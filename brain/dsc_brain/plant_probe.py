@@ -11,11 +11,39 @@ import json
 import uuid
 from typing import Any
 
-from .compose_store import get_helper, get_roster_slots, save_roster_slots, set_helper, update_roster_slot
+from .compose_store import (
+    ROSTER_SLOT_COUNT,
+    get_helper,
+    get_roster_slots,
+    save_roster_slots,
+    set_helper,
+    update_roster_slot,
+)
 from .settings import delete_roster, list_inventory, list_roster, upsert_inventory, upsert_roster
 from .stage_model import stage_family, tent_id
 
 STASH_KEY = "plant_stash"
+
+
+def release_conflicting_slot_pots(pot_n: int, keep_slot: int) -> list[int]:
+    """Clear stale roster rows that still claim this probe after a re-assign."""
+    released: list[int] = []
+    for slot in get_roster_slots():
+        sn = int(slot.get("slot") or 0)
+        if sn <= 0 or sn == keep_slot:
+            continue
+        if str(slot.get("pot") or "") != str(pot_n):
+            continue
+        status = str(slot.get("status") or "")
+        update_roster_slot(
+            sn,
+            {
+                "pot": "none",
+                "status": "detached" if status == "active" else status,
+            },
+        )
+        released.append(sn)
+    return released
 
 
 def plant_id_for_slot(slot_num: int) -> str:
@@ -54,7 +82,7 @@ def parse_slot_plant_id(plant_id: str) -> int | None:
             n = int(raw.split(":", 1)[1])
         except ValueError:
             return None
-        return n if 1 <= n <= 8 else None
+        return n if 1 <= n <= ROSTER_SLOT_COUNT else None
     if raw.startswith("plant:"):
         for slot in get_roster_slots():
             if str(slot.get("plant_uuid") or "") == raw:
@@ -204,12 +232,19 @@ def assign_plant_to_probe(slot_num: int, pot_n: int) -> dict[str, Any]:
     """Bind a detached (or unassigned) roster slot onto a vacant probe."""
     slot_n = int(slot_num)
     n = int(pot_n)
-    if slot_n < 1 or slot_n > 8:
-        raise ValueError("slot must be 1-8")
+    if slot_n < 1 or slot_n > ROSTER_SLOT_COUNT:
+        raise ValueError(f"slot must be 1-{ROSTER_SLOT_COUNT}")
     if n < 1 or n > 4:
         raise ValueError("pot must be 1-4")
+    release_conflicting_slot_pots(n, slot_n)
     if _pot_occupied(n):
-        raise ValueError(f"Probe {n} already has a plant — detach or move first")
+        incumbent_slot = _find_slot_for_pot(n)
+        if incumbent_slot > 0 and incumbent_slot != slot_n:
+            raise ValueError(f"Probe {n} already has a plant — detach or move first")
+        if incumbent_slot <= 0:
+            delete_roster(f"pot{n}")
+            _clear_probe_helpers(n)
+            _set_assigned_plant_id(n, "")
     slot = _slot_by_num(slot_n)
     status = str(slot.get("status") or "")
     if status in ("empty", "", "unknown", "unavailable"):

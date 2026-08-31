@@ -19,24 +19,32 @@
         ".superdesign/design-system.md",
         "homeassistant/custom_components/dsc_hub/frontend/src/App.tsx:104:205",
         "homeassistant/custom_components/dsc_hub/frontend/src/pages/DashHomePage.tsx",
-        "homeassistant/custom_components/dsc_hub/frontend/src/components/DashHomeSections.tsx:40:805",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/DashHomeSections.tsx",
         "homeassistant/custom_components/dsc_hub/frontend/src/components/ui.tsx:1:262",
         "homeassistant/custom_components/dsc_hub/frontend/src/routes.ts:31:85",
         "homeassistant/custom_components/dsc_hub/frontend/src/styles/dsc.css:1:45",
         "homeassistant/custom_components/dsc_hub/frontend/src/styles/dsc.css:231:520",
         "homeassistant/custom_components/dsc_hub/frontend/src/components/Honesty.tsx:23:76",
-        "homeassistant/custom_components/dsc_hub/frontend/src/components/HelpTip.tsx"
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/HelpTip.tsx",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/AirPathMap.tsx",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/KitPulse.tsx",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/HubLinkLine.tsx",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/CfmBadge.tsx"
       ],
       "fingerprints": {
         ".superdesign/design-system.md": "89e8eeee24952ac1a15b6e97b884c54e00b68bf99566163b8a76b511e69bec18",
         "homeassistant/custom_components/dsc_hub/frontend/src/App.tsx": "e9d8025c5565943425da434c06c206efb03406ef1a253116bd552dfda908b505",
         "homeassistant/custom_components/dsc_hub/frontend/src/pages/DashHomePage.tsx": "f61f0e9f5b04a67262bbf852c430709d19921356e0be2af8bc81e18c9f13d286",
-        "homeassistant/custom_components/dsc_hub/frontend/src/components/DashHomeSections.tsx": "115943a69d138ece882a39888a17498d91d491d43145d3cc0ee9b30584c36567",
-        "homeassistant/custom_components/dsc_hub/frontend/src/components/ui.tsx": "60875fcae5bfdeb65d8d2acd40245a7e6a512857a7073e3e21493c70c637e926",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/DashHomeSections.tsx": "af73f553461c0a750e08e6dfa78074854413edd95b951688a8e69ab9feeda0e4",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/ui.tsx": "20dc683f28ca03351319494f2d4a61fe22f8c5b96213412db99f237dc5bc800c",
         "homeassistant/custom_components/dsc_hub/frontend/src/routes.ts": "275fce5da5ae2b337f05178c217b2233b111a2586c608413311efe33c71565ea",
-        "homeassistant/custom_components/dsc_hub/frontend/src/styles/dsc.css": "3411bf3248c3827f6ebd6d7972c0f8fce8fbec99d166f496695918b30029be56",
+        "homeassistant/custom_components/dsc_hub/frontend/src/styles/dsc.css": "5233d412c6ec5f1e2be62e1678c2b4a516d76c59f8314a3794a84339dd86ed3f",
         "homeassistant/custom_components/dsc_hub/frontend/src/components/Honesty.tsx": "6dbf6839863a51d2c8d1893265f55f63d68a8187fcc4500be077e1347b27ebde",
-        "homeassistant/custom_components/dsc_hub/frontend/src/components/HelpTip.tsx": "1200bc3594c2c7b6fbb00560e2efc4b48d02857786bef6409f83677cbfd78738"
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/HelpTip.tsx": "1200bc3594c2c7b6fbb00560e2efc4b48d02857786bef6409f83677cbfd78738",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/AirPathMap.tsx": "a74d2765869044115de7ac2c15aa87391fea2bd2fe3553f77efbbc53d35c0826",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/KitPulse.tsx": "ad9bc4460870d48b336f85e5fda85fad722bc5dcc94cbf895ad4ba16c825e7c3",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/HubLinkLine.tsx": "c7fac2b7f85a36c021390919fd55e83a2a8ff6ba7e5bf4b3b9d24ca96e1975c4",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/CfmBadge.tsx": "962b7fc254b0752e3460ce9ad04d72e89c99773977082505d943f4007954cd19"
       },
       "components": [
         {
@@ -59,23 +67,23 @@
       "drafts": {
         "aaa17ee0-9376-43b5-b7b7-d4e52979a00a": {
           "title": "Current Dash Home",
-          "visualDirection": "operator dump with token parallax-star page wash (no title overlay)",
-          "currentVersion": 2
+          "visualDirection": "full current dump with CFM lung, roster, kit pulse",
+          "currentVersion": 3
         },
         "c6108cf7-49e4-4069-8c12-d8d04a3bef10": {
           "title": "DSC Hub - Premium Steering Console",
-          "visualDirection": "premium grow-steering / OGB-class",
+          "visualDirection": "premium grow-steering / OGB-class with complete sections",
           "parentDraftId": "aaa17ee0-9376-43b5-b7b7-d4e52979a00a",
-          "currentVersion": 1
+          "currentVersion": 2
         },
         "b8ba2858-a108-46da-99d8-241c93fc2286": {
           "title": "DSC Hub - High Contrast Dash",
-          "visualDirection": "high-contrast public-PD readability",
+          "visualDirection": "high-contrast public-PD readability with complete sections",
           "parentDraftId": "aaa17ee0-9376-43b5-b7b7-d4e52979a00a",
-          "currentVersion": 1
+          "currentVersion": 2
         }
       },
-      "updatedAt": "2026-08-31T00:47:00.000Z"
+      "updatedAt": "2026-08-31T04:00:30.000Z"
     }
   }
 }

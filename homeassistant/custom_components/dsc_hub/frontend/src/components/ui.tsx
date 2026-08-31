@@ -560,7 +560,18 @@ export async function flushEntityTextDrafts(
   if (active instanceof HTMLElement) active.blur();
   const entries = [...entityTextDrafts.entries()];
   for (const [entityId, value] of entries) {
-    await callService("input_text", "set_value", { entity_id: entityId, value });
+    if (!String(value || "").trim()) continue;
+    if (entityId.startsWith("input_datetime.")) {
+      const payload: Record<string, unknown> = { entity_id: entityId };
+      if (value.includes("T")) {
+        payload.datetime = value.replace("T", " ");
+      } else {
+        payload.date = value;
+      }
+      await callService("input_datetime", "set_datetime", payload);
+    } else {
+      await callService("input_text", "set_value", { entity_id: entityId, value });
+    }
   }
   await Promise.resolve();
 }
@@ -705,11 +716,16 @@ export function EntityDatetime({ entityId, label }: { entityId: string; label: s
   const focused = useRef(false);
 
   useEffect(() => {
-    if (!focused.current) setDraft(toInput(live));
-  }, [live, hasTime]);
+    if (!focused.current) {
+      const next = toInput(live);
+      setDraft(next);
+      entityTextDrafts.set(entityId, next);
+    }
+  }, [live, hasTime, entityId]);
 
   const commit = () => {
     if (!ok || !draft) return;
+    entityTextDrafts.set(entityId, draft);
     const value = hasTime ? draft.replace("T", " ") : draft;
     if (hasTime) {
       void callService("input_datetime", "set_datetime", { entity_id: entityId, datetime: value });
@@ -723,12 +739,16 @@ export function EntityDatetime({ entityId, label }: { entityId: string; label: s
       <span className="dsc-target-num-label">{label}</span>
       <input
         type={hasTime ? "datetime-local" : "date"}
+        data-entity-id={entityId}
         value={draft}
         disabled={!ok}
         onFocus={() => {
           focused.current = true;
         }}
-        onChange={(e) => setDraft(e.target.value)}
+        onChange={(e) => {
+          setDraft(e.target.value);
+          entityTextDrafts.set(entityId, e.target.value);
+        }}
         onBlur={() => {
           focused.current = false;
           commit();

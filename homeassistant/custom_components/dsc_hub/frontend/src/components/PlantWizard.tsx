@@ -43,6 +43,7 @@ export function PlantWizard() {
   const [customBlend, setCustomBlend] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [confirmAdd, setConfirmAdd] = useState(false);
+  const [commitErr, setCommitErr] = useState<string | null>(null);
   const [pickedStrain, setPickedStrain] = useState<CatalogItem | null>(null);
   const [pickedLight, setPickedLight] = useState<CatalogItem | null>(null);
   const [soilPresetId, setSoilPresetId] = useState<string | null>(null);
@@ -81,8 +82,8 @@ export function PlantWizard() {
   const canNext = useMemo(() => {
     switch (step.id) {
       case "plant":
-        // Prefer local pick + assignDraft so catalog/select clicks are not gated on bus lag.
-        return Boolean(strainLabel) && assign !== "none";
+        // Strain required; probe optional (stock roster when assign is none).
+        return Boolean(strainLabel);
       case "soil":
         return Boolean(vessel.label);
       default:
@@ -150,23 +151,63 @@ export function PlantWizard() {
     await flushEntityTextDrafts(callService);
   };
 
-  const commitAssign = async () => {
-    await flushEntityDrafts();
-    copyVesselToPot(assign);
-    if (available("script.dsc_build_plant_commit_and_assign")) {
-      await callService("script", "turn_on", { entity_id: "script.dsc_build_plant_commit_and_assign" });
-    } else {
-      await callService("script", "turn_on", { entity_id: "script.dsc_build_plant_commit" });
-      await callService("script", "turn_on", {
-        entity_id: "script.dsc_plant_assign_to_pot",
-        pot: assign,
-        variables: { pot: assign },
+  /** Catalog pick writes strain async; commit reads helpers — sync picked label first. */
+  const syncStrainToBus = async () => {
+    const label = strainLabel.trim();
+    if (!label) return;
+    const bus = strainOk(strain) ? strain.trim() : "";
+    if (bus !== label) {
+      await callService("input_text", "set_value", {
+        entity_id: "input_text.dsc_build_strain",
+        value: label,
       });
     }
-    await refreshBrain();
+  };
+
+  const syncComposeTextToBus = async () => {
+    await syncStrainToBus();
+    const n = nick.trim();
+    if (n && n !== nickBus.trim()) {
+      await callService("input_text", "set_value", {
+        entity_id: "input_text.dsc_build_nickname",
+        value: n,
+      });
+    }
+  };
+
+  const commitAssign = async () => {
+    setCommitErr(null);
+    await syncComposeTextToBus();
+    await flushEntityDrafts();
+    try {
+      if (assign !== "none") {
+        copyVesselToPot(assign);
+        if (available("script.dsc_build_plant_commit_and_assign")) {
+          await callService("script", "turn_on", { entity_id: "script.dsc_build_plant_commit_and_assign" });
+        } else {
+          await callService("script", "turn_on", { entity_id: "script.dsc_build_plant_commit" });
+          await callService("script", "turn_on", {
+            entity_id: "script.dsc_plant_assign_to_pot",
+            pot: assign,
+            variables: { pot: assign },
+          });
+        }
+      } else {
+        await callService("script", "turn_on", { entity_id: "script.dsc_build_plant_commit" });
+      }
+      clearComposeDraft(callService);
+      setPickedStrain(null);
+      setPickedLight(null);
+      setStepIdx(0);
+      await refreshBrain();
+    } catch (exc) {
+      setCommitErr(exc instanceof Error ? exc.message : "Add plant failed");
+      throw exc;
+    }
   };
 
   const goNext = async () => {
+    if (step.id === "plant") await syncComposeTextToBus();
     await flushEntityDrafts();
     if (step.id === "feed") setSkippedFeed(nutrients.length === 0);
     if (step.id === "light") setSkippedLight(!light || light === "unknown");
@@ -200,7 +241,7 @@ export function PlantWizard() {
   }, [tent]);
 
   const plantTitle = nick || strainLabel || "New plant";
-  const potLabel = assign === "none" ? "—" : probeLabel(Number(assign));
+  const potLabel = assign === "none" ? "Roster stock (no probe)" : probeLabel(Number(assign));
 
   const assignOptions = useMemo(() => {
     const raw = (entity("input_select.dsc_build_assign_pot")?.attributes?.options as string[]) || [];
@@ -491,10 +532,15 @@ export function PlantWizard() {
             ) : null}
           </dl>
           <div className="dsc-row-actions">
-            <Button variant="primary" disabled={assign === "none" || !strainLabel} icon="compose" iconMotion="glow" onClick={() => setConfirmAdd(true)}>
-              Add plant to {assign === "none" ? "probe" : potLabel}
+            <Button variant="primary" disabled={!strainLabel} icon="compose" iconMotion="glow" onClick={() => setConfirmAdd(true)}>
+              {assign === "none" ? "Add to roster (stock)" : `Add plant to ${potLabel}`}
             </Button>
           </div>
+          {commitErr ? (
+            <p className="dsc-honesty" style={{ marginTop: 10 }}>
+              <StatusChip label="Add failed" tone="bad" /> {commitErr}
+            </p>
+          ) : null}
           <details
             className="dsc-wizard-details"
             open={showAdvanced}

@@ -22,7 +22,7 @@ import {
 import { readPotVessel } from "../lib/vesselSpec";
 import { VesselGlyph } from "../components/VesselGlyph";
 import { CropScheduler } from "../components/CropScheduler";
-import { assignPlantToProbe, detachPlantFromProbe } from "../lib/fleetApi";
+import { assignPlantToProbe, detachPlantFromProbe, retireRosterSlot } from "../lib/fleetApi";
 
 export { PlantSeatPanel } from "../components/PlantSeatPanel";
 
@@ -107,6 +107,7 @@ export function GrowRosterPage() {
   const { refresh: refreshBrain } = useBrainContext();
   const [params, setParams] = useSearchParams();
   const [retirePot, setRetirePot] = useState<number | null>(null);
+  const [retireSlot, setRetireSlot] = useState<number | null>(null);
   const [retireErr, setRetireErr] = useState<string | null>(null);
   const [detachPot, setDetachPot] = useState<number | null>(null);
   const [lifecycleErr, setLifecycleErr] = useState<string | null>(null);
@@ -145,6 +146,20 @@ export function GrowRosterPage() {
   };
 
   const confirmRetire = async () => {
+    if (retireSlot != null) {
+      setRetireErr(null);
+      try {
+        await retireRosterSlot(retireSlot);
+        await refreshBrain();
+        if (pot != null && slots.some((s) => Number(s.slot) === retireSlot && Number(s.pot) === pot)) {
+          closePot();
+        }
+        setRetireSlot(null);
+      } catch (exc) {
+        setRetireErr(exc instanceof Error ? exc.message : "Delete failed");
+      }
+      return;
+    }
     if (retirePot == null) return;
     setRetireErr(null);
     try {
@@ -294,11 +309,23 @@ export function GrowRosterPage() {
                             onClick={() => {
                               setRetireErr(null);
                               setRetirePot(p);
+                              setRetireSlot(Number(s.slot));
                             }}
                           >
                             Delete
                           </Button>
-                        ) : null}
+                        ) : (
+                          <Button
+                            variant="danger"
+                            onClick={() => {
+                              setRetireErr(null);
+                              setRetirePot(null);
+                              setRetireSlot(Number(s.slot));
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -363,18 +390,22 @@ export function GrowRosterPage() {
       </DecisionLayer>
 
       <DecisionLayer
-        open={retirePot != null}
-        onDismiss={() => setRetirePot(null)}
+        open={retireSlot != null}
+        onDismiss={() => {
+          setRetireSlot(null);
+          setRetirePot(null);
+        }}
         onConfirm={() => {
           void confirmRetire();
         }}
-        title={retirePot != null ? `Delete plant on ${probeLabel(retirePot)}?` : "Delete plant"}
+        title={retireSlot != null ? `Delete roster #${retireSlot}?` : "Delete plant"}
         confirmLabel="Delete plant"
         help={null}
       >
         <p>
-          Destroys the plant on {retirePot != null ? probeLabel(retirePot) : "this probe"} and empties its roster slot.
-          Use Detach if you only want to free the probe.
+          {retirePot != null
+            ? `Destroys the plant on ${probeLabel(retirePot)} and clears roster slot #${retireSlot}. Use Detach if you only want to free the probe.`
+            : `Removes roster slot #${retireSlot} (stock or detached). This cannot be undone.`}
         </p>
       </DecisionLayer>
 

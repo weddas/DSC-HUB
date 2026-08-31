@@ -10,6 +10,7 @@ from .settings import get_all_settings, get_setting, set_setting
 
 COMPOSE_KEY = "compose_helpers_json"
 ROSTER_SLOTS_KEY = "plant_roster_slots_json"
+ROSTER_SLOT_COUNT = 10
 CAL_ACTIVE_KEY = "cal_active"
 CAL_STEP_KEY = "cal_step_index"
 CAL_FAN_KEY = "cal_fan_prefix"
@@ -117,23 +118,24 @@ def all_helpers() -> dict[str, Any]:
     return dict(_load_helpers())
 
 
+def _empty_roster_slot(slot_num: int) -> dict[str, Any]:
+    return {
+        "slot": slot_num,
+        "status": "empty",
+        "nickname": "",
+        "strain": "",
+        "blend": "",
+        "recipe": "",
+        "sprout": "",
+        "tent": "",
+        "pot": "none",
+        "seed_count": 0,
+        "notes": "",
+    }
+
+
 def default_roster_slots() -> list[dict[str, Any]]:
-    return [
-        {
-            "slot": i,
-            "status": "empty",
-            "nickname": "",
-            "strain": "",
-            "blend": "",
-            "recipe": "",
-            "sprout": "",
-            "tent": "",
-            "pot": "none",
-            "seed_count": 0,
-            "notes": "",
-        }
-        for i in range(1, 9)
-    ]
+    return [_empty_roster_slot(i) for i in range(1, ROSTER_SLOT_COUNT + 1)]
 
 
 def get_roster_slots() -> list[dict[str, Any]]:
@@ -144,8 +146,14 @@ def get_roster_slots() -> list[dict[str, Any]]:
         slots = json.loads(raw)
     except json.JSONDecodeError:
         return default_roster_slots()
-    if not isinstance(slots, list) or len(slots) != 8:
+    if not isinstance(slots, list) or len(slots) < 1:
         return default_roster_slots()
+    if len(slots) > ROSTER_SLOT_COUNT:
+        return default_roster_slots()
+    if len(slots) < ROSTER_SLOT_COUNT:
+        by_num = {int(s.get("slot") or 0): s for s in slots if isinstance(s, dict)}
+        slots = [by_num.get(i) or _empty_roster_slot(i) for i in range(1, ROSTER_SLOT_COUNT + 1)]
+        save_roster_slots(slots)
     return slots
 
 

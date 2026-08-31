@@ -3,7 +3,9 @@ import {
   KIT_PROBE_NUMBERS,
   buildPlantSeat,
   isPotInService,
+  normalizeTent,
   probeLabel,
+  rosterSlots,
   tentLabel,
   type TentId,
 } from "../lib/seatModel";
@@ -58,19 +60,39 @@ function StageTrack({ cur }: { cur: number }) {
   );
 }
 
+function daysSinceSprout(sprout: string | undefined): number | null {
+  if (!sprout || sprout.length < 8) return null;
+  const d = new Date(`${sprout.slice(0, 10)}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return null;
+  return Math.max(0, Math.floor((Date.now() - d.getTime()) / 86_400_000));
+}
+
 function TentCropColumn({
   tent,
   seats,
   hass,
   compact,
+  stockSlots,
 }: {
   tent: Exclude<TentId, "unassigned">;
   seats: { seat: PlantSeat; oos: boolean }[];
   hass: HassBits;
   compact?: boolean;
+  stockSlots: { slot: number; nickname?: string; strain?: string; sprout?: string; status?: string }[];
 }) {
   const tentSeats = seats.filter(({ seat, oos }) => !oos && seat.tent === tent);
-  const { mixed, cur, live } = stageTrackForSeats(tentSeats);
+  const stockInTent = stockSlots.filter((s) => normalizeTent(s.tent) === tent);
+  const stockAsSeats = stockInTent.map((s) => ({
+    seat: {
+      pot: 0,
+      plantName: s.nickname || s.strain || "Stock plant",
+      stage: s.status === "stock" ? "Expected (stock)" : String(s.status || "—"),
+      days: String(daysSinceSprout(s.sprout) ?? "—"),
+      need: "—",
+    } as PlantSeat,
+    oos: false,
+  }));
+  const { mixed, cur, live } = stageTrackForSeats([...tentSeats, ...stockAsSeats]);
   const title = tentLabel(tent);
 
   return (
@@ -82,7 +104,7 @@ function TentCropColumn({
       <StageTrack cur={cur} />
       {mixed ? (
         <StatusChip icon="alert" label={`Mixed stages in ${title}`} tone="warn" />
-      ) : live.length === 0 ? (
+      ) : live.length === 0 && stockInTent.length === 0 ? (
         <StatusChip icon="seat" label="No plants in tent" tone="muted" />
       ) : null}
       <div className={`dsc-scheduler-lanes${compact ? " is-compact" : ""}`}>
@@ -107,6 +129,20 @@ function TentCropColumn({
             </button>
           );
         })}
+        {stockInTent.map((s) => {
+          const days = daysSinceSprout(s.sprout);
+          const week = days != null ? Math.max(1, Math.ceil(days / 7)) : null;
+          return (
+            <div key={`stock-${s.slot}`} className="dsc-scheduler-lane" style={{ cursor: "default" }}>
+              <strong>Roster #{s.slot}</strong>
+              <span>{s.nickname || s.strain || "—"}</span>
+              <StatusChip label={s.status === "stock" ? "Stock" : String(s.status || "—")} tone="muted" />
+              <span className="dsc-muted">
+                W{week ?? "—"} · {days != null ? `${days}d` : "—"} · no probe
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -118,6 +154,10 @@ export function CropScheduler({ compact }: { compact?: boolean }) {
     seat: buildPlantSeat(n, hass),
     oos: !isPotInService(n, hass.state),
   }));
+  const stockSlots = rosterSlots(hass.entity).filter((s) => {
+    const st = String(s.status || "");
+    return st === "stock" || st === "detached";
+  });
   const catchup = hass.state("binary_sensor.dsc_hub_light_catchup_active") === "on";
   const darkViol = hass.state("binary_sensor.dsc_clone_dark_period_violation") === "on";
   const unassigned = seats.filter(({ seat, oos }) => !oos && seat.tent === "unassigned");
@@ -128,8 +168,8 @@ export function CropScheduler({ compact }: { compact?: boolean }) {
         Each tent tracks its own stage rail and pots — 4×8 and 2×4 are separate grow environments.
       </p>
       <div className="dsc-scheduler-tents-split">
-        <TentCropColumn tent="main" seats={seats} hass={hass} compact={compact} />
-        <TentCropColumn tent="clone" seats={seats} hass={hass} compact={compact} />
+        <TentCropColumn tent="main" seats={seats} hass={hass} compact={compact} stockSlots={stockSlots} />
+        <TentCropColumn tent="clone" seats={seats} hass={hass} compact={compact} stockSlots={stockSlots} />
       </div>
       <div className="dsc-chip-row" style={{ margin: "8px 0" }}>
         {catchup ? <StatusChip icon="lighting" motion="breathe" label="Catch-up" tone="warn" /> : null}

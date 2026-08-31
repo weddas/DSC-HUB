@@ -85,12 +85,10 @@ def test_move_plant_atomic(plant_db: Path) -> None:
 
 
 def test_assign_rejects_occupied_probe(plant_db: Path) -> None:
-    from dsc_brain.compose_store import default_roster_slots, get_roster_slots, save_roster_slots, update_roster_slot
+    from dsc_brain.compose_store import update_roster_slot
     from dsc_brain.plant_probe import assign_plant_to_probe
     import pytest
 
-    slots = get_roster_slots()
-    # fabricate a second detached plant on slot 2
     update_roster_slot(
         2,
         {
@@ -103,3 +101,26 @@ def test_assign_rejects_occupied_probe(plant_db: Path) -> None:
     )
     with pytest.raises(ValueError, match="already has a plant"):
         assign_plant_to_probe(2, 1)
+
+
+def test_assign_clears_stale_slot_probe_claims(plant_db: Path) -> None:
+    from dsc_brain.compose_store import get_roster_slots, update_roster_slot
+    from dsc_brain.plant_probe import assign_plant_to_probe, detach_plant_from_probe
+
+    detach_plant_from_probe(1)
+    update_roster_slot(
+        2,
+        {
+            "status": "detached",
+            "pot": "none",
+            "nickname": "Clone",
+            "strain": "Clone Strain",
+            "plant_stash": '{"strain_id":"clone","stage":"veg","recipe":{"plant_name":"Clone","nickname":"Clone","tent":"clone"}}',
+        },
+    )
+    update_roster_slot(2, {"pot": "1"})
+    assigned = assign_plant_to_probe(2, 1)
+    assert assigned["assigned"] is True
+    slots = {int(s["slot"]): s for s in get_roster_slots()}
+    assert slots[2]["pot"] == "1"
+    assert slots[1]["pot"] == "none"

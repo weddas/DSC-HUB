@@ -479,6 +479,14 @@ export async function detachPlantFromProbe(pot: number): Promise<Record<string, 
   return resp.json();
 }
 
+export async function retireRosterSlot(slot: number): Promise<Record<string, unknown>> {
+  const resp = await fetch(`/roster/slots/${slot}/retire`, { method: "POST" });
+  if (!resp.ok) {
+    throw new Error(formatApiError(await resp.text(), "retire failed"));
+  }
+  return resp.json();
+}
+
 export async function assignPlantToProbe(slot: number, pot: number): Promise<Record<string, unknown>> {
   const resp = await fetch(`/roster/assign`, {
     method: "POST",

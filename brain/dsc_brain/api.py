@@ -571,6 +571,21 @@ def roster_pot_patch(pot_n: int, body: PotPlantPatch) -> dict[str, Any]:
         raise HTTPException(400, str(exc)) from exc
 
 
+@app.post("/roster/slots/{slot_n}/retire")
+def roster_slot_retire(slot_n: int) -> dict[str, Any]:
+    """Retire a roster slot by number (stock, detached, or probe-assigned)."""
+    from .compose_ops import retire_roster_slot
+
+    from .compose_store import ROSTER_SLOT_COUNT
+
+    if slot_n < 1 or slot_n > ROSTER_SLOT_COUNT:
+        raise HTTPException(400, f"slot must be 1–{ROSTER_SLOT_COUNT}")
+    try:
+        return retire_roster_slot(slot_n)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
 @app.post("/roster/detach/{pot_n}")
 def roster_detach(pot_n: int) -> dict[str, Any]:
     """Detach plant from probe; keep roster slot (not retire)."""

@@ -184,6 +184,10 @@ export function hasComposeDraft(state: EntityState): boolean {
 export function clearComposeDraft(callService: CallService): void {
   void callService("input_text", "set_value", { entity_id: "input_text.dsc_build_strain", value: "" });
   void callService("input_text", "set_value", { entity_id: "input_text.dsc_build_nickname", value: "" });
+  void callService("input_datetime", "set_datetime", {
+    entity_id: "input_datetime.dsc_build_sprout_date",
+    date: "",
+  });
   void callService("input_select", "select_option", {
     entity_id: "input_select.dsc_build_assign_pot",
     option: "none",

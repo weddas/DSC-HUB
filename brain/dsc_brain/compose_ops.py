@@ -8,8 +8,10 @@ from typing import Any
 from .compose_store import (
     blend_snapshot_from_helpers,
     clear_build_helpers,
+    ROSTER_SLOT_COUNT,
     find_roster_slot_for_strain,
     get_helper,
+    get_roster_slots,
     next_empty_roster_slot,
     reset_cal_curve,
     set_cal_point,
@@ -84,12 +86,16 @@ def commit_to_roster() -> dict[str, Any]:
     if slot_num <= 0:
         slot_num = next_empty_roster_slot()
     if slot_num <= 0:
-        raise RuntimeError("Roster full — all eight slots occupied")
+        raise RuntimeError(f"Roster full — all {ROSTER_SLOT_COUNT} slots occupied")
     assign_pot = str(get_helper("input_select.dsc_build_assign_pot", "none"))
     sprout = str(get_helper("input_datetime.dsc_build_sprout_date", ""))[:10]
     blend = blend_snapshot_from_helpers()
     recipe = str(get_helper("input_text.dsc_build_recipe_note", "")).strip()
     status = "active" if assign_pot in ("1", "2", "3", "4") else "stock"
+    if assign_pot in ("1", "2", "3", "4"):
+        from .plant_probe import release_conflicting_slot_pots
+
+        release_conflicting_slot_pots(int(assign_pot), slot_num)
     slot = update_roster_slot(
         slot_num,
         {
@@ -114,6 +120,16 @@ def assign_to_pot(pot: str | None = None) -> dict[str, Any]:
     strain = str(get_helper("input_text.dsc_build_strain", "")).strip()
     if not strain:
         raise ValueError("Strain is empty — pick or enter a strain first")
+    nickname = str(get_helper("input_text.dsc_build_nickname", "")).strip() or strain
+    roster_slot = find_roster_slot_for_strain(strain, nickname)
+    from .plant_probe import _find_slot_for_pot, _pot_occupied, release_conflicting_slot_pots
+
+    if _pot_occupied(int(n)):
+        incumbent_slot = _find_slot_for_pot(int(n))
+        if roster_slot <= 0 or incumbent_slot != roster_slot:
+            raise ValueError(f"Probe {n} already has a plant — detach or delete it first")
+    if roster_slot > 0:
+        release_conflicting_slot_pots(int(n), roster_slot)
     recipe = _pot_recipe_from_build()
     seat_id = f"pot{n}"
     upsert_roster(
@@ -203,6 +219,45 @@ def update_pot_recipe(pot_n: int, updates: dict[str, Any]) -> dict[str, Any]:
         if slot_patch:
             update_roster_slot(slot_num, slot_patch)
     return result
+
+
+def retire_roster_slot(slot_num: int) -> dict[str, Any]:
+    """Remove a roster slot (stock, detached, or active). Clears probe if this slot owns it."""
+    from .plant_probe import STASH_KEY, _clear_probe_helpers, _find_slot_for_pot, _set_assigned_plant_id
+
+    sn = int(slot_num)
+    if sn < 1 or sn > ROSTER_SLOT_COUNT:
+        raise ValueError(f"slot must be 1-{ROSTER_SLOT_COUNT}")
+    slot = next((s for s in get_roster_slots() if int(s.get("slot") or 0) == sn), None)
+    if slot is None:
+        raise ValueError(f"invalid roster slot {sn}")
+    status = str(slot.get("status") or "")
+    if status in ("empty", "", "unknown", "unavailable"):
+        raise ValueError(f"Slot {sn} is already empty")
+    pot = str(slot.get("pot") or "none")
+    removed_seat: str | None = None
+    if pot in ("1", "2", "3", "4") and _find_slot_for_pot(int(pot)) == sn:
+        seat_id = f"pot{pot}"
+        delete_roster(seat_id)
+        removed_seat = seat_id
+        _clear_probe_helpers(int(pot))
+        _set_assigned_plant_id(int(pot), "")
+    update_roster_slot(
+        sn,
+        {
+            "status": "empty",
+            "nickname": "",
+            "strain": "",
+            "blend": "",
+            "recipe": "",
+            "sprout": "",
+            "tent": "",
+            "pot": "none",
+            "notes": "",
+            STASH_KEY: "",
+        },
+    )
+    return {"slot": sn, "retired": True, "removed_seat": removed_seat}
 
 
 def retire_plant(pot: str | None = None) -> dict[str, Any]:
@@ -367,6 +422,9 @@ def handle_script(entity_id: str, data: dict[str, Any] | None = None) -> dict[st
     if entity_id == "script.dsc_plant_assign_to_pot":
         return assign_to_pot(_script_pot(data))
     if entity_id == "script.dsc_plant_retire":
+        slot = data.get("slot") or (data.get("variables") or {}).get("slot")
+        if slot not in (None, ""):
+            return retire_roster_slot(int(slot))
         return retire_plant(_script_pot(data))
     if entity_id == "script.dsc_plant_detach":
         from .plant_probe import detach_plant_from_probe
