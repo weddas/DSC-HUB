@@ -106,7 +106,12 @@ export function DashHomePage() {
   const recircCfm = resolveCfm("sensor.dsc_cfm_exhaust_recirc_allocated", "sensor.dsc_cfm_exhaust_recirc", { available, num });
   const inMain = resolveCfm("sensor.dsc_cfm_intake_main_allocated", "sensor.dsc_cfm_intake_main", { available, num });
   const inClone = resolveCfm("sensor.dsc_cfm_intake_2x4_allocated", "sensor.dsc_cfm_intake_2x4", { available, num });
-  const cfmReadings = [outCfm, recircCfm, inMain, inClone];
+  const cascadeCfm = resolveCfm(
+    "sensor.dsc_cfm_cascade_2x4_allocated",
+    "sensor.dsc_cfm_cascade_2x4_allocated",
+    { available, num },
+  );
+  const cfmReadings = [outCfm, recircCfm, inMain, inClone, cascadeCfm];
 
   const kitNodes: KitNode[] = buildKitNodesFromFleet(fleet);
   const svc = kitInServiceCount(kitNodes);
@@ -265,7 +270,13 @@ export function DashHomePage() {
           <Kpi label="Intake 4×8" value={fmtCfm(inMain).replace(" CFM", "")} unit="CFM" />
           <Kpi label="Intake 2×4" value={fmtCfm(inClone).replace(" CFM", "")} unit="CFM" />
         </div>
-        <AirPathMap intakeClone={inClone} intakeMain={inMain} outCfm={outCfm} recircCfm={recircCfm} />
+        <AirPathMap
+          intakeClone={inClone}
+          intakeMain={inMain}
+          cascade={cascadeCfm}
+          outCfm={outCfm}
+          recircCfm={recircCfm}
+        />
       </Card>
 
       <DashTodaySection bus={bus} />

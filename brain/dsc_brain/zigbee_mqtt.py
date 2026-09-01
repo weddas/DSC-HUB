@@ -290,9 +290,20 @@ def save_zigbee_bindings(bindings: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return cleaned
 
 
+def _fleet_role_kinds() -> frozenset[str]:
+    """Roles that populate zigbee_by_role for Climate (climate + safety Wet/Dry)."""
+    return frozenset(
+        str(r["id"]) for r in ZIGBEE_ROLE_CATALOG if r.get("kind") in ("climate", "safety")
+    )
+
+
 def _reapply_bindings_to_fleet() -> None:
-    """Rebuild zigbee_by_role + canopy from cached device states using current bindings."""
-    climate_roles = {str(r["id"]) for r in ZIGBEE_ROLE_CATALOG if r.get("kind") == "climate"}
+    """Rebuild zigbee_by_role + canopy from cached device states using current bindings.
+
+    Includes safety leak roles (Wet/Dry). Seeds bound-role stubs from bindings when
+    MQTT has not yet delivered a state, so Climate/Overview surfaces stay visible.
+    """
+    fleet_roles = _fleet_role_kinds()
     by_role: dict[str, dict[str, Any]] = {}
     by_placement: dict[str, dict[str, Any]] = {}
     for friendly_name, state_row in list(_ingest._device_states.items()):
@@ -307,9 +318,38 @@ def _reapply_bindings_to_fleet() -> None:
         updated["zone"] = zone
         updated["friendly_name"] = friendly_name
         _ingest._device_states[friendly_name] = updated
-        if enabled and role != "unbound" and role in climate_roles:
-            by_role[role] = dict(updated)
-            by_placement[role] = dict(updated)
+        if enabled and role != "unbound" and role in fleet_roles:
+            if role in {str(r["id"]) for r in ZIGBEE_ROLE_CATALOG if r.get("kind") == "safety"}:
+                from .zigbee_policies import normalize_binary_active
+
+                wet = normalize_binary_active(updated)
+                safety_row = dict(updated)
+                if wet is not None:
+                    safety_row["active"] = wet
+                    safety_row["wet"] = wet
+                by_role[role] = safety_row
+                by_placement[role] = safety_row
+            else:
+                by_role[role] = dict(updated)
+                by_placement[role] = dict(updated)
+    # Binding stubs: role bound but no live MQTT row yet (or ieee/friendly mismatch).
+    for ieee, binding in load_zigbee_bindings().items():
+        if not isinstance(binding, dict):
+            continue
+        role = str(binding.get("role") or "unbound")
+        if role == "unbound" or not bool(binding.get("enabled", True)):
+            continue
+        if role not in fleet_roles or role in by_role:
+            continue
+        stub = {
+            "role": role,
+            "zone": str(binding.get("zone") or "shared"),
+            "friendly_name": str(binding.get("friendly_name") or ieee),
+            "ieee": str(ieee),
+            "bound_stub": True,
+        }
+        by_role[role] = stub
+        by_placement[role] = stub
     _ingest._by_role = by_role
     _ingest._by_placement = by_placement
     _ingest._canopy = _recompute_canopy(by_role)
@@ -368,7 +408,11 @@ def _role_conflict_map(bindings: dict[str, dict[str, Any]]) -> dict[str, list[st
 
 
 def _recompute_canopy(by_role: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    """Only canopy roles fill fleet.canopy; prefer 4x8 over 2x4."""
+    """Only canopy roles fill fleet.canopy; prefer 4x8 over 2x4.
+
+    Bound canopy without live temp/RH still sets role so Overview/Climate
+    show Canopy ← role instead of unbound theater.
+    """
     canopy: dict[str, Any] = {}
     for role in _CANOPY_ROLES:
         row = by_role.get(role)
@@ -378,11 +422,12 @@ def _recompute_canopy(by_role: dict[str, dict[str, Any]]) -> dict[str, Any]:
             canopy["temp_c"] = row.get("temperature")
         if row.get("humidity") is not None:
             canopy["rh_pct"] = row.get("humidity")
-        if canopy:
-            canopy["role"] = role
-            canopy["updated_at"] = row.get("updated_at")
-            canopy["friendly_name"] = row.get("friendly_name")
-            break
+        canopy["role"] = role
+        canopy["updated_at"] = row.get("updated_at")
+        canopy["friendly_name"] = row.get("friendly_name")
+        if row.get("bound_stub"):
+            canopy["bound_stub"] = True
+        break
     return canopy
 
 
@@ -632,6 +677,11 @@ class ZigbeeMqttIngest:
         state.system["zigbee_devices"] = devices
         state.system["zigbee_devices_updated_at"] = self._devices_updated_at
         update_fleet_state(state)
+        # Devices list arrived — re-route bindings into by_role / canopy (stubs ok).
+        try:
+            _reapply_bindings_to_fleet()
+        except Exception as exc:  # noqa: BLE001
+            _logger.debug("zigbee reapply after devices update skipped: %s", exc)
 
     def _update_bridge_state(self, payload: Any) -> None:
         state_val: str | None = None
@@ -815,15 +865,24 @@ def apply_zigbee_cache_to_state(state: FleetState) -> None:
     without this, those writes clobber canopy / zigbee_* system keys mid-flight.
     Also preserve Zigbee *policy* keys (banners / policy_state) that may have been
     written by MQTT evaluate while the ESPHome poll was in flight.
+
+    When bindings exist but by_role is empty (restart / no MQTT yet), seed stubs
+    so Climate Wet/Dry and canopy role chips are not silently omitted.
     """
     live_sys = dict(get_fleet_state().system or {})
+    bindings = load_zigbee_bindings()
+    if bindings and not _ingest._by_role:
+        try:
+            _reapply_bindings_to_fleet()
+        except Exception as exc:  # noqa: BLE001
+            _logger.debug("zigbee stub reapply skipped: %s", exc)
     state.canopy = dict(_ingest._canopy)
     state.system = dict(state.system)
     state.system["zigbee_device_states"] = dict(_ingest._device_states)
     state.system["zigbee_by_placement"] = dict(_ingest._by_placement)
     state.system["zigbee_by_role"] = dict(_ingest._by_role)
     state.system["zigbee_placements"] = _placement_map()
-    state.system["zigbee_device_bindings"] = load_zigbee_bindings()
+    state.system["zigbee_device_bindings"] = bindings
     if _ingest._devices:
         state.system["zigbee_devices"] = list(_ingest._devices)
     if _ingest._devices_updated_at is not None:

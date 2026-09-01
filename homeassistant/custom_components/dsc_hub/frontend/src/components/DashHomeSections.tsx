@@ -16,6 +16,7 @@ import type { CfmReading } from "../lib/cfmProvenance";
 import { TentLightClockStrip } from "./TentLightClock";
 import { buildCloneLightDesk, headerSfLabel } from "../lib/lightViewModel";
 import { useFleet } from "../hooks/useFleet";
+import { potWantBand } from "../lib/tentWant";
 
 type Bus = {
   state: (id: string, fb?: string) => string;
@@ -678,11 +679,11 @@ export function DashRootTankSection({
 }) {
   const { state, num } = bus;
   const fleet = useFleet();
-  const moistBand = { min: 30, max: 70 };
   return (
     <Card className="dsc-glass" title="Root & tank" icon="root">
       <p className="dsc-muted" style={{ fontSize: 12, margin: "0 0 8px" }}>
         Grey gauges mean no moisture Got or probe out of service — never a fake reading.
+        Band is Root Want (`potWantBand`); missing Want stays unbanded.
       </p>
       <div className="dsc-chip-row">
         {[...KIT_PROBE_NUMBERS].map((n) => {
@@ -717,6 +718,7 @@ export function DashRootTankSection({
         {[...KIT_PROBE_NUMBERS].map((n) => {
           const oos = !isPotInServiceWithFleet(n, state, fleet);
           const moist = oos ? NaN : potMoistureNum(num, state, n);
+          const moistBand = oos ? undefined : potWantBand(n, "moisture", state);
           return (
             <ArcGauge
               key={n}
@@ -725,8 +727,10 @@ export function DashRootTankSection({
               min={0}
               max={100}
               unit="%"
-              band={oos ? undefined : moistBand}
-              segments={oos ? undefined : moistureSegments(30, 70)}
+              band={moistBand}
+              segments={
+                moistBand ? moistureSegments(moistBand.min, moistBand.max) : undefined
+              }
               onClick={() => onPotChart(`pot${n}` as BandChartKind)}
             />
           );

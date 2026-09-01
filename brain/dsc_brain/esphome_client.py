@@ -351,13 +351,24 @@ def _record_hub_chart_history(
     if light:
         on = light.get("state") == "on"
         bri = float(light.get("brightness") or 0)
-        val = (bri / 255.0 * 100.0) if on and bri > 0 else 0.0
+        # Controls store 0–255; tolerate accidental 0–1.
+        if 0.0 < bri <= 1.0:
+            bri_pct = bri * 100.0
+        else:
+            bri_pct = bri / 255.0 * 100.0
+        val = bri_pct if on and bri > 0 else 0.0
+        # Binary on for DutyStrip / inspector; brightness kept for charts.
+        record_history("hub", "sf1000_on", 1.0 if on else 0.0, now)
         record_history("hub", "sf1000_brightness", val, now)
     twin = controls.get("light.dsc_hub_twin_sf1000")
     if twin:
         on = twin.get("state") == "on"
         bri = float(twin.get("brightness") or 0)
-        val = (bri / 255.0 * 100.0) if on and bri > 0 else 0.0
+        if 0.0 < bri <= 1.0:
+            bri_pct = bri * 100.0
+        else:
+            bri_pct = bri / 255.0 * 100.0
+        val = bri_pct if on and bri > 0 else 0.0
         # Binary on for Got / DutyStrip; brightness kept for charts.
         record_history("hub", "twin_sf1000_on", 1.0 if on else 0.0, now)
         record_history("hub", "twin_sf1000_brightness", val, now)

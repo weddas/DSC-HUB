@@ -71,3 +71,7 @@ Pass4 Task4: Phase A GREEN 48b443d
 
 Pass4 Task5: 84a3387..9225d2e Phase B inventory DONE_WITH_CONCERNS (B6 fail; named parks open)
 
+Pass4 Task5: Phase B inventory 6 findings
+
+Pass4 Task6: Phase C debt closeout ? SV-P1-6 / AirPathMap cascade / GAUGE-P0-1 / zigbee stubs; pass5 Hold+422 deferred; see pass4-task-6-report.md
+

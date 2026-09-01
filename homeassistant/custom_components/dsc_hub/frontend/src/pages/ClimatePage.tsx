@@ -114,6 +114,11 @@ export function LiveClimatePage() {
     "sensor.dsc_cfm_intake_2x4",
     { available, num },
   );
+  const cascadeReading = resolveCfm(
+    "sensor.dsc_cfm_cascade_2x4_allocated",
+    "sensor.dsc_cfm_cascade_2x4_allocated",
+    { available, num },
+  );
 
   const roomAh = absoluteHumidity(roomTHeld.value, roomRhHeld.value);
   const tentAh = absoluteHumidity(tentTHeld.value, tentRhHeld.value);
@@ -523,17 +528,14 @@ export function LiveClimatePage() {
             <AirPathMap
               intakeClone={inCloneReading}
               intakeMain={inMainReading}
+              cascade={cascadeReading}
               outCfm={outReading}
               recircCfm={recReading}
             />
             <FlowSankey
               intakeClone={inCloneReading}
               intakeMain={inMainReading}
-              cascade={resolveCfm(
-                "sensor.dsc_cfm_cascade_2x4_allocated",
-                "sensor.dsc_cfm_cascade_2x4_allocated",
-                { available, num },
-              )}
+              cascade={cascadeReading}
               outCfm={outReading}
               recircCfm={recReading}
               massBalanceOk={null}

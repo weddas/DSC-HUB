@@ -221,6 +221,11 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
     available,
     num,
   });
+  const cascadeCfm = resolveCfm(
+    "sensor.dsc_cfm_cascade_2x4_allocated",
+    "sensor.dsc_cfm_cascade_2x4_allocated",
+    { available, num },
+  );
   const fanOverride = state("switch.dsc_hub_tent_manual_override") === "on";
   const title = tent === "main" ? "4×8 tent" : "2×4 tent";
   const pathNote =
@@ -404,6 +409,7 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
               focus={tent}
               intakeClone={inClone}
               intakeMain={inMain}
+              cascade={cascadeCfm}
               outCfm={outReadingCockpit}
               recircCfm={recircReadingCockpit}
             />

@@ -59,6 +59,9 @@ export function LiveLightPage() {
   const got4Honesty = String(entity("sensor.dsc_lights_on_today_4x8")?.attributes?.honesty ?? "");
   const duty4Entity = twinAvailable ? twinEntity : "binary_sensor.dsc_hub_4x8_window_open";
   const duty4Label = twinAvailable ? "Twin SF1000 24h" : "4×8 window 24h";
+  // 2×4 Got is window photoperiod SoT — Actual strip follows Got, not lamp-only hours.
+  const duty2Entity = "binary_sensor.dsc_hub_2x4_window_open";
+  const duty2Label = "2×4 window 24h";
   const deviation = cloneDesk.deviationHours ?? num("sensor.dsc_lights_deviation_today");
   const rail4 = tentWantRail("main", { state, entity });
   const rail2 = tentWantRail("clone", { state, entity });
@@ -373,12 +376,19 @@ export function LiveLightPage() {
             <PhotoperiodTimeline
               tent="clone"
               scheduleValid={cloneDesk.scheduleValid}
-              onClick={() => open("light.dsc_hub_sf1000_dimmer", "SF1000", "binary")}
+              onClick={() => open("binary_sensor.dsc_hub_2x4_window_open", "2×4 window", "binary")}
+            />
+            <DutyStrip
+              entityId={duty2Entity}
+              hours={24}
+              label={duty2Label}
+              actualWhenHistory
+              onClick={() => open(duty2Entity, "2×4 window", "binary")}
             />
             <DutyStrip
               entityId="light.dsc_hub_sf1000_dimmer"
               hours={24}
-              label="SF1000 24h"
+              label="SF1000 lamp 24h"
               actualWhenHistory
               onClick={() => open("light.dsc_hub_sf1000_dimmer", "SF1000", "binary")}
             />

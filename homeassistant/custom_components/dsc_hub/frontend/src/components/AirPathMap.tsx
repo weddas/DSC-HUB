@@ -86,10 +86,12 @@ function PathRibbons({
 /**
  * Spatial air path. Cascade is the pipe between the tent boxes, never a join on dump/recirc.
  * Tent cockpits pass `focus` so the SVG is that tent + room + the cascade port stub.
+ * Cascade CFM must come from `sensor.dsc_cfm_cascade_2x4_allocated` — never alias intake 2×4.
  */
 export function AirPathMap({
   intakeClone,
   intakeMain,
+  cascade,
   outCfm,
   recircCfm,
   compact,
@@ -97,18 +99,13 @@ export function AirPathMap({
 }: {
   intakeClone: CfmReading;
   intakeMain: CfmReading;
+  cascade: CfmReading;
   outCfm: CfmReading;
   recircCfm: CfmReading;
   compact?: boolean;
   focus?: "main" | "clone";
 }) {
   const inspector = useInspector();
-  const cascade: CfmReading = {
-    value: Number.isFinite(intakeClone.value) ? intakeClone.value : 0,
-    kind: intakeClone.kind,
-    entityId: intakeClone.entityId,
-    nameplate: intakeClone.nameplate,
-  };
   const sigmaIn =
     (Number.isFinite(intakeClone.value) ? intakeClone.value : 0) +
     (Number.isFinite(intakeMain.value) ? intakeMain.value : 0);
@@ -117,10 +114,10 @@ export function AirPathMap({
   const showExhaust = focus !== "clone";
   const trustReadings =
     focus === "clone"
-      ? [intakeClone]
+      ? [intakeClone, cascade]
       : focus === "main"
-        ? [intakeMain, outCfm, recircCfm]
-        : [intakeClone, intakeMain, outCfm, recircCfm];
+        ? [intakeMain, cascade, outCfm, recircCfm]
+        : [intakeClone, intakeMain, cascade, outCfm, recircCfm];
 
   const openCascade = () =>
     inspector.open({

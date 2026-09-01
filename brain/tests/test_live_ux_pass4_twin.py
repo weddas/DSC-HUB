@@ -156,3 +156,54 @@ def test_query_entity_history_returns_twin_on_series(
     assert len(pts) >= 2
     assert all("t" in p and "v" in p for p in pts)
     assert pts[-1]["v"] in (0.0, 1.0)
+
+
+def test_sf1000_history_ingest_records_on_and_brightness(
+    temp_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """SV-P1-6: clone SF1000 DutyStrip must use binary on, not brightness theater."""
+    _point_db(monkeypatch, temp_db)
+    now = time.time()
+    _record_hub_chart_history(
+        {"light.dsc_hub_sf1000_dimmer": {"state": "on", "brightness": 128}},
+        {},
+        now,
+    )
+    from dsc_brain.settings import list_history
+
+    on_rows = list_history("hub", "sf1000_on", now - 10, db_path=temp_db)
+    bri_rows = list_history("hub", "sf1000_brightness", now - 10, db_path=temp_db)
+    assert on_rows and float(on_rows[0]["value"]) == 1.0
+    assert bri_rows and float(bri_rows[0]["value"]) > 0.5
+
+
+def test_sf1000_history_ingest_off_is_zero(
+    temp_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _point_db(monkeypatch, temp_db)
+    now = time.time()
+    _record_hub_chart_history(
+        {"light.dsc_hub_sf1000_dimmer": {"state": "off", "brightness": 0}},
+        {},
+        now,
+    )
+    from dsc_brain.settings import list_history
+
+    on_rows = list_history("hub", "sf1000_on", now - 10, db_path=temp_db)
+    assert on_rows and float(on_rows[0]["value"]) == 0.0
+
+
+def test_history_ops_maps_sf1000_to_on_metric_for_dutystrip() -> None:
+    assert ENTITY_METRIC_MAP["light.dsc_hub_sf1000_dimmer"] == ("hub", "sf1000_on")
+
+
+def test_query_entity_history_returns_sf1000_on_series(
+    temp_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _point_db(monkeypatch, temp_db)
+    now = time.time()
+    record_history("hub", "sf1000_on", 1.0, now - 30, temp_db)
+    record_history("hub", "sf1000_on", 0.0, now - 5, temp_db)
+    pts = query_entity_history("light.dsc_hub_sf1000_dimmer", hours=1.0)
+    assert len(pts) >= 2
+    assert pts[-1]["v"] in (0.0, 1.0)

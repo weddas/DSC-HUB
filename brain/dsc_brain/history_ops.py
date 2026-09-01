@@ -72,9 +72,9 @@ ENTITY_METRIC_MAP: dict[str, tuple[str, str]] = {
     "binary_sensor.dsc_4x8_window_open": ("hub", "window_4x8_open"),
     "binary_sensor.dsc_hub_2x4_window_open": ("hub", "window_2x4_open"),
     "binary_sensor.dsc_2x4_window_open": ("hub", "window_2x4_open"),
-    # Twin → binary on for DutyStrip / hybrid Got (brightness still ingested).
+    # Twin / SF1000 → binary on for DutyStrip (brightness still ingested separately).
     "light.dsc_hub_twin_sf1000": ("hub", "twin_sf1000_on"),
-    "light.dsc_hub_sf1000_dimmer": ("hub", "sf1000_brightness"),
+    "light.dsc_hub_sf1000_dimmer": ("hub", "sf1000_on"),
     "switch.dsc_hub_grow_mat_demand": ("hub", "switch_dsc_hub_grow_mat_demand"),
 }
 

@@ -1300,6 +1300,91 @@ def test_esphome_poll_does_not_clobber_zigbee_canopy(temp_db: Path, monkeypatch:
     assert get_fleet_state().system.get("appliance_link") is True
 
 
+def test_zigbee_reapply_keeps_safety_roles_and_seeds_stubs(
+    temp_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Pass 4 Phase C: safety Wet/Dry + canopy stubs survive reapply without new recipes."""
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain.fleet_state import get_fleet_state
+    from dsc_brain.zigbee_mqtt import _ingest, _reapply_bindings_to_fleet, save_zigbee_bindings
+
+    save_zigbee_bindings(
+        {
+            "0xcanopy": {
+                "role": "canopy_4x8",
+                "zone": "4x8",
+                "enabled": True,
+                "friendly_name": "canopy_stub",
+            },
+            "0xleak": {
+                "role": "leak_floor_4x8",
+                "zone": "4x8",
+                "enabled": True,
+                "friendly_name": "leak_4x8",
+            },
+        }
+    )
+    _ingest._devices = [
+        {"ieee_address": "0xcanopy", "friendly_name": "canopy_stub", "type": "EndDevice"},
+        {"ieee_address": "0xleak", "friendly_name": "leak_4x8", "type": "EndDevice"},
+    ]
+    _ingest._device_states = {
+        "leak_4x8": {
+            "friendly_name": "leak_4x8",
+            "occupancy": False,
+            "updated_at": 1.0,
+        }
+    }
+    _ingest._by_role = {}
+    _ingest._canopy = {}
+    _reapply_bindings_to_fleet()
+
+    fleet = get_fleet_state()
+    assert fleet.canopy.get("role") == "canopy_4x8"
+    assert fleet.system.get("zigbee_by_role", {}).get("canopy_4x8", {}).get("bound_stub") is True
+    leak = fleet.system.get("zigbee_by_role", {}).get("leak_floor_4x8") or {}
+    assert leak.get("role") == "leak_floor_4x8"
+    assert "wet" in leak
+
+
+def test_zigbee_apply_cache_seeds_by_role_from_bindings_alone(
+    temp_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Bindings present + empty by_role → stubs so Climate card is not omitted."""
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain.fleet_state import FleetState, get_fleet_state
+    from dsc_brain.zigbee_mqtt import _ingest, apply_zigbee_cache_to_state, save_zigbee_bindings
+
+    save_zigbee_bindings(
+        {
+            "0xseed": {
+                "role": "canopy_4x8",
+                "zone": "4x8",
+                "enabled": True,
+                "friendly_name": "seed_canopy",
+            },
+            "0xseedleak": {
+                "role": "leak_tank",
+                "zone": "shared",
+                "enabled": True,
+                "friendly_name": "seed_leak",
+            },
+        }
+    )
+    _ingest._devices = []
+    _ingest._device_states = {}
+    _ingest._by_role = {}
+    _ingest._canopy = {}
+
+    stale = FleetState()
+    apply_zigbee_cache_to_state(stale)
+    assert stale.canopy.get("role") == "canopy_4x8"
+    assert "canopy_4x8" in (stale.system.get("zigbee_by_role") or {})
+    assert "leak_tank" in (stale.system.get("zigbee_by_role") or {})
+    assert get_fleet_state().canopy.get("role") == "canopy_4x8"
+
+
 def test_zigbee_roles_and_bindings_api(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
     monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)

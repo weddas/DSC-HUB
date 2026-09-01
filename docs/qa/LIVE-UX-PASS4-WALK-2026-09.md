@@ -54,16 +54,16 @@
 
 ### Phase B findings
 
-| Severity | Desk | Evidence | in-scope \| pass5 |
-|----------|------|----------|-------------------|
-| P0 | Light | **SV-P1-6 / DutyStrip:** 2×4 `SF1000 24H · ACTUAL` = `0 CYCLES · 0.0H ON` while HTTP Got ≈12.0h (window/photoperiod SoT). 4×8 Twin Actual has cycles but `0.0H ON` with Twin OFF — history map still incomplete for clone SF1000 | **in-scope** |
-| P0 | Climate | **AirPathMap cascade alias:** SVG `cascade 96` equals `sensor.dsc_cfm_intake_2x4_allocated` (96.2), not `sensor.dsc_cfm_cascade_2x4_allocated` (83.3). `AirPathMap.tsx` still copies `intakeClone` into cascade. FlowSankey footer claims allocated cascade (honest) — map ribbon lies | **in-scope** |
-| P0 | Overview | **GAUGE-P0-1:** `DashHomeSections.tsx` hardcodes `moistBand = { min: 30, max: 70 }` / `moistureSegments(30, 70)` — not Root `potWantBand` (probe1 Want moisture live 45–65). Grey OOS path ok; band SoT still wrong when Got paints | **in-scope** |
-| P1 | Climate / Overview | **Canopy / Zigbee surface dark:** bindings present (`canopy_4x8`, leak roles) but `fleet.canopy={}`, `zigbee_by_role={}`, `zigbee_policy_state` empty → Overview “Canopy unbound”; Climate Zigbee + Safety Wet/Dry card omitted entirely | **in-scope** |
-| P2 | Light | **Manual Light Hold ON** while Twin/SF1000 OFF and both windows DARK — hold chip truthful but sticky after Phase A stress; confirm intentional before gate mutate | **pass5** |
-| P3 | Light | Energy `confirm=false` returns **422** (was 400 in Pass 1) — still blocks silent shift; status-code drift only | **pass5** |
+| Severity | Desk | Evidence | in-scope \| pass5 | Disposition (Task 6) |
+|----------|------|----------|-------------------|----------------------|
+| P0 | Light | **SV-P1-6 / DutyStrip:** 2×4 `SF1000 24H · ACTUAL` = `0 CYCLES · 0.0H ON` while HTTP Got ≈12.0h (window/photoperiod SoT). 4×8 Twin Actual has cycles but `0.0H ON` with Twin OFF — history map still incomplete for clone SF1000 | **in-scope** | **fixed** — `sf1000_on` binary history + ENTITY_METRIC_MAP; Light 2×4 Actual strip = window Got SoT (`2×4 window 24h`); SF1000 lamp strip kept separate |
+| P0 | Climate | **AirPathMap cascade alias:** SVG `cascade 96` equals `sensor.dsc_cfm_intake_2x4_allocated` (96.2), not `sensor.dsc_cfm_cascade_2x4_allocated` (83.3). `AirPathMap.tsx` still copies `intakeClone` into cascade. FlowSankey footer claims allocated cascade (honest) — map ribbon lies | **in-scope** | **fixed** — `AirPathMap` requires `cascade` prop ← `sensor.dsc_cfm_cascade_2x4_allocated` (Climate / Overview / tent cockpits) |
+| P0 | Overview | **GAUGE-P0-1:** `DashHomeSections.tsx` hardcodes `moistBand = { min: 30, max: 70 }` / `moistureSegments(30, 70)` — not Root `potWantBand` (probe1 Want moisture live 45–65). Grey OOS path ok; band SoT still wrong when Got paints | **in-scope** | **fixed** — Overview Root gauges use per-probe `potWantBand`; missing Want → unbanded |
+| P1 | Climate / Overview | **Canopy / Zigbee surface dark:** bindings present (`canopy_4x8`, leak roles) but `fleet.canopy={}`, `zigbee_by_role={}`, `zigbee_policy_state` empty → Overview “Canopy unbound”; Climate Zigbee + Safety Wet/Dry card omitted entirely | **in-scope** | **fixed** — `_reapply_bindings_to_fleet` keeps safety roles + seeds binding stubs; canopy role without temp; apply-cache / devices-update re-seed. Live Wet/Dry still needs MQTT occupancy/leak payload; Problem/Clear still needs task `policy_state` (no new recipes) |
+| P2 | Light | **Manual Light Hold ON** while Twin/SF1000 OFF and both windows DARK — hold chip truthful but sticky after Phase A stress; confirm intentional before gate mutate | **pass5** | **deferred (pass5)** — intentional hold hygiene; do not auto-clear at gate |
+| P3 | Light | Energy `confirm=false` returns **422** (was 400 in Pass 1) — still blocks silent shift; status-code drift only | **pass5** | **deferred (pass5)** — still blocks; status-code normalize later |
 
-**Named parks (still open):** SV-P1-6 / DutyStrip Actual vs Got; AirPathMap cascade ← `sensor.dsc_cfm_cascade_2x4_allocated`; GAUGE-P0-1 Overview moisture band vs Root `potWantBand`.
+**Named parks (Task 6):** SV-P1-6 / DutyStrip, AirPathMap cascade, GAUGE-P0-1 — **closed in source**. Canopy/Zigbee fleet planes restored from bindings (stubs until MQTT). Live Wet≠Problem re-prove remains Task 7 / MQTT-dependent.
 
 ---
 
@@ -71,11 +71,11 @@
 
 | Check | Result | Evidence |
 |-------|--------|----------|
-| C1 All Phase B findings marked in-scope — fixed or explicitly deferred | **pending** | Task 6 |
-| C2 SV-P1-6 / DutyStrip: 4×8 Twin Actual; 2×4 SF1000 if still 0.0H while ON | **pending** | Task 6 |
-| C3 AirPathMap cascade uses `sensor.dsc_cfm_cascade_2x4_allocated` (not `intakeClone`) | **pending** | Task 6 — `AirPathMap.tsx` |
-| C4 GAUGE-P0-1: Overview moisture band = Root `potWantBand`; missing Want → unbanded | **pending** | Task 6 |
-| C5 Pass 5 deferrals tagged with reason in findings table | **pending** | Task 6 |
+| C1 All Phase B findings marked in-scope — fixed or explicitly deferred | **pass** | Findings table disposition column (Task 6) |
+| C2 SV-P1-6 / DutyStrip: 4×8 Twin Actual; 2×4 SF1000 if still 0.0H while ON | **pass** | `sf1000_on` ingest + map; 2×4 window Actual aligns Got; lamp strip separate (`test_live_ux_pass4_twin.py` SF1000 guards) |
+| C3 AirPathMap cascade uses `sensor.dsc_cfm_cascade_2x4_allocated` (not `intakeClone`) | **pass** | `AirPathMap.tsx` required `cascade` prop; Climate/Overview/LivePages wired |
+| C4 GAUGE-P0-1: Overview moisture band = Root `potWantBand`; missing Want → unbanded | **pass** | `DashHomeSections.tsx` `DashRootTankSection` |
+| C5 Pass 5 deferrals tagged with reason in findings table | **pass** | P2 Manual Hold + P3 energy 422 → pass5 with reasons |
 
 ---
 
