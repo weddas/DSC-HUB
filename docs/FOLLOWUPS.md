@@ -3787,3 +3787,7 @@ Source: `/reflect` + `/interrogate` + `test_roster_stress.py` + react-doctor pas
 
 Do not file follow-ups or version gates that assume POT3 restore or AC/mister hardware landing unless operator reopens.
 
+## 2026-09-01 — Docs SoT residual (engineering-documentation)
+
+Durable tip SoT for `f029702` lives in draft PR on `cursor/engineering-documentation-b051`: `SPA-MODULE-MAP` · `KIT-SCOPE` · tip-aligned Mega Pass brain docs + `PI-HOTPATCH`. Prefer that over unmerged #154 hashes (`index-DlMHgtYz.js`) once landed. SoftCal→ESP NVS / SoftCalWizard→`POST /soft-cal/sessions` still open (#151/#145). Do not invent height/chem/PPFD/NPK; do not paste secrets.
+
