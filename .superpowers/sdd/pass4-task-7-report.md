@@ -3,6 +3,7 @@
 **Status:** DONE  
 **Gate:** **GREEN**  
 **Date:** 2026-09-01  
+**Commits:** `4a40589` (gate) — local only, not pushed  
 **Bundle:** `spa-dist/assets/index-BoyhWWR_.js`  
 **index.html sha256:** `d00bd5a4be5f2188c566b62618e7be3de828d26990e435915974c1bcd4cb92c8`  
 **Evidence:** `.audit/live-ux-pass4-prove-evidence.json`  
