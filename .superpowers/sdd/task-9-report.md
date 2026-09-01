@@ -3,6 +3,7 @@
 **Status:** complete (gate **GREEN**)  
 **Branch:** master  
 **Date:** 2026-09-01  
+**Commit:** `2d44c52` — prove(overview): Pass 3 Pi hotpatch walk gate green and close Passes 1-3
 
 ## Summary
 
