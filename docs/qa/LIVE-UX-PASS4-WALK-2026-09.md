@@ -33,28 +33,37 @@
 
 ## Phase B — Integrated re-walk (inventory)
 
+**Live bundle:** `assets/index-BEjnawnp.js` (unchanged from Phase A)  
+**Inventory evidence:** browser (browser-use + Playwright `domcontentloaded`) · HTTP `/fleet` `/fleet/computed` `/energy/*` `/journal/*` · screenshots `docs/qa-screenshots-2026-09-01-live-ux/pass4-b-*` · `.audit/live-ux-pass4-phaseb-inventory.json`  
+**Crash fixes:** none (no SPA/brain crashes observed)
+
 | Check | Desk | Result | Evidence |
 |-------|------|--------|----------|
-| B1 Light: Got/Want/DARK/Follow both tents | Light | **pending** | Task 5 |
-| B2 Light: Twin hybrid + SF1000 honesty (4×8 primary) | Light | **pending** | Task 5 |
-| B3 Light: Energy Estimate + confirm gate both tents | Light | **pending** | Task 5 |
-| B4 Light: Tent occupancy journals provenance | Light | **pending** | Task 5 |
-| B5 Climate: KIT HONEST / reduced_kit / canopy | Climate | **pending** | Task 5 |
-| B6 Climate: Wet/Dry vs Problem/Clear (policy-bound) | Climate | **pending** | Task 5 |
-| B7 Climate: FlowSankey air CFM + mass chip gated | Climate | **pending** | Task 5 |
-| B8 Overview: photoperiod glance vs Light SoT (both tents) | Overview | **pending** | Task 5 |
-| B9 Overview: critical banners vs grow-log history | Overview | **pending** | Task 5 |
-| B10 Overview: Room + DSC-Core journals | Overview | **pending** | Task 5 |
-| B11 Overview: Root strip / fan duties / bands grey honesty | Overview | **pending** | Task 5 |
-| B12 Cross-desk parity (Follow 4×8, timers, chips) | all | **pending** | Task 5 |
+| B1 Light: Got/Want/DARK/Follow both tents | Light | **pass** | Both tents DARK; Want 12h; 2×4 Schedule · Follow 4×8 + FOLLOWS 4×8; HTTP Got 4×8=`0.04h` `got_source=twin`, Got 2×4≈`12.0h`. `pass4-b-light-page-text.txt` |
+| B2 Light: Twin hybrid + SF1000 honesty (4×8 primary) | Light | **pass** | Twin OFF + “Got · Twin”; GPIO5 reserved / not physically wired; Twin SF1000 24H · ACTUAL (3 cycles); 2×4 SF1000 OFF (no live-lamp theater) |
+| B3 Light: Energy Estimate + confirm gate both tents | Light | **pass** | UI “4×8/2×4 ENERGY (ESTIMATE)” + Learning never auto-applies; HTTP estimate ok both spaces; suggestions `apply:false`; shift `confirm=false` → **422** (still blocked) |
+| B4 Light: Tent occupancy journals provenance | Light | **pass** | Both tents OCCUPANCY JOURNAL + SPACE provenance chips; HTTP `/journal/space/{4x8,2x4}` `provenance=space` |
+| B5 Climate: KIT HONEST / reduced_kit / canopy | Climate | **pass** | KIT HONEST; Full Auto ON; `binary_sensor.dsc_reduced_kit=off` (planned_oos POT3/4 only). **Finding:** Overview “Canopy unbound”; Climate Zigbee card omitted — `fleet.canopy={}` / `zigbee_by_role={}` despite bindings (`canopy_4x8`) |
+| B6 Climate: Wet/Dry vs Problem/Clear (policy-bound) | Climate | **fail** | Safety Wet/Dry UI not rendered this walk (`zigbee_by_role={}` → Zigbee-by-role card gated off). Leak bindings exist (`leak_floor_4x8` / `_room` / `leak_tank`); `zigbee_policy_state` empty. Cannot re-prove Wet≠Problem on live Climate surface |
+| B7 Climate: FlowSankey air CFM + mass chip gated | Climate | **pass** | AIR CFM + MASS CHIP GATED + honesty footer. FlowSankey uses cascade allocated SoT. **AirPathMap** still shows `cascade 96` = intake 2×4 allocated (`96.2`), not cascade sensor (`83.3`) — named park |
+| B8 Overview: photoperiod glance vs Light SoT (both tents) | Overview | **pass** | Overview + Light both DARK; 2×4 FOLLOWS 4×8; ON IN / DARK FOR both tents; glance copy “same schedule SoT as Light” |
+| B9 Overview: critical banners vs grow-log history | Overview | **pass** | No critical-live strip; grow-log caption “past notables — not live critical banners”; amber history rows (flatline / zigbee CLEAR). `/grow-log` HTTP live |
+| B10 Overview: Room + DSC-Core journals | Overview | **pass** | GROW ROOM + DSC-CORE journals with SPACE/ROOM/CORE/GROW_ROOM provenance; HTTP `/journal/room/grow_room` + `/journal/core` ok |
+| B11 Overview: Root strip / fan duties / bands grey honesty | Overview | **pass** | Bands legend grey=no data/OOS; Root strip grey honesty copy; fan duties live %. **GAUGE-P0-1** still open in source (`moistBand` 30–70) |
+| B12 Cross-desk parity (Follow 4×8, timers, chips) | all | **pass** | Light Schedule · Follow ≠ Climate Mode Follow 4x8 (distinct copy); Overview Follow chip matches Light; timers both tents DARK |
 
 ### Phase B findings
 
 | Severity | Desk | Evidence | in-scope \| pass5 |
 |----------|------|----------|-------------------|
-| | | | |
+| P0 | Light | **SV-P1-6 / DutyStrip:** 2×4 `SF1000 24H · ACTUAL` = `0 CYCLES · 0.0H ON` while HTTP Got ≈12.0h (window/photoperiod SoT). 4×8 Twin Actual has cycles but `0.0H ON` with Twin OFF — history map still incomplete for clone SF1000 | **in-scope** |
+| P0 | Climate | **AirPathMap cascade alias:** SVG `cascade 96` equals `sensor.dsc_cfm_intake_2x4_allocated` (96.2), not `sensor.dsc_cfm_cascade_2x4_allocated` (83.3). `AirPathMap.tsx` still copies `intakeClone` into cascade. FlowSankey footer claims allocated cascade (honest) — map ribbon lies | **in-scope** |
+| P0 | Overview | **GAUGE-P0-1:** `DashHomeSections.tsx` hardcodes `moistBand = { min: 30, max: 70 }` / `moistureSegments(30, 70)` — not Root `potWantBand` (probe1 Want moisture live 45–65). Grey OOS path ok; band SoT still wrong when Got paints | **in-scope** |
+| P1 | Climate / Overview | **Canopy / Zigbee surface dark:** bindings present (`canopy_4x8`, leak roles) but `fleet.canopy={}`, `zigbee_by_role={}`, `zigbee_policy_state` empty → Overview “Canopy unbound”; Climate Zigbee + Safety Wet/Dry card omitted entirely | **in-scope** |
+| P2 | Light | **Manual Light Hold ON** while Twin/SF1000 OFF and both windows DARK — hold chip truthful but sticky after Phase A stress; confirm intentional before gate mutate | **pass5** |
+| P3 | Light | Energy `confirm=false` returns **422** (was 400 in Pass 1) — still blocks silent shift; status-code drift only | **pass5** |
 
-**Named parks (must appear if still open):** SV-P1-6 / DutyStrip Actual vs ON; AirPathMap cascade ← `sensor.dsc_cfm_cascade_2x4_allocated`; GAUGE-P0-1 Overview moisture band vs Root `potWantBand`.
+**Named parks (still open):** SV-P1-6 / DutyStrip Actual vs Got; AirPathMap cascade ← `sensor.dsc_cfm_cascade_2x4_allocated`; GAUGE-P0-1 Overview moisture band vs Root `potWantBand`.
 
 ---
 

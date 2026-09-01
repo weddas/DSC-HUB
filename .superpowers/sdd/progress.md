@@ -67,3 +67,7 @@ Pass4 Task3: 5144978..ca106d7
 
 Pass4 Task4: 48b443d Phase A Pi smoke GREEN (see pass4-task-4-report.md)
 
+Pass4 Task4: Phase A GREEN 48b443d
+
+Pass4 Task5: Phase B inventory filled (B6 fail Wet/Dry UI absent; named parks open for Task 6)
+

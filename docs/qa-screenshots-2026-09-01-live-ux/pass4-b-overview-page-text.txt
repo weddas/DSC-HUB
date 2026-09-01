@@ -1,0 +1,725 @@
+DSC - A Plausible Deniability Project.
+SURFACE 7.4.0
+KIT HONEST
+Live
+Grow
+Tune
+Fleet
+Settings
+Overview
+Climate
+4×8
+Flower
+2×4
+Clone & veg
+Root
+Light
+Twin
+3D view
+Mission
+Triage
+Dash
+Legacy
+Overview
+
+Operational glance — alerts, area vitals, duties, root strip, grow log.
+
+Climate
+Mission
+HUB ONLINE
+UP 2.9D
+Canopy unbound
+PHOTOPERIOD
+
+Glance only — same schedule SoT as Light (including Follow 4×8). Edit on the Light desk.
+
+4×8
+DARK
+ON IN
+7H 58M
+DARK FOR
+4H 1M
+2×4
+DARK
+FOLLOWS 4×8
+ON IN
+7H 58M
+DARK FOR
+4H 1M
+Open Light desk
+GROW ROOM JOURNAL
+
+Room-native notes plus rollup of child tents and plants. Provenance chips mark room vs tent vs plant — observations only, not diagnoses.
+
+Room note
+Save room note
+Add text to enable Save
+01/09/2026, 19:51:31
+SPACE
+2X4
+Schedule slide plan #9 cancelled
+01/09/2026, 19:51:31
+ROOM
+Schedule slide #9 on 2x4 → 20:15:00
+01/09/2026, 19:51:31
+SPACE
+2X4
+Schedule slide plan #9 stepped to 20:15:00 · want_hours=12.0 (dark floor held)
+01/09/2026, 19:51:31
+ROOM
+Schedule slide plan #9 started on 2x4 (flower_strict)
+01/09/2026, 19:51:31
+SPACE
+2X4
+Schedule slide plan #9 started (flower_strict) 20:00:00 → 22:00:00
+01/09/2026, 19:51:31
+SPACE
+4X8
+Schedule slide plan #8 cancelled
+01/09/2026, 19:51:31
+ROOM
+Schedule slide #8 on 4x8 → 05:45:00
+01/09/2026, 19:51:31
+SPACE
+4X8
+Schedule slide plan #8 stepped to 05:45:00 · want_hours=12.0 (dark floor held)
+01/09/2026, 19:51:31
+ROOM
+Schedule slide plan #8 started on 4x8 (flower_strict)
+01/09/2026, 19:51:31
+SPACE
+4X8
+Schedule slide plan #8 started (flower_strict) 06:00:00 → 22:00:00
+01/09/2026, 19:49:06
+SPACE
+2X4
+live-ux-light-prove 2x4
+01/09/2026, 19:49:06
+SPACE
+4X8
+live-ux-light-prove 4x8
+01/09/2026, 19:49:06
+SPACE
+2X4
+Schedule slide plan #7 cancelled
+01/09/2026, 19:49:06
+ROOM
+Schedule slide plan #7 started on 2x4 (pause)
+01/09/2026, 19:49:06
+SPACE
+2X4
+Schedule slide plan #7 started (pause) 06:00:00 → 08:00:00
+01/09/2026, 19:49:06
+SPACE
+4X8
+Schedule slide plan #6 cancelled
+01/09/2026, 19:49:06
+ROOM
+Schedule slide plan #6 started on 4x8 (pause)
+01/09/2026, 19:49:06
+SPACE
+4X8
+Schedule slide plan #6 started (pause) 06:00:00 → 08:00:00
+01/09/2026, 18:26:12
+SPACE
+2X4
+Schedule slide plan #5 cancelled
+01/09/2026, 18:26:12
+ROOM
+Schedule slide #5 on 2x4 → 20:30:00
+01/09/2026, 18:26:11
+SPACE
+2X4
+Schedule slide plan #5 stepped to 20:30:00 · want_hours=18.0 (dark floor held)
+01/09/2026, 18:26:11
+ROOM
+Schedule slide plan #5 started on 2x4 (veg_style)
+01/09/2026, 18:26:11
+SPACE
+2X4
+Schedule slide plan #5 started (veg_style) 20:00:00 → 21:00:00
+01/09/2026, 18:26:10
+SPACE
+2X4
+Schedule slide plan #4 cancelled
+01/09/2026, 18:26:10
+ROOM
+Schedule slide #4 on 2x4 → 20:15:00
+01/09/2026, 18:26:10
+SPACE
+2X4
+Schedule slide plan #4 stepped to 20:15:00 · want_hours=12.0 (dark floor held)
+01/09/2026, 18:26:10
+ROOM
+Schedule slide plan #4 started on 2x4 (flower_strict)
+01/09/2026, 18:26:10
+SPACE
+2X4
+Schedule slide plan #4 started (flower_strict) 20:00:00 → 22:00:00
+01/09/2026, 18:26:10
+SPACE
+4X8
+Schedule slide plan #3 cancelled
+01/09/2026, 18:26:10
+ROOM
+Schedule slide #3 on 4x8 → 05:45:00
+01/09/2026, 18:26:10
+SPACE
+4X8
+Schedule slide plan #3 stepped to 05:45:00 · want_hours=12.0 (dark floor held)
+01/09/2026, 18:26:10
+ROOM
+Schedule slide plan #3 started on 4x8 (flower_strict)
+01/09/2026, 18:26:10
+SPACE
+4X8
+Schedule slide plan #3 started (flower_strict) 06:00:00 → 22:00:00
+01/09/2026, 18:23:01
+SPACE
+4X8
+burst4-15
+01/09/2026, 18:23:01
+SPACE
+4X8
+burst4-6
+01/09/2026, 18:23:01
+SPACE
+2X4
+burst2-15
+01/09/2026, 18:23:01
+SPACE
+4X8
+burst4-13
+01/09/2026, 18:23:01
+SPACE
+4X8
+burst4-14
+01/09/2026, 18:23:01
+SPACE
+4X8
+burst4-8
+01/09/2026, 18:23:01
+SPACE
+4X8
+burst4-12
+01/09/2026, 18:23:01
+SPACE
+4X8
+burst4-2
+01/09/2026, 18:23:01
+SPACE
+2X4
+burst2-14
+01/09/2026, 18:23:01
+SPACE
+2X4
+burst2-13
+01/09/2026, 18:23:01
+SPACE
+4X8
+burst4-11
+01/09/2026, 18:23:01
+SPACE
+2X4
+burst2-12
+01/09/2026, 18:23:01
+SPACE
+4X8
+burst4-7
+01/09/2026, 18:23:01
+SPACE
+4X8
+burst4-0
+01/09/2026, 18:23:01
+SPACE
+4X8
+burst4-10
+01/09/2026, 18:23:01
+SPACE
+4X8
+burst4-9
+01/09/2026, 18:23:01
+SPACE
+2X4
+burst2-11
+01/09/2026, 18:23:01
+SPACE
+2X4
+burst2-10
+01/09/2026, 18:23:01
+SPACE
+2X4
+burst2-8
+01/09/2026, 18:23:01
+SPACE
+2X4
+burst2-9
+01/09/2026, 18:23:01
+SPACE
+4X8
+burst4-4
+01/09/2026, 18:23:01
+SPACE
+4X8
+burst4-5
+01/09/2026, 18:23:01
+SPACE
+4X8
+burst4-3
+01/09/2026, 18:23:01
+SPACE
+4X8
+burst4-1
+01/09/2026, 18:23:01
+SPACE
+2X4
+burst2-2
+01/09/2026, 18:23:01
+SPACE
+2X4
+burst2-7
+01/09/2026, 18:23:01
+SPACE
+2X4
+burst2-5
+DSC-CORE JOURNAL
+
+Facility / system layer — Core-native notes plus rollup of rooms, tents, and plants. Provenance chips mark Core vs room vs tent.
+
+Core note
+Save Core note
+Add text to enable Save
+01/09/2026, 19:51:31
+SPACE
+GROW_ROOM
+2X4
+Schedule slide plan #9 cancelled
+01/09/2026, 19:51:31
+ROOM
+GROW_ROOM
+Schedule slide #9 on 2x4 → 20:15:00
+01/09/2026, 19:51:31
+CORE
+Schedule slide #9 on 2x4 → 20:15:00
+01/09/2026, 19:51:31
+SPACE
+GROW_ROOM
+2X4
+Schedule slide plan #9 stepped to 20:15:00 · want_hours=12.0 (dark floor held)
+01/09/2026, 19:51:31
+ROOM
+GROW_ROOM
+Schedule slide plan #9 started on 2x4 (flower_strict)
+01/09/2026, 19:51:31
+CORE
+Schedule slide plan #9 started on 2x4 (flower_strict)
+01/09/2026, 19:51:31
+SPACE
+GROW_ROOM
+2X4
+Schedule slide plan #9 started (flower_strict) 20:00:00 → 22:00:00
+01/09/2026, 19:51:31
+SPACE
+GROW_ROOM
+4X8
+Schedule slide plan #8 cancelled
+01/09/2026, 19:51:31
+ROOM
+GROW_ROOM
+Schedule slide #8 on 4x8 → 05:45:00
+01/09/2026, 19:51:31
+CORE
+Schedule slide #8 on 4x8 → 05:45:00
+01/09/2026, 19:51:31
+SPACE
+GROW_ROOM
+4X8
+Schedule slide plan #8 stepped to 05:45:00 · want_hours=12.0 (dark floor held)
+01/09/2026, 19:51:31
+ROOM
+GROW_ROOM
+Schedule slide plan #8 started on 4x8 (flower_strict)
+01/09/2026, 19:51:31
+CORE
+Schedule slide plan #8 started on 4x8 (flower_strict)
+01/09/2026, 19:51:31
+SPACE
+GROW_ROOM
+4X8
+Schedule slide plan #8 started (flower_strict) 06:00:00 → 22:00:00
+01/09/2026, 19:49:06
+SPACE
+GROW_ROOM
+2X4
+live-ux-light-prove 2x4
+01/09/2026, 19:49:06
+SPACE
+GROW_ROOM
+4X8
+live-ux-light-prove 4x8
+01/09/2026, 19:49:06
+SPACE
+GROW_ROOM
+2X4
+Schedule slide plan #7 cancelled
+01/09/2026, 19:49:06
+ROOM
+GROW_ROOM
+Schedule slide plan #7 started on 2x4 (pause)
+01/09/2026, 19:49:06
+CORE
+Schedule slide plan #7 started on 2x4 (pause)
+01/09/2026, 19:49:06
+SPACE
+GROW_ROOM
+2X4
+Schedule slide plan #7 started (pause) 06:00:00 → 08:00:00
+01/09/2026, 19:49:06
+SPACE
+GROW_ROOM
+4X8
+Schedule slide plan #6 cancelled
+01/09/2026, 19:49:06
+ROOM
+GROW_ROOM
+Schedule slide plan #6 started on 4x8 (pause)
+01/09/2026, 19:49:06
+CORE
+Schedule slide plan #6 started on 4x8 (pause)
+01/09/2026, 19:49:06
+SPACE
+GROW_ROOM
+4X8
+Schedule slide plan #6 started (pause) 06:00:00 → 08:00:00
+01/09/2026, 18:26:12
+SPACE
+GROW_ROOM
+2X4
+Schedule slide plan #5 cancelled
+01/09/2026, 18:26:12
+ROOM
+GROW_ROOM
+Schedule slide #5 on 2x4 → 20:30:00
+01/09/2026, 18:26:12
+CORE
+Schedule slide #5 on 2x4 → 20:30:00
+01/09/2026, 18:26:11
+SPACE
+GROW_ROOM
+2X4
+Schedule slide plan #5 stepped to 20:30:00 · want_hours=18.0 (dark floor held)
+01/09/2026, 18:26:11
+ROOM
+GROW_ROOM
+Schedule slide plan #5 started on 2x4 (veg_style)
+01/09/2026, 18:26:11
+CORE
+Schedule slide plan #5 started on 2x4 (veg_style)
+01/09/2026, 18:26:11
+SPACE
+GROW_ROOM
+2X4
+Schedule slide plan #5 started (veg_style) 20:00:00 → 21:00:00
+01/09/2026, 18:26:10
+SPACE
+GROW_ROOM
+2X4
+Schedule slide plan #4 cancelled
+01/09/2026, 18:26:10
+ROOM
+GROW_ROOM
+Schedule slide #4 on 2x4 → 20:15:00
+01/09/2026, 18:26:10
+CORE
+Schedule slide #4 on 2x4 → 20:15:00
+01/09/2026, 18:26:10
+SPACE
+GROW_ROOM
+2X4
+Schedule slide plan #4 stepped to 20:15:00 · want_hours=12.0 (dark floor held)
+01/09/2026, 18:26:10
+ROOM
+GROW_ROOM
+Schedule slide plan #4 started on 2x4 (flower_strict)
+01/09/2026, 18:26:10
+CORE
+Schedule slide plan #4 started on 2x4 (flower_strict)
+01/09/2026, 18:26:10
+SPACE
+GROW_ROOM
+2X4
+Schedule slide plan #4 started (flower_strict) 20:00:00 → 22:00:00
+01/09/2026, 18:26:10
+SPACE
+GROW_ROOM
+4X8
+Schedule slide plan #3 cancelled
+01/09/2026, 18:26:10
+ROOM
+GROW_ROOM
+Schedule slide #3 on 4x8 → 05:45:00
+01/09/2026, 18:26:10
+CORE
+Schedule slide #3 on 4x8 → 05:45:00
+01/09/2026, 18:26:10
+SPACE
+GROW_ROOM
+4X8
+Schedule slide plan #3 stepped to 05:45:00 · want_hours=12.0 (dark floor held)
+01/09/2026, 18:26:10
+ROOM
+GROW_ROOM
+Schedule slide plan #3 started on 4x8 (flower_strict)
+01/09/2026, 18:26:10
+CORE
+Schedule slide plan #3 started on 4x8 (flower_strict)
+01/09/2026, 18:26:10
+SPACE
+GROW_ROOM
+4X8
+Schedule slide plan #3 started (flower_strict) 06:00:00 → 22:00:00
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+4X8
+burst4-15
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+4X8
+burst4-6
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+burst2-15
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+4X8
+burst4-13
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+4X8
+burst4-14
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+4X8
+burst4-8
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+4X8
+burst4-12
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+4X8
+burst4-2
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+burst2-14
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+burst2-13
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+4X8
+burst4-11
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+burst2-12
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+4X8
+burst4-7
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+4X8
+burst4-0
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+4X8
+burst4-10
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+4X8
+burst4-9
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+burst2-11
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+burst2-10
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+burst2-8
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+burst2-9
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+4X8
+burst4-4
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+4X8
+burst4-5
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+4X8
+burst4-3
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+4X8
+burst4-1
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+burst2-2
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+burst2-7
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+burst2-5
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+burst2-6
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+burst2-4
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+burst2-3
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+burst2-1
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+burst2-0
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+Photoperiod flip approved on 2x4
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+Photoperiod flip requested on 2x4: 18.0h → 12.0h (pending approval)
+01/09/2026, 18:23:01
+SPACE
+GROW_ROOM
+2X4
+Photoperiod flip denied on 2x4
+Climate bands
+?
+?
+BANDS
+
+Green = in band · amber = drifting · red = alert · grey = no data or out of service
+
+All
+4×8
+2×4
+Room
+4×8
+4×8 T
+4×8 RH
+4×8 VPD
+2×4
+2×4 T
+2×4 RH
+2×4 VPD
+ROOM
+ROOM T
+ROOM RH
+ROOT
+FAN DUTIES
+IN 4×8 9%
+IN 2×4 15%
+EX ROOM 20%
+EX OUT 15%
+RUNNING
+HEAT
+COOL ○
+HUM
+DEHUM
+MAT
+C-HUM ○
+SF1000 OFF
+ROOT & TANK
+
+Grey gauges mean no moisture Got or probe out of service — never a fake reading.
+
+Probe 1 "Afternoon Brunch" Mimosa x Orange Punch Auto 2024
+Probe 2 Grandmommy Purple
+Probe 1 roster: "Afternoon Brunch" Mimosa x Orange Punch Auto 2024 · Living soil 100%
+Probe 2 roster: Grandmommy Purple · Coco coir 70% + Perlite 30%
+PROBE 1
+PROBE 2
+EC —
+Open Root Zone
+GROW LOG
+
+History of stage and duty events. Amber rows are past notables — not live critical banners.
+
+All
+Alerts
+Stage changes
+21:49 Stage - Early Flowering; Clone - Follow 4x8
+20:14 zigbee task CLEAR banner only seat=dehumidifier ieee=0xa4c138b9e2b9b690 (OOS not policy-owned)
+18:27 ▶ Grow Mat demand on
+18:22 ■ Grow Mat demand off
+08:30 ⚠ Pot 1 soil moisture flatline — probe may be stuck
+06:03 ⚠ Pot 1 soil moisture flatline — probe may be stuck
+04:29 ▶ Grow Mat demand on
+04:22 ■ Grow Mat demand off
+03:33 ⚠ Pot 1 soil moisture flatline — probe may be stuck
+02:42 ▶ Grow Mat demand on
+02:38 ■ Grow Mat demand off
+01:47 ▶ Grow Mat demand on
+01:42 ■ Grow Mat demand off
+
+Fleet 7.0.0.0 · expected 7.0.0.0
