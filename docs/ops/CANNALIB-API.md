@@ -33,3 +33,7 @@ python scripts/build_catalog_search_indexes.py
 Runs the CannaLib builder, then copies `CannaLib/publish/dsc-catalog/*.json` into `homeassistant/www/dsc-catalog/` and `dist/dsc-catalog/`. CannaLib never writes into this tree.
 
 **Unraid:** Recreate stack `cannalib` so mounts pick up CannaLib paths (see `services/cannalib/docker-compose.yml` trampoline). Then point Compose Manager at `.../Projects/CannaLib/services/cannalib`.
+
+## Lab gateway offset (tip `f029702`)
+
+Post-mega track **A** verified offset/pagination against the LAN gateway (`http://192.168.86.2:8790`): `/v1/catalogs/strain?offset=0` vs `offset=3` return distinct rows (`/settings/catalog/status` remote ok). Kit uses that LAN URL — external prod CDN deploy is N/A for this lab path. Evidence: [`../qa/AUDIT-CLOSURE-2026-09-D-C-A-B.md`](../qa/AUDIT-CLOSURE-2026-09-D-C-A-B.md).

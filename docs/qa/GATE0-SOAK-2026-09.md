@@ -1,6 +1,7 @@
 # Gate 0 — Pi operator soak (2026-09-01)
 
-**Pi:** `192.168.86.48:8787` · **SPA:** `assets/index-DlMHgtYz.js` · **Git:** `a307dc7`
+**Pi:** `192.168.86.48:8787` · **SPA (post-D):** `assets/index-CXq-NptO.js` · **Git tip:** `f029702`  
+**Gate 0 evidence commit:** `a307dc7` (`index-DlMHgtYz.js`) — closed before D splits; Post-D note below.
 
 ## API-backed checks (pass)
 
