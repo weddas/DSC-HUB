@@ -48,3 +48,7 @@ Task 7: complete (3b22bcc)
 
 Task 8: complete (0d95cdb..3dbe245)
 
+Task 8: complete (Overview SPA honesty)
+
+Task 9: complete (Overview Pi prove + program close; Passes 1?3 GREEN; Pass 4/5 stubs)
+

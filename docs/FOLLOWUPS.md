@@ -10,14 +10,14 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
-## 2026-08-31 — Operator correctness Wave 1 (SoftCal / Build-a-Plant / cal UX)
+## 2026-08-31 ? Operator correctness Wave 1 (SoftCal / Build-a-Plant / cal UX)
 
 **Spec:** [`docs/superpowers/specs/2026-08-31-operator-correctness-wave1-design.md`](superpowers/specs/2026-08-31-operator-correctness-wave1-design.md)  
 **Plan:** [`docs/superpowers/plans/2026-08-31-operator-correctness-wave1.md`](superpowers/plans/2026-08-31-operator-correctness-wave1.md)
 
 | Item | Status | Notes |
 |------|--------|-------|
-| SoftCal assignment chips | **done (live)** | `Probe N · {plant/name\|Unassigned} · SoftCal OK`; pot1/pot2 assigned on Pi fleet |
+| SoftCal assignment chips | **done (live)** | `Probe N � {plant/name\|Unassigned} � SoftCal OK`; pot1/pot2 assigned on Pi fleet |
 | CalOutcomeStrip (fan/SoftCal/lab/peer/soil) | **done (live)** | Shared What/Process/Expected; fan Start holds live fans copy |
 | Soil/lab assigned banners | **done (code)** | `ASSIGNED_PROBE_BANNER` when probe has plant |
 | Nickname flush on Next/commit | **done (code)** | `flushEntityTextDrafts` + `peekEntityTextDraft` so mid-typing survives step change |
@@ -25,18 +25,18 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Learning demotion copy | **done (code)** | Calibrate = guided fan SoT |
 | Pi SPA hotpatch | **done** | `index-XS57jN-m.js` / `calibrate-CpykSWoW.js` (verify after deploy); bundle contains SoftCal OK + What: + holds live fans |
 | Operator visual smoke (browser) | **done (live)** | All cal tabs What/Process/Expected; Fan+Light hold copy; SoftCal chips; Roster Detach on assigned rows |
-| CreateGoal completion gate | **done** | 2026-08-31 — fan HW parked per objective; genus CC0 strain reference live on Pi Research |
-| Waves 2–5 (CannaLib, PPFD, Twin, polish) | **next-plan** | Same CreateGoal objective; Zigbee+extra HW parked |
-| Wave 2 CannaLib (in progress) | **in progress** | Brain/SPA offset + Load more; type icons; hydrate media slot; live CannaLib still ignores offset until deploy — brain falls back to local OFFSET when head-page repeats |
+| CreateGoal completion gate | **done** | 2026-08-31 ? fan HW parked per objective; genus CC0 strain reference live on Pi Research |
+| Waves 2?5 (CannaLib, PPFD, Twin, polish) | **next-plan** | Same CreateGoal objective; Zigbee+extra HW parked |
+| Wave 2 CannaLib (in progress) | **in progress** | Brain/SPA offset + Load more; type icons; hydrate media slot; live CannaLib still ignores offset until deploy ? brain falls back to local OFFSET when head-page repeats |
 | Live CannaLib offset deploy | **deferred** | Hub trampoline `standalone_server.py` has offset; production `cannalib.plausible-deniability.net` needs same |
 | Wave 3 PPFD local crops | **done (kit)** | SF1000/SF2000/SE7000/TS1000 archived under `/dsc-catalog/ppfd/`; SPA refuses CDN; Pi serves maps (`scripts/fetch_kit_ppfd_maps.py`) |
 | Wave 4 Sankey air-only | **done (live)** | Heat/humidity estimated modes removed; MASS IMBALANCE stays gated (`massBalanceOk={null}`) |
-| Wave 4 UUID migrate verify | **done (Pi)** | inventory + roster: zero `slot:`; pot1/pot2 `plant:…` (`.audit/uuid-migrate-smoke.sh`) |
-| Wave 5 HF/AI architect notes | **done (doc)** | `docs/superpowers/specs/2026-08-31-hf-ai-architect-notes.md` — keep SoftCal/Ollama; MBRL paper offline later |
+| Wave 4 UUID migrate verify | **done (Pi)** | inventory + roster: zero `slot:`; pot1/pot2 `plant:?` (`.audit/uuid-migrate-smoke.sh`) |
+| Wave 5 HF/AI architect notes | **done (doc)** | `docs/superpowers/specs/2026-08-31-hf-ai-architect-notes.md` ? keep SoftCal/Ollama; MBRL paper offline later |
 | Wave 5 motion polish | **done (CSS)** | card depth + stagger + gauge entrance; reduced-motion respected |
 | Wave 5 Twin honesty polish | **done (hotpatch)** | Vessel moisture fill from live %; HELD chip; shadows; WireBox restored after regression. Live `twin-three-B0t1gmm4.js` |
 | Strain licensed images | **blocked upstream** | Pi hydrate scan: first 40 + Blue Dream/OG Kush/Gelato/Fritz/Wedding Cake all `media_n=0`; SPA honest blank |
-| Nickname flush browser E2E | **done (review)** | Compose → Review shows mid-typed nick `FlushVerify31`; local assign/strain drafts unblock Next (`index-COXY7tKN.js`). Full commit deferred (live pot1/pot2). |
+| Nickname flush browser E2E | **done (review)** | Compose ? Review shows mid-typed nick `FlushVerify31`; local assign/strain drafts unblock Next (`index-COXY7tKN.js`). Full commit deferred (live pot1/pot2). |
 | `/fleet/computed` HTTP 500 | **done (Pi)** | `sensor_trust._moisture_rate_per_hour` None-guard hotpatched; computed HTTP 200, 162 extras |
 
 ---
@@ -50,11 +50,11 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Spec (framework) | **done** | `docs/superpowers/specs/2026-08-30-zigbee-device-tasks-design.md` ? same Task path for every Zigbee device; curated recipes only |
 | Spec (Role vs Task + operator params) | **approved** | `docs/superpowers/specs/2026-08-30-zigbee-role-vs-task-operator-design.md` ? Role-only datapoints; capability-filtered Role/Zone/Task selects; liquid Task params; Show all escape |
 | Framework | **done (live)** | `zigbee_policies.py` + MQTT evaluate + Settings Task column + Overview `critical_banners` / `dsc-banner--critical-live`; ESPHome poll preserves policy keys; `occupancy` = wet for SNZB-03-fingerprinted liquid sensors |
-| Recipe `tank_full_appliance` | **done (Pi evidence)** | Inject + live bind `0xa4c138b9e2b9b690` leak_tank → dehum OOS on occupancy; dry restore. Desk ieee now used for floor flood (2026-08-31) |
+| Recipe `tank_full_appliance` | **done (Pi evidence)** | Inject + live bind `0xa4c138b9e2b9b690` leak_tank ? dehum OOS on occupancy; dry restore. Desk ieee now used for floor flood (2026-08-31) |
 | Role `leak_tank` | **done (live)** | Catalog + by_role safety row |
 | Operator params + filtered selects (implement) | **done (live)** | Pi task5 2026-08-30: hotpatch `zigbee_policies.py`+`zigbee_mqtt.py`, SPA `index-nLu-U8CF.js`; QA `problem_when=inactive` dry?OOS+banner / wet?clear; live `0xa4c138b9e2b9b690` `problem_when=active` wet?OOS+banner / dry?clear (policy re-bound via `.audit/zb-bind-tank-occ.sh`) |
 | Policy problem vs raw wet in UI | **done** | Climate safety chips: Wet/Dry primary + Problem/Clear when Task bound; plan 2026-08-31 |
-| Recipe `floor_flood_alert` | **done (live)** | Task 5 Pi 2026-08-31: desk `0xa4c1385a686af7df` room + `0xa4c1380d734f2033` 4×8 bound `floor_flood_alert`; independent `zb-policy-<ieee>` banners; wet→banner no OOS; dry→clear; tank unchanged |
+| Recipe `floor_flood_alert` | **done (live)** | Task 5 Pi 2026-08-31: desk `0xa4c1385a686af7df` room + `0xa4c1380d734f2033` 4�8 bound `floor_flood_alert`; independent `zb-policy-<ieee>` banners; wet?banner no OOS; dry?clear; tank unchanged |
 | Roles `leak_floor_room` / `_4x8` / `_2x4` | **done (catalog)** | Distinct floor roles so room + 4?8 don't clobber Climate honesty row; 2?4 selectable |
 | Multi-sensor per space (`*_b` roles) | **next-plan** | Extension path in spec; one ieee per role id this pass |
 | `leak_floor_2x4` live bind | **deferred** | Until hardware in 2?4 |
@@ -473,7 +473,7 @@ Remaining goal work: mid-reflect skill/rule drafts still await your **yes** befo
 | Lovelace YAML retired | `docs/archive/lovelace-7.3/` |
 | Phase E shim simplified | `useBrain.tsx` |
 
-**Remains (operator):** FlowSankey 48h soak closeout — see [`FLOW-SANKEY-SOAK-7.3.md`](qa/FLOW-SANKEY-SOAK-7.3.md). z2m **closed** 2026-09-01. F-001/F-002 on hold; POT3/4 retired.
+**Remains (operator):** FlowSankey 48h soak closeout ? see [`FLOW-SANKEY-SOAK-7.3.md`](qa/FLOW-SANKEY-SOAK-7.3.md). z2m **closed** 2026-09-01. F-001/F-002 on hold; POT3/4 retired.
 
 ---
 
@@ -593,7 +593,7 @@ Verdict pass over open items below (history untouched; line refs point at the or
 |---|---|
 | F-001 AC relay | **on hold** (indefinite) | Honest OOS UI only; operator 2026-09-01 |
 | F-002 clone mister | **on hold** (indefinite) | Honest OOS UI only; operator 2026-09-01 |
-| F-003 / POT3 | **retired** | pot3/4 out of kit — not chasing hardware |
+| F-003 / POT3 | **retired** | pot3/4 out of kit ? not chasing hardware |
 | POT4 | **retired** | Same as POT3 |
 | F-008 SCD41 real CO2 sensor | Hardware |
 | GPIO5 4x8 lamp | Hardware ? window stays Got proxy until wired |
@@ -620,9 +620,9 @@ Counts: **10 retired / 8 closed / 11 kept open.**
 
 | ID | Item | Notes |
 |---|---|---|
-| F-001 | Physical AC hardware + follower relay | **On hold** (indefinite) — in-service OFF; honest OOS |
-| F-002 | Physical clone mister + follower | **On hold** (indefinite) — in-service OFF |
-| F-003 | ~~Replace/repair POT3 probe~~ | **Retired** — pot3/4 out of kit |
+| F-001 | Physical AC hardware + follower relay | **On hold** (indefinite) ? in-service OFF; honest OOS |
+| F-002 | Physical clone mister + follower | **On hold** (indefinite) ? in-service OFF |
+| F-003 | ~~Replace/repair POT3 probe~~ | **Retired** ? pot3/4 out of kit |
 | F-004 | SoftAP preferred-BSSID mismatch (CHX) | Nest router channel lock remains out-of-scope; SoftAP-primary is the heal path |
 | F-005 | Multi-lever learn baseline engine | Fans+mat air-lever gate is interim |
 | F-006 | HA-link flap root-cause campaign | Softened bounce in 5.1.x; still ~frequent offs |
@@ -3581,7 +3581,7 @@ Already logged ? do not duplicate the row, **do escalate**: **SV-P1-6** (DutyStr
 
 ---
 
-## 2026-08-31 — Superdesign init (Dash Home)
+## 2026-08-31 ? Superdesign init (Dash Home)
 
 | Item | Status | Notes |
 |------|--------|-------|
@@ -3589,7 +3589,7 @@ Already logged ? do not duplicate the row, **do escalate**: **SV-P1-6** (DutyStr
 
 ---
 
-## 2026-08-31 — 10-plant browser stress test (Compose / Roster)
+## 2026-08-31 ? 10-plant browser stress test (Compose / Roster)
 
 Source: browser-only stress pass on live Pi SPA (`192.168.86.48:8787`). Goal: 10 diverse plants + probe moves + soil cal + full page audit.
 
@@ -3598,35 +3598,35 @@ Source: browser-only stress pass on live Pi SPA (`192.168.86.48:8787`). Goal: 10
 | Fix | File | Notes |
 |-----|------|-------|
 | Stock roster path | `PlantWizard.tsx` | `canNext` strain-only; `Add to roster (stock)` when assign none; `commitAssign` uses `dsc_build_plant_commit` only for stock; clears draft + shows commit error |
-| Datetime flush | `ui.tsx` | `data-entity-id` on sprout input; `flushEntityTextDrafts` routes `input_datetime.*` → `set_datetime`; skip empty values (was blocking Next) |
+| Datetime flush | `ui.tsx` | `data-entity-id` on sprout input; `flushEntityTextDrafts` routes `input_datetime.*` ? `set_datetime`; skip empty values (was blocking Next) |
 
-### red-flag (P0) — found during stress test
+### red-flag (P0) ? found during stress test
 
 | ID | Item | Notes |
 |---|---|---|
 | ST-P0-1 | Duplicate probe assignment | Roster #3 and #4 both `active` on Probe 1 after compose assign; tent strip shows one plant, roster shows two. Commit must reject or detach incumbent. |
-| ST-P0-2 | Delete plant no-op | Roster Delete + confirm dialog fires but slot #3 OpPolish remains; dialog says "DELETE PLANT ON PROBE 1" regardless of row — retire is probe-keyed not slot-keyed. |
-| ST-P0-3 | Detached plants undeletable | Slot #2 detached OpPolish has Assign only — no Delete. Orphan roster slots accumulate. |
-| ST-P0-4 | 4×8 tent ignores stock plants | Crop scheduler shows `NO PLANTS IN TENT` while stock commits target 4×8; stock status not rendered on tent rail. |
-| ST-P0-5 | Sprout/stage honesty on new assign | Afternoon Brunch on Probe 1 shows `W— · — · —` (no expected stage/days) despite sprout field set in compose. |
+| ST-P0-2 | Delete plant no-op | Roster Delete + confirm dialog fires but slot #3 OpPolish remains; dialog says "DELETE PLANT ON PROBE 1" regardless of row ? retire is probe-keyed not slot-keyed. |
+| ST-P0-3 | Detached plants undeletable | Slot #2 detached OpPolish has Assign only ? no Delete. Orphan roster slots accumulate. |
+| ST-P0-4 | 4�8 tent ignores stock plants | Crop scheduler shows `NO PLANTS IN TENT` while stock commits target 4�8; stock status not rendered on tent rail. |
+| ST-P0-5 | Sprout/stage honesty on new assign | Afternoon Brunch on Probe 1 shows `W? � ? � ?` (no expected stage/days) despite sprout field set in compose. |
 
 ### next-plan (P1)
 
 | ID | Item | Notes |
 |---|---|---|
 | ST-P1-1 | Nickname draft vs bus | Automation `type_text` into nickname works in DOM but bus `input_text.dsc_build_nickname` stayed empty until flush fix; verify after hotpatch. |
-| ST-P1-2 | Soil preset vs review mismatch | Living soil preset clicked but review showed default Coco 70/30 + 20L generic — preset not applied before commit. |
+| ST-P1-2 | Soil preset vs review mismatch | Living soil preset clicked but review showed default Coco 70/30 + 20L generic ? preset not applied before commit. |
 | ST-P1-3 | Compose wizard async Next | `goNext` flush is async; browser automation must wait ~2.5s after Next or step does not advance. |
 | ST-P1-4 | Roster vs unassigned strip drift | Unassigned strip showed Probe 1 empty while roster #3 claimed Probe 1 active. |
 | ST-P1-5 | Full page audit | Roster/Compose partially exercised; Calibrate probe moves, Climate, Live/Twin, Fleet, Settings, Dash home still need review pass. |
 
-### Stress-test progress (browser) — 2026-08-31 COMPLETE (resume pass)
+### Stress-test progress (browser) ? 2026-08-31 COMPLETE (resume pass)
 
 | Target | Status |
 |--------|--------|
-| 2×4 early-flower photo + auto | **Done** — #1 Grandmommy Purple (photo EF, Probe 2); #4 Afternoon Brunch auto (Probe 1) |
-| 8× 4×8 diverse as stock | **Done** — LCG, Three Ghost, Five Ghost, VPD, Skunk, SD, JRat, FRITZ (browser Compose) |
-| 10 total roster | **Done — 10/10** |
+| 2�4 early-flower photo + auto | **Done** ? #1 Grandmommy Purple (photo EF, Probe 2); #4 Afternoon Brunch auto (Probe 1) |
+| 8� 4�8 diverse as stock | **Done** ? LCG, Three Ghost, Five Ghost, VPD, Skunk, SD, JRat, FRITZ (browser Compose) |
+| 10 total roster | **Done ? 10/10** |
 | Probe moves + soil cal | **Done** (prior pass) |
 | Full page review | **Done** |
 | Browser-only creation | **Done** |
@@ -3647,20 +3647,20 @@ Source: browser-only stress pass on live Pi SPA (`192.168.86.48:8787`). Goal: 10
 |----|------|
 | ST-P0-7 soft | Delete UI may take one computed poll (~5s) to drop the row; hard reload always correct. Modal is `.dsc-decision-panel` / confirm **Delete plant**. |
 
-### red-flag (P0) — additional findings (2026-08-31 PM pass)
+### red-flag (P0) ? additional findings (2026-08-31 PM pass)
 
 | ID | Item | Notes |
 |---|---|---|
-| ST-P0-6 | Strain bus race on commit | Catalog `applyCatalogPick` is async; rapid Next/commit can commit **previous strain** with new nickname → slot shows `4x8-LCG` / strain Skunky. **Fix in code:** `syncComposeTextToBus()` before flush in `PlantWizard.tsx` (not yet hotpatched on Pi). |
-| ST-P0-7 | Roster UI stale after slot retire | `POST /roster/slots/N/retire` returns "already empty" while table still lists row until hard reload — operator may double-delete. |
-| ST-P0-8 | `clearComposeDraft` incomplete | Did not clear sprout date → stale `OpPolishE2E31` / day-468 expected stage on review. **Fix in code:** `composePlantLogic.ts` clears sprout on draft clear. |
+| ST-P0-6 | Strain bus race on commit | Catalog `applyCatalogPick` is async; rapid Next/commit can commit **previous strain** with new nickname ? slot shows `4x8-LCG` / strain Skunky. **Fix in code:** `syncComposeTextToBus()` before flush in `PlantWizard.tsx` (not yet hotpatched on Pi). |
+| ST-P0-7 | Roster UI stale after slot retire | `POST /roster/slots/N/retire` returns "already empty" while table still lists row until hard reload ? operator may double-delete. |
+| ST-P0-8 | `clearComposeDraft` incomplete | Did not clear sprout date ? stale `OpPolishE2E31` / day-468 expected stage on review. **Fix in code:** `composePlantLogic.ts` clears sprout on draft clear. |
 
 ### Browser automation recipe (verified)
 
 1. **JS** `.click()` on `.dsc-catalog-hits button` (coordinate clicks fail silently on catalog).
 2. Footer **Next** via `.dsc-btn-primary.click()` with ~3s wait between steps.
 3. After catalog pick: set strain/nick/sprout via `/control/service` **or** wait for bus; reload compose if draft polluted.
-4. Confirm stock via modal **"Add to Roster stock (no probe)"** — primary footer button alone is not enough.
+4. Confirm stock via modal **"Add to Roster stock (no probe)"** ? primary footer button alone is not enough.
 5. Roster refresh after retire should catch up within one computed poll (~5s); hard reload if still stale.
 
 ### Code fixes pending Pi hotpatch
@@ -3674,7 +3674,7 @@ Source: browser-only stress pass on live Pi SPA (`192.168.86.48:8787`). Goal: 10
 
 ---
 
-## 2026-09-01 — Post-stress audit (reflect / interrogate / tests)
+## 2026-09-01 ? Post-stress audit (reflect / interrogate / tests)
 
 Source: `/reflect` + `/interrogate` + `test_roster_stress.py` + react-doctor pass on SPA.
 
@@ -3687,16 +3687,16 @@ Source: `/reflect` + `/interrogate` + `test_roster_stress.py` + react-doctor pas
 | Deslop: trim stress-pass comment noise | `PlantWizard.tsx`, `useBrain.tsx` | Deslop |
 | 11 edge-case tests (10-slot migrate, full roster, retire API, probe conflicts) | `test_roster_stress.py` | Verification |
 
-### Interrogate verdict (stress-test commits `15d7016`…`149657d`)
+### Interrogate verdict (stress-test commits `15d7016`?`149657d`)
 
 **Act on (fixed above):**
-- Stale closure in `confirmRetire` after `refreshBrain()` — drawer could stay open with deleted plant.
-- `retire_roster_slot` left `plant_uuid` on emptied slots — re-compose could inherit wrong identity.
+- Stale closure in `confirmRetire` after `refreshBrain()` ? drawer could stay open with deleted plant.
+- `retire_roster_slot` left `plant_uuid` on emptied slots ? re-compose could inherit wrong identity.
 
-**Consider (not fixed — product decision):**
-- `syncComposeTextToBus` uses global `document.querySelector` — works for single wizard instance; fragile if compose mounts twice.
-- `get_roster_slots()` auto-persists 8→10 migration on read — convenient but side-effect on GET path.
-- CropScheduler stock lanes use synthetic `PlantSeat` (`pot: 0`) — honest for display but not navigable.
+**Consider (not fixed ? product decision):**
+- `syncComposeTextToBus` uses global `document.querySelector` ? works for single wizard instance; fragile if compose mounts twice.
+- `get_roster_slots()` auto-persists 8?10 migration on read ? convenient but side-effect on GET path.
+- CropScheduler stock lanes use synthetic `PlantSeat` (`pot: 0`) ? honest for display but not navigable.
 
 **Noted:**
 - React-doctor score 40/100 is repo-wide debt; stress-touch files (`PlantWizard`, `useBrain`, `GrowPages`) have no new critical findings beyond giant-component warnings.
@@ -3707,7 +3707,7 @@ Source: `/reflect` + `/interrogate` + `test_roster_stress.py` + react-doctor pas
 | Pattern | Where it repeats | Easier process |
 |---------|------------------|----------------|
 | Entity-bus lag vs local draft | Compose nick/strain/sprout, wizard Next | Local draft is SoT until commit; flush before every step advance and commit |
-| Probe ↔ slot dual claim | Assign, move, retire | Brain `release_conflicting_slot_pots` on every assign path; UI delete by slot not probe |
+| Probe ? slot dual claim | Assign, move, retire | Brain `release_conflicting_slot_pots` on every assign path; UI delete by slot not probe |
 | SPA stale computed | Retire, delete, assign | Serialized computed chain + cache-bust + tick bump |
 | Pi deploy on Windows | Hotpatch scripts | `plink`/`pscp` only; OpenSSH `scp` hangs on password |
 | Browser automation | Catalog, Next, modals | Documented recipe in FOLLOWUPS; prefer JS `.click()` on catalog hits |
@@ -3716,8 +3716,8 @@ Source: `/reflect` + `/interrogate` + `test_roster_stress.py` + react-doctor pas
 
 | # | Principle | Routing |
 |---|-----------|---------|
-| 1 | Operator primary actions must not wait on entity-bus round-trip — local drafts until commit/flush. | `AGENTS.md` / `.cursor/rules/dsc-kit-sot.mdc` |
-| 2 | Roster mutations need slot-keyed API + computed refresh serialization, not probe-only retire. | `docs/FOLLOWUPS.md` pattern → offer project rule |
+| 1 | Operator primary actions must not wait on entity-bus round-trip ? local drafts until commit/flush. | `AGENTS.md` / `.cursor/rules/dsc-kit-sot.mdc` |
+| 2 | Roster mutations need slot-keyed API + computed refresh serialization, not probe-only retire. | `docs/FOLLOWUPS.md` pattern ? offer project rule |
 | 3 | Pi SPA hotpatch on Windows: plink/pscp batch scripts, not OpenSSH scp. | `.audit/stress-spa-only-hotpatch.ps1` + offer ops skill |
 | 4 | Browser catalog picks need JS `.click()` on hit buttons; coordinate clicks fail silently. | `docs/FOLLOWUPS.md` automation recipe |
 | 5 | Stress-test completion requires brain tests for slot/probe edge matrix, not browser alone. | `brain/tests/test_roster_stress.py` as template |
@@ -3726,7 +3726,7 @@ Source: `/reflect` + `/interrogate` + `test_roster_stress.py` + react-doctor pas
 
 ---
 
-## 2026-09-01 — Mega Pass 2026-09 (closure)
+## 2026-09-01 ? Mega Pass 2026-09 (closure)
 
 **Register:** [`docs/qa/MEGA-PASS-2026-09-ISSUE-REGISTER.md`](qa/MEGA-PASS-2026-09-ISSUE-REGISTER.md)  
 **Closure:** [`docs/qa/AUDIT-CLOSURE-2026-09.md`](qa/AUDIT-CLOSURE-2026-09.md)  
@@ -3742,46 +3742,46 @@ Source: `/reflect` + `/interrogate` + `test_roster_stress.py` + react-doctor pas
 
 | ID | Was | Now |
 |----|-----|-----|
-| ST-P0-1…4, 6–8 | red-flag | **done** — prior commits + verify-close |
-| ST-P0-5 | red-flag | **done** — sprout on slot+pot; `buildPlantSeat` fallback; `test_commit_and_assign_carries_sprout_to_pot_and_slot` |
-| ST-P1-1 | next-plan | **done** — `149657d` |
-| ST-P1-2 | next-plan | **done** — preset label on review |
-| ST-P1-3 | next-plan | **deferred** — automation doc only |
-| ST-P1-4 | next-plan | **done** — vacantProbes vs roster pot |
-| ST-P1-5 | next-plan | **done** — audit matrix in AUDIT-CLOSURE |
+| ST-P0-1?4, 6?8 | red-flag | **done** ? prior commits + verify-close |
+| ST-P0-5 | red-flag | **done** ? sprout on slot+pot; `buildPlantSeat` fallback; `test_commit_and_assign_carries_sprout_to_pot_and_slot` |
+| ST-P1-1 | next-plan | **done** ? `149657d` |
+| ST-P1-2 | next-plan | **done** ? preset label on review |
+| ST-P1-3 | next-plan | **deferred** ? automation doc only |
+| ST-P1-4 | next-plan | **done** ? vacantProbes vs roster pot |
+| ST-P1-5 | next-plan | **done** ? audit matrix in AUDIT-CLOSURE |
 
 ### Still open (deferred from mega pass)
 
-- CannaLib prod offset — ops deploy (`MP-030`).
-- Zigbee new recipes / `leak_floor_2x4` — hardware pick (`MP-040–045`).
-- 7.4 hardware F-001…F-008 (`MP-062`).
-- `test_zigbee_save_bindings_reroutes_cached_state` flake — **fixed** (isolated ieee + offset monkeypatch); 161/161 green.
+- CannaLib prod offset ? ops deploy (`MP-030`).
+- Zigbee new recipes / `leak_floor_2x4` ? hardware pick (`MP-040?045`).
+- 7.4 hardware F-001?F-008 (`MP-062`).
+- `test_zigbee_save_bindings_reroutes_cached_state` flake ? **fixed** (isolated ieee + offset monkeypatch); 161/161 green.
 
 ---
 
-## 2026-09-01 — Post-mega D → C → A → B
+## 2026-09-01 ? Post-mega D ? C ? A ? B
 
-**Closure:** [`docs/qa/AUDIT-CLOSURE-2026-09-D-C-A-B.md`](qa/AUDIT-CLOSURE-2026-09-D-C-A-B.md) · **SPA:** `index-CXq-NptO.js`
+**Closure:** [`docs/qa/AUDIT-CLOSURE-2026-09-D-C-A-B.md`](qa/AUDIT-CLOSURE-2026-09-D-C-A-B.md) � **SPA:** `index-CXq-NptO.js`
 
 | Track | Result |
 |-------|--------|
-| Gate 0 soak | Closed — [`GATE0-SOAK-2026-09.md`](qa/GATE0-SOAK-2026-09.md) |
+| Gate 0 soak | Closed ? [`GATE0-SOAK-2026-09.md`](qa/GATE0-SOAK-2026-09.md) |
 | D splits | Settings / PlantWizard / Roster dialogs extracted; build + hotpatch |
-| C z2m | **done** — radio_up, 4 end devices |
-| C F-003/POT4 | **retired** — pot3/4 out of kit; not chasing flash/enable |
-| C F-001/F-002 | **on hold** — AC relay + clone mister indefinitely; honest OOS UI only |
-| A CannaLib | **done** — offset pagination verified on `192.168.86.2:8790` |
-| B Zigbee | **done** — `leak_floor_4x8` recipe live with policy state |
+| C z2m | **done** ? radio_up, 4 end devices |
+| C F-003/POT4 | **retired** ? pot3/4 out of kit; not chasing flash/enable |
+| C F-001/F-002 | **on hold** ? AC relay + clone mister indefinitely; honest OOS UI only |
+| A CannaLib | **done** ? offset pagination verified on `192.168.86.2:8790` |
+| B Zigbee | **done** ? `leak_floor_4x8` recipe live with policy state |
 
 ---
 
-## 2026-09-01 — Operator kit scope (pot3/4 + climate capacity)
+## 2026-09-01 ? Operator kit scope (pot3/4 + climate capacity)
 
 **Decision (operator):**
 
 | Item | Status | Notes |
 |------|--------|-------|
-| POT3 / POT4 | **retired from kit** | No longer live probes — not chasing USB flash, enable, or mat-vote restore. Device inventory / Advanced restore only (`KIT_PROBE_NUMBERS` = 1–2). |
+| POT3 / POT4 | **retired from kit** | No longer live probes ? not chasing USB flash, enable, or mat-vote restore. Device inventory / Advanced restore only (`KIT_PROBE_NUMBERS` = 1?2). |
 | F-001 AC relay | **on hold indefinitely** | Honest capacity-offline / planned chips stay; no install timeline. |
 | F-002 Clone mister | **on hold indefinitely** | Same as F-001. |
 
@@ -3789,34 +3789,34 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 
 ---
 
-## 2026-09-01 — Phase 0 progress (7.4.0 path)
+## 2026-09-01 ? Phase 0 progress (7.4.0 path)
 
-**Walk doc:** [`docs/qa/PHASE0-WALK-2026-09.md`](qa/PHASE0-WALK-2026-09.md) · **Git:** `f029702`
+**Walk doc:** [`docs/qa/PHASE0-WALK-2026-09.md`](qa/PHASE0-WALK-2026-09.md) � **Git:** `f029702`
 
 | Gate | Status |
 |------|--------|
-| z2m | **closed** — radio_up, 4 end devices |
+| z2m | **closed** ? radio_up, 4 end devices |
 | Live walk | **pass** (API-backed; bundle `index-CXq-NptO.js`) |
-| FlowSankey 48h soak | **closed** — [`FLOW-SANKEY-SOAK-7.3.md`](qa/FLOW-SANKEY-SOAK-7.3.md) |
+| FlowSankey 48h soak | **closed** ? [`FLOW-SANKEY-SOAK-7.3.md`](qa/FLOW-SANKEY-SOAK-7.3.md) |
 
 **7.4.0:** Phase 0 closed. Surface bump in tree; Pi hotpatch + tag pending. Hardware F-001/F-002/F-003 do not gate.
 
 ---
 
-## 2026-09-01 — 7.4.0 Phase 0 closed + surface bump
+## 2026-09-01 ? 7.4.0 Phase 0 closed + surface bump
 
-**Closure:** [`docs/qa/AUDIT-CLOSURE-7.4.md`](qa/AUDIT-CLOSURE-7.4.md) · **Soak:** [`FLOW-SANKEY-SOAK-7.3.md`](qa/FLOW-SANKEY-SOAK-7.3.md) closed
+**Closure:** [`docs/qa/AUDIT-CLOSURE-7.4.md`](qa/AUDIT-CLOSURE-7.4.md) � **Soak:** [`FLOW-SANKEY-SOAK-7.3.md`](qa/FLOW-SANKEY-SOAK-7.3.md) closed
 
 | Item | Status |
 |------|--------|
 | Phase 0 (z2m, walk, Sankey) | **closed** |
 | Phase B (EXPERIMENTAL) | **done** in SPA (Air CFM only; mass chip gated) |
 | Surface version | **7.4.0** brain + SPA defaults + Pi live (`/health` 7.4.0/7.4.0, SPA `index-K2_ziUnM.js`) |
-| Git tag `v7.4.0` | **done** — operator signed off 2026-09-01 on `3eeecab` |
+| Git tag `v7.4.0` | **done** ? operator signed off 2026-09-01 on `3eeecab` |
 
 ---
 
-## 2026-09-01 — Space energy / journals (local implement)
+## 2026-09-01 ? Space energy / journals (local implement)
 
 **Spec:** [`docs/superpowers/specs/2026-09-01-space-energy-journal-design.md`](superpowers/specs/2026-09-01-space-energy-journal-design.md)  
 **Plan:** [`docs/superpowers/plans/2026-09-01-space-energy-journal.md`](superpowers/plans/2026-09-01-space-energy-journal.md)
@@ -3825,7 +3825,7 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 |------|--------|-------|
 | Space/device + journals + energy/shift/learning modules | **done (code)** | SQLite in `dsc_ops`; kit `4x8`/`2x4` seed |
 | HTTP + fleetApi | **done (code)** | `/journal/*`, `/spaces`, `/energy/*`; confirm required for shift plans |
-| SPA PlantMiniJournal / TentOccupancyJournal / LightEnergyPanel / Settings Brain card | **done (code)** | `build:spa` → `index-DMMGdgxP.js`; synced `brain/static` |
+| SPA PlantMiniJournal / TentOccupancyJournal / LightEnergyPanel / Settings Brain card | **done (code)** | `build:spa` ? `index-DMMGdgxP.js`; synced `brain/static` |
 | Brain pytest | **done** | 178 passed |
 | Pi hotpatch (new modules + SPA) | **done** | 2026-09-01 closure: `index-B79UQDGB.js`; room/Core modules live |
 | Live evidence (estimate, confirm-only ramp, flip banner) | **done** | Walk [`docs/qa/SPACE-ENERGY-PI-WALK-2026-09.md`](qa/SPACE-ENERGY-PI-WALK-2026-09.md); evidence `.audit/space-energy-closure-evidence.json` |
@@ -3835,7 +3835,7 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 
 ---
 
-## 2026-09-01 — Space-energy Pi closure (room + DSC-Core)
+## 2026-09-01 ? Space-energy Pi closure (room + DSC-Core)
 
 **Spec:** [`docs/superpowers/specs/2026-09-01-space-energy-pi-closure-design.md`](superpowers/specs/2026-09-01-space-energy-pi-closure-design.md)  
 **Plan:** [`docs/superpowers/plans/2026-09-01-space-energy-pi-closure.md`](superpowers/plans/2026-09-01-space-energy-pi-closure.md)
@@ -3849,30 +3849,30 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 
 ---
 
-## 2026-09-01 — Capacity offline named POT4 (honesty)
+## 2026-09-01 ? Capacity offline named POT4 (honesty)
 
 | Item | Status | Notes |
 |------|--------|-------|
-| `_reduced_kit` treated pot4 as live kit | **fixed (code)** | pot4 → planned_oos with pot3; live probes = 1–2 only |
+| `_reduced_kit` treated pot4 as live kit | **fixed (code)** | pot4 ? planned_oos with pot3; live probes = 1?2 only |
 | Default inventory pot4 | **fixed** | `in_service: False` + `pot4_retired_gate` one-shot |
 | Pi hotpatch `dash_computed.py` (+ settings gate) | **done** | Bundled in space-energy Pi closure hotpatch 2026-09-01 |
 
 
 ---
 
-## 2026-09-01 � Live UX honesty Pass 1 (Light prove)
+## 2026-09-01 ? Live UX honesty Pass 1 (Light prove)
 
 **Spec:** [docs/superpowers/specs/2026-09-01-live-ux-honesty-program-design.md](superpowers/specs/2026-09-01-live-ux-honesty-program-design.md)  
 **Plan:** [docs/superpowers/plans/2026-09-01-live-ux-honesty-program.md](superpowers/plans/2026-09-01-live-ux-honesty-program.md)  
-**Walk:** [docs/qa/LIVE-UX-LIGHT-WALK-2026-09.md](qa/LIVE-UX-LIGHT-WALK-2026-09.md) � **gate green**
+**Walk:** [docs/qa/LIVE-UX-LIGHT-WALK-2026-09.md](qa/LIVE-UX-LIGHT-WALK-2026-09.md) ? **gate green**
 
 | Item | Status | Notes |
 |------|--------|-------|
 | SPA hotpatch index-DYFvyI2i.js | **done (live)** | Prove .audit/live-ux-light-prove.ps1; index.html sha256 `146bfc0dc8233e85fefccc6924939aa21e96e5ceb816a603c62e5100d3521ea9` |
 | HTTP energy both tents | **done** | estimate Estimate + suggestions `apply:false`; confirm=false ? 400; evidence .audit/live-ux-light-prove-evidence.json |
 | Browser matrix + screenshots | **done** | `docs/qa-screenshots-2026-09-01-live-ux/` |
-| Force-tick restore | **done** | 4�8 `06:00:00`; 2�4 helper `20:00:00`; no active plans / pending flips |
-| DutyStrip 2�4 `0.0H ON` vs Got ~12h | **parked** | Same hole as **SV-P1-6**; Got/Want chips honest � do not block Pass 1. History/DutyStrip map for SF1000 clone entity |
+| Force-tick restore | **done** | 4?8 `06:00:00`; 2?4 helper `20:00:00`; no active plans / pending flips |
+| DutyStrip 2?4 `0.0H ON` vs Got ~12h | **parked** | Same hole as **SV-P1-6**; Got/Want chips honest ? do not block Pass 1. History/DutyStrip map for SF1000 clone entity |
 | Climate Pass 2 | **next-plan** | Task 4+ only after this Light gate (now green) |
 
 ---
@@ -3890,5 +3890,24 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Item | Status | Notes |
 |------|--------|-------|
 | Overview SPA honesty (Task 8) | **done (repo)** | Journal provenance/Save UX; root OOS grey; grow-log history caption; photoperiod glance SoT copy ? see `.superpowers/sdd/task-8-report.md`. Bundle `index-C8GkS5XE.js` |
-| Overview walk / Pi hotpatch (Task 9) | **next-plan** | Do not fill walk until prove; hotpatch + browser matrix + cross-desk photoperiod parity |
-| Moisture band 30?70 vs Root Want | **parked** | GAUGE-P0-1; not OOS/no-data greying |
+| Overview walk / Pi hotpatch (Task 9) | **done (live)** | Hotpatched `index-C8GkS5XE.js`; index.html sha256 `40ec4848fb8974335be024a91897c507c393edb500826dde244d7434c93cea25`; HTTP health/rooms/journals/fleet green; browser matrix + Light SoT cross-check; walk filled ? gate **GREEN**. Evidence `.audit/live-ux-overview-prove-evidence.json` |
+| Moisture band 30?70 vs Root Want | **parked** | GAUGE-P0-1; not OOS/no-data greying ? Pass 4 brainstorm candidate |
+
+## 2026-09-01 ? Live UX honesty Passes 1?3 closure
+
+**Spec:** [docs/superpowers/specs/2026-09-01-live-ux-honesty-program-design.md](superpowers/specs/2026-09-01-live-ux-honesty-program-design.md)  
+**Walks:** Light / Climate / Overview all **gate green**
+
+| Pass | Bundle | Evidence | Gate |
+|------|--------|----------|------|
+| 1 Light | `index-DYFvyI2i.js` | `.audit/live-ux-light-prove-evidence.json` | **GREEN** |
+| 2 Climate | `index-CzcL7cKc.js` | `.audit/live-ux-climate-prove-evidence.json` | **GREEN** |
+| 3 Overview | `index-C8GkS5XE.js` | `.audit/live-ux-overview-prove-evidence.json` | **GREEN** |
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Passes 1?3 desk gates | **done (live)** | Shared honesty contract held; both tents parity each pass |
+| Pass 4 Integrated | **stub** | Pending `/brainstorming` ? may absorb parked UX (GAUGE-P0-1 moisture band, DutyStrip SV-P1-6, AirPathMap cascade alias) |
+| Pass 5 Follow-up | **stub** | Pending `/brainstorming` after Pass 4 |
+| Operator queue (outside 1?3) | **next-plan** | CannaLib prod ? FlowSankey verify ? Zigbee one-recipe ? unless Pass 4 reorders |
+| Hardware | **parked** | Twin PWM / Zigbee new recipes stay locked until operator unlocks |

@@ -1,0 +1,553 @@
+{
+  "ts": 1788258682.3167481,
+  "gates": {
+    "G0_index_bundle": {
+      "ok": true,
+      "detail": {
+        "local": "assets/index-C8GkS5XE.js",
+        "live": "assets/index-C8GkS5XE.js",
+        "local_sha256": "40ec4848fb8974335be024a91897c507c393edb500826dde244d7434c93cea25",
+        "live_sha256": "40ec4848fb8974335be024a91897c507c393edb500826dde244d7434c93cea25"
+      }
+    },
+    "HTTP_health": {
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "keys": [
+          "status",
+          "version",
+          "surface",
+          "expected_firmware",
+          "mode",
+          "zigbee"
+        ]
+      }
+    },
+    "HTTP_rooms_grow_room": {
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "room_ids": [
+          "grow_room"
+        ],
+        "raw_type": "dict"
+      }
+    },
+    "HTTP_journal_room_grow_room": {
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "type": "dict",
+        "keys": [
+          "room_id",
+          "entries"
+        ],
+        "len": 78
+      }
+    },
+    "HTTP_journal_core": {
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "type": "dict",
+        "keys": [
+          "entries"
+        ],
+        "len": 93
+      }
+    },
+    "HTTP_fleet": {
+      "ok": true,
+      "detail": {
+        "keys": [
+          "version",
+          "surface",
+          "expected_firmware",
+          "hub",
+          "panel",
+          "pots",
+          "sonoffs",
+          "canopy",
+          "system",
+          "updated_at",
+          "inventory",
+          "root_steering"
+        ]
+      }
+    },
+    "HTTP_fleet_computed": {
+      "ok": true,
+      "detail": {
+        "keys": [
+          "hass_extras"
+        ]
+      }
+    },
+    "HTTP_kit_honest_reduced_kit": {
+      "ok": true,
+      "detail": {
+        "state": "off",
+        "planned_oos": "AC, Clone mister, POT3, POT4, Tank",
+        "offline": "a live lever is parked"
+      }
+    },
+    "HTTP_hub_online": {
+      "ok": true,
+      "detail": {
+        "hub": {
+          "seat_id": "hub",
+          "online": true,
+          "firmware": "7.0.0.0",
+          "values": {
+            "wifi_rssi": -30.0,
+            "uptime": 249614.015625,
+            "api_down_age": 0.0,
+            "ha_handshake_age": null,
+            "link_recovery_bounces": 0.0,
+            "light_delivered_hours": 12.001388549804688,
+            "light_debt_hours": 0.0,
+            "heartbeat": 8322.0,
+            "temp_c": 23.399999618530273,
+            "room_temp_c": 24.899999618530273,
+            "clone_temp_c": 24.399999618530273,
+            "co2_sensor_voltage": 0.14200004935264587,
+            "dynamic_co2_ppm": 172.87132263183594,
+            "vpd_kpa": 1.085,
+            "clone_vpd_kpa": 1.174,
+            "dehumidifier_fire_countdown": 0.0,
+            "humidifier_fire_countdown": 0.0,
+            "heater_fire_countdown": 0.0,
+            "ac_fire_countdown": 0.0,
+            "grow_mat_fire_countdown": 0.0,
+            "clone_humidifier_fire_countdown": 0.0,
+            "humidifier_cooldown_remaining": 0.0,
+            "dehumidifier_cooldown_remaining": 0.0,
+            "ac_cooldown_remaining": 0.0,
+            "heater_cooldown_remaining": 0.0,
+            "grow_mat_cooldown_remaining": 0.0,
+            "clone_humidifier_cooldown_remaining": 0.0,
+            "vpd_main_band_hours": 12.233888626098633,
+            "vpd_clone_band_hours": 3.660277843475342,
+            "vpd_main_band_debt_hours": 5.770277976989746,
+            "vpd_clone_band_debt_hours": 14.339722633361816,
+            "mister_delivered_hours": 0.0,
+            "mister_debt_hours": 0.0,
+            "coherence_hash": 1843826944.0,
+            "coherence_epoch": 1788258560.0,
+            "rh_pct": 62.29999923706055,
+            "room_rh_pct": 58.60000228881836,
+            "clone_rh_pct": 61.60000228881836,
+            "wifi_ssid": "DSC-Brain",
+            "wifi_bssid": "E4:5F:01:E0:93:B5",
+            "ip_address": "10.42.0.10",
+            "esphome_version": "2025.12.4",
+            "firmware_version": "7.0.0.0",
+            "link_recovery_last_reason": "none",
+            "last_evt": "EVT|H|API_BLIP|1788258478|",
+            "rf_status": "RF|H|B59|---|6|-29|OK",
+            "controls": {
+              "fan.dsc_hub_6_inch_exhaust_outside": {
+                "state": "on",
+                "percentage": 70
+              },
+              "fan.dsc_hub_6_inch_exhaust_room": {
+                "state": "on",
+                "percentage": 30
+              },
+              "fan.dsc_hub_4_inch_intake_fan_main": {
+                "state": "on",
+                "percentage": 40
+              },
+              "fan.dsc_hub_4_inch_intake_fan_2x4": {
+                "state": "on",
+                "percentage": 30
+              },
+              "light.dsc_hub_sf1000_dimmer": {
+                "state": "off",
+                "brightness": 1
+              },
+              "light.dsc_hub_twin_sf1000": {
+                "state": "off",
+                "brightness": 1
+              },
+              "switch.dsc_hub_tent_manual_override": {
+                "state": "off"
+              },
+              "switch.dsc_hub_tent_full_auto_mode": {
+                "state": "on"
+              },
+              "switch.dsc_hub_lock_wifi_ap": {
+                "state": "off"
+              },
+              "switch.dsc_hub_auto_photoperiod": {
+                "state": "on"
+              },
+              "switch.dsc_hub_manual_light_hold": {
+                "state": "off"
+              },
+              "switch.dsc_hub_manual_takeover": {
+                "state": "off"
+              },
+              "switch.dsc_hub_humidifier_auto": {
+                "state": "on"
+              },
+              "switch.dsc_hub_humidifier_demand": {
+                "state": "off"
+              },
+              "switch.dsc_hub_dehumidifier_auto": {
+                "state": "on"
+              },
+              "switch.dsc_hub_dehumidifier_demand": {
+                "state": "on"
+              },
+              "switch.dsc_hub_heater_auto": {
+                "state": "on"
+              },
+              "switch.dsc_hub_heater_demand": {
+                "state": "off"
+              },
+              "switch.dsc_hub_grow_mat_auto": {
+                "state": "on"
+              },
+              "switch.dsc_hub_grow_mat_demand": {
+                "state": "on"
+              },
+              "switch.dsc_hub_mat_vote_pot_1": {
+                "state": "off"
+              },
+              "switch.dsc_hub_mat_vote_pot_2": {
+                "state": "off"
+              },
+              "switch.dsc_hub_mat_vote_pot_3": {
+                "state": "off"
+              },
+              "switch.dsc_hub_mat_vote_pot_4": {
+                "state": "off"
+              },
+              "switch.dsc_hub_ac_in_service": {
+                "state": "off"
+              },
+              "switch.dsc_hub_clone_humidifier_in_service": {
+                "state": "off"
+              },
+              "switch.dsc_hub_pot1_in_service": {
+                "state": "off"
+              },
+              "switch.dsc_hub_pot2_in_service": {
+                "state": "off"
+              },
+              "switch.dsc_hub_pot3_in_service": {
+                "state": "off"
+              },
+              "switch.dsc_hub_pot4_in_service": {
+                "state": "off"
+              },
+              "switch.dsc_hub_ac_auto": {
+                "state": "off"
+              },
+              "switch.dsc_hub_ac_demand": {
+                "state": "off"
+              },
+              "switch.dsc_hub_clone_humidifier_auto": {
+                "state": "off"
+              },
+              "switch.dsc_hub_clone_humidifier_demand": {
+                "state": "off"
+              },
+              "switch.dsc_hub_humidifier_intake_routing": {
+                "state": "off"
+              },
+              "switch.dsc_hub_recirc_de_strat_pulse": {
+                "state": "off"
+              },
+              "number.dsc_hub_target_temp": {
+                "state": "25.0"
+              },
+              "number.dsc_hub_vpd_target_min": {
+                "state": "1.0"
+              },
+              "number.dsc_hub_vpd_target_max": {
+                "state": "1.2"
+              },
+              "number.dsc_hub_rh_target_min": {
+                "state": "50.0"
+              },
+              "number.dsc_hub_rh_target_max": {
+                "state": "55.0"
+              },
+              "number.dsc_hub_sunrise_duration": {
+                "state": "30.0"
+              },
+              "number.dsc_hub_sunset_duration": {
+                "state": "30.0"
+              },
+              "number.dsc_hub_sf1000_target_brightness": {
+                "state": "100.0"
+              },
+              "number.dsc_hub_clone_target_temp": {
+                "state": "25.0"
+              },
+              "number.dsc_hub_clone_vpd_min": {
+                "state": "1.0"
+              },
+              "number.dsc_hub_clone_vpd_max": {
+                "state": "1.2"
+              },
+              "number.dsc_hub_clone_rh_min": {
+                "state": "50.0"
+              },
+              "number.dsc_hub_clone_rh_max": {
+                "state": "55.0"
+              },
+              "number.dsc_hub_clone_light_hours": {
+                "state": "12.0"
+              },
+              "number.dsc_hub_sf1000_ramp_floor": {
+                "state": "0.0"
+              },
+              "number.dsc_hub_min_dark_hours": {
+                "state": "4.0"
+              },
+              "number.dsc_hub_clone_hum_hysteresis": {
+                "state": "6.0"
+              },
+              "number.dsc_hub_clone_hum_min_off_time": {
+                "state": "180.0"
+              },
+              "number.dsc_hub_humidifier_min_off_time": {
+                "state": "120.0"
+              },
+              "number.dsc_hub_ladder_wait_dehum": {
+                "state": "300.0"
+              },
+              "number.dsc_hub_ladder_wait_hum": {
+                "state": "120.0"
+              },
+              "number.dsc_hub_ladder_wait_heat": {
+                "state": "300.0"
+              },
+              "number.dsc_hub_ladder_wait_ac": {
+                "state": "300.0"
+              },
+              "number.dsc_hub_ladder_wait_mat": {
+                "state": "60.0"
+              },
+              "number.dsc_hub_heater_min_off_time": {
+                "state": "60.0"
+              },
+              "number.dsc_hub_mat_root_zone_low": {
+                "state": "20.0"
+              },
+              "number.dsc_hub_mat_root_zone_high": {
+                "state": "22.0"
+              },
+              "number.dsc_hub_mat_min_off_time": {
+                "state": "300.0"
+              },
+              "number.dsc_hub_de_strat_pulse_period": {
+                "state": "180.0"
+              },
+              "number.dsc_hub_de_strat_pulse_length": {
+                "state": "15.0"
+              },
+              "number.dsc_hub_de_strat_pulse_level": {
+                "state": "70.0"
+              },
+              "number.dsc_hub_ha_handshake": {
+                "state": "0.0"
+              },
+              "number.dsc_hub_vpd_band_target_hours": {
+                "state": "18.0"
+              },
+              "number.dsc_hub_mister_target_hours": {
+                "state": "0.0"
+              },
+              "number.dsc_hub_mister_min_off_hours": {
+                "state": "4.0"
+              },
+              "select.dsc_hub_grow_stage": {
+                "state": "Early Flowering",
+                "options": [
+                  "Germination",
+                  "Seedling",
+                  "Early Vegetative",
+                  "Vegetative",
+                  "Late (Push) Vegetative",
+                  "Early Flowering",
+                  "Flowering",
+                  "Late Flowering",
+                  "Final 48-72h Flowering",
+                  "Dry Mode",
+                  "Custom",
+                  "Off"
+                ]
+              },
+              "select.dsc_hub_control_strategy": {
+                "state": "VPD",
+                "options": [
+                  "VPD",
+                  "Temperature",
+                  "Humidity"
+                ]
+              },
+              "select.dsc_hub_clone_mode": {
+                "state": "Follow 4x8",
+                "options": [
+                  "Follow 4x8",
+                  "Follow Plants",
+                  "Custom",
+                  "Off"
+                ]
+              },
+              "select.dsc_hub_clone_photoperiod": {
+                "state": "Follow 4x8",
+                "options": [
+                  "Follow 4x8",
+                  "Independent"
+                ]
+              },
+              "select.dsc_hub_priority_tent": {
+                "state": "2x4 Clone",
+                "options": [
+                  "4x8 Main",
+                  "2x4 Clone"
+                ]
+              }
+            },
+            "binaries": {
+              "binary_sensor.dsc_hub_ha_link_status": true,
+              "binary_sensor.dsc_hub_wifi_associated": true,
+              "binary_sensor.dsc_hub_climate_sensor_fault": false,
+              "binary_sensor.dsc_hub_aux_sensor_fault": false,
+              "binary_sensor.dsc_hub_root_zone_sensor_fault": false,
+              "binary_sensor.dsc_hub_emergency_failsafe": false,
+              "binary_sensor.dsc_hub_4x8_window_open": false,
+              "binary_sensor.dsc_hub_2x4_window_open": false,
+              "binary_sensor.dsc_hub_light_catchup_active": false,
+              "binary_sensor.dsc_hub_pot1_esp_now_link": true,
+              "binary_sensor.dsc_hub_pot2_esp_now_link": true,
+              "binary_sensor.dsc_hub_pot3_esp_now_link": false,
+              "binary_sensor.dsc_hub_pot4_esp_now_link": false,
+              "binary_sensor.dsc_hub_clock_valid": true,
+              "binary_sensor.dsc_hub_fix_active": false,
+              "binary_sensor.dsc_hub_ota_blocked": false,
+              "binary_sensor.dsc_hub_coherence_mismatch": false,
+              "binary_sensor.dsc_hub_mister_catchup_active": false,
+              "binary_sensor.dsc_hub_learning_paused": false
+            },
+            "room_vpd_kpa": 1.304,
+            "leaf_vpd_kpa": 0.961,
+            "clone_leaf_vpd_kpa": 1.04,
+            "host": "10.42.0.10",
+            "seat_id": "hub"
+          },
+          "last_seen": 1788258633.589312
+        }
+      }
+    },
+    "HTTP_canopy_fields": {
+      "ok": true,
+      "detail": {
+        "role": "canopy_4x8",
+        "canopy": {
+          "role": "canopy_4x8",
+          "friendly_name": "0xa4c1384d10f805bf",
+          "temp_c": 24.0,
+          "rh_pct": 54.0,
+          "ieee": null
+        }
+      }
+    },
+    "HTTP_critical_banners": {
+      "ok": true,
+      "detail": {
+        "count": 0,
+        "sample": []
+      }
+    },
+    "HTTP_photoperiod_sot_present": {
+      "ok": true,
+      "detail": {
+        "lights_on_4x8": null,
+        "lights_off_4x8": null,
+        "lights_on_2x4": null,
+        "lights_off_2x4": null,
+        "clone_photoperiod": "Follow 4x8",
+        "sf1000": null,
+        "sf1000_clone": null
+      }
+    }
+  },
+  "errors": [],
+  "restore": {
+    "note": "HTTP-only Overview prove; no schedule/climate/journal mutations.",
+    "levers_stressed": false
+  },
+  "snapshot": {
+    "health": {
+      "status": "ok",
+      "version": "7.4.0",
+      "surface": "7.4.0",
+      "expected_firmware": "7.0.0.0",
+      "mode": "live",
+      "zigbee": {
+        "mqtt_connected": true,
+        "bridge_state": "online",
+        "bridge_state_updated_at": 1788250968.028872,
+        "radio_up": true,
+        "radio_note": "Coordinator online",
+        "device_count": 5,
+        "end_device_count": 4,
+        "devices_updated_at": 1788250968.0284364,
+        "canopy_updated_at": 1788257406.4130683,
+        "permit_join": false,
+        "permit_join_end": null
+      }
+    },
+    "rooms": [
+      "grow_room"
+    ],
+    "hub_online": true,
+    "reduced_kit": {
+      "state": "off",
+      "planned_oos": "AC, Clone mister, POT3, POT4, Tank",
+      "offline": "a live lever is parked"
+    },
+    "canopy": {
+      "temp_c": 24.0,
+      "rh_pct": 54.0,
+      "role": "canopy_4x8",
+      "updated_at": 1788257406.4130683,
+      "friendly_name": "0xa4c1384d10f805bf",
+      "last_topic": "zigbee2mqtt/0xa4c138b9e2b9b690"
+    },
+    "critical_banners": [],
+    "photoperiod": {
+      "lights_on_4x8": null,
+      "lights_off_4x8": null,
+      "lights_on_2x4": null,
+      "lights_off_2x4": null,
+      "clone_photoperiod": "Follow 4x8",
+      "sf1000": null,
+      "sf1000_clone": null
+    },
+    "journal_room": {
+      "status": 200,
+      "type": "dict",
+      "keys": [
+        "room_id",
+        "entries"
+      ],
+      "len": 78
+    },
+    "journal_core": {
+      "status": 200,
+      "type": "dict",
+      "keys": [
+        "entries"
+      ],
+      "len": 93
+    }
+  }
+}

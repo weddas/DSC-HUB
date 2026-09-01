@@ -1,7 +1,7 @@
 # Live UX honesty program (five-pass) — Design
 
 **Date:** 2026-09-01  
-**Status:** approved — implementation plan [`2026-09-01-live-ux-honesty-program.md`](../plans/2026-09-01-live-ux-honesty-program.md)
+**Status:** **Passes 1–3 implemented/proven** (2026-09-01 Overview gate green) — plan [`2026-09-01-live-ux-honesty-program.md`](../plans/2026-09-01-live-ux-honesty-program.md). **Pass 4/5 remain stubs** pending `/brainstorming`.  
 **Domain:** Operator Live desks (Light → Climate → Overview); Pi brain SoT; honesty + light UX  
 **Related:** space-energy journals (implemented); kit honesty (pot3/4 planned OOS); `dsc-space-energy.mdc`, `dsc-pi-hotpatch.mdc`
 
@@ -153,6 +153,8 @@ Do not invent Pass 4/5 requirements in the Pass 1–3 plan beyond these stubs.
 ## §7 Success
 
 Passes 1–3 each have a filled walk + green stress prove; shared honesty contract held; Pass 4/5 only stubbed for later brainstorms. Parent status → **implemented** for Passes 1–3 only after Overview gate (or note partial if stopping early).
+
+**Closure (2026-09-01):** Pass 1 Light, Pass 2 Climate, Pass 3 Overview walks filled and gates **GREEN**. Live Overview bundle `index-C8GkS5XE.js`. Do not invent Pass 4/5 requirements here — offer `/brainstorming` when operator ready.
 
 ## Artifacts
 
