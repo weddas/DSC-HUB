@@ -67,6 +67,8 @@ Exit 0 → `spa-dist/assets/index-C8GkS5XE.js`.
 
 ```
 0d95cdb fix(spa): Overview desk honesty journals OOS and grow-log
+dfc139c docs(sdd): record Task 8 commit hash in report
+c6b694a docs(sdd): extend Task 8 progress range through report commit
 ```
 
 Files: OverviewPage.tsx, RoomJournal.tsx, CoreJournal.tsx, DashHomeSections.tsx, spa-dist (`index-C8GkS5XE.js`), FOLLOWUPS, task-8 brief/report, progress.
