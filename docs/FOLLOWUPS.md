@@ -3887,6 +3887,13 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 
 ## 2026-09-01 - Live UX honesty Pass 3 (Overview SPA)
 
+**Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-honesty-program-design.md`](superpowers/specs/2026-09-01-live-ux-honesty-program-design.md)
+**Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-honesty-program.md`](superpowers/plans/2026-09-01-live-ux-honesty-program.md)
+**Walk:** [`docs/qa/LIVE-UX-OVERVIEW-WALK-2026-09.md`](qa/LIVE-UX-OVERVIEW-WALK-2026-09.md) -- gate **GREEN**
+**Developer runbook:** [`docs/brain/LIVE-UX-HONESTY.md`](brain/LIVE-UX-HONESTY.md) (Passes 1-3 green; Pass 4 plan on tip `e7ebfd3`)
+**Prove:** `.audit/live-ux-overview-prove.ps1` / evidence `.audit/live-ux-overview-prove-evidence.json`
+
+
 | Item | Status | Notes |
 |------|--------|-------|
 | Overview SPA honesty (Task 8) | **done (repo)** | Journal provenance/Save UX; root OOS grey; grow-log history caption; photoperiod glance SoT copy ? see `.superpowers/sdd/task-8-report.md`. Bundle `index-C8GkS5XE.js` |
@@ -3907,7 +3914,23 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Item | Status | Notes |
 |------|--------|-------|
 | Passes 1?3 desk gates | **done (live)** | Shared honesty contract held; both tents parity each pass |
-| Pass 4 Integrated | **stub** | Pending `/brainstorming` ? may absorb parked UX (GAUGE-P0-1 moisture band, DutyStrip SV-P1-6, AirPathMap cascade alias) |
+| Pass 4 Twin-first | **design+plan** | Spec+plan tip `e7ebfd3` (Phases A-C/Gate not started). GPIO5 reserved Twin PWM. Parks: GAUGE-P0-1, SV-P1-6, AirPathMap cascade. SoT: `docs/brain/LIVE-UX-HONESTY.md` / `docs/ops/TWIN-SF1000.md` |
 | Pass 5 Follow-up | **stub** | Pending `/brainstorming` after Pass 4 |
 | Operator queue (outside 1?3) | **next-plan** | CannaLib prod ? FlowSankey verify ? Zigbee one-recipe ? unless Pass 4 reorders |
 | Hardware | **parked** | Twin PWM / Zigbee new recipes stay locked until operator unlocks |
+
+
+## 2026-09-01 - Live UX Pass 4 Twin-first (design+plan)
+
+**Design:** [`docs/superpowers/specs/2026-09-01-live-ux-pass4-twin-integrated-design.md`](superpowers/specs/2026-09-01-live-ux-pass4-twin-integrated-design.md)
+**Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-pass4-twin-integrated.md`](superpowers/plans/2026-09-01-live-ux-pass4-twin-integrated.md)
+**Developer runbook:** [`docs/brain/LIVE-UX-HONESTY.md`](brain/LIVE-UX-HONESTY.md) / [`docs/ops/TWIN-SF1000.md`](ops/TWIN-SF1000.md) (tip `e7ebfd3` / spa `index-C8GkS5XE.js`)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Pass 4 design + plan | **done (repo)** | Twin-first -> re-walk -> debt -> full-stress gate; FOLLOWUPS write-up gate-blocking |
+| Phase A Twin hybrid Got / DutyStrip | **not started** | Tip still window Got (`computed_ops` + Light DutyStrip window entity) |
+| Phase B walk + findings | **not started** | `LIVE-UX-PASS4-WALK-2026-09.md` absent |
+| Phase C named parks | **open** | SV-P1-6 / AirPathMap cascade<-intakeClone / GAUGE-P0-1 |
+| Hub GPIO5 Twin PWM | **reserved** | Software entity live; physical PWM module wire-up = operator handoff (do not claim wired) |
+| Pass 4 gate prove | **not started** | No `live-ux-pass4-prove` scripts yet |
