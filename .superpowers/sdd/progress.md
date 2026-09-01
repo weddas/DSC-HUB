@@ -52,3 +52,6 @@ Task 8: complete (Overview SPA honesty)
 
 Task 9: complete (Overview Pi prove + program close; Passes 1?3 GREEN; Pass 4/5 stubs)
 
+Task 9: complete (Overview gate GREEN, Passes 1-3 closed; commits 2d44c52..183f2f0)
+Program Passes 1-3: DONE
+

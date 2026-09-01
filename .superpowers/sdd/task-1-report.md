@@ -1,77 +1,75 @@
-# Task 1 Report — Roles + `floor_flood_alert` recipe (TDD)
+# Task 1 Report: Pass 1 — Light honesty tests (brain/API)
 
-**Status:** DONE  
-**Branch:** (unchanged — working tree)  
-**Commit:** none (per user rule: commit only when asked)  
-**Runtime code changed:** yes
+**Status:** complete  
+**Branch:** master  
+**Date:** 2026-09-01
 
-## What was done
+## Summary
 
-Added three space-scoped floor leak roles to the Zigbee role catalog, a banner-only `floor_flood_alert` recipe (no appliance OOS / relay force), and `flood_banner_template(problem_when)` helper for SPA defaults. Reused existing `_apply_active` / `_apply_clear` paths — flood params omit `seat_id` and `force_relay`, so only banner + grow-log fire.
+Created `brain/tests/test_live_ux_light_honesty.py` using the `_point_db` + `TestClient` fixture pattern from `brain/tests/test_space_energy_stress.py`. No brain or SPA code changes were required — existing API behavior already satisfies the honesty guards.
 
-### Steps completed (TDD)
+## Deliverables
 
-1. **RED — Write failing tests**  
-   Appended to `brain/tests/test_zigbee_policies.py`:
-   - `test_floor_flood_wet_banner_no_oos`
-   - `test_floor_flood_dry_clears_banner`
-   - `test_floor_flood_inactive_polarity`
-   - `test_flood_banner_template`  
-   Appended to `brain/tests/test_zigbee_capability.py`:
-   - `test_floor_space_roles_in_safety_filter`
+| Item | Path | Notes |
+|------|------|-------|
+| Test module | `brain/tests/test_live_ux_light_honesty.py` | 3 tests, all PASS |
+| SPA changes | — | None (per brief) |
 
-2. **RED — Run tests (expect FAIL)**  
-   ```
-   cd brain && python -m pytest tests/test_zigbee_policies.py::test_floor_flood_wet_banner_no_oos tests/test_zigbee_policies.py::test_flood_banner_template tests/test_zigbee_capability.py::test_floor_space_roles_in_safety_filter -v
-   ```
-   **Evidence (3 failed):**
-   - `test_floor_flood_wet_banner_no_oos` → `ValueError: unknown recipe_id floor_flood_alert`
-   - `test_flood_banner_template` → `ImportError: cannot import name 'flood_banner_template'`
-   - `test_floor_space_roles_in_safety_filter` → `AssertionError: 'leak_floor_room' not in {'door_tent', 'leak_floor', 'leak_tank', 'unbound'}`
+## Tests implemented
 
-3. **GREEN — Implement catalog + helper**  
-   - `brain/dsc_brain/zigbee_mqtt.py`: added `leak_floor_room`, `leak_floor_4x8`, `leak_floor_2x4` after `leak_floor` in `ZIGBEE_ROLE_CATALOG`.
-   - `brain/dsc_brain/zigbee_policies.py`: added `flood_banner_template(problem_when)`; added `floor_flood_alert` to `RECIPE_CATALOG` after `tank_full_appliance` with `device_classes`, `suggested_roles`, `param_schema`, and banner-only defaults (no `seat_id` / `force_relay`).
+### 1. `test_both_spaces_estimate_labeled_and_suggestions_never_apply`
 
-4. **GREEN — Run full policy + capability tests (expect PASS)**  
-   ```
-   cd brain && python -m pytest tests/test_zigbee_policies.py tests/test_zigbee_capability.py -v
-   ```
-   **Evidence:** `31 passed in 4.64s`
+For both `4x8` and `2x4`:
 
-5. **Commit** — skipped (user did not ask).
+- `GET /energy/estimate` → 200, `ok: true`, `estimate_label` contains `"Estimate"`
+- `GET /energy/suggestions` → top-level `apply: false`, every suggestion `apply: false`
 
-## Self-review
+Params: `lights_on=06:00:00`, `want_hours=12` (per brief).
 
-| Brief requirement | Met |
-|-------------------|-----|
-| Roles `leak_floor_room`, `leak_floor_4x8`, `leak_floor_2x4` in catalog | yes |
-| Roles appear in liquid/safety filter | yes |
-| Recipe id `floor_flood_alert` in `RECIPE_CATALOG` | yes |
-| Banner-only (no OOS, no relay force) | yes — verified by `test_floor_flood_wet_banner_no_oos` |
-| Wet → critical banner; dry → clear | yes |
-| `problem_when: inactive` polarity | yes |
-| `flood_banner_template(problem_when)` helper | yes |
-| No evaluator fork (reuse `_apply_active` / `_apply_clear`) | yes |
-| Tank regressions pass | yes — all 13 existing policy tests green |
-| TDD RED→GREEN | yes |
+### 2. `test_shift_confirm_gate_both_spaces`
 
-## Test summary
+For both spaces:
 
-`31 passed` — 17 policy tests (4 new floor-flood + 13 existing tank/legacy) and 14 capability tests (1 new role filter + 13 existing).
+- `POST /energy/shift/plan` with `confirm: false` → **400**
 
-## Concerns
+Policy: `pause`; shift `06:00:00` → `08:00:00`.
 
-1. **Brief typo `get_role_catalog`** — codebase uses `get_zigbee_role_catalog`; test uses existing name (consistent with other capability tests).
-2. **SPA not updated** — `floor_flood_alert` recipe and `flood_banner_template` not wired in Settings UI; out of scope for this task.
-3. **`test_filter_recipes_liquid_includes_tank_full`** — still only asserts `tank_full_appliance`; `floor_flood_alert` is also liquid-eligible but not explicitly tested (harmless; filter logic is generic).
+### 3. `test_journal_space_provenance_both_spaces`
 
-## Files touched
+Posts operator notes to `/journal/space/2x4` and `/journal/space/4x8`; GET lists assert:
 
-| Path | Action |
-|------|--------|
-| `brain/dsc_brain/zigbee_mqtt.py` | 3 new floor space roles |
-| `brain/dsc_brain/zigbee_policies.py` | `floor_flood_alert` recipe, `flood_banner_template` |
-| `brain/tests/test_zigbee_policies.py` | 4 new tests |
-| `brain/tests/test_zigbee_capability.py` | 1 new test |
-| `.superpowers/sdd/task-1-report.md` | this report |
+- Response `space_id` matches tent
+- Posted and listed entries include `space_id`, `provenance: "space"`, `source: "operator"`
+- Notes round-trip in entry lists
+
+Matches existing journal API shape from `dsc_brain.space_journal.add_space_entry` / `list_space_native`.
+
+## Test run
+
+```powershell
+cd brain; python -m pytest tests/test_live_ux_light_honesty.py -q --tb=short
+```
+
+```
+3 passed in 2.90s
+```
+
+## Commit
+
+```
+77c8541 test(brain): add Pass 1 light honesty guard tests
+```
+
+Files: `brain/tests/test_live_ux_light_honesty.py`
+
+## Concerns / follow-ups
+
+- **Overlap with existing coverage:** `test_space_energy_stress.py::test_confirm_gate_and_both_spaces_estimate` and `test_journal_api.py::test_journal_space_energy_api` partially overlap. This module is intentionally scoped as the Live UX honesty program guard rail with exact brief shapes and both-space coverage.
+- **No brain fixes needed:** All guards passed on first run; no API regressions found.
+- **Task 2+:** SPA polish for light surfaces should treat these tests as the brain contract; do not start Task 2 from this pass.
+
+## Out of scope (not done)
+
+- Push to remote
+- SPA changes
+- Task 2+ work

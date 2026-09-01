@@ -1,133 +1,26 @@
-﻿### Task 3: Climate safety honesty (Wet/Dry + Problem/Clear)
+﻿### Task 3: Pass 1 â€” Light Pi prove + walk fill
 
 **Files:**
-- Modify: `homeassistant/custom_components/dsc_hub/frontend/src/pages/ClimatePage.tsx`
+- Create: `.audit/live-ux-light-prove.ps1` (mirror `space-energy-pi-closure.ps1`: pack SPA+brain if needed, pscp/plink, HTTP energy both spaces, pull evidence JSON)
+- Modify: `docs/qa/LIVE-UX-LIGHT-WALK-2026-09.md` (fill every cell)
+- Screenshots â†’ `docs/qa-screenshots-2026-09-01-live-ux/`
 
 **Interfaces:**
-- Consumes: `fleet.system.zigbee_by_role`, `fleet.system.zigbee_device_bindings`, `fleet.system.zigbee_device_policies`, `fleet.system.zigbee_policy_state`
-- Produces: Climate safety rows with wet chip + optional problem chip
+- Consumes: built `spa-dist`, brain if API fixes shipped
+- Produces: filled Light walk; evidence JSON optional under `.audit/`
 
-- [ ] **Step 1: Split climate vs safety rows**
+- [ ] **Step 1: Hotpatch SPA (and brain if Task 1 changed modules)**
 
-Import `isZigbeeSafetyLeakRole` from `../lib/fleetApi`.
+Use plink/pscp only (`dsc-pi-hotpatch.mdc`). Verify live index hash matches `spa-dist/index.html`.
 
-```typescript
-const bindings = (fleet.system.zigbee_device_bindings ?? {}) as Record<
-  string,
-  { role?: string; zone?: string; recipe_id?: string }
->;
-const policies = (fleet.system.zigbee_device_policies ?? {}) as Record<
-  string,
-  { recipe_id?: string }
->;
-const policyState = (fleet.system.zigbee_policy_state ?? {}) as Record<
-  string,
-  { problem?: boolean; active?: boolean }
->;
+- [ ] **Step 2: HTTP + browser matrix**
 
-function ieeeForRole(roleId: string): string | null {
-  for (const [ieee, row] of Object.entries(bindings)) {
-    if (String(row?.role ?? "") === roleId) return ieee;
-  }
-  return null;
-}
+Both tents: estimate/suggestions/confirm=false; UI Got/Want/DARK/Follow/energy/journals. Save screenshots.
 
-const zigbeeClimateRows = useMemo(() => {
-  if (!zigbeeByRole) return [];
-  return Object.entries(zigbeeByRole)
-    .filter(([role]) => !isZigbeeSafetyLeakRole(role))
-    .map(([role, row]) => ({
-      role,
-      zone: String(row.zone ?? "â€”"),
-      temp: row.temperature,
-      rh: row.humidity,
-      name: String(row.friendly_name ?? role),
-    }));
-}, [zigbeeByRole]);
+- [ ] **Step 3: Fill Light walk; gate**
 
-const zigbeeSafetyRows = useMemo(() => {
-  if (!zigbeeByRole) return [];
-  return Object.entries(zigbeeByRole)
-    .filter(([role]) => isZigbeeSafetyLeakRole(role))
-    .map(([role, row]) => {
-      const ieee = ieeeForRole(role);
-      const recipe =
-        (ieee && policies[ieee]?.recipe_id) ||
-        (ieee && bindings[ieee] && (bindings[ieee] as { recipe_id?: string }).recipe_id) ||
-        "none";
-      // Prefer zigbee_device_policies from fleet (brain mirrors policies onto fleet)
-      const recipeId = ieee ? String(policies[ieee]?.recipe_id ?? "none") : "none";
-      const st = ieee ? policyState[ieee] : undefined;
-      const wet = typeof row.wet === "boolean" ? row.wet : typeof row.active === "boolean" ? row.active : null;
-      const showProblem = Boolean(ieee && recipeId !== "none" && st && typeof st.problem === "boolean");
-      return {
-        role,
-        zone: String(row.zone ?? "â€”"),
-        name: String(row.friendly_name ?? role),
-        wet,
-        showProblem,
-        problem: showProblem ? Boolean(st?.problem) : null,
-      };
-    });
-}, [zigbeeByRole, bindings, policies, policyState]);
-```
+All rows green. If schedule stress used: restore lights-on both tents; no active plans. **Do not start Climate until this gate passes.**
 
-Fix any dead `recipe` variable â€” use only `recipeId` from `policies`.
-
-Gate card visibility on climate **or** safety rows (not climate-only).
-
-- [ ] **Step 2: Render safety subsection**
-
-Below the climate table (or second table):
-
-```tsx
-{zigbeeSafetyRows.length ? (
-  <>
-    <p className="dsc-muted" style={{ fontSize: 12, marginTop: 12, marginBottom: 8 }}>
-      Safety â€” Wet/Dry is the raw sensor. Problem/Clear appears only when a Task is bound.
-    </p>
-    <div className="dsc-chip-row">
-      {zigbeeSafetyRows.map((row) => (
-        <React.Fragment key={row.role}>
-          <StatusChip
-            label={`${row.role} Â· ${row.zone} Â· ${row.name}`}
-            tone="muted"
-          />
-          <StatusChip
-            label={row.wet === true ? "Wet" : row.wet === false ? "Dry" : "Wet/Dry â€”"}
-            tone={row.wet === true ? "warn" : "ok"}
-          />
-          {row.showProblem ? (
-            <StatusChip
-              label={row.problem ? "Problem" : "Clear"}
-              tone={row.problem ? "critical" : "ok"}
-            />
-          ) : null}
-        </React.Fragment>
-      ))}
-    </div>
-  </>
-) : null}
-```
-
-Use existing `StatusChip` tone names already used on Climate (adjust `critical` â†’ `warn` if tone enum lacks critical).
-
-Ensure climate table maps `zigbeeClimateRows` (not all roles).
-
-- [ ] **Step 3: Rebuild SPA**
-
-```bash
-cd homeassistant/custom_components/dsc_hub/frontend && npm run build:spa
-```
-
-Expected: exit 0
-
-- [ ] **Step 4: Commit** (only if user asked)
-
-```bash
-git add homeassistant/custom_components/dsc_hub/frontend/src/pages/ClimatePage.tsx
-git commit -m "feat(spa): Climate Zigbee safety Wet/Dry and Problem chips"
-```
+- [ ] **Step 4: FOLLOWUPS note for Pass 1** (hashes, parks) when closing the desk
 
 ---
-

@@ -1,24 +1,33 @@
-﻿### Task 4: FOLLOWUPS + docs status
+﻿### Task 4: Pass 2 â€” Climate honesty tests
 
 **Files:**
-- Modify: `docs/FOLLOWUPS.md` (2026-08-30 Zigbee device tasks section)
-- Optionally mark related rows in one-pass section if needed
+- Create: `brain/tests/test_live_ux_climate_honesty.py`
+- Reuse: `brain/tests/test_reduced_kit.py`, zigbee policy tests as reference
 
-- [ ] **Step 1: Update FOLLOWUPS**
+**Interfaces:**
+- Consumes: `_reduced_kit`, fleet extras shapes
+- Produces: assertions pot3/4 in `planned_oos`, never offline lead when only planned
 
-In `## 2026-08-30 â€” Zigbee device tasks`:
+- [ ] **Step 1: Write reduced-kit + policy display guards**
 
-| Item | Status |
-|------|--------|
-| Policy problem vs raw wet in UI | **done** (Climate safety chips; this plan) |
-| Recipe `floor_flood_alert` | **done (Pi evidence pending Task 5)** then **done (live)** after Task 5 |
-| Roles `leak_floor_room` / `_4x8` / `_2x4` | **done (catalog)** |
-| Multi-sensor per space (`*_b` roles) | **next-plan** |
-| `leak_floor_2x4` live bind | **deferred** until hardware in 2Ã—4 |
+```python
+def test_reduced_kit_pot34_planned_not_offline_lead(temp_db, monkeypatch):
+    # point DEFAULT_DB; list_inventory; _reduced_kit
+    active, attrs = _reduced_kit(list_inventory(temp_db))
+    assert "POT4" not in attrs.get("offline", "")
+    assert "POT3" not in attrs.get("offline", "")
+    planned = attrs.get("planned_oos", "")
+    assert "POT3" in planned and "POT4" in planned
+```
 
-Add dated note pointing at this plan + spec.
+Add a test that documents SPA must not infer problem from wet alone (comment + optional pure helper if one exists; otherwise browser-only in Task 6 â€” do not invent a new policy engine).
 
-- [ ] **Step 2: Commit** (only if user asked)
+- [ ] **Step 2: pytest**
+
+```powershell
+cd brain; python -m pytest tests/test_live_ux_climate_honesty.py tests/test_reduced_kit.py -q --tb=short
+```
+
+Expected: PASS
 
 ---
-
