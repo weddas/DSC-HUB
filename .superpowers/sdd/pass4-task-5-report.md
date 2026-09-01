@@ -7,7 +7,7 @@
 
 ## Commits
 
-- (see git log after commit) — docs(pass4): Phase B re-walk inventory + findings
+- `84a3387` — docs(pass4): Phase B re-walk inventory and findings
 
 ## What landed
 
