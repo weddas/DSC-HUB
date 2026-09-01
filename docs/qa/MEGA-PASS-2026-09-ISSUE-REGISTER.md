@@ -4,7 +4,7 @@
 
 ## Register snapshot (2026-09-01 — closure)
 
-- Open: 0 | In flight: 0 | Closed: 30 | Regressed: 0 | Deferred: 10 | Out-of-scope: 1
+- Open: 0 | In flight: 0 | Closed: 31 | Regressed: 0 | Deferred: 9 | Out-of-scope: 1
 - P0/P1: none open without defer
 
 ---
@@ -47,7 +47,7 @@
 | MP-060 | Help | WS6 | PD site | closed | prior | — | — | verify-close | |
 | MP-061 | HA | WS6 | Lovelace soak | out-of-scope | — | — | — | — | |
 | MP-062 | 7.4 HW | WS6 | F-001…F-008 | deferred | D-C-A-B | — | — | z2m health | z2m closed; F-003/POT4 **retired**; F-001/F-002 **on hold** |
-| MP-063 | 7.4 | WS6 | FlowSankey soak | deferred | — | — | — | — | Operator |
+| MP-063 | 7.4 | WS6 | FlowSankey soak | closed | 7.4.0 | FLOW-SANKEY-SOAK-7.3 | — | Air CFM live | mass chip gated; EXPERIMENTAL gone |
 | MP-064 | stress | WS2 | Strain-as-nickname data | deferred | — | — | — | — | Re-compose |
 | MP-065 | stress | WS2 | FRITZ detached | deferred | — | — | — | — | Operator |
 

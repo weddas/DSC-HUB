@@ -39,7 +39,7 @@ def temp_db(monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def test_version_is_pi_train() -> None:
-    assert __version__.startswith("7.3.0")
+    assert __version__.startswith("7.4.0")
 
 
 def test_settings_defaults(temp_db: Path) -> None:
@@ -458,8 +458,8 @@ def test_health_endpoint() -> None:
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "ok"
-    assert body["version"] == "7.3.0"
-    assert body["surface"] == "7.3.0"
+    assert body["version"] == "7.4.0"
+    assert body["surface"] == "7.4.0"
     assert body["expected_firmware"] == "7.0.0.0"
 
 

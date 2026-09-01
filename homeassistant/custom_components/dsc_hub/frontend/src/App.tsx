@@ -79,7 +79,7 @@ function RouteFallback() {
   );
 }
 
-function Shell({ surfaceVersion = "7.3.0" }: { surfaceVersion?: string }) {
+function Shell({ surfaceVersion = "7.4.0" }: { surfaceVersion?: string }) {
   const location = useLocation();
   const navigate = useNavigate();
   const section: PrimarySection = sectionFromPath(location.pathname);
@@ -206,7 +206,7 @@ function Shell({ surfaceVersion = "7.3.0" }: { surfaceVersion?: string }) {
 
 export function App({
   hass,
-  surfaceVersion = "7.3.0",
+  surfaceVersion = "7.4.0",
   hassRevision = 0,
   fleetSource = "ha",
 }: {

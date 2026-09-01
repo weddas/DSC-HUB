@@ -453,7 +453,7 @@ Remaining goal work: mid-reflect skill/rule drafts still await your **yes** befo
 | D | UX polish: compose, photoperiod, icons (after ~1 week live) |
 | E | Version 7.4.0 + AUDIT-CLOSURE-7.4 |
 
-**Git baseline:** `432d205` pushed; Pi SPA `index-IOZwdpgy.js`.
+**Git baseline:** `f029702` pushed; Pi SPA `index-CXq-NptO.js`.
 
 ---
 
@@ -473,7 +473,7 @@ Remaining goal work: mid-reflect skill/rule drafts still await your **yes** befo
 | Lovelace YAML retired | `docs/archive/lovelace-7.3/` |
 | Phase E shim simplified | `useBrain.tsx` |
 
-**Remains (operator):** z2m TS0201 pair + stick recovery, FlowSankey 48h soak closeout (~2026-08-29), F-001?F-008 hardware.
+**Remains (operator):** FlowSankey 48h soak closeout — see [`FLOW-SANKEY-SOAK-7.3.md`](qa/FLOW-SANKEY-SOAK-7.3.md). z2m **closed** 2026-09-01. F-001/F-002 on hold; POT3/4 retired.
 
 ---
 
@@ -3786,4 +3786,31 @@ Source: `/reflect` + `/interrogate` + `test_roster_stress.py` + react-doctor pas
 | F-002 Clone mister | **on hold indefinitely** | Same as F-001. |
 
 Do not file follow-ups or version gates that assume POT3 restore or AC/mister hardware landing unless operator reopens.
+
+---
+
+## 2026-09-01 — Phase 0 progress (7.4.0 path)
+
+**Walk doc:** [`docs/qa/PHASE0-WALK-2026-09.md`](qa/PHASE0-WALK-2026-09.md) · **Git:** `f029702`
+
+| Gate | Status |
+|------|--------|
+| z2m | **closed** — radio_up, 4 end devices |
+| Live walk | **pass** (API-backed; bundle `index-CXq-NptO.js`) |
+| FlowSankey 48h soak | **closed** — [`FLOW-SANKEY-SOAK-7.3.md`](qa/FLOW-SANKEY-SOAK-7.3.md) |
+
+**7.4.0:** Phase 0 closed. Surface bump in tree; Pi hotpatch + tag pending. Hardware F-001/F-002/F-003 do not gate.
+
+---
+
+## 2026-09-01 — 7.4.0 Phase 0 closed + surface bump
+
+**Closure:** [`docs/qa/AUDIT-CLOSURE-7.4.md`](qa/AUDIT-CLOSURE-7.4.md) · **Soak:** [`FLOW-SANKEY-SOAK-7.3.md`](qa/FLOW-SANKEY-SOAK-7.3.md) closed
+
+| Item | Status |
+|------|--------|
+| Phase 0 (z2m, walk, Sankey) | **closed** |
+| Phase B (EXPERIMENTAL) | **done** in SPA (Air CFM only; mass chip gated) |
+| Surface version | **7.4.0** brain + SPA defaults + Pi live (`/health` 7.4.0/7.4.0, SPA `index-K2_ziUnM.js`) |
+| Git tag `v7.4.0` | pending operator signoff |
 

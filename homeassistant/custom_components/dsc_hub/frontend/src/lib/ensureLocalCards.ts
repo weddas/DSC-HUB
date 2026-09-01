@@ -1,6 +1,6 @@
 /** Script sources that register DSC Lovelace custom elements. */
 /** Cache-bust: HA /local max-age ~31d; bump when Dash/Twin IIFE changes. */
-const BUNDLE_V = "7.3.0";
+const BUNDLE_V = "7.4.0";
 
 const PI_MODE = import.meta.env.VITE_DSC_PI === "1";
 

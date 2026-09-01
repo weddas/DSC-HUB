@@ -1,7 +1,7 @@
 # DSC-HUB 7.4 plan
 
 **Baseline:** 7.3 software closed 2026-08-27 · [`AUDIT-CLOSURE-7.3.md`](AUDIT-CLOSURE-7.3.md)  
-**Git:** `432d205` on `origin/master` · Pi SPA `index-IOZwdpgy.js` on `.48`  
+**Git:** `f029702` on `origin/master` · Pi SPA `index-CXq-NptO.js` on `.48`  
 **Surface target:** `7.4.0` (brain + SPA unified when pass ships)
 
 7.3 delivered graphs, twin, Lovelace retirement, compose wizard, per-tent photoperiod clocks, and icon motion. **7.4 is unblock → prove → polish → wire** — not another mega feature dump before the stick and soaks are green.
@@ -12,11 +12,11 @@
 
 | Gate | Owner | Action | Done when |
 |------|-------|--------|-----------|
-| FlowSankey 48h soak | Operator | Watch Climate → Sankey air/heat/humidity through ~2026-08-29; tick [`FLOW-SANKEY-SOAK-7.3.md`](FLOW-SANKEY-SOAK-7.3.md) | Criteria checked; no false mass-balance alarms >6h |
-| z2m radio + TS0201 | Operator | [`docs/ops/ZIGBEE-RECOVERY.md`](../ops/ZIGBEE-RECOVERY.md) — no factory reset without OK | `radio_up: true`, ≥1 device, permit-join pair succeeds |
-| Live walk | Operator | Overview, Light, Compose, Twin, Climate on `.48` | No blockers filed as red-flag in FOLLOWUPS |
+| FlowSankey 48h soak | Operator | Watch Climate → Sankey air through ~2026-08-29; tick [`FLOW-SANKEY-SOAK-7.3.md`](FLOW-SANKEY-SOAK-7.3.md) | **closed 2026-09-01** |
+| z2m radio + TS0201 | Operator | [`docs/ops/ZIGBEE-RECOVERY.md`](../ops/ZIGBEE-RECOVERY.md) — no factory reset without OK | **closed 2026-09-01** (`radio_up: true`, 4 end devices) |
+| Live walk | Operator | Overview, Light, Compose, Twin, Climate on `.48` | **pass** — [`PHASE0-WALK-2026-09.md`](PHASE0-WALK-2026-09.md) |
 
-**Do not bump version to 7.4.0 until Phase 0 signoff** (or explicitly defer a gate with a dated note in FOLLOWUPS).
+**Phase 0 signed off 2026-09-01.** See [`AUDIT-CLOSURE-7.4.md`](AUDIT-CLOSURE-7.4.md).
 
 ---
 
@@ -42,14 +42,14 @@ These are not polish; the UI already shows honest OOS until installed.
 
 ## Phase B — FlowSankey graduation
 
-**Prerequisite:** Phase 0 FlowSankey soak signed off.
+**Prerequisite:** Phase 0 FlowSankey soak signed off — **done 2026-09-01**.
 
 | Task | Notes |
 |------|-------|
-| Remove **EXPERIMENTAL** label | Climate tab + any honesty banners |
-| Default tab or Overview chip | Only if soak shows stable mass-balance during fan duty |
-| Alert wiring | Optional: surface mass-balance warn as StatusChip on Overview (no new automations without ops OK) |
-| Docs | Add row to AUDIT-CLOSURE-7.4 when done |
+| Remove **EXPERIMENTAL** label | **done** — SPA shows `Air CFM` chip only |
+| Default tab or Overview chip | Skipped — mass chip stays gated (`massBalanceOk=null`) |
+| Alert wiring | Deferred — no Overview mass-balance warn unless ops asks |
+| Docs | [`AUDIT-CLOSURE-7.4.md`](AUDIT-CLOSURE-7.4.md) |
 
 ---
 
@@ -115,12 +115,16 @@ Live with 7.3 UI first (~1 week), then one coherent pass — not death-by-a-thou
 
 ## Success criteria (7.4.0)
 
-- [ ] Phase 0 gates closed or deferred with dated owner note
-- [ ] FlowSankey not experimental (or explicitly remains experimental with reason)
-- [ ] z2m: `radio_up: true` OR documented blocker + UI still honest
-- [ ] No regressions: 61/61 brain tests, SPA build clean
-- [ ] Compose + photoperiod flows verified on `.48` post-polish
-- [ ] AUDIT-CLOSURE-7.4 published
+- [x] Phase 0 gates closed or deferred with dated owner note
+- [x] FlowSankey not experimental (or explicitly remains experimental with reason)
+- [x] z2m: `radio_up: true` OR documented blocker + UI still honest
+- [x] Hardware F-001/F-002/F-003 retired or on-hold with dated note
+- [x] Surface version strings `7.4.0` in brain + SPA defaults
+- [x] Pi hotpatch / `.env` (`DSC_SURFACE_VERSION=7.4.0`, SPA `index-K2_ziUnM.js`)
+- [ ] Operator git tag `v7.4.0`
+- [x] Brain pytest green after bump; SPA `build:spa` clean
+- [x] AUDIT-CLOSURE-7.4 published
+- [ ] Compose + photoperiod smoke on `.48` post-deploy (operator)
 
 ---
 

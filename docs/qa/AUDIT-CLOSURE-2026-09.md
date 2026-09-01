@@ -59,7 +59,7 @@ Not re-run full repo (~40/100 baseline). Changed files are targeted fixes; no ne
 
 ## Version bump
 
-**Defer 7.4.0** until hardware blockers (F-001…) and operator soak signoff.
+**Defer 7.4.0** until Phase 0 soak signoff + operator walk on `.48`. Hardware F-001/F-002/F-003 no longer gate the bump (operator 2026-09-01: pot3/4 retired; AC/mister on hold). See [`AUDIT-CLOSURE-2026-09-D-C-A-B.md`](AUDIT-CLOSURE-2026-09-D-C-A-B.md).
 
 ## FOLLOWUPS reconciliation
 

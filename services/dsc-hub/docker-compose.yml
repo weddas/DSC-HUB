@@ -16,7 +16,7 @@ services:
       DSC_DATA: /data
       DSC_BRAIN_API_KEY: ${DSC_BRAIN_API_KEY:-}
       DSC_EXPECTED_FIRMWARE: ${DSC_EXPECTED_FIRMWARE:-7.0.0.0}
-      DSC_SURFACE_VERSION: ${DSC_SURFACE_VERSION:-7.3.0}
+      DSC_SURFACE_VERSION: ${DSC_SURFACE_VERSION:-7.4.0}
       DSC_HUB_API_KEY: ${DSC_HUB_API_KEY:-}
       DSC_CONTROL_API_KEY: ${DSC_CONTROL_API_KEY:-}
       # Must match .env + esphome_client `DSC_{SEAT}_API_KEY` (uppercase).

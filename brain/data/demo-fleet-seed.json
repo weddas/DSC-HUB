@@ -1,6 +1,6 @@
 {
   "version": "7.0.0.0-demo",
-  "surface": "7.3.0-demo",
+  "surface": "7.4.0-demo",
   "expected_firmware": "7.0.0.0",
   "hub": {
     "seat_id": "hub",

@@ -10,7 +10,7 @@ import { FleetProvider } from "./hooks/useFleet";
 import type { HassEntity } from "./vite-env";
 import "./styles/dsc.css";
 
-const DEFAULT_SURFACE = "7.3.0";
+const DEFAULT_SURFACE = "7.4.0";
 
 function PiApp() {
   const { hass, fleet, computed, tick, loading, error, refresh } = useBrainContext();

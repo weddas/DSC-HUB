@@ -19,7 +19,7 @@ services:
       DSC_DATA: /data
       DSC_REPO_ROOT: /app
       DSC_EXPECTED_FIRMWARE: 7.0.0.0-demo
-      DSC_SURFACE_VERSION: 7.3.0-demo
+      DSC_SURFACE_VERSION: 7.4.0-demo
       CANNALIB_USE_LOCAL_FALLBACK: "true"
     volumes:
       - dsc_demo_ops:/data
