@@ -3814,3 +3814,11 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Surface version | **7.4.0** brain + SPA defaults + Pi live (`/health` 7.4.0/7.4.0, SPA `index-K2_ziUnM.js`) |
 | Git tag `v7.4.0` | **done** — operator signed off 2026-09-01 on `3eeecab` |
 
+---
+
+## 2026-09-01 — Docs SoT residual (engineering-documentation)
+
+Durable tip SoT for `32836fe` / **v7.4.0** lives in draft PR on `cursor/engineering-documentation-332e`: lands #155 brain docs tip-aligned (`SPA-MODULE-MAP` · `KIT-SCOPE` · roster/wizard/R3F/Zigbee/`PI-HOTPATCH`) plus **new** `FLOW-SANKEY` · `SURFACE-VERSION`. Prefer over open #155 (`f029702` hashes) and #154. SoftCal→ESP NVS / SoftCalWizard→`POST /soft-cal/sessions` still open (#151/#145).
+
+**Cascade CFM id mismatch (docs-found, code fix later):** brain emits `sensor.dsc_cfm_cascade_2x4_allocated`; Climate `FlowSankey` still resolves `sensor.dsc_cfm_cascade_allocated` / `sensor.dsc_cfm_cascade` — cascade link omitted until SPA points at `*_2x4_*`. See [`docs/brain/FLOW-SANKEY.md`](brain/FLOW-SANKEY.md). Do not invent height/chem/PPFD/NPK; do not paste secrets.
+

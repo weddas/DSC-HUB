@@ -1,6 +1,7 @@
 # Gate 0 — Pi operator soak (2026-09-01)
 
-**Pi:** `192.168.86.48:8787` · **SPA:** `assets/index-DlMHgtYz.js` · **Git:** `a307dc7`
+**Pi:** `192.168.86.48:8787` · **SPA (post-D):** `assets/index-CXq-NptO.js` · **Git tip:** `f029702`  
+**Gate 0 evidence commit:** `a307dc7` (`index-DlMHgtYz.js`) — closed before D splits; Post-D note below.
 
 ## API-backed checks (pass)
 
@@ -29,4 +30,6 @@
 
 **Gate 0: CLOSED** — proceed to D splits.
 
-**Post-D note (2026-09-01):** Pi now serves `index-CXq-NptO.js` after D hotpatch; z2m/catalog/leak_floor_4x8 re-verified live.
+**Post-D note (2026-09-01):** Pi served `index-CXq-NptO.js` after D hotpatch; z2m/catalog/leak_floor_4x8 re-verified live.
+
+**Post-7.4.0 note (2026-09-01):** Surface bump + tag signed off on tip `32836fe` — Pi SPA `index-K2_ziUnM.js`; Phase 0/Sankey closed in [`AUDIT-CLOSURE-7.4.md`](AUDIT-CLOSURE-7.4.md) · [`PHASE0-WALK-2026-09.md`](PHASE0-WALK-2026-09.md).

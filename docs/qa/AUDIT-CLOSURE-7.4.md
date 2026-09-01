@@ -2,7 +2,8 @@
 
 **Prior:** [`AUDIT-CLOSURE-7.3.md`](AUDIT-CLOSURE-7.3.md) · [`AUDIT-CLOSURE-2026-09-D-C-A-B.md`](AUDIT-CLOSURE-2026-09-D-C-A-B.md)  
 **Plan:** [`PLAN-7.4.md`](PLAN-7.4.md) · **Phase 0 walk:** [`PHASE0-WALK-2026-09.md`](PHASE0-WALK-2026-09.md)  
-**Git:** post-`f029702` surface bump · **SPA:** rebuild after version bump
+**Git:** post-`f029702` surface bump · tip `32836fe` · **SPA:** `index-K2_ziUnM.js`  
+**Developer SoT:** [`../brain/SURFACE-VERSION.md`](../brain/SURFACE-VERSION.md) · [`../brain/FLOW-SANKEY.md`](../brain/FLOW-SANKEY.md) · [`../brain/KIT-SCOPE.md`](../brain/KIT-SCOPE.md)
 
 ---
 

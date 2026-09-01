@@ -45,3 +45,5 @@
 - [x] 48h soak complete (calendar + honesty gates)
 
 **Phase B:** EXPERIMENTAL already gone; mass chip stays gated. Optional Overview mass-balance alert remains out of scope unless ops asks.
+
+**Developer SoT:** [`../brain/FLOW-SANKEY.md`](../brain/FLOW-SANKEY.md) — includes cascade entity-id pitfall (`*_2x4_allocated` vs SPA bare cascade ids).

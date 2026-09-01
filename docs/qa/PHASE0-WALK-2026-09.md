@@ -37,7 +37,9 @@ Per operator 2026-09-01: POT3/POT4 **retired**; F-001/F-002 **on hold indefinite
 
 ---
 
-## Next
+## Next (closed)
 
-1. Deploy 7.4.0 surface to Pi (brain + SPA + `.env`)
-2. Operator signoff → git tag `v7.4.0`
+1. ~~Deploy 7.4.0 surface to Pi (brain + SPA + `.env`)~~ — done (live `/health` 7.4.0 / SPA `index-K2_ziUnM.js`)
+2. ~~Operator signoff → git tag `v7.4.0`~~ — signed off 2026-09-01 (`32836fe`)
+
+Developer SoT: [`../brain/SURFACE-VERSION.md`](../brain/SURFACE-VERSION.md) · [`../brain/FLOW-SANKEY.md`](../brain/FLOW-SANKEY.md).
