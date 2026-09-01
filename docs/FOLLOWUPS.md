@@ -591,10 +591,10 @@ Verdict pass over open items below (history untouched; line refs point at the or
 
 | Item | Gate |
 |---|---|
-| F-001 AC relay | Hardware install |
-| F-002 clone mister | Hardware install |
-| F-003 POT3 probe replacement | Hardware (probe swap) |
-| POT4 probe isolate (L~1941 / L~2017) | Hardware ? POT2 known-good probe swap test |
+| F-001 AC relay | **on hold** (indefinite) | Honest OOS UI only; operator 2026-09-01 |
+| F-002 clone mister | **on hold** (indefinite) | Honest OOS UI only; operator 2026-09-01 |
+| F-003 / POT3 | **retired** | pot3/4 out of kit — not chasing hardware |
+| POT4 | **retired** | Same as POT3 |
 | F-008 SCD41 real CO2 sensor | Hardware |
 | GPIO5 4x8 lamp | Hardware ? window stays Got proxy until wired |
 | DSC-Tank firmware | Hardware ? dummy contract only |
@@ -620,9 +620,9 @@ Counts: **10 retired / 8 closed / 11 kept open.**
 
 | ID | Item | Notes |
 |---|---|---|
-| F-001 | Physical AC hardware + follower relay | In-service stays OFF until installed |
-| F-002 | Physical clone mister + follower | In-service stays OFF |
-| F-003 | Replace/repair POT3 probe | In-service OFF; mat vote excluded |
+| F-001 | Physical AC hardware + follower relay | **On hold** (indefinite) — in-service OFF; honest OOS |
+| F-002 | Physical clone mister + follower | **On hold** (indefinite) — in-service OFF |
+| F-003 | ~~Replace/repair POT3 probe~~ | **Retired** — pot3/4 out of kit |
 | F-004 | SoftAP preferred-BSSID mismatch (CHX) | Nest router channel lock remains out-of-scope; SoftAP-primary is the heal path |
 | F-005 | Multi-lever learn baseline engine | Fans+mat air-lever gate is interim |
 | F-006 | HA-link flap root-cause campaign | Softened bounce in 5.1.x; still ~frequent offs |
@@ -3756,4 +3756,34 @@ Source: `/reflect` + `/interrogate` + `test_roster_stress.py` + react-doctor pas
 - Zigbee new recipes / `leak_floor_2x4` — hardware pick (`MP-040–045`).
 - 7.4 hardware F-001…F-008 (`MP-062`).
 - `test_zigbee_save_bindings_reroutes_cached_state` flake — **fixed** (isolated ieee + offset monkeypatch); 161/161 green.
+
+---
+
+## 2026-09-01 — Post-mega D → C → A → B
+
+**Closure:** [`docs/qa/AUDIT-CLOSURE-2026-09-D-C-A-B.md`](qa/AUDIT-CLOSURE-2026-09-D-C-A-B.md) · **SPA:** `index-CXq-NptO.js`
+
+| Track | Result |
+|-------|--------|
+| Gate 0 soak | Closed — [`GATE0-SOAK-2026-09.md`](qa/GATE0-SOAK-2026-09.md) |
+| D splits | Settings / PlantWizard / Roster dialogs extracted; build + hotpatch |
+| C z2m | **done** — radio_up, 4 end devices |
+| C F-003/POT4 | **retired** — pot3/4 out of kit; not chasing flash/enable |
+| C F-001/F-002 | **on hold** — AC relay + clone mister indefinitely; honest OOS UI only |
+| A CannaLib | **done** — offset pagination verified on `192.168.86.2:8790` |
+| B Zigbee | **done** — `leak_floor_4x8` recipe live with policy state |
+
+---
+
+## 2026-09-01 — Operator kit scope (pot3/4 + climate capacity)
+
+**Decision (operator):**
+
+| Item | Status | Notes |
+|------|--------|-------|
+| POT3 / POT4 | **retired from kit** | No longer live probes — not chasing USB flash, enable, or mat-vote restore. Device inventory / Advanced restore only (`KIT_PROBE_NUMBERS` = 1–2). |
+| F-001 AC relay | **on hold indefinitely** | Honest capacity-offline / planned chips stay; no install timeline. |
+| F-002 Clone mister | **on hold indefinitely** | Same as F-001. |
+
+Do not file follow-ups or version gates that assume POT3 restore or AC/mister hardware landing unless operator reopens.
 

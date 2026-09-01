@@ -22,19 +22,21 @@
 
 ## Phase A — Unblockers (hardware / ops)
 
+> **Operator 2026-09-01:** POT3/POT4 **retired** from kit (not pursuing). F-001 AC + F-002 clone mister **on hold indefinitely** — honest OOS UI only. Remaining Phase A items below still apply when/if hardware lands.
+
 These are not polish; the UI already shows honest OOS until installed.
 
 | ID | Item | 7.4 software hook (when hardware lands) |
 |----|------|----------------------------------------|
-| F-003 | POT3 probe / USB flash | Restore pot3 in mat vote; re-enable peer-MAD for pot3 |
-| F-001 | AC relay + follower | Remove capacity-offline chip; wire demand path proof |
-| F-002 | Clone mister | Same for clone humidifier capacity |
+| F-003 | ~~POT3 probe / USB flash~~ | **Retired** — pot3/4 out of kit; Advanced restore only |
+| F-001 | AC relay + follower | **On hold** — remove capacity-offline chip when installed |
+| F-002 | Clone mister | **On hold** — same for clone humidifier capacity |
 | F-008 | SCD41 real CO₂ | Promote from informational ADC proxy to live band |
 | F-008-adj | Main tent GPIO lamp | 4×8 “Got” from window → real dimmer entity |
 | N-016 | Lab wet cal soak | Run wizard on one pot; document result in LAB-WET-CAL |
 | N-020..023 | Sensor trust thresholds | Collect 7+ days post-cal evidence; tune if false positives |
 
-**Priority order:** z2m (Phase 0) → F-003 (fleet hole) → F-001/F-002 (climate capacity) → GPIO lamp → SCD41.
+**Priority order:** z2m (Phase 0) → ~~F-003~~ (retired) → ~~F-001/F-002~~ (on hold) → GPIO lamp → SCD41.
 
 ---
 

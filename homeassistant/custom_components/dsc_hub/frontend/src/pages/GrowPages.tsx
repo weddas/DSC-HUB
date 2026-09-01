@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ComposePlant } from "../components/ComposePlant";
 import { CatalogResearch } from "../components/CatalogResearch";
-import { DecisionLayer } from "../components/DecisionLayer";
+import { RosterLifecycleDialogs } from "../components/roster/RosterLifecycleDialogs";
 import { SlideDrawer } from "../components/chrome";
 import { Button, Card, PageHeader, StatusChip } from "../components/ui";
 import { HelpTip } from "../components/HelpTip";
@@ -350,68 +350,30 @@ export function GrowRosterPage() {
         ) : null}
       </Card>
 
-      <DecisionLayer
-        open={detachPot != null}
-        onDismiss={() => setDetachPot(null)}
-        onConfirm={() => {
+      <RosterLifecycleDialogs
+        detachPot={detachPot}
+        onDismissDetach={() => setDetachPot(null)}
+        onConfirmDetach={() => {
           void confirmDetach();
         }}
-        title={detachPot != null ? `Detach plant from ${probeLabel(detachPot)}?` : "Detach"}
-        confirmLabel="Detach"
-        help={null}
-      >
-        <p>
-          Frees {detachPot != null ? probeLabel(detachPot) : "this probe"} and keeps the plant on the roster with no
-          probe. SoftCal and probe-station home are unchanged. Delete if you mean to destroy the plant.
-        </p>
-      </DecisionLayer>
-
-      <DecisionLayer
-        open={assignSlot != null}
-        onDismiss={() => setAssignSlot(null)}
-        onConfirm={() => {
+        assignSlot={assignSlot}
+        assignPot={assignPot}
+        onAssignPotChange={setAssignPot}
+        vacantProbes={vacantProbes}
+        onDismissAssign={() => setAssignSlot(null)}
+        onConfirmAssign={() => {
           void confirmAssign();
         }}
-        title={assignSlot != null ? `Assign roster #${assignSlot} to a probe?` : "Assign"}
-        confirmLabel="Assign"
-        help={null}
-      >
-        <p>Pick a vacant kit probe for this detached plant.</p>
-        <label>
-          Probe
-          <select
-            value={assignPot}
-            onChange={(e) => setAssignPot(Number(e.target.value))}
-            style={{ display: "block", marginTop: 8 }}
-          >
-            {vacantProbes.map((n) => (
-              <option key={n} value={n}>
-                {probeLabel(n)}
-              </option>
-            ))}
-          </select>
-        </label>
-      </DecisionLayer>
-
-      <DecisionLayer
-        open={retireSlot != null}
-        onDismiss={() => {
+        retireSlot={retireSlot}
+        retirePot={retirePot}
+        onDismissRetire={() => {
           setRetireSlot(null);
           setRetirePot(null);
         }}
-        onConfirm={() => {
+        onConfirmRetire={() => {
           void confirmRetire();
         }}
-        title={retireSlot != null ? `Delete roster #${retireSlot}?` : "Delete plant"}
-        confirmLabel="Delete plant"
-        help={null}
-      >
-        <p>
-          {retirePot != null
-            ? `Destroys the plant on ${probeLabel(retirePot)} and clears roster slot #${retireSlot}. Use Detach if you only want to free the probe.`
-            : `Removes roster slot #${retireSlot} (stock or detached). This cannot be undone.`}
-        </p>
-      </DecisionLayer>
+      />
 
       <SlideDrawer
         open={pot != null}
