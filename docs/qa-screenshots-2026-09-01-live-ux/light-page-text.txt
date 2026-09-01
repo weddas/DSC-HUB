@@ -1,0 +1,420 @@
+DSC - A Plausible Deniability Project.
+SURFACE 7.4.0
+KIT HONEST
+Live
+Grow
+Tune
+Fleet
+Settings
+Overview
+Climate
+4×8
+Flower
+2×4
+Clone & veg
+Root
+Light
+Twin
+3D view
+Mission
+Triage
+Dash
+Legacy
+Light
+
+Separate 4×8 and 2×4 desks — each tent has its own schedule and clocks.
+
+Climate Want →
+?
+DARK PERIOD OK
+4×8 PHOTOPERIOD
+4×8
+DARK
+ON IN
+10H 7M
+DARK FOR
+1H 52M
+
+Main tent — Twin SF1000 (GPIO5) is the live lamp when available; window remains photoperiod SoT for Got hours.
+
+TWIN SF1000 OFF
+DARK
+outside · Early Flowering · 12h rail
+EARLY FLOWERING · 12H RAIL
+GOT / WANT H
+WANT HOURS
+12h
+4×8 SCHEDULE 24H
+ON 06:00 · OFF 18:00 · 12H LIT · RAMP 60M
+12a
+6a
+12p
+6p
+12a
+4×8 24H · ACTUAL
+1 CYCLE · LAST 03:00 · 12.0H ON
+TWIN SF1000
+OFF
+LIGHTS ON
+SUNRISE MIN
+SUNSET MIN
+MIN DARK H
+outside · Early Flowering · 12h rail
+
+DLI estimate needs SF1000 PPFD calibration — Fleet → Calibrate.
+
+2×4 PHOTOPERIOD
+2×4
+DARK
+FOLLOWS 4×8
+ON IN
+10H 7M
+DARK FOR
+1H 52M
+
+Clone tent — SF1000 is the live lamp.
+Schedule follow
+is below; climate follow is on the Climate desk (Follow 4x8).
+
+Climate · Follow 4x8
+SCHEDULE · FOLLOW 4×8
+SF1000 OFF
+in-band · stage rail
+MIXED STAGES · FINAL 48-72H FLOWERING, EARLY FLOWERING
+GOT / WANT H
+WANT HOURS
+12h
+DEVIATION TODAY
+0.00h
+2×4 only
+2×4 SCHEDULE 24H
+ON 06:00 · OFF 18:00 · 12H LIT · RAMP 60M
+12a
+6a
+12p
+6p
+12a
+SF1000 24H · ACTUAL
+0 CYCLES · LAST 19:52 · 0.0H ON
+SF1000
+OFF
+AUTO PHOTOPERIOD
+ON
+MANUAL LIGHT HOLD
+OFF
+SCHEDULE SOURCE
+Follow 4x8
+Independent
+SCHEDULE FOLLOWS 4×8
+
+Opens at 06:00:00 · 12 h window (mirrored from 4×8). Edit the 4×8 card to change timing, or switch Schedule source to Independent.
+
+Climate mode (Follow 4x8) →
+
+DLI estimate needs SF1000 PPFD calibration — Fleet → Calibrate.
+
+CROP SCHEDULER
+
+Each tent tracks its own stage rail and pots — 4×8 and 2×4 are separate grow environments.
+
+4×8
+4×8
+DARK
+ON IN
+10H 7M
+DARK FOR
+1H 52M
+GERMINATION
+SEEDLING
+EARLY VEG
+VEGETATIVE
+PUSH VEG
+EARLY FLWR
+FLOWERING
+LATE FLWR
+FINISH
+DRY MODE
+Roster #2
+4x8-LCG
+STOCK
+W64 · 443d · no probe
+Roster #3
+# Three Ghost OG X Trophy Wife
+STOCK
+W96 · 669d · no probe
+Roster #5
+# Five Ghost OG X Trophy Wife
+STOCK
+W96 · 669d · no probe
+Roster #6
+4x8-OSB-stock
+STOCK
+W96 · 669d · no probe
+Roster #7
+4x8-Skunk-stock
+STOCK
+W96 · 669d · no probe
+Roster #8
+4x8-SD
+STOCK
+W96 · 669d · no probe
+Roster #9
+"Jungle Rat" - The adventure of a lonely mystery seed
+STOCK
+W96 · 669d · no probe
+Roster #10
+"FRITZ" The Cat
+DETACHED
+W96 · 669d · no probe
+2×4
+2×4
+DARK
+FOLLOWS 4×8
+ON IN
+10H 7M
+DARK FOR
+1H 52M
+GERMINATION
+SEEDLING
+EARLY VEG
+VEGETATIVE
+PUSH VEG
+EARLY FLWR
+FLOWERING
+LATE FLWR
+FINISH
+DRY MODE
+MIXED STAGES IN 2×4
+Probe 1
+"Afternoon Brunch" Mimosa x Orange Punch Auto 2024
+W96 · 669d · Final 48-72h Flowering · Need —
+Probe 2
+Grandmommy Purple
+W8 · 54d · Early Flowering · Need —
+4×8 ENERGY (ESTIMATE)
+
+Estimate from local watts × hours × tariff — not a utility bill. Learning never auto-applies a schedule.
+
+EST. $1.83/DAY
+5.76 KWH
+Max off-peak · on 22:00 · Δ $-0.65
+Start gradual…
+Night heat · on 20:00 · Δ $-0.52
+Start gradual…
+Morning · on 06:00 · Δ $0.00
+Start gradual…
+2×4 ENERGY (ESTIMATE)
+
+Estimate from local watts × hours × tariff — not a utility bill. Learning never auto-applies a schedule.
+
+EST. $0.38/DAY
+1.20 KWH
+Max off-peak · on 22:00 · Δ $-0.14
+Start gradual…
+Night heat · on 20:00 · Δ $-0.11
+Start gradual…
+Morning · on 06:00 · Δ $0.00
+Start gradual…
+4×8 OCCUPANCY JOURNAL
+
+Space-native notes plus rolled-up plant journal rows. Provenance chips mark plant vs tent.
+
+Tent note
+Save tent note
+Add text to enable Save
+01/09/2026, 19:51:31
+SPACE
+Schedule slide plan #8 cancelled
+01/09/2026, 19:51:31
+SPACE
+Schedule slide plan #8 stepped to 05:45:00 · want_hours=12.0 (dark floor held)
+01/09/2026, 19:51:31
+SPACE
+Schedule slide plan #8 started (flower_strict) 06:00:00 → 22:00:00
+01/09/2026, 19:49:06
+SPACE
+live-ux-light-prove 4x8
+01/09/2026, 19:49:06
+SPACE
+Schedule slide plan #6 cancelled
+01/09/2026, 19:49:06
+SPACE
+Schedule slide plan #6 started (pause) 06:00:00 → 08:00:00
+01/09/2026, 18:26:10
+SPACE
+Schedule slide plan #3 cancelled
+01/09/2026, 18:26:10
+SPACE
+Schedule slide plan #3 stepped to 05:45:00 · want_hours=12.0 (dark floor held)
+01/09/2026, 18:26:10
+SPACE
+Schedule slide plan #3 started (flower_strict) 06:00:00 → 22:00:00
+01/09/2026, 18:23:01
+SPACE
+burst4-15
+01/09/2026, 18:23:01
+SPACE
+burst4-6
+01/09/2026, 18:23:01
+SPACE
+burst4-13
+01/09/2026, 18:23:01
+SPACE
+burst4-14
+01/09/2026, 18:23:01
+SPACE
+burst4-8
+01/09/2026, 18:23:01
+SPACE
+burst4-12
+01/09/2026, 18:23:01
+SPACE
+burst4-2
+01/09/2026, 18:23:01
+SPACE
+burst4-11
+01/09/2026, 18:23:01
+SPACE
+burst4-7
+01/09/2026, 18:23:01
+SPACE
+burst4-0
+01/09/2026, 18:23:01
+SPACE
+burst4-10
+01/09/2026, 18:23:01
+SPACE
+burst4-9
+01/09/2026, 18:23:01
+SPACE
+burst4-4
+01/09/2026, 18:23:01
+SPACE
+burst4-5
+01/09/2026, 18:23:01
+SPACE
+burst4-3
+01/09/2026, 18:23:01
+SPACE
+burst4-1
+01/09/2026, 18:23:01
+SPACE
+Schedule slide plan #1 cancelled
+01/09/2026, 18:23:00
+SPACE
+Schedule slide plan #1 started (pause) 20:00:00 → 22:00:00
+01/09/2026, 18:23:00
+SPACE
+tent 4x8 closure
+2×4 OCCUPANCY JOURNAL
+
+Space-native notes plus rolled-up plant journal rows. Provenance chips mark plant vs tent.
+
+Tent note
+Save tent note
+Add text to enable Save
+01/09/2026, 19:51:31
+SPACE
+Schedule slide plan #9 cancelled
+01/09/2026, 19:51:31
+SPACE
+Schedule slide plan #9 stepped to 20:15:00 · want_hours=12.0 (dark floor held)
+01/09/2026, 19:51:31
+SPACE
+Schedule slide plan #9 started (flower_strict) 20:00:00 → 22:00:00
+01/09/2026, 19:49:06
+SPACE
+live-ux-light-prove 2x4
+01/09/2026, 19:49:06
+SPACE
+Schedule slide plan #7 cancelled
+01/09/2026, 19:49:06
+SPACE
+Schedule slide plan #7 started (pause) 06:00:00 → 08:00:00
+01/09/2026, 18:26:12
+SPACE
+Schedule slide plan #5 cancelled
+01/09/2026, 18:26:11
+SPACE
+Schedule slide plan #5 stepped to 20:30:00 · want_hours=18.0 (dark floor held)
+01/09/2026, 18:26:11
+SPACE
+Schedule slide plan #5 started (veg_style) 20:00:00 → 21:00:00
+01/09/2026, 18:26:10
+SPACE
+Schedule slide plan #4 cancelled
+01/09/2026, 18:26:10
+SPACE
+Schedule slide plan #4 stepped to 20:15:00 · want_hours=12.0 (dark floor held)
+01/09/2026, 18:26:10
+SPACE
+Schedule slide plan #4 started (flower_strict) 20:00:00 → 22:00:00
+01/09/2026, 18:23:01
+SPACE
+burst2-15
+01/09/2026, 18:23:01
+SPACE
+burst2-14
+01/09/2026, 18:23:01
+SPACE
+burst2-13
+01/09/2026, 18:23:01
+SPACE
+burst2-12
+01/09/2026, 18:23:01
+SPACE
+burst2-11
+01/09/2026, 18:23:01
+SPACE
+burst2-10
+01/09/2026, 18:23:01
+SPACE
+burst2-8
+01/09/2026, 18:23:01
+SPACE
+burst2-9
+01/09/2026, 18:23:01
+SPACE
+burst2-2
+01/09/2026, 18:23:01
+SPACE
+burst2-7
+01/09/2026, 18:23:01
+SPACE
+burst2-5
+01/09/2026, 18:23:01
+SPACE
+burst2-6
+01/09/2026, 18:23:01
+SPACE
+burst2-4
+01/09/2026, 18:23:01
+SPACE
+burst2-3
+01/09/2026, 18:23:01
+SPACE
+burst2-1
+01/09/2026, 18:23:01
+SPACE
+burst2-0
+01/09/2026, 18:23:01
+SPACE
+Photoperiod flip approved on 2x4
+01/09/2026, 18:23:01
+SPACE
+Photoperiod flip requested on 2x4: 18.0h → 12.0h (pending approval)
+01/09/2026, 18:23:01
+SPACE
+Photoperiod flip denied on 2x4
+01/09/2026, 18:23:01
+SPACE
+Photoperiod flip requested on 2x4: 18.0h → 12.0h (pending approval)
+01/09/2026, 18:23:01
+SPACE
+Schedule slide plan #2 cancelled
+01/09/2026, 18:23:01
+SPACE
+Schedule slide plan #2 started (pause) 20:00:00 → 22:00:00
+01/09/2026, 18:23:00
+SPACE
+tent 2x4 closure

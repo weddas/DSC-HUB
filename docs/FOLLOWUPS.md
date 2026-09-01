@@ -3857,3 +3857,20 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Default inventory pot4 | **fixed** | `in_service: False` + `pot4_retired_gate` one-shot |
 | Pi hotpatch `dash_computed.py` (+ settings gate) | **done** | Bundled in space-energy Pi closure hotpatch 2026-09-01 |
 
+
+---
+
+## 2026-09-01 — Live UX honesty Pass 1 (Light prove)
+
+**Spec:** [docs/superpowers/specs/2026-09-01-live-ux-honesty-program-design.md](superpowers/specs/2026-09-01-live-ux-honesty-program-design.md)  
+**Plan:** [docs/superpowers/plans/2026-09-01-live-ux-honesty-program.md](superpowers/plans/2026-09-01-live-ux-honesty-program.md)  
+**Walk:** [docs/qa/LIVE-UX-LIGHT-WALK-2026-09.md](qa/LIVE-UX-LIGHT-WALK-2026-09.md) — **gate green**
+
+| Item | Status | Notes |
+|------|--------|-------|
+| SPA hotpatch index-DYFvyI2i.js | **done (live)** | Prove .audit/live-ux-light-prove.ps1; index.html sha256 `146bfc0dc8233e85fefccc6924939aa21e96e5ceb816a603c62e5100d3521ea9` |
+| HTTP energy both tents | **done** | estimate Estimate + suggestions `apply:false`; confirm=false ? 400; evidence .audit/live-ux-light-prove-evidence.json |
+| Browser matrix + screenshots | **done** | `docs/qa-screenshots-2026-09-01-live-ux/` |
+| Force-tick restore | **done** | 4×8 `06:00:00`; 2×4 helper `20:00:00`; no active plans / pending flips |
+| DutyStrip 2×4 `0.0H ON` vs Got ~12h | **parked** | Same hole as **SV-P1-6**; Got/Want chips honest — do not block Pass 1. History/DutyStrip map for SF1000 clone entity |
+| Climate Pass 2 | **next-plan** | Task 4+ only after this Light gate (now green) |

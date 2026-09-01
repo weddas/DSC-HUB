@@ -1,0 +1,240 @@
+{
+  "ts": 1788256144.157237,
+  "gates": {
+    "G0_index_bundle": {
+      "ok": true,
+      "detail": {
+        "local": "assets/index-DYFvyI2i.js",
+        "live": "assets/index-DYFvyI2i.js",
+        "local_sha256": "146bfc0dc8233e85fefccc6924939aa21e96e5ceb816a603c62e5100d3521ea9",
+        "live_sha256": "146bfc0dc8233e85fefccc6924939aa21e96e5ceb816a603c62e5100d3521ea9"
+      }
+    },
+    "G0_health": {
+      "ok": true,
+      "detail": {
+        "status": "ok",
+        "version": "7.4.0",
+        "surface": "7.4.0",
+        "expected_firmware": "7.0.0.0",
+        "mode": "live",
+        "zigbee": {
+          "mqtt_connected": true,
+          "bridge_state": "online",
+          "bridge_state_updated_at": 1788250968.028872,
+          "radio_up": true,
+          "radio_note": "Coordinator online",
+          "device_count": 5,
+          "end_device_count": 4,
+          "devices_updated_at": 1788250968.0284364,
+          "canopy_updated_at": 1788253865.4597826,
+          "permit_join": false,
+          "permit_join_end": null
+        }
+      }
+    },
+    "G0_fleet": {
+      "ok": true,
+      "detail": {
+        "keys": [
+          "hass_extras"
+        ]
+      }
+    },
+    "E1_estimate_4x8": {
+      "ok": true,
+      "detail": "Estimate"
+    },
+    "E1_suggestions_4x8": {
+      "ok": true,
+      "detail": {
+        "apply": false,
+        "n": 4
+      }
+    },
+    "E2_confirm_gate_4x8": {
+      "ok": true,
+      "detail": {
+        "detail": "confirm=true required \u2014 no silent schedule changes"
+      }
+    },
+    "E1_estimate_2x4": {
+      "ok": true,
+      "detail": "Estimate"
+    },
+    "E1_suggestions_2x4": {
+      "ok": true,
+      "detail": {
+        "apply": false,
+        "n": 4
+      }
+    },
+    "E2_confirm_gate_2x4": {
+      "ok": true,
+      "detail": {
+        "detail": "confirm=true required \u2014 no silent schedule changes"
+      }
+    },
+    "E3_pause_4x8": {
+      "ok": true,
+      "detail": {
+        "id": 6,
+        "space_id": "4x8",
+        "from_on": "06:00:00",
+        "to_on": "08:00:00",
+        "want_hours": 12.0,
+        "policy": "pause",
+        "status": "paused",
+        "next_step_at": null,
+        "created_at": 1788256146.1062326,
+        "updated_at": 1788256146.1062326
+      }
+    },
+    "E3_cancel_4x8": {
+      "ok": true,
+      "detail": {
+        "id": 6,
+        "space_id": "4x8",
+        "from_on": "06:00:00",
+        "to_on": "08:00:00",
+        "want_hours": 12.0,
+        "policy": "pause",
+        "status": "cancelled",
+        "next_step_at": null,
+        "created_at": 1788256146.1062326,
+        "updated_at": 1788256146.1657543
+      }
+    },
+    "E3_pause_2x4": {
+      "ok": true,
+      "detail": {
+        "id": 7,
+        "space_id": "2x4",
+        "from_on": "06:00:00",
+        "to_on": "08:00:00",
+        "want_hours": 12.0,
+        "policy": "pause",
+        "status": "paused",
+        "next_step_at": null,
+        "created_at": 1788256146.1924193,
+        "updated_at": 1788256146.1924193
+      }
+    },
+    "E3_cancel_2x4": {
+      "ok": true,
+      "detail": {
+        "id": 7,
+        "space_id": "2x4",
+        "from_on": "06:00:00",
+        "to_on": "08:00:00",
+        "want_hours": 12.0,
+        "policy": "pause",
+        "status": "cancelled",
+        "next_step_at": null,
+        "created_at": 1788256146.1924193,
+        "updated_at": 1788256146.2360137
+      }
+    },
+    "J1_post_4x8": {
+      "ok": true,
+      "detail": {
+        "id": 56,
+        "space_id": "4x8",
+        "occurred_at": 1788256146.2597785,
+        "note": "live-ux-light-prove 4x8",
+        "source": "operator",
+        "tags": [],
+        "created_at": 1788256146.2597835,
+        "provenance": "space"
+      }
+    },
+    "J1_list_4x8": {
+      "ok": true,
+      "detail": {
+        "n": 20
+      }
+    },
+    "J1_post_2x4": {
+      "ok": true,
+      "detail": {
+        "id": 57,
+        "space_id": "2x4",
+        "occurred_at": 1788256146.316167,
+        "note": "live-ux-light-prove 2x4",
+        "source": "operator",
+        "tags": [],
+        "created_at": 1788256146.316172,
+        "provenance": "space"
+      }
+    },
+    "J1_list_2x4": {
+      "ok": true,
+      "detail": {
+        "n": 20
+      }
+    },
+    "G8_restore": {
+      "ok": true,
+      "detail": {
+        "cancelled": [
+          {
+            "id": 6,
+            "status": "cancelled"
+          },
+          {
+            "id": 7,
+            "status": "cancelled"
+          }
+        ],
+        "pending_flips": [],
+        "pre": {
+          "4x8": "06:00:00",
+          "2x4": null
+        },
+        "post": {
+          "4x8": "06:00:00",
+          "2x4": null
+        }
+      }
+    }
+  },
+  "errors": [],
+  "restore": {
+    "pre_lights_on": {
+      "4x8": "06:00:00",
+      "2x4": null
+    },
+    "post_lights_on": {
+      "4x8": "06:00:00",
+      "2x4": null
+    },
+    "cancelled_plans": [
+      {
+        "id": 6,
+        "status": "cancelled"
+      },
+      {
+        "id": 7,
+        "status": "cancelled"
+      }
+    ],
+    "pending_flips": [],
+    "note": "E3 pause/cancel only; lights-on must match pre. No force-tick in this prove."
+  },
+  "fleet_snapshot": {
+    "want_4x8": "12.0",
+    "got_4x8": "11.99",
+    "window_4x8": "off",
+    "want_2x4": "12.0",
+    "got_2x4": "12.001388549804688",
+    "window_2x4": "off",
+    "clone_photoperiod": "Follow 4x8",
+    "twin": "off",
+    "sf1000": null,
+    "dark_violation": null,
+    "manual_hold": "off",
+    "auto_photoperiod": null,
+    "lights_on_4x8": "06:00:00",
+    "lights_on_2x4": null
+  }
+}
