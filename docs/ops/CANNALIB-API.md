@@ -24,6 +24,8 @@ Hub still owns the **client**:
 - **Local fallback:** when remote fails and **Use on-Pi sqlite fallback** is checked, brain reads `CANNALIB_DB_PATH` (default `/cannalib/dsc_brain.sqlite3`, volume-shared with the `cannalib` service). If no DB is mounted, `/v1/catalogs/*` returns **503** with an explicit message — no silent empty results.
 - Slim Want YAML (`/catalogs/*`) remains the last tier inside the brain proxy when the corpus DB is absent.
 
+**Pass 5 verify-close (2026-09-01):** Prod HTTPS + LAN `:8790` `q=kush&limit=3&offset=0|3` returned distinct pages (`0.2.2-stdlib`); Pi Settings Test CannaLib + CatalogPicker Load more green against prod; MP-030/034 closed in FOLLOWUPS — **no redeploy**. See [`../qa/LIVE-UX-PASS5-WALK-2026-09.md`](../qa/LIVE-UX-PASS5-WALK-2026-09.md).
+
 Pull capped offline indexes (from this repo):
 
 ```text
