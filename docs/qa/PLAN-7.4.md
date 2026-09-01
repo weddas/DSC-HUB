@@ -121,7 +121,7 @@ Live with 7.3 UI first (~1 week), then one coherent pass — not death-by-a-thou
 - [x] Hardware F-001/F-002/F-003 retired or on-hold with dated note
 - [x] Surface version strings `7.4.0` in brain + SPA defaults
 - [x] Pi hotpatch / `.env` (`DSC_SURFACE_VERSION=7.4.0`, SPA `index-K2_ziUnM.js`)
-- [ ] Operator git tag `v7.4.0`
+- [x] Operator git tag `v7.4.0` (2026-09-01)
 - [x] Brain pytest green after bump; SPA `build:spa` clean
 - [x] AUDIT-CLOSURE-7.4 published
 - [ ] Compose + photoperiod smoke on `.48` post-deploy (operator)

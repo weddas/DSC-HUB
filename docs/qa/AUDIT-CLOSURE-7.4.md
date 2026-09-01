@@ -51,7 +51,7 @@
 - [x] Hub `const.SURFACE_VERSION` + SPA defaults → `7.4.0`
 - [x] Brain pytest version assertions updated
 - [x] Pi `.env` `DSC_SURFACE_VERSION=7.4.0` + brain/SPA hotpatch (operator deploy)
-- [ ] Git tag `v7.4.0` after operator OK
+- [x] Git tag `v7.4.0` — operator signed off 2026-09-01 (`3eeecab`)
 
 ## Live Pi (2026-09-01 post-hotpatch)
 

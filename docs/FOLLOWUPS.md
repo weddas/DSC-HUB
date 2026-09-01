@@ -3812,5 +3812,5 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Phase 0 (z2m, walk, Sankey) | **closed** |
 | Phase B (EXPERIMENTAL) | **done** in SPA (Air CFM only; mass chip gated) |
 | Surface version | **7.4.0** brain + SPA defaults + Pi live (`/health` 7.4.0/7.4.0, SPA `index-K2_ziUnM.js`) |
-| Git tag `v7.4.0` | pending operator signoff |
+| Git tag `v7.4.0` | **done** — operator signed off 2026-09-01 on `3eeecab` |
 
