@@ -3874,3 +3874,13 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Force-tick restore | **done** | 4×8 `06:00:00`; 2×4 helper `20:00:00`; no active plans / pending flips |
 | DutyStrip 2×4 `0.0H ON` vs Got ~12h | **parked** | Same hole as **SV-P1-6**; Got/Want chips honest — do not block Pass 1. History/DutyStrip map for SF1000 clone entity |
 | Climate Pass 2 | **next-plan** | Task 4+ only after this Light gate (now green) |
+
+---
+
+## 2026-09-01 ? Live UX honesty Pass 2 (Climate SPA)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Climate SPA honesty (Task 5) | **done (repo)** | Cascade entity, Capacity offline SoT, canopy fleet T/RH, Wet unknown muted, mass chip gated label ? see `.superpowers/sdd/task-5-report.md` |
+| Climate walk / Pi hotpatch (Task 6) | **next-plan** | Do not fill walk until Task 6 |
+| AirPathMap cascade ? intake 2×4 | **parked** | SVG still copies `intakeClone` as cascade ribbon (not `dsc_cfm_cascade_2x4_allocated`). Sankey fixed in Task 5; map is out of ClimatePage/FlowSankey scope ? park for later CFM viz pass |

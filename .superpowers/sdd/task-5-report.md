@@ -1,38 +1,77 @@
-﻿# Task 5 report — Pi hotpatch + desk flood evidence
+﻿# Task 5 Report: Pass 2 — Climate SPA honesty + light UX
 
-**Date:** 2026-08-31  
-**Status:** DONE  
-**Pi:** 192.168.86.48 (power-cycled by operator after prior sudo hang)
+**Status:** complete  
+**Branch:** master  
+**Date:** 2026-09-01
 
-## Deploy
+## Summary
 
-- SPA: `index-Cj_Rsb-d.js` → `dsc-hub-brain:/app/static/`
-- Brain: `zigbee_policies.py` + `zigbee_mqtt.py` → `/app/dsc_brain/`
-- Restart: `timeout 25 docker restart dsc-hub-brain` (sudo -S)
-- Health: `health_ok 7.3.0`
-- Script: `.audit/task5-desk-flood-run.sh`
+Inventoried live `#/live/climate` against `/fleet` + `/fleet/computed` (Pi `192.168.86.48:8787`) and design §3. Fixed four SPA honesty/UX mismatches in `ClimatePage.tsx` / `FlowSankey.tsx`. Rebuilt SPA → `index-CzcL7cKc.js`. Climate walk left empty for Task 6. Did not push.
 
-## Bind
+## Inventory (live Pi)
 
-| ieee | role | zone | recipe |
-|------|------|------|--------|
-| `0xa4c1385a686af7df` | `leak_floor_room` | `room` | `floor_flood_alert` |
-| `0xa4c1380d734f2033` | `leak_floor_4x8` | `4x8` | `floor_flood_alert` |
-| `0xa4c138b9e2b9b690` | `leak_tank` | `4x8` | `tank_full_appliance` (preserved) |
+| Check | Fleet / API | SPA before | Verdict |
+|-------|-------------|------------|---------|
+| Full Auto on | `switch.dsc_hub_tent_full_auto_mode` = on | Full Auto chip path | match |
+| Capacity offline SoT | `binary_sensor.dsc_reduced_kit` = **off**; `planned_oos` has POT3/4/AC/mister/tank; `offline` placeholder only | Used `fleet.system.reduced_kit` (unset on `/fleet`) | **fixed** — read entity bus |
+| Zone All / 4×8 / 2×4 / Room | FOCUS_OPTIONS + HelpTip (Room = lung) | present | match |
+| Climate Mode ≠ Light schedule | `select.dsc_hub_clone_mode` = Follow 4x8; photoperiod separate entity; TentTargets “Climate mode” + Light “Schedule ·” | no photoperiod Follow chip on Climate | match (none-found) |
+| Sankey air-only | FlowSankey air model; heat/humidity removed | air-only | match |
+| Mass-imbalance chip | live `binary_sensor.dsc_flow_mass_balance_ok` = **off** (would theater) | `massBalanceOk={null}` | match; **UX** gated chip label added |
+| Cascade CFM | `sensor.dsc_cfm_cascade_2x4_allocated` ≈ 147 CFM | resolved **wrong** ids (`dsc_cfm_cascade[_allocated]`) → always omit | **fixed** |
+| Canopy bound | fleet.canopy role `canopy_4x8`, 24.2°C / 53% RH | role chip OK; T/RH via entity bus often empty | **fixed** — fleet.canopy SoT; unbound never paints T/RH |
+| Wet/Dry vs Problem | `leak_floor_4x8` / `_room` wet=false; policy_state.problem=false; recipes bound | Wet/Dry raw + Problem only when recipe≠none + boolean problem | match; **UX** unknown Wet/Dry → muted |
+| GotWantBars / Triad | tent Want numbers + held Got | present | match (browser prove Task 6) |
 
-## MQTT evidence (occupancy)
+## Gaps fixed
 
-1. **Baseline dry** — both flood policies `problem=False`; `banners=[]`
-2. **WET room** — `zb-policy-0xa4c1385a686af7df` present; 4×8 banner absent; room `problem=True`
-3. **DRY room** — banners cleared; room `problem=False`
-4. **WET 4×8** — `zb-policy-0xa4c1380d734f2033` present; room banner absent; room `problem=False`
-5. **DRY 4×8** — banners cleared
+1. **Sankey cascade entity** — Climate FlowSankey now resolves `sensor.dsc_cfm_cascade_2x4_allocated` (soak SoT). Prior ids never existed on the Pi bus, so cascade was always omitted.
+2. **Full Auto vs Capacity offline** — `reducedKit` now uses `state("binary_sensor.dsc_reduced_kit") === "on"` (computed hass_extras), not `fleet.system.reduced_kit`.
+3. **Canopy honesty** — Prefer live held → fleet.canopy → held stale; require `canopyRole` before painting T/RH; unbound never fills from leftover held.
+4. **Wet/Dry unknown tone** — `Wet/Dry —` uses `muted` (not optimistic `ok`).
+5. **Mass chip gated label** — FlowSankey shows muted “Mass chip gated” when `massBalanceOk` is null so operators see the gate, not a silent omission.
 
-## Honesty / OOS
+## None-found (evidence)
 
-- Post-run inventory: `dehumidifier in_service=true`, `humidifier in_service=true` (flood did not OOS)
-- Fleet `zigbee_by_role`: `leak_floor_room` zone=room wet=False; `leak_floor_4x8` zone=4x8 wet=False (independent rows, no clobber)
+- Zone focus copy / HelpTip already distinguishes Room vs tent Want editor.
+- 2×4 Climate Mode on TentTargets labeled “Climate mode”; photoperiod Follow stays on Light (`Schedule · Follow 4×8`).
+- Wet/Problem chip contract already matched Task 4 guards (raw wet; Problem only from bound `policy_state`).
+- `massBalanceOk={null}` already blocked live mass-imbalance theater (`flow_mass_balance_ok` is off on kit).
 
-## Log
+## Files changed
 
-Remote log: `/tmp/task5-desk-flood.log` on Pi; EXIT:0
+| Path | Change |
+|------|--------|
+| `.../src/pages/ClimatePage.tsx` | cascade id; reducedKit SoT; canopy fleet read; Wet muted; Sankey honesty copy |
+| `.../src/components/FlowSankey.tsx` | explicit “Mass chip gated” when null |
+| `.../spa-dist/*` | `build:spa` → `index-CzcL7cKc.js` |
+| `docs/FOLLOWUPS.md` | Pass 2 SPA row + AirPathMap cascade park |
+| `.superpowers/sdd/task-5-report.md` | this report |
+| `.superpowers/sdd/progress.md` | Task 5 complete |
+
+## Build
+
+```powershell
+cd homeassistant\custom_components\dsc_hub\frontend
+npm.cmd run build:spa
+```
+
+Exit 0 → `spa-dist/assets/index-CzcL7cKc.js`.
+
+## Commit
+
+_(filled after commit)_
+
+## Concerns / parks
+
+- **Live SPA not hotpatched** — repo `spa-dist` only; Pi still serves `index-DYFvyI2i.js` until Task 6 prove.
+- **AirPathMap cascade** — SVG still aliases cascade to intake 2×4 CFM; parked in FOLLOWUPS (out of this brief’s file list).
+- **Browser MCP** — Cursor browser tab did not mount the SPA (`#root` empty); inventory used HTTP fleet/computed. Task 6 browser matrix still required.
+- **Walk doc** — intentionally not filled (Task 6).
+
+## Out of scope (not done)
+
+- Push to remote
+- Climate walk fill / Pi hotpatch (Task 6)
+- Overview Pass 3
+- New Zigbee recipes, Twin, R3F rewrite

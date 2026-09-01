@@ -140,9 +140,12 @@ export function FlowSankey({
             label={massBalanceOk ? "Mass balance OK" : "Mass imbalance"}
             tone={massBalanceOk ? "ok" : "warn"}
           />
-        ) : null}
+        ) : (
+          <StatusChip label="Mass chip gated" tone="muted" />
+        )}
         <span className="dsc-muted" style={{ fontSize: 12 }}>
-          CFM provenance per link (Allocated / Nameplate). Heat/humidity estimated splits removed. Zero links omitted.
+          CFM provenance per link (Allocated / Nameplate). Heat/humidity estimated splits removed. Zero links
+          omitted.
         </span>
       </div>
       <EChart option={option} style={{ width: "100%", height: 290 }} ariaLabel="Air flow sankey" />

@@ -18,3 +18,23 @@ Final whole-branch review fix pass:
 - Re-assert tick stage from grow_stage/roster (not hardcoded veg)
 - Re-assert except: log + grow-log (not silent pass)
 - FOLLOWUPS: dual dash emit, pending_reassert chip, lights_on_time ingest, 2x4 Got window
+
+
+# Live UX honesty program SDD
+Branch: master
+Started: 2026-09-01
+Plan: docs/superpowers/plans/2026-09-01-live-ux-honesty-program.md
+
+
+Task 0: complete (commits ed21de4..b0a3e39, review clean)
+
+Task 1: complete (commits b0a3e39..77c8541, review clean — guard tests)
+
+Task 2: complete (commits 77c8541..3d1ead4, review clean; minor: 2x4 DutyStrip 0.0H vs Got ~12h park for Task3/FOLLOWUPS)
+
+Task 3: complete (commits 3d1ead4..985a2c4, Light gate GREEN; park SV-P1-6 DutyStrip)
+
+Task 4: complete (commits 985a2c4..2feb837, review clean)
+
+Task 5: complete (commits 2feb837..PENDING, Climate SPA honesty + light UX)
+

@@ -63,7 +63,8 @@ export function LiveClimatePage() {
   const fullAuto = useFleetEntity("switch.dsc_hub_tent_full_auto_mode").state === "on";
   const manualTakeover = useFleetEntity("switch.dsc_hub_manual_takeover").state === "on";
   const honesty = String(entity("sensor.dsc_keepup_gaps")?.attributes?.full_auto_honesty ?? "");
-  const reducedKit = !!fleet.system.reduced_kit;
+  // Capacity offline SoT is computed hass_extras — not fleet.system (often unset on /fleet).
+  const reducedKit = state("binary_sensor.dsc_reduced_kit") === "on";
   const fanBus = { state, num, available, entity };
 
   const tentTHeld = useHeldReading("sensor.dsc_hub_tent_temperature");
@@ -156,6 +157,34 @@ export function LiveClimatePage() {
     typeof fleet.canopy?.role === "string" ? String(fleet.canopy.role) : null;
   const canopyDevice =
     typeof fleet.canopy?.friendly_name === "string" ? String(fleet.canopy.friendly_name) : null;
+  // Entity bus often lacks canopy sensors (compat map omits them); fleet.canopy is Zigbee SoT.
+  // Unbound → never paint T/RH (even if a held reading lingers from a prior bind).
+  const canopyTempFleet = Number(fleet.canopy?.temp_c);
+  const canopyRhFleet = Number(fleet.canopy?.rh_pct);
+  const canopyTemp = !canopyRole
+    ? NaN
+    : canopyTempHeld.live && Number.isFinite(canopyTempHeld.value)
+      ? canopyTempHeld.value
+      : Number.isFinite(canopyTempFleet)
+        ? canopyTempFleet
+        : Number.isFinite(canopyTempHeld.value)
+          ? canopyTempHeld.value
+          : NaN;
+  const canopyRh = !canopyRole
+    ? NaN
+    : canopyRhHeld.live && Number.isFinite(canopyRhHeld.value)
+      ? canopyRhHeld.value
+      : Number.isFinite(canopyRhFleet)
+        ? canopyRhFleet
+        : Number.isFinite(canopyRhHeld.value)
+          ? canopyRhHeld.value
+          : NaN;
+  const canopyStale =
+    Boolean(canopyRole) &&
+    Number.isFinite(canopyTemp) &&
+    !(canopyTempHeld.live && Number.isFinite(canopyTempHeld.value)) &&
+    !Number.isFinite(canopyTempFleet) &&
+    canopyTempHeld.stale;
 
   const zigbeeByRole = (fleet.system.zigbee_by_role ?? fleet.system.zigbee_by_placement) as
     | Record<string, Record<string, unknown>>
@@ -501,8 +530,8 @@ export function LiveClimatePage() {
               intakeClone={inCloneReading}
               intakeMain={inMainReading}
               cascade={resolveCfm(
-                "sensor.dsc_cfm_cascade_allocated",
-                "sensor.dsc_cfm_cascade",
+                "sensor.dsc_cfm_cascade_2x4_allocated",
+                "sensor.dsc_cfm_cascade_2x4_allocated",
                 { available, num },
               )}
               outCfm={outReading}
@@ -511,13 +540,13 @@ export function LiveClimatePage() {
             />
             <p className="dsc-muted" style={{ marginTop: 8, fontSize: "0.85rem" }}>
               Sankey is air CFM only (Allocated / Nameplate). Heat and humidity estimated splits are not shown.
-              Missing cascade links read as 0 — not invented balance.
+              Cascade uses the 2×4→4×8 allocated sensor — zero / missing links are omitted, not invented balance.
+              Mass-imbalance chip stays gated (not a live alarm).
             </p>
           </Card>
         </div>
 
         {canopyRole ||
-        Number.isFinite(canopyTempHeld.value) ||
         zigbeeClimateRows.length ||
         zigbeeSafetyRows.length ? (
           <div className="dsc-col-12">
@@ -535,12 +564,12 @@ export function LiveClimatePage() {
                 ) : (
                   <StatusChip label="Canopy unbound" tone="muted" />
                 )}
-                {Number.isFinite(canopyTempHeld.value) ? (
+                {canopyRole && Number.isFinite(canopyTemp) ? (
                   <StatusChip
-                    label={`Canopy ${canopyTempHeld.value.toFixed(1)}°C / ${
-                      Number.isFinite(canopyRhHeld.value) ? `${canopyRhHeld.value.toFixed(0)}% RH` : "— RH"
+                    label={`Canopy ${canopyTemp.toFixed(1)}°C / ${
+                      Number.isFinite(canopyRh) ? `${canopyRh.toFixed(0)}% RH` : "— RH"
                     }`}
-                    tone={canopyTempHeld.stale ? "warn" : "ok"}
+                    tone={canopyStale ? "warn" : "ok"}
                   />
                 ) : null}
               </div>
@@ -598,7 +627,7 @@ export function LiveClimatePage() {
                           label={
                             row.wet === true ? "Wet" : row.wet === false ? "Dry" : "Wet/Dry —"
                           }
-                          tone={row.wet === true ? "warn" : "ok"}
+                          tone={row.wet === true ? "warn" : row.wet === false ? "ok" : "muted"}
                         />
                         {row.showProblem ? (
                           <StatusChip
