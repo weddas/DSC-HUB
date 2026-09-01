@@ -10,6 +10,23 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-09-01 — Space / energy / journals (design approved; implementation pending)
+
+**Spec:** [`docs/superpowers/specs/2026-09-01-space-energy-journal-design.md`](superpowers/specs/2026-09-01-space-energy-journal-design.md) (approved; verified SHIPPED vs DESIGN ONLY appendix)  
+**Plan:** [`docs/superpowers/plans/2026-09-01-space-energy-journal.md`](superpowers/plans/2026-09-01-space-energy-journal.md) (Tasks 1–10 unchecked)  
+**Developer index:** [`docs/brain/PHOTOPERIOD-TIMELINE.md`](brain/PHOTOPERIOD-TIMELINE.md) · [`docs/brain/WEBUI.md`](brain/WEBUI.md)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Design + implementation plan on master | **done (doc)** | Tip `39233ae` |
+| Verified baseline appendix (light_loop, grow-log, absent journal/tariff modules) | **done (doc)** | Re-verified tip `39233ae` / spa `index-K2_ziUnM.js` |
+| Land PHOTOPERIOD-TIMELINE + WEBUI Light/grow-log SoT | **done (doc)** | This pass — no product runbook inventing tariff/journal |
+| Tasks 1–10 code (space/journal/energy/ramp/Learning SPA) | **next-plan** | Modules absent; do not claim shipped |
+| Strict space-owned photoperiod (remove plant silent override) | **next-plan** | Tension: `apply_clone_tent_automation` + `PlantSeatPanel.applyTent` |
+| Encode cannabis-domain skill fragment | **deferred** | Offer only after ship; write on yes |
+
+---
+
 ## 2026-08-31 — Operator correctness Wave 1 (SoftCal / Build-a-Plant / cal UX)
 
 **Spec:** [`docs/superpowers/specs/2026-08-31-operator-correctness-wave1-design.md`](superpowers/specs/2026-08-31-operator-correctness-wave1-design.md)  
