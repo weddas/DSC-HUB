@@ -10,6 +10,19 @@
 
 **Spec:** [`docs/superpowers/specs/2026-09-01-space-energy-journal-design.md`](../specs/2026-09-01-space-energy-journal-design.md)
 
+### Tip status (`42a4f92` / ship `a22050a`)
+
+| Area | Status |
+|------|--------|
+| Tasks 1–9 (modules, HTTP, SPA, tests) | **done (code)** — ship commit `a22050a`; spa `index-DMMGdgxP.js` |
+| Task 10 Step 1 FOLLOWUPS | **done** |
+| Task 10 Step 2 Pi live evidence | **pending** — keep parent spec “implemented locally”; Pi closure design approved on tip (`42a4f92`) |
+| Task 10 Step 3 pytest | **done** (178 passed per FOLLOWUPS) |
+| Room + DSC-Core journals | **ABSENT** — see [`../specs/2026-09-01-space-energy-pi-closure-design.md`](../specs/2026-09-01-space-energy-pi-closure-design.md) |
+| Developer SoT | [`docs/brain/SPACE-ENERGY-JOURNAL.md`](../../brain/SPACE-ENERGY-JOURNAL.md) · [`WEBUI.md`](../../brain/WEBUI.md) · [`PHOTOPERIOD-TIMELINE.md`](../../brain/PHOTOPERIOD-TIMELINE.md) |
+
+Historical step checkboxes below remain as the original TDD trail; use the table above for tip truth.
+
 ## Global Constraints
 
 - No plant or tent changes lighting window or ratio without explicit operator approval.
@@ -225,11 +238,11 @@
 - Modify: `docs/FOLLOWUPS.md`, optional `docs/qa/AUDIT-CLOSURE-*.md`
 - Offer (do not write until yes): cannabis-domain / DSC skill fragment for space-owned photoperiod + journals
 
-- [ ] **Step 1: Dated FOLLOWUPS section**
+- [x] **Step 1: Dated FOLLOWUPS section** (2026-09-01 — Space energy / journals)
 
-- [ ] **Step 2: Mark spec status implemented** when Pi evidence collected
+- [ ] **Step 2: Mark spec status implemented** when Pi evidence collected (local-only until Pi closure G0–G4)
 
-- [ ] **Step 3: Full brain pytest** `161+` green
+- [x] **Step 3: Full brain pytest** `161+` green (178 passed on ship)
 
 ---
 
