@@ -60,7 +60,11 @@ Exit 0 → `spa-dist/assets/index-CzcL7cKc.js`.
 
 ## Commit
 
-_(filled after commit)_
+```
+70e9231 fix(spa): Climate desk honesty cascade canopy and Capacity SoT
+```
+
+Files: ClimatePage.tsx, FlowSankey.tsx, spa-dist (`index-CzcL7cKc.js`), FOLLOWUPS, task-5 brief/report, progress.
 
 ## Concerns / parks
 
