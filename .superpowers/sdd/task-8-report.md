@@ -65,7 +65,11 @@ Exit 0 → `spa-dist/assets/index-C8GkS5XE.js`.
 
 ## Commit
 
-_(filled after commit)_
+```
+0d95cdb fix(spa): Overview desk honesty journals OOS and grow-log
+```
+
+Files: OverviewPage.tsx, RoomJournal.tsx, CoreJournal.tsx, DashHomeSections.tsx, spa-dist (`index-C8GkS5XE.js`), FOLLOWUPS, task-8 brief/report, progress.
 
 ## Concerns / parks
 

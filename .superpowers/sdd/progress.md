@@ -46,5 +46,5 @@ Task 6: complete (Climate gate GREEN, commits bb6cf1a..0ef26ce)
 
 Task 7: complete (3b22bcc)
 
-Task 8: complete (pending commit)
+Task 8: complete (0d95cdb)
 
