@@ -1,0 +1,224 @@
+DSC - A Plausible Deniability Project.
+SURFACE 7.4.0
+KIT HONEST
+Live
+Grow
+Tune
+Fleet
+Settings
+Overview
+Climate
+4×8
+Flower
+2×4
+Clone & veg
+Root
+Light
+Twin
+3D view
+Mission
+Triage
+Dash
+Legacy
+Light
+
+Separate 4×8 and 2×4 desks — each tent has its own schedule and clocks.
+
+Climate Want →
+?
+DARK PERIOD OK
+4×8 PHOTOPERIOD
+4×8
+DARK
+ON IN
+7H 38M
+DARK FOR
+4H 21M
+
+Main tent — Twin SF1000 is the live 4×8 actuator (on/off + brightness). Hub GPIO5 is
+reserved
+for Twin PWM — not physically wired yet. Got prefers Twin on-hours when history is healthy; otherwise the photoperiod window (Got · Twin).
+
+TWIN SF1000 OFF
+Got · Twin
+DARK
+outside · Early Flowering · 12h rail
+EARLY FLOWERING · 12H RAIL
+GOT / WANT H
+WANT HOURS
+12h
+4×8 SCHEDULE 24H
+ON 06:00 · OFF 18:00 · 12H LIT · RAMP 60M
+12a
+6a
+12p
+6p
+12a
+TWIN SF1000 24H
+0 CYCLES · LAST 22:21 · …
+TWIN SF1000
+OFF
+LIGHTS ON
+SUNRISE MIN
+SUNSET MIN
+MIN DARK H
+outside · Early Flowering · 12h rail
+
+DLI estimate needs SF1000 PPFD calibration — Fleet → Calibrate.
+
+2×4 PHOTOPERIOD
+2×4
+DARK
+FOLLOWS 4×8
+ON IN
+7H 38M
+DARK FOR
+4H 21M
+
+Clone tent — SF1000 is the live lamp.
+Schedule follow
+is below; climate follow is on the Climate desk (Follow 4x8).
+
+Climate · Follow 4x8
+SCHEDULE · FOLLOW 4×8
+SF1000 OFF
+in-band · stage rail
+MIXED STAGES · FINAL 48-72H FLOWERING, EARLY FLOWERING
+GOT / WANT H
+WANT HOURS
+12h
+DEVIATION TODAY
+0.00h
+2×4 only
+2×4 SCHEDULE 24H
+ON 06:00 · OFF 18:00 · 12H LIT · RAMP 60M
+12a
+6a
+12p
+6p
+12a
+2×4 WINDOW 24H
+0 CYCLES · LAST 22:21 · …
+SF1000 LAMP 24H
+0 CYCLES · LAST 22:21 · …
+SF1000
+OFF
+AUTO PHOTOPERIOD
+ON
+MANUAL LIGHT HOLD
+ON
+SCHEDULE SOURCE
+Follow 4x8
+Independent
+SCHEDULE FOLLOWS 4×8
+
+Opens at 06:00:00 · 12 h window (mirrored from 4×8). Edit the 4×8 card to change timing, or switch Schedule source to Independent.
+
+Climate mode (Follow 4x8) →
+
+DLI estimate needs SF1000 PPFD calibration — Fleet → Calibrate.
+
+CROP SCHEDULER
+
+Each tent tracks its own stage rail and pots — 4×8 and 2×4 are separate grow environments.
+
+4×8
+4×8
+DARK
+ON IN
+7H 38M
+DARK FOR
+4H 21M
+GERMINATION
+SEEDLING
+EARLY VEG
+VEGETATIVE
+PUSH VEG
+EARLY FLWR
+FLOWERING
+LATE FLWR
+FINISH
+DRY MODE
+Roster #2
+4x8-LCG
+STOCK
+W64 · 443d · no probe
+Roster #3
+# Three Ghost OG X Trophy Wife
+STOCK
+W96 · 669d · no probe
+Roster #5
+# Five Ghost OG X Trophy Wife
+STOCK
+W96 · 669d · no probe
+Roster #6
+4x8-OSB-stock
+STOCK
+W96 · 669d · no probe
+Roster #7
+4x8-Skunk-stock
+STOCK
+W96 · 669d · no probe
+Roster #8
+4x8-SD
+STOCK
+W96 · 669d · no probe
+Roster #9
+"Jungle Rat" - The adventure of a lonely mystery seed
+STOCK
+W96 · 669d · no probe
+Roster #10
+"FRITZ" The Cat
+DETACHED
+W96 · 669d · no probe
+2×4
+2×4
+DARK
+FOLLOWS 4×8
+ON IN
+7H 38M
+DARK FOR
+4H 21M
+GERMINATION
+SEEDLING
+EARLY VEG
+VEGETATIVE
+PUSH VEG
+EARLY FLWR
+FLOWERING
+LATE FLWR
+FINISH
+DRY MODE
+MIXED STAGES IN 2×4
+Probe 1
+"Afternoon Brunch" Mimosa x Orange Punch Auto 2024
+W96 · 669d · Final 48-72h Flowering · Need —
+Probe 2
+Grandmommy Purple
+W8 · 54d · Early Flowering · Need —
+4×8 ENERGY (ESTIMATE)
+
+Estimate from local watts × hours × tariff — not a utility bill. Learning never auto-applies a schedule.
+
+NO SCHEDULE FOR ESTIMATE
+2×4 ENERGY (ESTIMATE)
+
+Estimate from local watts × hours × tariff — not a utility bill. Learning never auto-applies a schedule.
+
+NO SCHEDULE FOR ESTIMATE
+4×8 OCCUPANCY JOURNAL
+
+Space-native notes plus rolled-up plant journal rows. Provenance chips mark plant vs tent.
+
+Tent note
+Save tent note
+Add text to enable Save
+No occupancy journal rows yet.
+2×4 OCCUPANCY JOURNAL
+
+Space-native notes plus rolled-up plant journal rows. Provenance chips mark plant vs tent.
+
+Tent note
+Save tent note
+Add text to enable Save
+No occupancy journal rows yet.

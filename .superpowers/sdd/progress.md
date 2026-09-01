@@ -75,3 +75,7 @@ Pass4 Task5: Phase B inventory 6 findings
 
 Pass4 Task6: Phase C debt closeout `083c178` ? SV-P1-6 / AirPathMap cascade / GAUGE-P0-1 / zigbee stubs; pass5 Hold+422 deferred; see pass4-task-6-report.md
 
+Pass4 Task6: Phase C 083c178
+
+Pass4 Task7: gate GREEN ? full stress + FOLLOWUPS write-up; bundle `index-BoyhWWR_.js`; Pass 4 proven
+

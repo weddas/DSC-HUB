@@ -1,17 +1,16 @@
-# Live UX Pass 4 — Phase A Twin software Pi smoke
-# Hotpatch SPA (index-BEjnawnp.js) + brain hybrid Got modules; Twin entity +
-# on/brightness command round-trip (optical output N/A).
+# Live UX Pass 4 — full gate prove (Task 7)
+# Hotpatch SPA (index-BoyhWWR_.js) + brain; Twin entity + HTTP matrix + restore.
 # Use plink/pscp only (see .cursor/rules/dsc-pi-hotpatch.mdc). Lab password
 # pattern matches other .audit hotpatch scripts; durable store = Notion API Keys.
-# Task 7 will extend this script for full gate (Phase B/C stress).
+# Prefer docker kill+start (Task 4 hung on bare restart).
 $ErrorActionPreference = "Stop"
 $Repo = "C:\Users\cmgwe\Documents\DSC-HUB"
 $PiHost = "192.168.86.48"
 $PiUser = "dsc"
 $PiPassword = "Digital"
 $HostKey = "SHA256:4XD2kIJ5qNCnULKNmo/L9mvzLbmZdURLwLW7Utt9NJs"
-$ExpectedJs = "assets/index-BEjnawnp.js"
-$Phase = if ($env:PASS4_PHASE) { $env:PASS4_PHASE } else { "A" }
+$ExpectedJs = "assets/index-BoyhWWR_.js"
+$Phase = if ($env:PASS4_PHASE) { $env:PASS4_PHASE } else { "GATE" }
 
 $SpaTar = Join-Path $env:TEMP "live-ux-pass4-spa.tgz"
 $BrainTar = Join-Path $env:TEMP "live-ux-pass4-brain.tgz"
@@ -41,7 +40,7 @@ if ($LASTEXITCODE -ne 0) { throw "tar brain failed" }
 $pscpArgs = @("-batch", "-hostkey", $HostKey, "-pw", $PiPassword)
 $plinkTarget = "${PiUser}@${PiHost}"
 
-Write-Host "Upload SPA + brain + remote Phase A prove script..."
+Write-Host "Upload SPA + brain + remote full-gate prove script..."
 & pscp @pscpArgs $SpaTar "${plinkTarget}:/tmp/live-ux-pass4-spa.tgz"
 if ($LASTEXITCODE -ne 0) { throw "pscp spa failed" }
 & pscp @pscpArgs $BrainTar "${plinkTarget}:/tmp/live-ux-pass4-brain.tgz"
@@ -49,10 +48,10 @@ if ($LASTEXITCODE -ne 0) { throw "pscp brain failed" }
 & pscp @pscpArgs $RemoteSh "${plinkTarget}:/tmp/live-ux-pass4-prove.sh"
 if ($LASTEXITCODE -ne 0) { throw "pscp script failed" }
 
-Write-Host "Run remote Pass 4 Phase A prove on Pi..."
-$remoteCmd = "PASS4_PHASE=$Phase tr -d '\r' < /tmp/live-ux-pass4-prove.sh > /tmp/live-ux-pass4-prove.run.sh; bash /tmp/live-ux-pass4-prove.run.sh"
+Write-Host "Run remote Pass 4 full gate prove on Pi..."
+$remoteCmd = "PASS4_PHASE=$Phase PASS4_EXPECTED_JS=$ExpectedJs tr -d '\r' < /tmp/live-ux-pass4-prove.sh > /tmp/live-ux-pass4-prove.run.sh; bash /tmp/live-ux-pass4-prove.run.sh"
 & plink @("-batch", "-hostkey", $HostKey, "-pw", $PiPassword, $plinkTarget, $remoteCmd)
-if ($LASTEXITCODE -ne 0) { throw "remote Pass 4 Phase A prove failed exit=$LASTEXITCODE" }
+if ($LASTEXITCODE -ne 0) { throw "remote Pass 4 gate prove failed exit=$LASTEXITCODE" }
 
 Write-Host "Pull evidence JSON..."
 & pscp @pscpArgs "${plinkTarget}:/tmp/live-ux-pass4-prove-evidence.json" $LocalEvid
@@ -71,4 +70,4 @@ try {
   throw "Live index verify failed: $_"
 }
 
-Write-Host "Done Phase A. Evidence: $LocalEvid"
+Write-Host "Done Pass 4 gate ($Phase). Evidence: $LocalEvid"

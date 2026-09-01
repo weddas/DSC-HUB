@@ -1,17 +1,18 @@
 {
-  "ts": 1788263185.792637,
-  "phase": "A",
+  "ts": 1788265055.5959077,
+  "phase": "GATE",
   "gates": {
-    "A_G0_index_bundle": {
+    "G0_index_bundle": {
       "ok": true,
       "detail": {
-        "local": "assets/index-BEjnawnp.js",
-        "live": "assets/index-BEjnawnp.js",
-        "local_sha256": "040b2d0ca1826392a8baec1c0a8c07ed43c2eca239bd1719a444d7e280a977b4",
-        "live_sha256": "040b2d0ca1826392a8baec1c0a8c07ed43c2eca239bd1719a444d7e280a977b4"
+        "local": "assets/index-BoyhWWR_.js",
+        "live": "assets/index-BoyhWWR_.js",
+        "expected": "assets/index-BoyhWWR_.js",
+        "local_sha256": "d00bd5a4be5f2188c566b62618e7be3de828d26990e435915974c1bcd4cb92c8",
+        "live_sha256": "d00bd5a4be5f2188c566b62618e7be3de828d26990e435915974c1bcd4cb92c8"
       }
     },
-    "A_G0_health": {
+    "G0_health": {
       "ok": true,
       "detail": {
         "status": "ok",
@@ -22,33 +23,33 @@
         "zigbee": {
           "mqtt_connected": true,
           "bridge_state": "online",
-          "bridge_state_updated_at": 1788263183.33062,
+          "bridge_state_updated_at": 1788265053.1852767,
           "radio_up": true,
           "radio_note": "Coordinator online",
           "device_count": 5,
           "end_device_count": 4,
-          "devices_updated_at": 1788263183.329535,
+          "devices_updated_at": 1788265053.1577034,
           "canopy_updated_at": null,
           "permit_join": false,
           "permit_join_end": null
         }
       }
     },
-    "A7_twin_entity_available": {
+    "G2_twin_entity_available": {
       "ok": true,
       "detail": {
         "http": 200,
         "hub_online": true,
         "source": "controls",
         "state": "off",
-        "brightness": 128,
-        "got_state": "0.01",
+        "brightness": 255,
+        "got_state": "0.04",
         "got_source": "twin",
         "got_honesty": "ok",
         "available": true
       }
     },
-    "A7_twin_turn_on_brightness": {
+    "G2_twin_turn_on_brightness": {
       "ok": true,
       "detail": {
         "http": 200,
@@ -62,8 +63,8 @@
           "hub_online": true,
           "source": "controls",
           "state": "off",
-          "brightness": 128,
-          "got_state": "0.02",
+          "brightness": 255,
+          "got_state": "0.04",
           "got_source": "twin",
           "got_honesty": "ok",
           "available": true
@@ -74,47 +75,243 @@
         "optical": "N/A"
       }
     },
-    "A7_twin_restore": {
+    "G2_twin_restore": {
       "ok": true,
       "detail": {
-        "pre": {
-          "http": 200,
-          "hub_online": true,
-          "source": "controls",
-          "state": "off",
-          "brightness": 128,
-          "got_state": "0.01",
-          "got_source": "twin",
-          "got_honesty": "ok",
-          "available": true
-        },
-        "post": {
-          "http": 200,
-          "hub_online": true,
-          "source": "controls",
-          "state": "off",
-          "brightness": 128,
-          "got_state": "0.02",
-          "got_source": "twin",
-          "got_honesty": "ok",
-          "available": true
-        },
+        "pre_state": "off",
+        "post_state": "off",
         "detail": {
           "off_http": 200,
           "off_body": {
             "entity_id": "light.dsc_hub_twin_sf1000",
-            "state": "off"
+            "state": "off",
+            "brightness": 0
           },
           "restore_off": true
         }
       }
     },
-    "A_hybrid_got_attrs": {
+    "G2_hybrid_got_attrs": {
       "ok": true,
       "detail": {
-        "got_state": "0.02",
+        "got_state": "0.04",
         "got_source": "twin",
         "got_honesty": "ok"
+      }
+    },
+    "G2_fleet": {
+      "ok": true,
+      "detail": {
+        "keys": [
+          "version",
+          "surface",
+          "expected_firmware",
+          "hub",
+          "panel",
+          "pots",
+          "sonoffs",
+          "canopy",
+          "system",
+          "updated_at",
+          "inventory",
+          "root_steering"
+        ]
+      }
+    },
+    "G2_fleet_computed": {
+      "ok": true,
+      "detail": {
+        "keys": [
+          "hass_extras"
+        ]
+      }
+    },
+    "G2_cfm_cascade": {
+      "ok": true,
+      "detail": {
+        "cascade": "83.3",
+        "intake_2x4": "96.2",
+        "distinct_from_intake": true
+      }
+    },
+    "G2_energy_estimate_4x8": {
+      "ok": true,
+      "detail": "Estimate"
+    },
+    "G2_energy_suggestions_4x8": {
+      "ok": true,
+      "detail": {
+        "apply": false,
+        "n": 4
+      }
+    },
+    "G2_energy_confirm_gate_4x8": {
+      "ok": true,
+      "detail": {
+        "status": 400,
+        "body": {
+          "detail": "confirm=true required \u2014 no silent schedule changes"
+        }
+      }
+    },
+    "G2_energy_estimate_2x4": {
+      "ok": true,
+      "detail": "Estimate"
+    },
+    "G2_energy_suggestions_2x4": {
+      "ok": true,
+      "detail": {
+        "apply": false,
+        "n": 4
+      }
+    },
+    "G2_energy_confirm_gate_2x4": {
+      "ok": true,
+      "detail": {
+        "status": 400,
+        "body": {
+          "detail": "confirm=true required \u2014 no silent schedule changes"
+        }
+      }
+    },
+    "G2_journal_space_4x8": {
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "provenance": null,
+        "n": 5
+      }
+    },
+    "G2_journal_space_2x4": {
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "provenance": null,
+        "n": 5
+      }
+    },
+    "G2_journal_room": {
+      "ok": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    "G2_journal_core": {
+      "ok": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    "G2_canopy_plane": {
+      "ok": true,
+      "detail": {
+        "role": "canopy_4x8",
+        "keys": [
+          "role",
+          "updated_at",
+          "friendly_name",
+          "bound_stub"
+        ]
+      }
+    },
+    "G2_zigbee_by_role": {
+      "ok": true,
+      "detail": {
+        "roles": [],
+        "count": 0
+      }
+    },
+    "G2_dutystrip_entities": {
+      "ok": true,
+      "detail": {
+        "got_4x8": "0.04",
+        "got_source_4x8": "twin",
+        "got_2x4": "12.001388549804688",
+        "window_2x4": "off"
+      }
+    },
+    "G4_pause_4x8": {
+      "ok": true,
+      "detail": {
+        "id": 10,
+        "space_id": "4x8",
+        "from_on": "06:00:00",
+        "to_on": "08:00:00",
+        "want_hours": 12.0,
+        "policy": "pause",
+        "status": "paused",
+        "next_step_at": null,
+        "created_at": 1788265186.946377,
+        "updated_at": 1788265186.946377
+      }
+    },
+    "G4_cancel_4x8": {
+      "ok": true,
+      "detail": {
+        "id": 10,
+        "space_id": "4x8",
+        "from_on": "06:00:00",
+        "to_on": "08:00:00",
+        "want_hours": 12.0,
+        "policy": "pause",
+        "status": "cancelled",
+        "next_step_at": null,
+        "created_at": 1788265186.946377,
+        "updated_at": 1788265187.1432247
+      }
+    },
+    "G4_pause_2x4": {
+      "ok": true,
+      "detail": {
+        "id": 11,
+        "space_id": "2x4",
+        "from_on": "06:00:00",
+        "to_on": "08:00:00",
+        "want_hours": 12.0,
+        "policy": "pause",
+        "status": "paused",
+        "next_step_at": null,
+        "created_at": 1788265187.2416174,
+        "updated_at": 1788265187.2416174
+      }
+    },
+    "G4_cancel_2x4": {
+      "ok": true,
+      "detail": {
+        "id": 11,
+        "space_id": "2x4",
+        "from_on": "06:00:00",
+        "to_on": "08:00:00",
+        "want_hours": 12.0,
+        "policy": "pause",
+        "status": "cancelled",
+        "next_step_at": null,
+        "created_at": 1788265187.2416174,
+        "updated_at": 1788265187.3299098
+      }
+    },
+    "G4_restore": {
+      "ok": true,
+      "detail": {
+        "cancelled": [
+          {
+            "id": 10,
+            "status": "cancelled"
+          },
+          {
+            "id": 11,
+            "status": "cancelled"
+          }
+        ],
+        "pending_flips": [],
+        "pre": {
+          "4x8": "06:00:00",
+          "2x4": null
+        },
+        "post": {
+          "4x8": "06:00:00",
+          "2x4": null
+        }
       }
     }
   },
@@ -125,8 +322,8 @@
       "hub_online": true,
       "source": "controls",
       "state": "off",
-      "brightness": 128,
-      "got_state": "0.01",
+      "brightness": 255,
+      "got_state": "0.04",
       "got_source": "twin",
       "got_honesty": "ok",
       "available": true
@@ -136,20 +333,84 @@
       "hub_online": true,
       "source": "controls",
       "state": "off",
-      "brightness": 128,
-      "got_state": "0.02",
+      "brightness": 255,
+      "got_state": "0.04",
       "got_source": "twin",
       "got_honesty": "ok",
       "available": true
     },
-    "detail": {
+    "twin_detail": {
       "off_http": 200,
       "off_body": {
         "entity_id": "light.dsc_hub_twin_sf1000",
-        "state": "off"
+        "state": "off",
+        "brightness": 0
       },
       "restore_off": true
+    },
+    "pre_lights_on": {
+      "4x8": "06:00:00",
+      "2x4": null
+    },
+    "post_lights_on": {
+      "4x8": "06:00:00",
+      "2x4": null
+    },
+    "cancelled_plans": [
+      {
+        "id": 10,
+        "status": "cancelled"
+      },
+      {
+        "id": 11,
+        "status": "cancelled"
+      }
+    ],
+    "pending_flips": []
+  },
+  "snapshot": {
+    "health": {
+      "status": "ok",
+      "version": "7.4.0",
+      "surface": "7.4.0",
+      "expected_firmware": "7.0.0.0",
+      "mode": "live",
+      "zigbee": {
+        "mqtt_connected": true,
+        "bridge_state": "online",
+        "bridge_state_updated_at": 1788265053.1852767,
+        "radio_up": true,
+        "radio_note": "Coordinator online",
+        "device_count": 5,
+        "end_device_count": 4,
+        "devices_updated_at": 1788265053.1577034,
+        "canopy_updated_at": null,
+        "permit_join": false,
+        "permit_join_end": null
+      }
+    },
+    "local_js": "assets/index-BoyhWWR_.js",
+    "live_js": "assets/index-BoyhWWR_.js",
+    "local_sha256": "d00bd5a4be5f2188c566b62618e7be3de828d26990e435915974c1bcd4cb92c8",
+    "live_sha256": "d00bd5a4be5f2188c566b62618e7be3de828d26990e435915974c1bcd4cb92c8",
+    "got_4x8": "0.04",
+    "got_source_4x8": "twin",
+    "got_2x4": "12.001388549804688",
+    "cascade": "83.3",
+    "intake_2x4": "96.2",
+    "canopy_role": "canopy_4x8",
+    "zigbee_roles": [],
+    "twin_post": {
+      "http": 200,
+      "hub_online": true,
+      "source": "controls",
+      "state": "off",
+      "brightness": 255,
+      "got_state": "0.04",
+      "got_source": "twin",
+      "got_honesty": "ok",
+      "available": true
     }
   },
-  "note": "Phase A Twin software smoke; optical output N/A; GPIO5 reserved not wired"
+  "note": "Pass 4 full gate; optical output N/A; GPIO5 reserved not wired"
 }

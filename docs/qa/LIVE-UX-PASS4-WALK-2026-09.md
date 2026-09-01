@@ -26,7 +26,8 @@
 | A7 Pi smoke: Twin entity HTTP + on/brightness command round-trip | operator | **pass** | Task 4 `.audit/live-ux-pass4-prove.ps1` Phase A — all gates ok; optical N/A. Post-fix: turn_on bri=128 fleet-persisted |
 | A8 Pytest Twin hybrid guards | brain | **pass** | `pytest tests/test_live_ux_pass4_twin.py` → **8 passed** |
 
-**Live bundle:** `assets/index-BEjnawnp.js` (index.html sha256 `040b2d0ca1826392…`)  
+**Live bundle (Phase A):** `assets/index-BEjnawnp.js` (index.html sha256 `040b2d0ca1826392…`)  
+**Gate bundle:** `assets/index-BoyhWWR_.js` (index.html sha256 `d00bd5a4be5f2188…`)  
 **Phase A note:** Prefer `docker kill`+`start` over `docker restart` (restart hung Pi mid-session). Hub light brightness now normalized to aioesphomeapi 0–1.
 
 ---
@@ -63,7 +64,7 @@
 | P2 | Light | **Manual Light Hold ON** while Twin/SF1000 OFF and both windows DARK — hold chip truthful but sticky after Phase A stress; confirm intentional before gate mutate | **pass5** | **deferred (pass5)** — intentional hold hygiene; do not auto-clear at gate |
 | P3 | Light | Energy `confirm=false` returns **422** (was 400 in Pass 1) — still blocks silent shift; status-code drift only | **pass5** | **deferred (pass5)** — still blocks; status-code normalize later |
 
-**Named parks (Task 6):** SV-P1-6 / DutyStrip, AirPathMap cascade, GAUGE-P0-1 — **closed in source**. Canopy/Zigbee fleet planes restored from bindings (stubs until MQTT). Live Wet≠Problem re-prove remains Task 7 / MQTT-dependent.
+**Named parks (Task 6):** SV-P1-6 / DutyStrip, AirPathMap cascade, GAUGE-P0-1 — **closed in source**. Gate (Task 7) re-proved live: Climate `cascade 83`, Light `2×4 WINDOW 24H`, Overview Root Want band copy. Canopy stub live; Wet/Dry raw still `—` until MQTT occupancy/leak payload. Problem/Clear still needs task `policy_state`.
 
 ---
 
@@ -81,15 +82,20 @@
 
 ## Gate — full stress + FOLLOWUPS
 
+**Live bundle:** `assets/index-BoyhWWR_.js` · index.html sha256 `d00bd5a4be5f2188c566b62618e7be3de828d26990e435915974c1bcd4cb92c8`  
+**Prove:** `.audit/live-ux-pass4-prove.ps1` / `.sh` `PASS4_PHASE=GATE` · evidence `.audit/live-ux-pass4-prove-evidence.json`  
+**Browser inventory:** `docs/qa-screenshots-2026-09-01-live-ux/pass4-g-*-page-text.txt` + `pass4-g-browser-inventory.json`  
+**Gate:** **GREEN** (2026-09-01 Task 7)
+
 | Gate | Result | Evidence |
 |------|--------|----------|
-| G0 Hotpatch final bundle + index sha256 | **pending** | Task 7 |
-| G1 Pytest (Twin hybrid + touched brain edges) | **pending** | Task 7 |
-| G2 HTTP: Twin entity, energy confirm, journals, fleet, CFM cascade | **pending** | Task 7 |
-| G3 Browser: Light + Climate + Overview matrix + Twin controls (no physical lamp) | **pending** | Task 7 |
-| G4 Restore: no active shift plans / pending flips after mutate stress | **pending** | Task 7 |
-| G5 Walk fully filled (Phase A/B/C + findings disposition) | **pending** | Task 7 |
-| G6 FOLLOWUPS Pass 4 gate section committed (gate-blocking) | **pending** | Task 7 — passed/failed/flakes/residuals/Pass 5 parks/GPIO5/hashes |
+| G0 Hotpatch final bundle + index sha256 | **pass** | Hotpatch via plink/pscp + `docker kill`+`start` (not restart). Live = local `index-BoyhWWR_.js`; sha256 match both sides |
+| G1 Pytest (Twin hybrid + touched brain edges) | **pass** | `test_live_ux_pass4_twin.py` **12 passed**; focused brain_pi (sf1000/zigbee/twin/canopy/reapply/duty) **22 passed** |
+| G2 HTTP: Twin entity, energy confirm, journals, fleet, CFM cascade | **pass** | All G2_* gates ok in evidence: Twin available + turn_on bri=128 accepted (optical N/A) + restore off; `got_source=twin`; cascade=`83.3` ≠ intake `96.2`; energy estimate/suggestions both spaces; confirm=false → **400** both; journals space/room/core; canopy stub `canopy_4x8`; DutyStrip entities live |
+| G3 Browser: Light + Climate + Overview matrix + Twin controls (no physical lamp) | **pass** | Light: Got·Twin, GPIO5 reserved / not wired, Twin OFF, `2×4 WINDOW 24H` + separate SF1000 lamp strip. Climate: KIT HONEST, **cascade 83** (not 96), AIR CFM + MASS CHIP GATED, Canopy stub, Wet/Dry `—` + Problem/Clear honesty copy. Overview: Hub online, Canopy stub chip, both tents DARK/Follow, journals, Root Want band copy, past notables caption |
+| G4 Restore: no active shift plans / pending flips after mutate stress | **pass** | Pause+cancel both tents; pending_flips=[]; lights-on 4×8 `06:00:00` unchanged; Twin restored **off** |
+| G5 Walk fully filled (Phase A/B/C + findings disposition) | **pass** | This file — Phase A/B/C + findings disposition + gate + restore + GPIO5 |
+| G6 FOLLOWUPS Pass 4 gate section committed (gate-blocking) | **pass** | `docs/FOLLOWUPS.md` dated Pass 4 gate section (Task 7 commit) |
 
 ---
 
@@ -97,11 +103,13 @@
 
 | Item | Pre state | Post restore | Notes |
 |------|-----------|--------------|-------|
-| Lights-on / Twin brightness | — | — | Record before mutate stress (Task 7) |
-| Shift / gradual plans | — | — | Cancel + restore per Pass 1–3 pattern |
+| Twin | off · brightness 255 (fleet) | off | turn_on bri=128 accepted then turn_off; optical N/A |
+| Lights-on 4×8 | `06:00:00` | `06:00:00` | Pause path only — no force-tick |
+| Lights-on 2×4 | null (follow) | null | Unchanged |
+| Shift / gradual plans | none active | plans 10/11 **cancelled**; pending_flips=[] | G4 |
 
 ---
 
 ## GPIO5 operator handoff
 
-**Hub GPIO5 = reserved for Twin SF1000 PWM module** — software path treats Twin as live actuator; physical wire-up deferred. See `docs/FOLLOWUPS.md` Pass 4 stub; expand at gate (Task 7).
+**Hub GPIO5 = reserved for Twin SF1000 PWM module.** Software path treats Twin (`light.dsc_hub_twin_sf1000`) as the live 4×8 actuator (on/off + brightness HTTP round-trip proven). Physical wire-up deferred — SPA copy states reserved / not physically wired. Do **not** claim optical/PWM wired until operator completes GPIO5 rig-up. Full handoff in `docs/FOLLOWUPS.md` Pass 4 gate section.

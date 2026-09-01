@@ -17,7 +17,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 | Item | Status | Notes |
 |------|--------|-------|
-| SoftCal assignment chips | **done (live)** | `Probe N · {plant/name\|Unassigned} · SoftCal OK`; pot1/pot2 assigned on Pi fleet |
+| SoftCal assignment chips | **done (live)** | `Probe N ? {plant/name\|Unassigned} ? SoftCal OK`; pot1/pot2 assigned on Pi fleet |
 | CalOutcomeStrip (fan/SoftCal/lab/peer/soil) | **done (live)** | Shared What/Process/Expected; fan Start holds live fans copy |
 | Soil/lab assigned banners | **done (code)** | `ASSIGNED_PROBE_BANNER` when probe has plant |
 | Nickname flush on Next/commit | **done (code)** | `flushEntityTextDrafts` + `peekEntityTextDraft` so mid-typing survives step change |
@@ -54,7 +54,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Role `leak_tank` | **done (live)** | Catalog + by_role safety row |
 | Operator params + filtered selects (implement) | **done (live)** | Pi task5 2026-08-30: hotpatch `zigbee_policies.py`+`zigbee_mqtt.py`, SPA `index-nLu-U8CF.js`; QA `problem_when=inactive` dry?OOS+banner / wet?clear; live `0xa4c138b9e2b9b690` `problem_when=active` wet?OOS+banner / dry?clear (policy re-bound via `.audit/zb-bind-tank-occ.sh`) |
 | Policy problem vs raw wet in UI | **done** | Climate safety chips: Wet/Dry primary + Problem/Clear when Task bound; plan 2026-08-31 |
-| Recipe `floor_flood_alert` | **done (live)** | Task 5 Pi 2026-08-31: desk `0xa4c1385a686af7df` room + `0xa4c1380d734f2033` 4×8 bound `floor_flood_alert`; independent `zb-policy-<ieee>` banners; wet?banner no OOS; dry?clear; tank unchanged |
+| Recipe `floor_flood_alert` | **done (live)** | Task 5 Pi 2026-08-31: desk `0xa4c1385a686af7df` room + `0xa4c1380d734f2033` 4?8 bound `floor_flood_alert`; independent `zb-policy-<ieee>` banners; wet?banner no OOS; dry?clear; tank unchanged |
 | Roles `leak_floor_room` / `_4x8` / `_2x4` | **done (catalog)** | Distinct floor roles so room + 4?8 don't clobber Climate honesty row; 2?4 selectable |
 | Multi-sensor per space (`*_b` roles) | **next-plan** | Extension path in spec; one ieee per role id this pass |
 | `leak_floor_2x4` live bind | **deferred** | Until hardware in 2?4 |
@@ -3607,8 +3607,8 @@ Source: browser-only stress pass on live Pi SPA (`192.168.86.48:8787`). Goal: 10
 | ST-P0-1 | Duplicate probe assignment | Roster #3 and #4 both `active` on Probe 1 after compose assign; tent strip shows one plant, roster shows two. Commit must reject or detach incumbent. |
 | ST-P0-2 | Delete plant no-op | Roster Delete + confirm dialog fires but slot #3 OpPolish remains; dialog says "DELETE PLANT ON PROBE 1" regardless of row ? retire is probe-keyed not slot-keyed. |
 | ST-P0-3 | Detached plants undeletable | Slot #2 detached OpPolish has Assign only ? no Delete. Orphan roster slots accumulate. |
-| ST-P0-4 | 4×8 tent ignores stock plants | Crop scheduler shows `NO PLANTS IN TENT` while stock commits target 4×8; stock status not rendered on tent rail. |
-| ST-P0-5 | Sprout/stage honesty on new assign | Afternoon Brunch on Probe 1 shows `W? · ? · ?` (no expected stage/days) despite sprout field set in compose. |
+| ST-P0-4 | 4?8 tent ignores stock plants | Crop scheduler shows `NO PLANTS IN TENT` while stock commits target 4?8; stock status not rendered on tent rail. |
+| ST-P0-5 | Sprout/stage honesty on new assign | Afternoon Brunch on Probe 1 shows `W? ? ? ? ?` (no expected stage/days) despite sprout field set in compose. |
 
 ### next-plan (P1)
 
@@ -3624,8 +3624,8 @@ Source: browser-only stress pass on live Pi SPA (`192.168.86.48:8787`). Goal: 10
 
 | Target | Status |
 |--------|--------|
-| 2×4 early-flower photo + auto | **Done** ? #1 Grandmommy Purple (photo EF, Probe 2); #4 Afternoon Brunch auto (Probe 1) |
-| 8× 4×8 diverse as stock | **Done** ? LCG, Three Ghost, Five Ghost, VPD, Skunk, SD, JRat, FRITZ (browser Compose) |
+| 2?4 early-flower photo + auto | **Done** ? #1 Grandmommy Purple (photo EF, Probe 2); #4 Afternoon Brunch auto (Probe 1) |
+| 8? 4?8 diverse as stock | **Done** ? LCG, Three Ghost, Five Ghost, VPD, Skunk, SD, JRat, FRITZ (browser Compose) |
 | 10 total roster | **Done ? 10/10** |
 | Probe moves + soil cal | **Done** (prior pass) |
 | Full page review | **Done** |
@@ -3761,7 +3761,7 @@ Source: `/reflect` + `/interrogate` + `test_roster_stress.py` + react-doctor pas
 
 ## 2026-09-01 ? Post-mega D ? C ? A ? B
 
-**Closure:** [`docs/qa/AUDIT-CLOSURE-2026-09-D-C-A-B.md`](qa/AUDIT-CLOSURE-2026-09-D-C-A-B.md) · **SPA:** `index-CXq-NptO.js`
+**Closure:** [`docs/qa/AUDIT-CLOSURE-2026-09-D-C-A-B.md`](qa/AUDIT-CLOSURE-2026-09-D-C-A-B.md) ? **SPA:** `index-CXq-NptO.js`
 
 | Track | Result |
 |-------|--------|
@@ -3791,7 +3791,7 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 
 ## 2026-09-01 ? Phase 0 progress (7.4.0 path)
 
-**Walk doc:** [`docs/qa/PHASE0-WALK-2026-09.md`](qa/PHASE0-WALK-2026-09.md) · **Git:** `f029702`
+**Walk doc:** [`docs/qa/PHASE0-WALK-2026-09.md`](qa/PHASE0-WALK-2026-09.md) ? **Git:** `f029702`
 
 | Gate | Status |
 |------|--------|
@@ -3805,7 +3805,7 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 
 ## 2026-09-01 ? 7.4.0 Phase 0 closed + surface bump
 
-**Closure:** [`docs/qa/AUDIT-CLOSURE-7.4.md`](qa/AUDIT-CLOSURE-7.4.md) · **Soak:** [`FLOW-SANKEY-SOAK-7.3.md`](qa/FLOW-SANKEY-SOAK-7.3.md) closed
+**Closure:** [`docs/qa/AUDIT-CLOSURE-7.4.md`](qa/AUDIT-CLOSURE-7.4.md) ? **Soak:** [`FLOW-SANKEY-SOAK-7.3.md`](qa/FLOW-SANKEY-SOAK-7.3.md) closed
 
 | Item | Status |
 |------|--------|
@@ -3891,7 +3891,7 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 |------|--------|-------|
 | Overview SPA honesty (Task 8) | **done (repo)** | Journal provenance/Save UX; root OOS grey; grow-log history caption; photoperiod glance SoT copy ? see `.superpowers/sdd/task-8-report.md`. Bundle `index-C8GkS5XE.js` |
 | Overview walk / Pi hotpatch (Task 9) | **done (live)** | Hotpatched `index-C8GkS5XE.js`; index.html sha256 `40ec4848fb8974335be024a91897c507c393edb500826dde244d7434c93cea25`; HTTP health/rooms/journals/fleet green; browser matrix + Light SoT cross-check; walk filled ? gate **GREEN**. Evidence `.audit/live-ux-overview-prove-evidence.json` |
-| Moisture band 30?70 vs Root Want | **parked** | GAUGE-P0-1; not OOS/no-data greying ? Pass 4 brainstorm candidate |
+| Moisture band 30?70 vs Root Want | **done (Pass 4)** | GAUGE-P0-1 closed in Phase C + gate re-prove ? Overview Root uses `potWantBand`; missing Want unbanded |
 
 ## 2026-09-01 ? Live UX honesty Passes 1?3 closure
 
@@ -3907,10 +3907,10 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Item | Status | Notes |
 |------|--------|-------|
 | Passes 1?3 desk gates | **done (live)** | Shared honesty contract held; both tents parity each pass |
-| Pass 4 Integrated | **stub** | Pending `/brainstorming` ? may absorb parked UX (GAUGE-P0-1 moisture band, DutyStrip SV-P1-6, AirPathMap cascade alias) |
-| Pass 5 Follow-up | **stub** | Pending `/brainstorming` after Pass 4 |
-| Operator queue (outside 1?3) | **next-plan** | CannaLib prod ? FlowSankey verify ? Zigbee one-recipe ? unless Pass 4 reorders |
-| Hardware | **parked** | Twin PWM / Zigbee new recipes stay locked until operator unlocks |
+| Pass 4 Integrated | **proven** | Twin software + Phase B/C + gate GREEN 2026-09-01 ? `index-BoyhWWR_.js`; GPIO5 reserved handoff in Pass 4 gate FOLLOWUPS |
+| Pass 5 Follow-up | **stub** | Pending `/brainstorming` after Pass 4 ? Manual Hold hygiene, energy 400/422 normalize, Wet/Dry MQTT prove, optical PWM |
+| Operator queue (outside 1?3) | **next-plan** | CannaLib prod ? FlowSankey verify ? Zigbee one-recipe ? unless Pass 5 reorders |
+| Hardware | **parked** | GPIO5 Twin PWM physical wire-up (operator); Zigbee new recipes stay locked until unlock |
 
 ---
 
@@ -3922,3 +3922,79 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Item | Status | Notes |
 |------|--------|-------|
 | Hub GPIO5 | **reserved** | Twin SF1000 PWM ? physical wire-up later; expand at Pass 4 gate |
+
+---
+
+## 2026-09-01 ? Live UX Pass 4 gate (Twin-first integrated) ? **GREEN**
+
+**Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-pass4-twin-integrated-design.md`](superpowers/specs/2026-09-01-live-ux-pass4-twin-integrated-design.md)  
+**Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-pass4-twin-integrated.md`](superpowers/plans/2026-09-01-live-ux-pass4-twin-integrated.md)  
+**Walk:** [`docs/qa/LIVE-UX-PASS4-WALK-2026-09.md`](qa/LIVE-UX-PASS4-WALK-2026-09.md) ? Phase A/B/C + gate filled  
+**Evidence:** `.audit/live-ux-pass4-prove-evidence.json` ? browser `docs/qa-screenshots-2026-09-01-live-ux/pass4-g-*`
+
+### Hashes / bundle
+
+| Artifact | Value |
+|----------|-------|
+| SPA bundle | `assets/index-BoyhWWR_.js` |
+| index.html sha256 | `d00bd5a4be5f2188c566b62618e7be3de828d26990e435915974c1bcd4cb92c8` |
+| Deploy | plink/pscp hotpatch; container `docker kill` + `start` (not `restart`) |
+| Brain surface | `7.4.0` health ok |
+
+### Passed at gate
+
+| Area | Result |
+|------|--------|
+| G0 index/hotpatch | Live index matches spa-dist `index-BoyhWWR_.js` + sha256 |
+| G1 pytest | `test_live_ux_pass4_twin.py` 12 passed; focused zigbee/twin/DutyStrip guards 22 passed |
+| G2 Twin HTTP | Entity available; turn_on brightness 128 accepted (optical N/A); restore off; `got_source=twin` |
+| G2 energy | Estimate + suggestions `apply:false` both tents; confirm=false blocked (**400**) |
+| G2 journals / fleet | Space 4?8/2?4 + room + core HTTP 200; fleet + computed ok |
+| G2 CFM cascade | `sensor.dsc_cfm_cascade_2x4_allocated` = **83.3** (? intake 96.2) |
+| G2 canopy stub | `fleet.canopy` role `canopy_4x8` `bound_stub=true` |
+| G3 browser Light | Got?Twin; GPIO5 reserved / not wired; Twin OFF; `2?4 WINDOW 24H` + separate SF1000 lamp strip |
+| G3 browser Climate | KIT HONEST; **cascade 83** (alias closed); AIR CFM + MASS CHIP GATED; Canopy stub; Wet/Dry honesty copy |
+| G3 browser Overview | Hub online; Canopy stub chip; both tents DARK / Follow; journals; Root Want band copy; past notables caption |
+| G4 restore | Twin off; pause plans cancelled; pending_flips=[]; lights-on unchanged |
+| Phase C parks | SV-P1-6 / AirPathMap cascade / GAUGE-P0-1 closed in source **and** re-proved live |
+
+### Failed at gate
+
+| Item | Result |
+|------|--------|
+| _(none)_ | No gate-blocking failures |
+
+### Flakes
+
+| Item | Notes |
+|------|-------|
+| Energy confirm status code | Phase B inventory saw **422**; gate prove saw **400**. Both block silent shift ? status-code drift only (Pass 5 park) |
+| Twin fleet persist on | Command response acknowledges `on` + bri=128; fleet mirror sometimes stays `off` without GPIO5 PWM ? software accept path still green (optical N/A) |
+
+### Residuals (non-blocking)
+
+| Severity | Item | Notes |
+|----------|------|-------|
+| P2 | Wet/Dry live reading | Climate Safety cards render; Wet/Dry shows `?` until leak/occupancy MQTT publishes. Problem/Clear still requires bound task `policy_state` (no SPA wet?problem inference) |
+| P2 | `zigbee_by_role` empty on live fleet | Canopy stub present; safety Wet/Dry UI still mounts from bindings path. Full by_role population needs live MQTT / reapply soak |
+| P3 | Historical SF1000 ? `sf1000_on` | Not backfilled; DutyStrip honesty improves going forward after hotpatch |
+| P3 | Twin Actual `0.0H` while OFF | Brief Phase A/gate cycles; sub-0.1h rounding expected ? not a park |
+
+### Pass 5 parks (deferred ? do not invent Pass 5 scope here)
+
+| ID | Reason |
+|----|--------|
+| Manual Light Hold sticky ON | Intentional after Phase A/gate stress; confirm/clear with operator ? do not auto-mutate |
+| Energy `confirm=false` status-code normalize | Still blocks; 400 vs 422 drift only |
+| Live Wet?Problem MQTT prove | Needs sensor payload + optional bound `policy_state` recipe (Zigbee one-recipe queue) |
+| Optical / PWM verify | Blocked on physical GPIO5 wire-up |
+
+### Twin software status + GPIO5 reserved handoff
+
+- **Software:** Twin is the live 4?8 actuator path. Hybrid Got prefers Twin when history healthy (`got_source=twin` at gate). SPA honesty: reserved GPIO5 / not physically wired.
+- **Entity:** `light.dsc_hub_twin_sf1000` ? on/off + brightness HTTP round-trip proven; optical output **N/A**.
+- **Operator handoff:** **Hub GPIO5 = reserved for Twin SF1000 PWM module.** Physical wire-up tonight/tomorrow is operator-owned. Until then: never claim ?wired,? never gate product success on lamp photons. After wire-up: re-prove brightness stick + optical, then clear this reserved note.
+
+### Parent program pointer
+
+Passes 1?3 desk gates remain **GREEN**. Pass 4 integrated gate **GREEN**. Pass 5 remains stub ? offer `/brainstorming` for soak leftovers and deferred parks above (do not invent Pass 5 work in this section).

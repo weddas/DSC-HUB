@@ -1,8 +1,8 @@
 # Live UX Pass 4 — Twin-first integrated — Design
 
 **Date:** 2026-09-01  
-**Status:** approved — implementation plan [`2026-09-01-live-ux-pass4-twin-integrated.md`](../plans/2026-09-01-live-ux-pass4-twin-integrated.md)
-**Parent:** [`2026-09-01-live-ux-honesty-program-design.md`](2026-09-01-live-ux-honesty-program-design.md) (Passes 1–3 proven)  
+**Status:** **Pass 4 proven** (2026-09-01 gate GREEN — Twin software + integrated Live re-walk + debt closeout + FOLLOWUPS) — plan [`2026-09-01-live-ux-pass4-twin-integrated.md`](../plans/2026-09-01-live-ux-pass4-twin-integrated.md)  
+**Parent:** [`2026-09-01-live-ux-honesty-program-design.md`](2026-09-01-live-ux-honesty-program-design.md) (Passes 1–3 proven; Pass 4 proven)  
 **Domain:** Live desks + Twin SF1000 software path (4×8); honesty + light UX
 
 ## Problem

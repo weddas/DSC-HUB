@@ -1,0 +1,326 @@
+DSC - A Plausible Deniability Project.
+SURFACE 7.4.0
+KIT HONEST
+Live
+Grow
+Tune
+Fleet
+Settings
+Overview
+Climate
+4×8
+Flower
+2×4
+Clone & veg
+Root
+Light
+Twin
+3D view
+Mission
+Triage
+Dash
+Legacy
+Climate
+
+Room is the umbrella lung. 2×4 and 4×8 are grow rooms and transfer/storage. T, RH, VPD only together.
+
+HUB 23.9°C
+All
+4×8
+2×4
+Room
+?
+1h
+6h
+24h
+48h
+Cycle
+Photo
+Kit / Fleet
+COMMAND
+FULL AUTO
+ON
+MASTER TAKEOVER
+OFF
+FAN OVERRIDE
+OFF
+HUM INTAKE ROUTING
+OFF
+RECIRC DE-STRAT
+OFF
+?
+STRATEGY
+VPD
+Temperature
+Humidity
+PRIORITY TENT
+4x8 Main
+2x4 Clone
+HEAT
+OFF
+COOL
+OFF
+HUM
+OFF
+DEHUM
+ON
+MAT
+ON
+MISTER
+OFF
+
+Full Auto
+The hub drives fans and appliances automatically while Full Auto is on.
+
+ROOM UMBRELLA
+ROOM °C
+25.2°C
+ROOM RH
+53%
+ROOM VPD
+1.50kPa
+ROOM AH
+12.4g/m³
+24h —°C
+
+ΔT room↔4×8 -1.3°C · ΔAH -0.3 g/m³ · ΔVPD -0.19 · ΔT/ΔAH 2×4↔4×8 -0.7°C / -0.6 · ΔAH room↔2×4 0.3 g/m³. Early warn is the lung poisoning a tent before Want miss.
+
+4×8 climate
+EARLY FLOWERING · 12H RAIL
+Got 23.9°C / 56% / 1.31 kPa
+Want 25.0°C · RH 50–55%
+TEMP °C
+Early Flowering · 12h rail
+RH MIN %
+Early Flowering · 12h rail
+RH MAX %
+Early Flowering · 12h rail
+VPD MIN
+Early Flowering · 12h rail
+VPD MAX
+Early Flowering · 12h rail
+2×4 climate
+MIXED STAGES · FINAL 48-72H FLOWERING, EARLY FLOWERING
+MIXED STAGES
+Got 24.6°C / 56% / 1.35 kPa
+Want 25.0°C · RH 50–55%
+CLIMATE FOLLOWS 4×8
+
+Clone climate mode is Follow 4×8 — Want targets lock here. Edit 4×8 climate or change mode below.
+
+CLIMATE MODE
+Follow 4x8
+Follow Plants
+Custom
+Off
+
+Follow 4×8 mirrors main stage targets. Follow Plants intersects Want for 2×4 plants (Pi, ~12h). Custom leaves sliders alone. Off parks the 2×4. Photoperiod follow is on Light — separate from climate mode.
+
+TEMP °C
+in-band · plant Want
+RH MIN %
+in-band · plant Want
+RH MAX %
+in-band · plant Want
+VPD MIN
+outside · stage rail
+VPD MAX
+in-band · stage rail
+TRIAD · T / RH / VPD
+ROOM
+T
+RH
+VPD
+2×4
+T
+RH
+VPD
+4×8
+T
+RH
+VPD
+Room T
+Got 25.2°C
+Want —
+2×4 T
+Got 24.6°C
+Want 25.0
+4×8 T
+Got 23.9°C
+Want 25.0
+2×4 RH
+Got 56.3%
+Want 50–55
+4×8 RH
+Got 55.9%
+Want 50–55
+2×4 VPD
+Got 1.4kPa
+Want 1–1.2
+4×8 VPD
+Got 1.3kPa
+Want 1–1.2
+4×8 leaf VPD
+Got 1.2kPa
+Want —
+2×4 leaf VPD
+Got 1.2kPa
+Want —
+TEMPERATURE
+Room
+2×4
+4×8
+25.2 °C
+HUMIDITY
+Room
+2×4
+4×8
+53.1 %
+VPD
+Room
+2×4 air
+4×8 air
+4×8 leaf
+2×4 leaf
+1.5 kPa
+AIR PATH
+
+CFM from Learning (anemometer).
+
+Room
+umbrella lung
+2×4 tent
+in 96 cfm
+4×8 tent
+in 58 cfm
+Outdoors
+dump 21
+cascade 83
+same air · not added to Σ
+recirc 27
+MASS-BALANCE EXHAUST = Σ INTAKE 154 × DUMP/RECIRC SPLIT
+AIR CFM
+MASS CHIP GATED
+CFM provenance per link (Allocated / Nameplate). Heat/humidity estimated splits removed. Zero links omitted.
+
+Sankey is air CFM only (Allocated / Nameplate). Heat and humidity estimated splits are not shown. Cascade uses the 2×4→4×8 allocated sensor — zero / missing links are omitted, not invented balance. Mass-imbalance chip stays gated (not a live alarm).
+
+ZIGBEE BY ROLE
+
+Assign Role/Zone in Settings → Device → Zigbee. Save re-routes into Climate immediately. Unbound sensors never fill canopy.
+
+CANOPY ← CANOPY_4X8 (CANOPY_4X8_MAIN)
+ROLE	ZONE	DEVICE	°C	RH %
+canopy_4x8	4x8	canopy_4x8_main	—	—
+
+Safety — Wet/Dry is the raw sensor. Problem/Clear appears only when a Task is bound.
+
+LEAK_TANK · 4X8 · 0XA4C138B9E2B9B690
+WET/DRY —
+LEAK_FLOOR_ROOM · ROOM · 0XA4C1385A686AF7DF
+WET/DRY —
+LEAK_FLOOR_4X8 · 4X8 · 0XA4C1380D734F2033
+WET/DRY —
+FAN DUTY %
+IN 4×8 9%
+IN 2×4 15%
+EX ROOM 20%
+EX OUT 15%
+OUT %
+RECIRC %
+INTAKE 4×8
+9%
+INTAKE 2×4
+15%
+EXHAUST ROOM
+20%
+EXHAUST OUTSIDE
+15%
+EFFICACY · BUYING KW BECAUSE THE LUNG COULD NOT TRANSFER
+Heat off
+Cool off
+Hum off
+Dehum ON
+Hum ok
+Heat ok
+Bought —h today
+Dump — BTU/h
+Heater today 1S
+CROP SCHEDULER
+
+Each tent tracks its own stage rail and pots — 4×8 and 2×4 are separate grow environments.
+
+4×8
+4×8
+DARK
+ON IN
+7H 38M
+DARK FOR
+4H 21M
+GERMINATION
+SEEDLING
+EARLY VEG
+VEGETATIVE
+PUSH VEG
+EARLY FLWR
+FLOWERING
+LATE FLWR
+FINISH
+DRY MODE
+Roster #2
+4x8-LCG
+STOCK
+W64 · 443d · no probe
+Roster #3
+# Three Ghost OG X Trophy Wife
+STOCK
+W96 · 669d · no probe
+Roster #5
+# Five Ghost OG X Trophy Wife
+STOCK
+W96 · 669d · no probe
+Roster #6
+4x8-OSB-stock
+STOCK
+W96 · 669d · no probe
+Roster #7
+4x8-Skunk-stock
+STOCK
+W96 · 669d · no probe
+Roster #8
+4x8-SD
+STOCK
+W96 · 669d · no probe
+Roster #9
+"Jungle Rat" - The adventure of a lonely mystery seed
+STOCK
+W96 · 669d · no probe
+Roster #10
+"FRITZ" The Cat
+DETACHED
+W96 · 669d · no probe
+2×4
+2×4
+DARK
+FOLLOWS 4×8
+ON IN
+7H 38M
+DARK FOR
+4H 21M
+GERMINATION
+SEEDLING
+EARLY VEG
+VEGETATIVE
+PUSH VEG
+EARLY FLWR
+FLOWERING
+LATE FLWR
+FINISH
+DRY MODE
+MIXED STAGES IN 2×4
+Probe 1
+"Afternoon Brunch" Mimosa x Orange Punch Auto 2024
+W96 · 669d · Final 48-72h Flowering · Need —
+Probe 2
+Grandmommy Purple
+W8 · 54d · Early Flowering · Need —
