@@ -1,7 +1,7 @@
 # Live UX honesty program (five-pass) — Design
 
 **Date:** 2026-09-01  
-**Status:** approved for planning — awaiting implementation plan  
+**Status:** approved — implementation plan [`2026-09-01-live-ux-honesty-program.md`](../plans/2026-09-01-live-ux-honesty-program.md)
 **Domain:** Operator Live desks (Light → Climate → Overview); Pi brain SoT; honesty + light UX  
 **Related:** space-energy journals (implemented); kit honesty (pot3/4 planned OOS); `dsc-space-energy.mdc`, `dsc-pi-hotpatch.mdc`
 
