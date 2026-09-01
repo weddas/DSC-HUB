@@ -73,5 +73,5 @@ Pass4 Task5: 84a3387..9225d2e Phase B inventory DONE_WITH_CONCERNS (B6 fail; nam
 
 Pass4 Task5: Phase B inventory 6 findings
 
-Pass4 Task6: Phase C debt closeout ? SV-P1-6 / AirPathMap cascade / GAUGE-P0-1 / zigbee stubs; pass5 Hold+422 deferred; see pass4-task-6-report.md
+Pass4 Task6: Phase C debt closeout `083c178` ? SV-P1-6 / AirPathMap cascade / GAUGE-P0-1 / zigbee stubs; pass5 Hold+422 deferred; see pass4-task-6-report.md
 
