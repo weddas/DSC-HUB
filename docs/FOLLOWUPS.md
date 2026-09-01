@@ -3911,3 +3911,14 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Pass 5 Follow-up | **stub** | Pending `/brainstorming` after Pass 4 |
 | Operator queue (outside 1?3) | **next-plan** | CannaLib prod ? FlowSankey verify ? Zigbee one-recipe ? unless Pass 4 reorders |
 | Hardware | **parked** | Twin PWM / Zigbee new recipes stay locked until operator unlocks |
+
+---
+
+## 2026-09-01 ? Live UX Pass 4 (scaffold)
+
+**Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-pass4-twin-integrated-design.md`](superpowers/specs/2026-09-01-live-ux-pass4-twin-integrated-design.md)  
+**Walk:** [`docs/qa/LIVE-UX-PASS4-WALK-2026-09.md`](qa/LIVE-UX-PASS4-WALK-2026-09.md) ? scaffold only (Task 1)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Hub GPIO5 | **reserved** | Twin SF1000 PWM ? physical wire-up later; expand at Pass 4 gate |
