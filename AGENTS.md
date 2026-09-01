@@ -1,6 +1,6 @@
 ## Learned User Preferences
 
-- Prefer one coherent end-to-end pass over narrow phasing; keep polish and operator UX first-class, not a later polish pass.
+- Prefer one coherent end-to-end pass over narrow phasing; keep kit spaces (4x8 and 2x4) at the same development point in a pass — do not leave one tent behind; polish and operator UX stay first-class, not a later polish pass.
 - Demand behavioral honesty: gauges, chips, and labels must match real Light/Climate/Root Want→Got state — no blank WebGL/Sankey theater or status collages that look live when they are not; strain catalog images only when upstream media exists.
 - Calibrate surfaces each expose What→Process→Expected; live calibration must state that Start holds live actuators until finish.
 - Entity-bus round-trip must not gate wizard Next or primary actions — use local strain/assign/text drafts until the bus catches up.
@@ -26,4 +26,4 @@
 - Twin SF1000 and Zigbee/Z2M/SkyConnect are in-scope product surfaces; Zigbee onboarding is role/task binding with `capability_class` (optional `capability_override`) and operator-chosen `problem_when`, not bare device join alone. `tank_full_appliance` may OOS; `floor_flood_alert` is banner-only (never OOS). Space leak roles: `leak_floor_room` / `leak_floor_4x8` / `leak_floor_2x4`.
 - Some kit Zigbee leak/liquid sensors expose wet/dry as `occupancy` (liquid present), not PIR motion — do not treat occupancy as motion for those SKUs. Climate Wet/Dry is that raw reading; Problem/Clear comes only from bound `policy_state` (SPA must not infer problem from wet).
 - Light fixture PPFD maps are local static assets under `/dsc-catalog/ppfd/` (manifest + images), not vendor CDN hotlinks in the SPA.
-- Recurring friction is encoded only after approval (e.g. `.cursor/rules/dsc-kit-sot.mdc`, `dsc-viz-honesty.mdc`, `dsc-roster-probe.mdc`, `dsc-pi-hotpatch.mdc`); durable ops debt stays in `docs/FOLLOWUPS.md`.
+- Photoperiod and fixture energy are space-owned (`4x8`/`2x4`); no lighting controls on plant cards; schedule shifts/flips/Learning apply only with explicit operator confirm (no auto-flip from one plant). Journals hierarchy on Pi SQLite: plant → tent space → room (`grow_room`) → DSC-Core facility (`dsc_core`), separate tables with read-time rollups; see skill `dsc-space-photoperiod-journal`.

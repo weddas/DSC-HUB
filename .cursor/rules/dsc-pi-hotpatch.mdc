@@ -17,6 +17,11 @@ alwaysApply: false
 |--------|--------|
 | `.audit/stress-spa-only-hotpatch.ps1` | SPA tarball → `/app/static/` |
 | `.audit/stress-roster-hotpatch.ps1` | SPA + brain tarball + restart |
+| `.audit/space-energy-pi-closure.ps1` | SPA + brain + HTTP stress + force-tick both tents (upload `se-force-tick.py` / `se-veg-tick.py`) |
+
+## Force-tick prove
+
+When mutating live schedules: record pre lights-on for **both** tents, force-tick with restore, Cancel plans, leave none active. Run container Python with `-w /app -e PYTHONPATH=/app`.
 
 ## SPA-only flow
 

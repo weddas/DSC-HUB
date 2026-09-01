@@ -1,0 +1,31 @@
+---
+description: Space photoperiod, energy, and journal hierarchy — tent parity and confirm gates
+globs: "{brain/dsc_brain/**,brain/tests/test_space_energy*,brain/tests/test_room*,homeassistant/custom_components/dsc_hub/frontend/src/**}"
+alwaysApply: false
+---
+
+# Space energy + journals
+
+## Tent parity
+
+In one pass, treat `4x8` and `2x4` at the **same development point** (API, mutate, force-tick, UI, walk rows). Do not ship or close with one tent read-only.
+
+## Hard gates
+
+- Schedule shift / lights-on mutate requires `confirm=true` — never silent.
+- Learning and suggestions always `apply: false` (planning signal only).
+- Flip approve/deny does **not** write lights-on helpers.
+- Conflict may `suggest_move`; never auto-move plants.
+- No lighting controls on plant cards — plant UI = mini journal only.
+
+## Journals
+
+Hierarchy on same `dsc_ops.sqlite3`: plant → tent space → room (`grow_room`) → DSC-Core. Read-time rollups; provenance chips (`plant|space|room|core`). Observations ≠ diagnoses. Facility system rows bubble via `facility_journal.bubble_facility_system`.
+
+## Honesty
+
+pot3/4 = `planned_oos` only — never Capacity offline lead. Skill: `dsc-space-photoperiod-journal`.
+
+## Pi prove / closure
+
+Record pre lights-on for both tents before force-tick; Cancel + restore after; leave no active plans. Mark parent space-energy **implemented** only after walk matrix rows are filled (`docs/qa/SPACE-ENERGY-PI-WALK-*.md`). Hotpatch: `.audit/space-energy-pi-closure.ps1` + `dsc-pi-hotpatch.mdc`.
