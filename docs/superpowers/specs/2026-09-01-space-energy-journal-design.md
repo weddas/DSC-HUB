@@ -1,9 +1,9 @@
 # Space-owned photoperiod, energy learning & journal hierarchy — Design
 
 **Date:** 2026-09-01  
-**Status:** approved 2026-09-01 — implementation plan next  
+**Status:** approved 2026-09-01 — implementation plan [`../plans/2026-09-01-space-energy-journal.md`](../plans/2026-09-01-space-energy-journal.md) (Tasks 1–10 unchecked; modules absent)  
 **Domain:** cannabis-domain honesty; Pi brain local SoT  
-**Related:** Light clocks/timeline (`lightSchedule`, `TentLightClock`), `dsc_ops.sqlite3`, roster plant UUIDs, dark-period violation sensors
+**Related:** Light clocks/timeline (`lightSchedule`, `TentLightClock`), `dsc_ops.sqlite3`, roster plant UUIDs, dark-period violation sensors · developer index [`../../brain/PHOTOPERIOD-TIMELINE.md`](../../brain/PHOTOPERIOD-TIMELINE.md) · [`../../brain/WEBUI.md`](../../brain/WEBUI.md)
 
 ## Problem
 
@@ -150,3 +150,87 @@ Offer a project / cannabis-domain skill fragment: space-owned photoperiod, no si
 ## Research inputs (brainstorm)
 
 Photoperiod night-length / night-break risk; sliding window vs ratio change; TOU lighting as dominant load; hobby calculators as W×h×$/kWh. Minute-scale safe-shift limits are mostly practice (veg ~30–45 min/day; flower much stricter) — product defaults stay conservative and operator-chosen.
+
+---
+
+## Appendix — Verified shipped baseline vs this design
+
+**Verified on:** tip `39233ae` (master; spa-dist unchanged since `32836fe` / v7.4.0). Labels: **SHIPPED** = code present and wired; **DESIGN ONLY** = design/plan only (not live). Do not treat DESIGN ONLY as product behavior. Plan Tasks 1–10 remain unchecked; `space_model.py`, `plant_journal.py`, `space_journal.py`, `energy_model.py`, `schedule_shift.py`, `energy_learning.py` are **absent** from `brain/dsc_brain/`.
+
+```mermaid
+flowchart TB
+  subgraph shipped [SHIPPED today]
+    ll[light_loop + hub time ingest]
+    spa[SPA TentLightClock / PhotoperiodTimeline]
+    gl[grow_event_log + GET /grow-log]
+    w[catalog wattage_w display]
+  end
+  subgraph design [DESIGN ONLY — plan Tasks 1–10]
+    pj[plant_journal / space_journal]
+    en[energy_tariff + W×h×$ estimate]
+    rp[schedule_shift_plan approve-only]
+    lr[energy Learning outlier vs norm]
+  end
+  shipped -.->|do not invent as live| design
+```
+
+### SPA source
+
+| Item | Status | Path |
+|------|--------|------|
+| Operator SPA | SHIPPED | `homeassistant/custom_components/dsc_hub/frontend/src/` |
+| spa-dist tip hashes | SHIPPED | `spa-dist/index.html` → `index-K2_ziUnM.js`, `calibrate-BqnIG9Rc.js`, `tune-fleet-C9fzhOX5.js`, `twin-three-BjdbWAdH.js`, `index-D0rIyyPr.css` |
+
+### 1. Light control
+
+| Piece | Status | Cite |
+|-------|--------|------|
+| Photoperiod SoT loop | SHIPPED | `brain/dsc_brain/light_loop.py` — `build_light_loop`, `emit_light_loop`, `LightLoopSnapshot` |
+| Hub lights-on ingest | SHIPPED | `hub_controls.HUB_TIME_OID_TO_ENTITY` (`lights_on_time` → `time.dsc_hub_lights_on_time`); `esphome_client` TimeState ingest |
+| SPA clocks / timeline | SHIPPED | `lib/lightSchedule.ts`; `TentLightClock.tsx`; `PhotoperiodTimeline.tsx`; `hooks/useTentLightSchedule.ts`; `pages/LightPage.tsx` (`#/live/light`) |
+| Dark-period / ramp floor entities | SHIPPED | `binary_sensor.dsc_clone_dark_period_violation` (`dash_computed`); `number.dsc_hub_sf1000_ramp_floor` / `min_dark_hours` — **not** design `schedule_shift_plan` |
+| Gradual lights-on slide / confirm ramp | DESIGN ONLY | Plan Task 6 / 9 — modules absent |
+
+### 2. Grow log / journal
+
+| Piece | Status | Cite |
+|-------|--------|------|
+| Flat grow event log | SHIPPED | Table `grow_event_log` (`settings.SETTINGS_SCHEMA`); `event_log.record_grow_log` / `list_grow_log`; `GET /grow-log` |
+| SPA consumer | SHIPPED | `fleetApi.get_grow_log`; `DashGrowLog` in `DashHomeSections.tsx`; `growLogFilter.ts` |
+| `learning_log` + `GET /learning` | SHIPPED | Seat event log — **not** design energy Learning |
+| `plant_journal` / `space_journal` APIs | DESIGN ONLY | Absent from sqlite schemas / `api.py` |
+
+### 3. Energy / tariff / watts
+
+| Piece | Status | Cite |
+|-------|--------|------|
+| Fixture nameplate watts (catalog) | SHIPPED | Catalog `lights`; SPA `PlantWizardLightStep` / `CatalogResearch` display `wattage_w` |
+| CFM / climate nameplate | SHIPPED | Fan/appliance capacity proxies — not TOU lighting cost |
+| `energy_tariff`, W×h×$/kWh calculator, Learning banners | DESIGN ONLY | No `/energy/*` routes; no `energy_model.py` |
+
+### 4. Space vs plant ownership (current model)
+
+| Layer | Status | Behavior (verified) |
+|-------|--------|---------------------|
+| Tent helpers own windows | SHIPPED | 4×8: `time.dsc_hub_lights_on_time` + expected light hours; 2×4: Follow 4x8 \| Independent + `clone_*` |
+| Follow 4x8 | SHIPPED | `light_loop` `clone_follows_main`; SPA follow lock |
+| Climate Mode Follow Plants | SHIPPED | `follow_plants.py` — **climate bands**, writes `clone_*` numbers; not photoperiod SoT alone |
+| Plant stage → 2×4 photo write | SHIPPED | `control_ops.apply_clone_tent_automation` |
+| Plant seat rehome photo template | SHIPPED | `PlantSeatPanel.applyTent` can set Independent + hours |
+| Strict space-owned photoperiod (no plant override) | DESIGN ONLY | Conflicts with stage-automation / rehome writes until plan Tasks 6–8 |
+
+### 5. Design tables in `dsc_ops.sqlite3`
+
+| Table | Status |
+|-------|--------|
+| `grow_event_log` | SHIPPED |
+| `learning_log` | SHIPPED (unrelated to energy Learning) |
+| `plant_journal` / `space_journal` / `energy_tariff` / `schedule_shift_plan` / `space` / `space_device` | ABSENT (DESIGN ONLY) |
+
+### Durable docs (this tip)
+
+| Doc | Role |
+|-----|------|
+| [`docs/brain/PHOTOPERIOD-TIMELINE.md`](../../brain/PHOTOPERIOD-TIMELINE.md) | SPA timeline + tent-helper SoT; points at this design for unshipped space ownership |
+| [`docs/brain/WEBUI.md`](../../brain/WEBUI.md) | Light route + `GET /grow-log`; states journal/tariff APIs unshipped |
+| [`docs/superpowers/plans/2026-09-01-space-energy-journal.md`](../plans/2026-09-01-space-energy-journal.md) | Task checklist — do not mark done until code + tests land |

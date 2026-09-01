@@ -8,7 +8,21 @@
 
 **Tech Stack:** Python FastAPI brain (`brain/dsc_brain`), SQLite, React SPA (`homeassistant/custom_components/dsc_hub/frontend`), existing `light_loop` / `lightSchedule` / roster plant UUIDs.
 
-**Spec:** [`docs/superpowers/specs/2026-09-01-space-energy-journal-design.md`](../specs/2026-09-01-space-energy-journal-design.md)
+**Spec:** [`docs/superpowers/specs/2026-09-01-space-energy-journal-design.md`](../specs/2026-09-01-space-energy-journal-design.md) (approved; appendix = SHIPPED vs DESIGN ONLY)
+
+## Verified baseline (tip `39233ae` — before Task 1)
+
+Do **not** treat plan modules as shipped. Re-check before starting work:
+
+| Plan module | Tree status |
+|-------------|-------------|
+| `space_model.py` · `plant_journal.py` · `space_journal.py` | **ABSENT** |
+| `energy_model.py` · `schedule_shift.py` · `energy_learning.py` | **ABSENT** |
+| `GET/POST /journal/*` · `GET /energy/*` | **ABSENT** from `api.py` |
+| Existing SoT to reuse | `light_loop.py`, `HUB_TIME_OID_TO_ENTITY`, SPA `lightSchedule` / `TentLightClock` / `PhotoperiodTimeline`, `grow_event_log` + `GET /grow-log`, catalog `wattage_w` |
+| Ownership tension | `apply_clone_tent_automation` + `PlantSeatPanel.applyTent` still write 2×4 photoperiod — Task 6+ must replace silent plant overrides |
+
+Developer index (not a product runbook): [`docs/brain/PHOTOPERIOD-TIMELINE.md`](../../brain/PHOTOPERIOD-TIMELINE.md) · [`docs/brain/WEBUI.md`](../../brain/WEBUI.md).
 
 ## Global Constraints
 
