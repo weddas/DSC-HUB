@@ -8,6 +8,10 @@
 ## Commits
 
 - `84a3387` — docs(pass4): Phase B re-walk inventory and findings
+- `2f5bdf0` — docs(sdd): record Pass 4 Task 5 commit hash in report
+- `557de02` — docs(sdd): note Pass 4 Task 5 commit range in progress
+
+**Range:** `84a3387..557de02`
 
 ## What landed
 
