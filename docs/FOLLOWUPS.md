@@ -3724,3 +3724,12 @@ Source: `/reflect` + `/interrogate` + `test_roster_stress.py` + react-doctor pas
 
 **Approve reflect routings?** Encoded in `.cursor/rules/dsc-roster-probe.mdc` and `.cursor/rules/dsc-pi-hotpatch.mdc` (`3a452f0`).
 
+### Docs / residual (2026-09-01 eng-docs)
+
+| Item | Status |
+|------|--------|
+| Developer SoT for tip `a2f5f08` (`plant_uuid` clear, drawer close, `test_roster_stress`, hotpatch runbook) | See `docs/brain/ROSTER-STOCK.md` · `PLANT-PROBE-LIFECYCLE.md` · `PLANT-WIZARD.md` · `WEBUI.md` · `docs/ops/PI-HOTPATCH.md` |
+| ST-P0-7 soft (~5s computed poll lag) | Still residual |
+| SoftCal→ESP NVS; SoftCalWizard→`POST /soft-cal/sessions`; live CannaLib CDN offset | Still residual (prefer #151 for SoftCal SoT) |
+| `.audit/stress-*-hotpatch.ps1` embeds lab SSH/sudo phrases in-repo | **Ops debt** — rotate if shared; durable store is Notion API Keys; do not paste values into Wiki/PR |
+
