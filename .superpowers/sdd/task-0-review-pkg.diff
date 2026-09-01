@@ -1,0 +1,326 @@
+﻿diff --git a/docs/qa-screenshots-2026-09-01-live-ux/.gitkeep b/docs/qa-screenshots-2026-09-01-live-ux/.gitkeep
+new file mode 100644
+index 0000000..8b13789
+--- /dev/null
++++ b/docs/qa-screenshots-2026-09-01-live-ux/.gitkeep
+@@ -0,0 +1 @@
++
+diff --git a/docs/qa/LIVE-UX-CLIMATE-WALK-2026-09.md b/docs/qa/LIVE-UX-CLIMATE-WALK-2026-09.md
+new file mode 100644
+index 0000000..cd21bc4
+--- /dev/null
++++ b/docs/qa/LIVE-UX-CLIMATE-WALK-2026-09.md
+@@ -0,0 +1,94 @@
++# Live UX ÔÇö Climate desk walk (Pass 2)
++
++**Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-honesty-program-design.md`](../superpowers/specs/2026-09-01-live-ux-honesty-program-design.md) ┬º3  
++**Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-honesty-program.md`](../superpowers/plans/2026-09-01-live-ux-honesty-program.md)  
++**Prerequisite:** Light walk (Pass 1) gate green  
++**Prove script:** `.audit/live-ux-climate-prove.ps1` (Task 6)  
++**Screenshots:** `docs/qa-screenshots-2026-09-01-live-ux/`
++
++---
++
++## Gates
++
++| Gate | Result | Evidence |
++|------|--------|----------|
++| G0 Hotpatch | | |
++| G1 Full Auto vs reduced-kit honesty | | |
++| G2 Zone focus (All / 4├ù8 / 2├ù4 / Room) | | |
++| G3 Climate Mode vs Light schedule chips | | |
++| G4 Sankey air-only + mass chip gated | | |
++| G5 Canopy honesty | | |
++| G6 Wet/Dry vs Problem/Clear | | |
++| G7 Pytest (`test_live_ux_climate_honesty`) | | |
++| G8 Browser matrix | | |
++| G9 Restore | | |
++
++---
++
++## Honesty checklist (┬º3)
++
++| Check | Result | Notes |
++|-------|--------|-------|
++| Full Auto vs Capacity offline ÔÇö honest distinction | | |
++| Reduced-kit: pot3/4 in `planned_oos` only, never offline lead | | |
++| GotWantBars match fleet SoT | | |
++| Zone All: aggregate view honest | | |
++| Zone 4├ù8: tent Want editor scope correct | | |
++| Zone 2├ù4: tent Want editor scope correct | | |
++| Zone Room: lung view only ÔÇö not tent Want editor | | |
++| 2├ù4 Climate Mode chips Ôëá Light schedule Follow chips | | |
++| Air CFM Sankey only (no mass theater) | | |
++| Mass-imbalance chip gated (not live alarm) | | |
++| Canopy unbound: never fills / no fake live | | |
++| Canopy bound: role/device labeled | | |
++| Canopy stale held ÔåÆ warn tone | | |
++| Wet/Dry = raw sensor reading | | |
++| Problem/Clear only from bound `policy_state` | | |
++| SPA does not infer problem from wet alone | | |
++
++---
++
++## Light UX checklist (┬º3)
++
++| Check | Result | Notes |
++|-------|--------|-------|
++| Zone switcher clarity (All / 4├ù8 / 2├ù4 / Room) | | |
++| Help tips accurate | | |
++| Spacing / hierarchy | | |
++
++---
++
++## HTTP checklist
++
++| Endpoint / entity | Result | Notes |
++|-------------------|--------|-------|
++| `binary_sensor.dsc_reduced_kit` attrs via `/fleet/computed` | | |
++| Canopy fields present / honest | | |
++| CFM sensors present | | |
++
++---
++
++## Browser checklist
++
++| ID | Zone | Result | Notes |
++|----|------|--------|-------|
++| B1 Full Auto / reduced-kit banner | All | | |
++| B2 GotWantBars | 4├ù8 | | |
++| B3 GotWantBars | 2├ù4 | | |
++| B4 Room lung view (not Want editor) | Room | | |
++| B5 Climate Mode chips (2├ù4) | 2├ù4 | | |
++| B6 Light schedule Follow chips distinct | 2├ù4 | | |
++| B7 Sankey air CFM only | All | | |
++| B8 Mass-imbalance chip gated | All | | |
++| B9 Canopy unbound empty | both tents | | |
++| B10 Canopy bound labeled | both tents | | |
++| B11 Wet/Dry raw reading | safety | | |
++| B12 Problem/Clear from policy only | safety | | |
++
++---
++
++## Restore
++
++| Item | Pre state | Post restore | Notes |
++|------|-----------|--------------|-------|
++| Climate levers stressed | | | |
+diff --git a/docs/qa/LIVE-UX-LIGHT-WALK-2026-09.md b/docs/qa/LIVE-UX-LIGHT-WALK-2026-09.md
+new file mode 100644
+index 0000000..8bf57e1
+--- /dev/null
++++ b/docs/qa/LIVE-UX-LIGHT-WALK-2026-09.md
+@@ -0,0 +1,99 @@
++# Live UX ÔÇö Light desk walk (Pass 1)
++
++**Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-honesty-program-design.md`](../superpowers/specs/2026-09-01-live-ux-honesty-program-design.md) ┬º2  
++**Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-honesty-program.md`](../superpowers/plans/2026-09-01-live-ux-honesty-program.md)  
++**Prove script:** `.audit/live-ux-light-prove.ps1` (Task 3)  
++**Screenshots:** `docs/qa-screenshots-2026-09-01-live-ux/`
++
++---
++
++## Gates
++
++| Gate | Result | Evidence |
++|------|--------|----------|
++| G0 Hotpatch | | |
++| G1 Got/Want/DARK/Follow (both tents) | | |
++| G2 Twin / SF1000 honesty | | |
++| G3 DLI (both tents) | | |
++| G4 Energy Estimate + confirm gate | | |
++| G5 Tent occupancy journals | | |
++| G6 Pytest (`test_live_ux_light_honesty`) | | |
++| G7 Browser matrix | | |
++| G8 Restore (no active shift plans) | | |
++
++---
++
++## Honesty checklist (┬º2)
++
++| Check | 4├ù8 | 2├ù4 | Notes |
++|-------|-----|-----|-------|
++| Got hours match fleet/helper SoT | | | |
++| Want hours match fleet/helper SoT | | | |
++| WINDOW OPEN vs DARK matches real switch state | | | |
++| Schedule Follow 4├ù8 vs Independent chips honest | | | |
++| Twin SF1000 / SF1000 OFF ÔÇö no live-lamp theater without GPIO | | | |
++| Stage rail / draft tones read as Expected, not live plant | | | |
++| DLI: estimate only with calibrated PPFD | | | |
++| DLI: honest calibrate CTA when uncalibrated | | | |
++| Energy panel labeled Estimate | | | |
++| Energy suggestions not applyable (`apply: false`) | | | |
++| Shift/gradual requires `confirm=true` | | | |
++| Tent occupancy journal provenance (observations only) | | | |
++| No lighting controls on plant cards | | | |
++| Dark-violation banner matches real state | | | |
++| Manual hold banner matches real state | | | |
++| Auto-photoperiod banner matches real state | | | |
++
++---
++
++## Light UX checklist (┬º2)
++
++| Check | Result | Notes |
++|-------|--------|-------|
++| Card hierarchy (Got/Want ÔåÆ schedule ÔåÆ energy ÔåÆ journals) | | |
++| Spacing / disabled Save clarity | | |
++| Climate Want deep-link honest (not live climate editor) | | |
++| Help tips / WhatÔåÆProcessÔåÆExpected accurate | | |
++
++---
++
++## Energy matrix (both tents)
++
++| Step | 4├ù8 | 2├ù4 | Notes |
++|------|-----|-----|-------|
++| E1 estimate + suggestions (`apply: false`) | | | |
++| E2 confirm=false ÔåÆ 400 | | | |
++| E3 pause + cancel | | | |
++| E4 force-tick + restore lights-on | | | |
++
++---
++
++## Browser checklist
++
++| ID | Tent | Result | Notes |
++|----|------|--------|-------|
++| B1 Got/Want hours | 4├ù8 | | |
++| B2 WINDOW OPEN vs DARK | 4├ù8 | | |
++| B3 Follow vs Independent schedule chips | 4├ù8 | | |
++| B4 Twin / SF1000 OFF honesty | 4├ù8 | | |
++| B5 DLI / calibrate CTA | 4├ù8 | | |
++| B6 Energy Estimate panel | 4├ù8 | | |
++| B7 Tent occupancy journal | 4├ù8 | | |
++| B8 Got/Want hours | 2├ù4 | | |
++| B9 WINDOW OPEN vs DARK | 2├ù4 | | |
++| B10 Follow vs Independent schedule chips | 2├ù4 | | |
++| B11 Twin / SF1000 OFF honesty | 2├ù4 | | |
++| B12 DLI / calibrate CTA | 2├ù4 | | |
++| B13 Energy Estimate panel | 2├ù4 | | |
++| B14 Tent occupancy journal | 2├ù4 | | |
++| B15 Stage rail = Expected (not live plant) | both | | |
++| B16 Banners (dark-violation / manual hold / auto-photoperiod) | both | | |
++
++---
++
++## Restore
++
++| Tent | Pre lights-on | Post restore | Plans left active? |
++|------|---------------|--------------|--------------------|
++| 4├ù8 | | | |
++| 2├ù4 | | | |
+diff --git a/docs/qa/LIVE-UX-OVERVIEW-WALK-2026-09.md b/docs/qa/LIVE-UX-OVERVIEW-WALK-2026-09.md
+new file mode 100644
+index 0000000..fe684b7
+--- /dev/null
++++ b/docs/qa/LIVE-UX-OVERVIEW-WALK-2026-09.md
+@@ -0,0 +1,108 @@
++# Live UX ÔÇö Overview desk walk (Pass 3)
++
++**Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-honesty-program-design.md`](../superpowers/specs/2026-09-01-live-ux-honesty-program-design.md) ┬º4  
++**Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-honesty-program.md`](../superpowers/plans/2026-09-01-live-ux-honesty-program.md)  
++**Prerequisite:** Climate walk (Pass 2) gate green  
++**Prove script:** `.audit/live-ux-overview-prove.ps1` (Task 9)  
++**Screenshots:** `docs/qa-screenshots-2026-09-01-live-ux/`
++
++---
++
++## Gates
++
++| Gate | Result | Evidence |
++|------|--------|----------|
++| G0 Hotpatch | | |
++| G1 KIT HONEST / hub online / canopy-unbound | | |
++| G2 Critical banners vs grow-log alerts | | |
++| G3 Photoperiod glance vs Light SoT | | |
++| G4 Room + DSC-Core journals | | |
++| G5 Root strip / fan duties / bands grey | | |
++| G6 Pytest (`test_live_ux_overview_honesty`) | | |
++| G7 Browser matrix | | |
++| G8 Cross-desk photoperiod parity | | |
++| G9 Program close | | |
++
++---
++
++## Honesty checklist (┬º4)
++
++| Check | Result | Notes |
++|-------|--------|-------|
++| KIT HONEST matches fleet | | |
++| Hub online state honest | | |
++| Canopy-unbound matches fleet | | |
++| Critical banners = live policy (not history theater) | | |
++| Grow-log alerts distinct from live critical banners | | |
++| No fake urgency on historical alerts | | |
++| Photoperiod glance 4├ù8 matches Light SoT | | |
++| Photoperiod glance 2├ù4 matches Light SoT | | |
++| Follow chip on glance when applicable | | |
++| Room journal: provenance chips | | |
++| Room journal: save/list works | | |
++| DSC-Core journal: provenance chips | | |
++| DSC-Core journal: save/list works | | |
++| Journal rollups coherent (tent ÔåÆ room ÔåÆ Core) | | |
++| Root strip grey when no data / OOS | | |
++| Fan duties grey when no data / OOS | | |
++| Bands grey when no data / OOS | | |
++
++---
++
++## Light UX checklist (┬º4)
++
++| Check | Result | Notes |
++|-------|--------|-------|
++| Glance hierarchy: photoperiod ÔåÆ journals ÔåÆ vitals | | |
++| Help tips accurate | | |
++| Spacing / readability | | |
++
++---
++
++## HTTP checklist
++
++| Endpoint | Result | Notes |
++|----------|--------|-------|
++| `/health` | | |
++| `/rooms` (incl. `grow_room`) | | |
++| `/journal/room/grow_room` | | |
++| `/journal/core` | | |
++| `/fleet/computed` (banners, KIT HONEST) | | |
++
++---
++
++## Browser checklist
++
++| ID | Result | Notes |
++|----|--------|-------|
++| B1 KIT HONEST banner | | |
++| B2 Hub online indicator | | |
++| B3 Canopy-unbound state | | |
++| B4 Critical banner (live policy) | | |
++| B5 Grow-log alert (historical) | | |
++| B6 Photoperiod glance 4├ù8 | | |
++| B7 Photoperiod glance 2├ù4 | | |
++| B8 Room journal UI | | |
++| B9 DSC-Core journal UI | | |
++| B10 Root strip grey/OOS | | |
++| B11 Fan duties grey/OOS | | |
++| B12 Bands grey/OOS | | |
++
++---
++
++## Cross-desk parity
++
++| Check | Light SoT | Overview glance | Match? |
++|-------|-----------|-----------------|--------|
++| 4├ù8 photoperiod | | | |
++| 2├ù4 photoperiod | | | |
++| 4├ù8 Follow chip | | | |
++| 2├ù4 Follow chip | | | |
++
++---
++
++## Restore
++
++| Item | Pre state | Post restore | Notes |
++|------|-----------|--------------|-------|
++| N/A (Overview is read-mostly) | | | |
