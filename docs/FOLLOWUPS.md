@@ -3872,7 +3872,7 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | HTTP energy both tents | **done** | estimate Estimate + suggestions `apply:false`; confirm=false ? 400; evidence .audit/live-ux-light-prove-evidence.json |
 | Browser matrix + screenshots | **done** | `docs/qa-screenshots-2026-09-01-live-ux/` |
 | Force-tick restore | **done** | 4?8 `06:00:00`; 2?4 helper `20:00:00`; no active plans / pending flips |
-| DutyStrip 2?4 `0.0H ON` vs Got ~12h | **parked** | Same hole as **SV-P1-6**; Got/Want chips honest ? do not block Pass 1. History/DutyStrip map for SF1000 clone entity |
+| DutyStrip 2x4 `0.0H ON` vs Got ~12h | **fixed (Pass 4 Phase C)** | `083c178` - 2x4 Actual = window Got SoT; `sf1000_on` map; separate lamp strip |
 | Climate Pass 2 | **next-plan** | Task 4+ only after this Light gate (now green) |
 
 ---
@@ -3883,7 +3883,7 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 |------|--------|-------|
 | Climate SPA honesty (Task 5) | **done (repo)** | Cascade entity, Capacity offline SoT, canopy fleet T/RH, Wet unknown muted, mass chip gated label - see `.superpowers/sdd/task-5-report.md` |
 | Climate walk / Pi hotpatch (Task 6) | **done (live)** | Hotpatched `index-CzcL7cKc.js`; HTTP reduced_kit/canopy/CFM green; walk filled - gate **GREEN**. Evidence `.audit/live-ux-climate-prove-evidence.json` |
-| AirPathMap cascade <- intake 2x4 | **parked** | Live confirm Task 6: SVG still aliases cascade ribbon to `intakeClone` (not `dsc_cfm_cascade_2x4_allocated`). FlowSankey honesty green (AIR CFM + MASS CHIP GATED + allocated cascade) - does **not** block Pass 2 / Overview |
+| AirPathMap cascade <- intake 2x4 | **fixed (Pass 4 Phase C)** | `083c178` - required cascade prop from `sensor.dsc_cfm_cascade_2x4_allocated` |
 
 ## 2026-09-01 - Live UX honesty Pass 3 (Overview SPA)
 
@@ -3891,7 +3891,7 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 |------|--------|-------|
 | Overview SPA honesty (Task 8) | **done (repo)** | Journal provenance/Save UX; root OOS grey; grow-log history caption; photoperiod glance SoT copy ? see `.superpowers/sdd/task-8-report.md`. Bundle `index-C8GkS5XE.js` |
 | Overview walk / Pi hotpatch (Task 9) | **done (live)** | Hotpatched `index-C8GkS5XE.js`; index.html sha256 `40ec4848fb8974335be024a91897c507c393edb500826dde244d7434c93cea25`; HTTP health/rooms/journals/fleet green; browser matrix + Light SoT cross-check; walk filled ? gate **GREEN**. Evidence `.audit/live-ux-overview-prove-evidence.json` |
-| Moisture band 30?70 vs Root Want | **parked** | GAUGE-P0-1; not OOS/no-data greying ? Pass 4 brainstorm candidate |
+| Moisture band 30-70 vs Root Want | **fixed (Pass 4 Phase C)** | `083c178` - Overview uses `potWantBand`; missing Want unbanded |
 
 ## 2026-09-01 ? Live UX honesty Passes 1?3 closure
 
@@ -3907,18 +3907,29 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Item | Status | Notes |
 |------|--------|-------|
 | Passes 1?3 desk gates | **done (live)** | Shared honesty contract held; both tents parity each pass |
-| Pass 4 Integrated | **stub** | Pending `/brainstorming` ? may absorb parked UX (GAUGE-P0-1 moisture band, DutyStrip SV-P1-6, AirPathMap cascade alias) |
+| Pass 4 Twin-first | **Phase A GREEN + Phase B/C DONE_WITH_CONCERNS** | Tip `cf2337d` Tasks 1-6. Task 7 gate open. GPIO5 reserved. SoT: `docs/brain/LIVE-UX-HONESTY.md` / `docs/ops/TWIN-SF1000.md` |
 | Pass 5 Follow-up | **stub** | Pending `/brainstorming` after Pass 4 |
 | Operator queue (outside 1?3) | **next-plan** | CannaLib prod ? FlowSankey verify ? Zigbee one-recipe ? unless Pass 4 reorders |
 | Hardware | **parked** | Twin PWM / Zigbee new recipes stay locked until operator unlocks |
 
 ---
 
-## 2026-09-01 ? Live UX Pass 4 (scaffold)
+## 2026-09-01 - Live UX Pass 4 Twin-first (Phase A GREEN + Phase B/C DONE_WITH_CONCERNS)
 
-**Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-pass4-twin-integrated-design.md`](superpowers/specs/2026-09-01-live-ux-pass4-twin-integrated-design.md)  
-**Walk:** [`docs/qa/LIVE-UX-PASS4-WALK-2026-09.md`](qa/LIVE-UX-PASS4-WALK-2026-09.md) ? scaffold only (Task 1)
+**Design:** [`docs/superpowers/specs/2026-09-01-live-ux-pass4-twin-integrated-design.md`](superpowers/specs/2026-09-01-live-ux-pass4-twin-integrated-design.md)
+**Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-pass4-twin-integrated.md`](superpowers/plans/2026-09-01-live-ux-pass4-twin-integrated.md)
+**Walk:** [`docs/qa/LIVE-UX-PASS4-WALK-2026-09.md`](qa/LIVE-UX-PASS4-WALK-2026-09.md) - Phase A/B/C filled; Task 7 gate pending
+**Developer runbook:** [`docs/brain/LIVE-UX-HONESTY.md`](brain/LIVE-UX-HONESTY.md) / [`docs/ops/TWIN-SF1000.md`](ops/TWIN-SF1000.md) (tip `cf2337d` / spa `index-BoyhWWR_.js`)
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Hub GPIO5 | **reserved** | Twin SF1000 PWM ? physical wire-up later; expand at Pass 4 gate |
+| Pass 4 design + plan | **done (repo)** | Twin-first -> re-walk -> debt -> full-stress gate |
+| Task 1 walk scaffold | **done** | `LIVE-UX-PASS4-WALK-2026-09.md` + GPIO5 stub |
+| Phase A hybrid Got + Twin on ingest | **done** (`b4ca126`) | `got_source` twin/window; pytest `test_live_ux_pass4_twin.py` |
+| Phase A Light Twin + DutyStrip Actual | **done** (`5144978`) | later spa supersedes |
+| Task 4 Pi smoke + brightness scale | **Phase A GREEN** (`48b443d`) | A1-A8 pass; evidence `.audit/live-ux-pass4-prove-evidence.json`; hub light 0-255->0-1 |
+| Phase B inventory re-walk | **DONE_WITH_CONCERNS** (`84a3387..83af94c`) | B1-B5,B7-B12 pass; **B6 fail** at inventory (zigbee_by_role empty); inventory `.audit/live-ux-pass4-phaseb-inventory.json` |
+| Phase C debt closeout | **DONE_WITH_CONCERNS** (`083c178`) | SV-P1-6 / AirPathMap cascade / GAUGE-P0-1 **fixed**; zigbee_by_role/canopy binding stubs; spa `index-BoyhWWR_.js`; walk C1-C5 pass |
+| Pass 5 deferrals | **parked** | Manual Light Hold sticky ON; energy confirm=false -> 422 (still blocks) |
+| Hub GPIO5 Twin PWM | **reserved** | Software Twin live; physical PWM wire-up = operator handoff (do not claim wired) |
+| Pass 4 gate prove | **not started** | Task 7 extends `.audit/live-ux-pass4-prove.*`; live Wet/Dry MQTT prove |
