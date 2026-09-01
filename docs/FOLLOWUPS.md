@@ -3838,7 +3838,8 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 ## 2026-09-01 — Space-energy Pi closure (room + DSC-Core)
 
 **Spec:** [`docs/superpowers/specs/2026-09-01-space-energy-pi-closure-design.md`](superpowers/specs/2026-09-01-space-energy-pi-closure-design.md)  
-**Plan:** [`docs/superpowers/plans/2026-09-01-space-energy-pi-closure.md`](superpowers/plans/2026-09-01-space-energy-pi-closure.md)
+**Plan:** [`docs/superpowers/plans/2026-09-01-space-energy-pi-closure.md`](superpowers/plans/2026-09-01-space-energy-pi-closure.md)  
+**Developer runbook:** [`docs/brain/SPACE-ENERGY-JOURNAL.md`](brain/SPACE-ENERGY-JOURNAL.md) (tip `3b22bcc`)
 
 | Item | Status | Notes |
 |------|--------|-------|
@@ -3846,6 +3847,7 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Stress pytest + Pi HTTP + force-tick both tents | **done** | Restored lights-on 4x8=`06:00:00`, 2x4=`20:00:00`; intentional dark-floor steps |
 | Capacity offline pot3/4 honesty | **done (live)** | `planned_oos` includes POT3,POT4; offline not POT4-led; KIT HONEST |
 | Parent space-energy spec | **implemented** | Walk filled; screenshots under `docs/qa-screenshots-2026-09-01-space-energy/` |
+| Tip SoT runbook on master | **landing** | `docs/brain/SPACE-ENERGY-JOURNAL.md` + `PHOTOPERIOD-TIMELINE.md` + `LIVE-UX-HONESTY.md` for tip `3b22bcc` |
 
 ---
 
@@ -3884,3 +3886,18 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Climate SPA honesty (Task 5) | **done (repo)** | Cascade entity, Capacity offline SoT, canopy fleet T/RH, Wet unknown muted, mass chip gated label - see `.superpowers/sdd/task-5-report.md` |
 | Climate walk / Pi hotpatch (Task 6) | **done (live)** | Hotpatched `index-CzcL7cKc.js`; HTTP reduced_kit/canopy/CFM green; walk filled - gate **GREEN**. Evidence `.audit/live-ux-climate-prove-evidence.json` |
 | AirPathMap cascade <- intake 2x4 | **parked** | Live confirm Task 6: SVG still aliases cascade ribbon to `intakeClone` (not `dsc_cfm_cascade_2x4_allocated`). FlowSankey honesty green (AIR CFM + MASS CHIP GATED + allocated cascade) - does **not** block Pass 2 / Overview |
+
+---
+
+## 2026-09-01 — Live UX honesty Pass 3 (Overview)
+
+**Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-honesty-program-design.md`](superpowers/specs/2026-09-01-live-ux-honesty-program-design.md)  
+**Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-honesty-program.md`](superpowers/plans/2026-09-01-live-ux-honesty-program.md)  
+**Walk:** [`docs/qa/LIVE-UX-OVERVIEW-WALK-2026-09.md`](qa/LIVE-UX-OVERVIEW-WALK-2026-09.md) — gates blank until Task 9  
+**Developer runbook:** [`docs/brain/LIVE-UX-HONESTY.md`](brain/LIVE-UX-HONESTY.md) (tip `3b22bcc`)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Overview pytest (`test_live_ux_overview_honesty`) | **done (repo)** | `/rooms` + `grow_room` + `/journal/room/grow_room` + `/journal/core` + `/health` |
+| Overview SPA honesty (Task 8) | **open** | Photoperiod glance parity, banners vs grow-log, root/bands grey |
+| Overview Pi prove + walk fill (Task 9) | **open** | Prove script not in tree yet (plan Task 9); do not claim gate green from pytest alone |
