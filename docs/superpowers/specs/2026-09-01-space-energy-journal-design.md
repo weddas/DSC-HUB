@@ -150,3 +150,82 @@ Offer a project / cannabis-domain skill fragment: space-owned photoperiod, no si
 ## Research inputs (brainstorm)
 
 Photoperiod night-length / night-break risk; sliding window vs ratio change; TOU lighting as dominant load; hobby calculators as W×h×$/kWh. Minute-scale safe-shift limits are mostly practice (veg ~30–45 min/day; flower much stricter) — product defaults stay conservative and operator-chosen.
+
+---
+
+## Appendix — Verified shipped baseline vs this design
+
+**Verified on:** branch tip `75c55a5` (parent `32836fe` / master spa-dist). Labels: **SHIPPED** = code/docs present and wired; **DESIGN ONLY** = this file only (not invented as live). Do not treat DESIGN ONLY as product behavior.
+
+### SPA source
+
+| Item | Status | Path |
+|------|--------|------|
+| Operator SPA | SHIPPED | `homeassistant/custom_components/dsc_hub/frontend/src/` |
+| spa-dist tip hashes | SHIPPED | `spa-dist/index.html` → `index-K2_ziUnM.js`, `calibrate-BqnIG9Rc.js`, `tune-fleet-C9fzhOX5.js`, `twin-three-BjdbWAdH.js`, `index-D0rIyyPr.css` |
+
+### 1. Light control
+
+| Piece | Status | Cite |
+|-------|--------|------|
+| Photoperiod SoT loop | SHIPPED | `brain/dsc_brain/light_loop.py` — `build_light_loop`, `emit_light_loop`, `LightLoopSnapshot` |
+| Hub lights-on ingest | SHIPPED | `hub_controls.HUB_TIME_OID_TO_ENTITY` (`lights_on_time` → `time.dsc_hub_lights_on_time`); `esphome_client` TimeState ingest |
+| SPA clocks / timeline | SHIPPED | `lib/lightSchedule.ts` (`readTentPhotoperiodInput`, `computeLightSchedule`, `dayScheduleSegments`); `TentLightClock.tsx`; `PhotoperiodTimeline.tsx`; `hooks/useTentLightSchedule.ts`; `pages/LightPage.tsx` |
+| Dark-period / ramp floor entities | SHIPPED | `binary_sensor.dsc_clone_dark_period_violation` (`dash_computed`); `number.dsc_hub_sf1000_ramp_floor` / `min_dark_hours` (hub numbers) — **not** design `schedule_shift_plan` |
+| Gradual lights-on slide / confirm ramp | DESIGN ONLY | — |
+
+### 2. Grow log / journal
+
+| Piece | Status | Cite |
+|-------|--------|------|
+| Flat grow event log | SHIPPED | Table `grow_event_log` (`settings.SETTINGS_SCHEMA`); `event_log.record_grow_log` / `list_grow_log`; API `GET /grow-log` (`api.grow_log_get`) |
+| SPA consumer | SHIPPED | `fleetApi.get_grow_log`; `DashGrowLog` in `DashHomeSections.tsx`; filter `growLogFilter.ts` |
+| `learning_log` + `GET /learning` | SHIPPED | Seat event log (`append_learning` / `list_learning`) — **not** design energy Learning |
+| `plant_journal` / `space_journal` APIs | DESIGN ONLY | Absent from sqlite schemas |
+
+### 3. Energy / tariff / watts
+
+| Piece | Status | Cite |
+|-------|--------|------|
+| Fixture nameplate watts (catalog) | SHIPPED | Catalog DB `lights.raw_json`; photometrics / HA `wattage_w` (e.g. SF1000 100 W); SPA `PlantWizardLightStep` / `CatalogResearch` display |
+| CFM / climate “nameplate” | SHIPPED | Fan/appliance capacity proxies — not TOU lighting cost |
+| `energy_tariff`, `energy_device`, W×h×$/kWh calculator, Learning banners | DESIGN ONLY | No brain/SPA tariff or energy estimate routes found |
+
+### 4. Space vs plant ownership (current model)
+
+| Layer | Status | Behavior (verified) |
+|-------|--------|---------------------|
+| Tent helpers own windows | SHIPPED | 4×8: `time.dsc_hub_lights_on_time` + stage/`sensor.dsc_expected_light_hours`; 2×4: `select.dsc_hub_clone_photoperiod` Follow 4x8 \| Independent, `clone_lights_on_time`, `clone_light_hours` |
+| Follow 4x8 | SHIPPED | `light_loop` `clone_follows_main`; SPA `tentPhotoperiodFollowsMain` |
+| Climate Mode Follow 4x8 / Follow Plants | SHIPPED | `climate_mode.py` / `follow_plants.py` — **climate bands**, not photoperiod SoT; Follow Plants writes `clone_*` numbers |
+| Plant stage → 2×4 photo write | SHIPPED | `control_ops.apply_clone_tent_automation` sets `clone_photoperiod` + `clone_light_hours` from seated 2×4 recipe (flower → Follow 4x8) |
+| Plant seat rehome photo template | SHIPPED | `PlantSeatPanel.applyTent` can set Independent + 18h or main `min_dark_hours` |
+| Strict space-owned photoperiod (no plant override) | DESIGN ONLY | Conflicts with current stage-automation / rehome writes |
+
+### 5. Existing draft docs (other branches)
+
+| Doc | Branch | Note |
+|-----|--------|------|
+| `docs/brain/PHOTOPERIOD-TIMELINE.md` | `cursor/engineering-documentation-e281644` (commit docs tip `863ea81`) | Present; tip `e281644` spa was `index-CZEwOtDZ.js` (stale vs `K2_ziUnM`) |
+| Same path | `332e` / master tip `32836fe` / this branch | **Absent** |
+| `docs/brain/WEBUI.md` light section | `e281644` | Photoperiod timeline row + grow-log API mention |
+| `docs/brain/WEBUI.md` | `332e` | Rich tip SoT (`index-K2_ziUnM`) — no dedicated energy/journal; Light via SPA map links |
+| `docs/brain/WEBUI.md` | this tip / master | Thin MVP stub (no Light surface table) |
+
+### 6. Design tables in `dsc_ops.sqlite3`
+
+| Table | Status |
+|-------|--------|
+| `grow_event_log` | SHIPPED |
+| `learning_log` | SHIPPED (unrelated to energy Learning) |
+| `plant_journal` | ABSENT (DESIGN ONLY) |
+| `space_journal` | ABSENT (DESIGN ONLY) |
+| `energy_tariff` | ABSENT (DESIGN ONLY) |
+| `schedule_shift_plan` | ABSENT (DESIGN ONLY) |
+
+### Recommended durable doc updates (prefer existing)
+
+1. **Land / refresh** `docs/brain/PHOTOPERIOD-TIMELINE.md` from `e281644` onto tip SoT (`332e`/`WEBUI` merge path); retip spa hash to `index-K2_ziUnM.js`; add one paragraph: schedule is tent-helper SoT today; space-owned + ramp/journal is this design (unshipped).
+2. **Update** tip `docs/brain/WEBUI.md` (prefer `332e` body over master stub): Light route → clocks/timeline modules; `GET /grow-log`; explicitly **no** plant/space journal or energy tariff APIs yet.
+3. **Cross-link** this appendix from `docs/brain/WEBUI.md` / PHOTOPERIOD related — do not invent a new top-level energy runbook until implementation.
+4. Keep Notion Photoperiod & Lighting + Local webserver blurbs aligned with tip hashes; do not claim tariff/journal shipped.
