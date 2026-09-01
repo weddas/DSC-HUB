@@ -105,23 +105,20 @@ export function CatalogPicker({
       const res = await searchCatalog(kind, q, state, PAGE_SIZE, nextOffset);
       setSource(res.source);
       setNote(res.note);
-      setItems((prev) => {
-        const seen = new Set(prev.map(itemKey));
-        const appended = res.items.filter((it) => {
-          const k = itemKey(it);
-          if (!k || seen.has(k)) return false;
-          seen.add(k);
-          return true;
-        });
-        // Remote ignored offset → no new ids
-        if (!appended.length) {
-          setHasMore(false);
-          return prev;
-        }
-        setHasMore(res.items.length >= PAGE_SIZE);
-        setOffset(nextOffset);
-        return [...prev, ...appended];
+      const seen = new Set(items.map(itemKey));
+      const appended = res.items.filter((it) => {
+        const k = itemKey(it);
+        if (!k || seen.has(k)) return false;
+        seen.add(k);
+        return true;
       });
+      if (!appended.length) {
+        setHasMore(false);
+        return;
+      }
+      setItems((prev) => [...prev, ...appended]);
+      setHasMore(res.items.length >= PAGE_SIZE);
+      setOffset(nextOffset);
     } catch {
       setHasMore(false);
     } finally {

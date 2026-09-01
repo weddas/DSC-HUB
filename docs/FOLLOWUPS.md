@@ -3724,3 +3724,36 @@ Source: `/reflect` + `/interrogate` + `test_roster_stress.py` + react-doctor pas
 
 **Approve reflect routings?** Encoded in `.cursor/rules/dsc-roster-probe.mdc` and `.cursor/rules/dsc-pi-hotpatch.mdc` (`3a452f0`).
 
+---
+
+## 2026-09-01 — Mega Pass 2026-09 (closure)
+
+**Register:** [`docs/qa/MEGA-PASS-2026-09-ISSUE-REGISTER.md`](qa/MEGA-PASS-2026-09-ISSUE-REGISTER.md)  
+**Closure:** [`docs/qa/AUDIT-CLOSURE-2026-09.md`](qa/AUDIT-CLOSURE-2026-09.md)  
+**Pi SPA:** `index-DlMHgtYz.js` (hotpatched via `.audit/wave1-spa-hotpatch.ps1`)
+
+| Bucket | Count | Notes |
+|--------|-------|-------|
+| Closed | 28 | P0/P1 code + verify evidence |
+| Deferred | 12 | HW, CannaLib prod deploy, Zigbee recipes |
+| Out-of-scope | 1 | HA Lovelace soak |
+
+### Stress-test red-flag reconciliation
+
+| ID | Was | Now |
+|----|-----|-----|
+| ST-P0-1…4, 6–8 | red-flag | **done** — prior commits + verify-close |
+| ST-P0-5 | red-flag | **done** — sprout on slot+pot; `buildPlantSeat` fallback; `test_commit_and_assign_carries_sprout_to_pot_and_slot` |
+| ST-P1-1 | next-plan | **done** — `149657d` |
+| ST-P1-2 | next-plan | **done** — preset label on review |
+| ST-P1-3 | next-plan | **deferred** — automation doc only |
+| ST-P1-4 | next-plan | **done** — vacantProbes vs roster pot |
+| ST-P1-5 | next-plan | **done** — audit matrix in AUDIT-CLOSURE |
+
+### Still open (deferred from mega pass)
+
+- CannaLib prod offset — ops deploy (`MP-030`).
+- Zigbee new recipes / `leak_floor_2x4` — hardware pick (`MP-040–045`).
+- 7.4 hardware F-001…F-008 (`MP-062`).
+- `test_zigbee_save_bindings_reroutes_cached_state` flake — **fixed** (isolated ieee + offset monkeypatch); 161/161 green.
+

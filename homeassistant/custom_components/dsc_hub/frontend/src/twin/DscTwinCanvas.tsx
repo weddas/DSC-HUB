@@ -1,5 +1,5 @@
-import { Suspense, useMemo, useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import type { Group } from "three";
 import type { TwinFocusTent, VesselLive } from "../lib/dsc-twin-api";
 
@@ -107,6 +107,26 @@ function SceneBody({
   );
 }
 
+/** Resize WebGL when portaled into a slot that mounts after first paint. */
+function CanvasResizeSync() {
+  const { gl, invalidate, size } = useThree();
+  useEffect(() => {
+    const parent = gl.domElement.parentElement;
+    if (!parent) return;
+    const ro = new ResizeObserver(() => {
+      const w = Math.max(1, parent.clientWidth);
+      const h = Math.max(1, parent.clientHeight);
+      if (w !== size.width || h !== size.height) {
+        gl.setSize(w, h, false);
+        invalidate();
+      }
+    });
+    ro.observe(parent);
+    return () => ro.disconnect();
+  }, [gl, invalidate, size.height, size.width]);
+  return null;
+}
+
 export function DscTwinCanvas({
   pots,
   focusTent,
@@ -120,13 +140,16 @@ export function DscTwinCanvas({
 }) {
   if (!visible) return null;
   return (
-    <Suspense fallback={<div className="dsc-empty">Loading twin…</div>}>
-      <Canvas shadows camera={{ position: [6, 5, 8], fov: 45 }} style={{ width: "100%", height: "100%" }}>
-        <color attach="background" args={["#0a0f14"]} />
-        <ambientLight intensity={0.45} />
-        <directionalLight position={[5, 8, 4]} intensity={1.05} castShadow shadow-mapSize={[1024, 1024]} />
-        <SceneBody pots={pots} focusTent={focusTent} held={held} />
-      </Canvas>
+    <div className="dsc-twin-canvas-wrap">
+      <Suspense fallback={<div className="dsc-empty">Loading twin…</div>}>
+        <Canvas shadows camera={{ position: [6, 5, 8], fov: 45 }} style={{ width: "100%", height: "100%" }}>
+          <color attach="background" args={["#0a0f14"]} />
+          <ambientLight intensity={0.45} />
+          <directionalLight position={[5, 8, 4]} intensity={1.05} castShadow shadow-mapSize={[1024, 1024]} />
+          <CanvasResizeSync />
+          <SceneBody pots={pots} focusTent={focusTent} held={held} />
+        </Canvas>
+      </Suspense>
       {held ? (
         <div
           className="dsc-chip dsc-chip--warn"
@@ -135,6 +158,6 @@ export function DscTwinCanvas({
           HELD · hub link down — rotation frozen
         </div>
       ) : null}
-    </Suspense>
+    </div>
   );
 }

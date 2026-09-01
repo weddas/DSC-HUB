@@ -1216,33 +1216,48 @@ def test_zigbee_binding_follows_ieee_not_friendly_name(temp_db: Path, monkeypatc
 def test_zigbee_save_bindings_reroutes_cached_state(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Assigning a role must integrate into fleet/Climate without waiting for next MQTT."""
     monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
-    from dsc_brain.fleet_state import get_fleet_state
+    monkeypatch.setattr(
+        "dsc_brain.global_modifiers.apply_temp_rh_offsets",
+        lambda temp_c, rh_pct, _zone: (temp_c, rh_pct, False),
+    )
+    from dsc_brain.fleet_state import get_fleet_state, update_fleet_state
     from dsc_brain.zigbee_mqtt import _ingest, save_zigbee_bindings
 
-    _ingest._devices = [{"ieee_address": "0xabc", "friendly_name": "sensor_a", "type": "EndDevice"}]
+    fleet = get_fleet_state()
+    fleet.canopy = {}
+    fleet.system = dict(fleet.system)
+    fleet.system["zigbee_by_role"] = {}
+    fleet.system["zigbee_by_placement"] = {}
+    update_fleet_state(fleet)
+
+    _ingest._devices = [{"ieee_address": "0xreroute", "friendly_name": "sensor_reroute_a", "type": "EndDevice"}]
     _ingest._by_role = {}
+    _ingest._by_placement = {}
     _ingest._canopy = {}
     _ingest._device_states = {}
 
     class _Msg:
-        topic = "zigbee2mqtt/sensor_a"
+        topic = "zigbee2mqtt/sensor_reroute_a"
         payload = b'{"temperature": 23.0, "humidity": 48.0}'
 
     _ingest._on_message(None, None, _Msg())
     assert get_fleet_state().canopy.get("temp_c") is None
+    assert _ingest._device_states["sensor_reroute_a"]["temperature"] == 23.0
 
     save_zigbee_bindings(
         {
-            "0xabc": {
+            "0xreroute": {
                 "role": "canopy_4x8",
                 "zone": "4x8",
                 "enabled": True,
-                "friendly_name": "sensor_a",
+                "friendly_name": "sensor_reroute_a",
             }
         }
     )
-    assert get_fleet_state().canopy.get("temp_c") == 23.0
-    assert get_fleet_state().system.get("zigbee_by_role", {}).get("canopy_4x8", {}).get("humidity") == 48.0
+    assert _ingest._by_role["canopy_4x8"]["temperature"] == 23.0
+    fleet = get_fleet_state()
+    assert fleet.canopy.get("temp_c") == 23.0
+    assert fleet.system.get("zigbee_by_role", {}).get("canopy_4x8", {}).get("humidity") == 48.0
 
 
 def test_esphome_poll_does_not_clobber_zigbee_canopy(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:

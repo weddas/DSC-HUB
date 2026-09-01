@@ -2,6 +2,7 @@ import { STAGE_ORDER, tentStageRailLabel } from "../lib/tentWant";
 import {
   KIT_PROBE_NUMBERS,
   buildPlantSeat,
+  daysSinceSproutIso,
   isPotInService,
   normalizeTent,
   probeLabel,
@@ -61,10 +62,7 @@ function StageTrack({ cur }: { cur: number }) {
 }
 
 function daysSinceSprout(sprout: string | undefined): number | null {
-  if (!sprout || sprout.length < 8) return null;
-  const d = new Date(`${sprout.slice(0, 10)}T12:00:00`);
-  if (Number.isNaN(d.getTime())) return null;
-  return Math.max(0, Math.floor((Date.now() - d.getTime()) / 86_400_000));
+  return daysSinceSproutIso(sprout);
 }
 
 function TentCropColumn({

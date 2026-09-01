@@ -180,6 +180,8 @@ function ZigbeeBindRow({
   allRecipes,
   onBindingChange,
   onPolicyChange,
+  liveWet,
+  liveProblem,
 }: {
   ieee: string;
   name: string;
@@ -200,6 +202,8 @@ function ZigbeeBindRow({
     patch: { role: string; zone: string; recipe_id: string; capability_override?: string },
   ) => void;
   onPolicyChange: (ieee: string, patch: { recipe_id: string; params: Record<string, unknown> }) => void;
+  liveWet?: boolean | null;
+  liveProblem?: boolean | null;
 }) {
   const effectiveClass = effectiveZigbeeClass(capabilityClass, capabilityOverride);
   let roleOptions = showAll ? allRoles : filterZigbeeRolesForClass(effectiveClass, allRoles);
@@ -276,10 +280,18 @@ function ZigbeeBindRow({
         </td>
         <td>{model || "—"}</td>
         <td>
-          <StatusChip
-            label={status === "bound" ? "BOUND" : status === "conflict" ? "CONFLICT" : "UNBOUND"}
-            tone={status === "bound" ? "ok" : status === "conflict" ? "warn" : "muted"}
-          />
+          <div className="dsc-chip-row" style={{ flexWrap: "wrap" }}>
+            <StatusChip
+              label={status === "bound" ? "BOUND" : status === "conflict" ? "CONFLICT" : "UNBOUND"}
+              tone={status === "bound" ? "ok" : status === "conflict" ? "warn" : "muted"}
+            />
+            {recipeId !== "none" && liveWet != null ? (
+              <StatusChip label={liveWet ? "Wet" : "Dry"} tone={liveWet ? "warn" : "ok"} />
+            ) : null}
+            {recipeId !== "none" && liveProblem != null ? (
+              <StatusChip label={liveProblem ? "Problem" : "Clear"} tone={liveProblem ? "warn" : "ok"} />
+            ) : null}
+          </div>
         </td>
         <td>
           <select
@@ -1536,6 +1548,25 @@ export function SettingsPage() {
                           default_params: taskParamDefaults(FLOOD_TASK_ID, undefined),
                         },
                       ];
+                      const zigbeePolicyLive = (fleet?.system?.zigbee_policy_state ?? {}) as Record<
+                        string,
+                        { problem?: boolean }
+                      >;
+                      const zigbeeByRoleLive = (fleet?.system?.zigbee_by_role ??
+                        fleet?.system?.zigbee_by_placement ??
+                        {}) as Record<string, { wet?: boolean; active?: boolean }>;
+                      const roleLive = zigbeeByRoleLive[draft.role];
+                      const liveWet =
+                        typeof roleLive?.wet === "boolean"
+                          ? roleLive.wet
+                          : typeof roleLive?.active === "boolean"
+                            ? roleLive.active
+                            : null;
+                      const policyLive = zigbeePolicyLive[ieee];
+                      const liveProblem =
+                        policy.recipe_id !== "none" && policyLive && typeof policyLive.problem === "boolean"
+                          ? Boolean(policyLive.problem)
+                          : null;
                       return (
                         <ZigbeeBindRow
                           key={ieee || String(d.friendly_name)}
@@ -1550,6 +1581,8 @@ export function SettingsPage() {
                           capabilityClass={String(d.capability_class ?? "other")}
                           capabilityOverride={draft.capability_override}
                           showAll={Boolean(zigbeeShowAll[ieee])}
+                          liveWet={liveWet}
+                          liveProblem={liveProblem}
                           onToggleShowAll={() =>
                             setZigbeeShowAll((prev) => ({ ...prev, [ieee]: !prev[ieee] }))
                           }

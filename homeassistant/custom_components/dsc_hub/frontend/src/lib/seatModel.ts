@@ -50,6 +50,14 @@ function clean(v: string | undefined, fallback = "—"): string {
   return v;
 }
 
+/** Days since ISO sprout date — shared by roster rail and CropScheduler. */
+export function daysSinceSproutIso(sprout: string | undefined): number | null {
+  if (!sprout || sprout.length < 8 || sprout === "—") return null;
+  const d = new Date(`${sprout.slice(0, 10)}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return null;
+  return Math.max(0, Math.floor((Date.now() - d.getTime()) / 86400000));
+}
+
 function preferReading(
   primary: string,
   fallback: string,
@@ -107,14 +115,28 @@ export function buildPlantSeat(
     preferReading(state(primary, ""), state(fallback, ""), digits);
 
   const blend = clean(roster?.blend, "");
+  let sprout = clean(state(`datetime.dsc_probe${pot}_sprout_date`, ""), "—").slice(0, 10);
+  if (sprout === "—" && roster?.sprout) {
+    sprout = roster.sprout.slice(0, 10);
+  }
+  let days = clean(state(`sensor.dsc_probe${pot}_days_since_sprout`, ""));
+  if (!days && sprout !== "—") {
+    const derived = daysSinceSproutIso(sprout);
+    if (derived != null) days = String(derived);
+  }
+  let stage = clean(state(`sensor.dsc_probe${pot}_expected_stage`, ""));
+  const growthStage = clean(state(`select.dsc_probe${pot}_growth_stage`, ""));
+  if (!stage && growthStage && growthStage !== "—") {
+    stage = growthStage;
+  }
   return {
     pot,
     plantName: clean(state(`text.dsc_probe${pot}_plant_name`, "")),
     strainDisplay: clean(state(`sensor.dsc_probe${pot}_strain_display`, "")),
-    sprout: clean(state(`datetime.dsc_probe${pot}_sprout_date`, ""), "—").slice(0, 10),
-    days: clean(state(`sensor.dsc_probe${pot}_days_since_sprout`, "")),
-    stage: clean(state(`sensor.dsc_probe${pot}_expected_stage`, "")),
-    growthStage: clean(state(`select.dsc_probe${pot}_growth_stage`, "")),
+    sprout,
+    days,
+    stage,
+    growthStage,
     tent: readTent(state, pot),
     blend,
     recipe: clean(roster?.recipe, ""),

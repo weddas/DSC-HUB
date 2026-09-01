@@ -67,7 +67,8 @@ export function PlantWizard() {
   const light = state("input_select.dsc_light_fixture", "");
   const vesselRaw = state("input_select.dsc_build_vessel", "");
   const vessel = resolveVesselSpec(vesselRaw || undefined, volumeL);
-  const mixLabel = blendSummary(state);
+  const presetLabel = soilPresetId ? SOIL_PRESETS.find((p) => p.id === soilPresetId)?.label : null;
+  const mixLabel = presetLabel ?? blendSummary(state);
   const nutrients = activeNutrientNames(state);
   const strainLabel =
     (strainOk(strain) ? strain : "") ||

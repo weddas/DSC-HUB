@@ -128,7 +128,7 @@ export function AirflowParticleScene({
   void manualOverride;
   return (
     <div className="dsc-airflow-canvas-wrap">
-      <Canvas camera={{ position: [0, 12, 25], fov: 45 }} style={{ height: 320 }}>
+      <Canvas camera={{ position: [0, 12, 25], fov: 45 }} style={{ width: "100%", height: 320, display: "block" }}>
         <color attach="background" args={["#0d1117"]} />
         <fog attach="fog" args={["#0d1117", 18, 42]} />
         <ambientLight intensity={0.55} />

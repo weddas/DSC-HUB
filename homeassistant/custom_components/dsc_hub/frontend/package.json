@@ -8,7 +8,8 @@
     "build": "vite build",
     "build:spa": "vite build --config vite.spa.config.ts",
     "preview": "vite preview",
-    "test:smoke": "npx --yes tsx src/lib/seatApi.smoke.ts"
+    "test:smoke": "npx --yes tsx src/lib/seatApi.smoke.ts",
+    "test:compose": "npx --yes tsx src/lib/composePlantLogic.smoke.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.0.6",

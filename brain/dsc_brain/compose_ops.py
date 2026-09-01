@@ -147,7 +147,14 @@ def assign_to_pot(pot: str | None = None) -> dict[str, Any]:
         set_helper(f"datetime.dsc_probe{n}_sprout_date", recipe["sprout_date"])
     roster_slot = find_roster_slot_for_strain(strain, recipe["nickname"])
     if roster_slot > 0:
-        update_roster_slot(roster_slot, {"pot": n, "status": "active"})
+        update_roster_slot(
+            roster_slot,
+            {
+                "pot": n,
+                "status": "active",
+                "sprout": str(recipe.get("sprout_date") or "")[:10],
+            },
+        )
     from .plant_probe import sync_assignment_on_compose_assign
 
     sync_assignment_on_compose_assign(int(n), roster_slot)

@@ -116,6 +116,11 @@ export function DashCannalibTiles({ bus }: { bus: Bus }) {
   ];
   return (
     <Card className="dsc-glass" title="Cannalib catalog API" icon="research">
+      {!online ? (
+        <p className="dsc-muted" style={{ marginTop: 0, fontSize: 12 }}>
+          Catalog offline — hit counts and corpus size are stale until the API is reachable.
+        </p>
+      ) : null}
       <div className="dsc-chip-row">
         {tiles.map((t) => (
           <Kpi

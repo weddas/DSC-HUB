@@ -208,3 +208,31 @@ def test_api_retire_slot_out_of_range(roster_db: Path) -> None:
     client = TestClient(app)
     assert client.post("/roster/slots/0/retire").status_code == 400
     assert client.post("/roster/slots/11/retire").status_code == 400
+
+
+def test_commit_and_assign_carries_sprout_to_pot_and_slot(roster_db: Path) -> None:
+    """ST-P0-5: sprout/stage must survive commit+assign (roster slot + pot recipe)."""
+    from dsc_brain.compose_ops import commit_and_assign
+    from dsc_brain.compose_store import get_roster_slots, set_helper
+    from dsc_brain.computed_ops import build_computed_hass_states, invalidate_computed_cache
+    from dsc_brain.fleet_state import get_fleet_state
+    from dsc_brain.settings import list_roster
+
+    set_helper("input_text.dsc_build_strain", "Afternoon Brunch")
+    set_helper("input_text.dsc_build_nickname", "Brunch")
+    set_helper("input_datetime.dsc_build_sprout_date", "2026-07-09")
+    set_helper("input_select.dsc_build_assign_pot", "1")
+    set_helper("input_select.dsc_build_tent", "4x8")
+    commit_and_assign()
+
+    rows = {r["seat_id"]: r for r in list_roster()}
+    recipe = rows["pot1"]["recipe"]
+    assert recipe.get("sprout_date") == "2026-07-09"
+    slots = {int(s["slot"]): s for s in get_roster_slots()}
+    active = next(s for s in slots.values() if s.get("pot") == "1")
+    assert active.get("sprout") == "2026-07-09"
+
+    invalidate_computed_cache()
+    computed = build_computed_hass_states(get_fleet_state())
+    assert computed["sensor.dsc_probe1_days_since_sprout"]["state"] not in ("", "unknown", "unavailable")
+    assert computed["sensor.dsc_probe1_expected_stage"]["state"] not in ("", "unknown", "unavailable")

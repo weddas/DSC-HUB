@@ -121,6 +121,11 @@ export function GrowRosterPage() {
   });
   const vacantProbes = KIT_PROBE_NUMBERS.filter((n) => {
     if (!isPotInService(n, state)) return false;
+    const claimedOnRoster = allSlots.some((s) => {
+      const p = Number(s.pot);
+      return Number.isFinite(p) && p === n;
+    });
+    if (claimedOnRoster) return false;
     const name = state(`text.dsc_probe${n}_plant_name`, "").trim();
     return !name;
   });
