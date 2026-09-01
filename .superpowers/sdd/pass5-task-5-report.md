@@ -75,7 +75,7 @@ Step 2 left the host dark: no ICMP, SSH timeout, `:8787` dead (~15+ min). Gatewa
 
 | SHA | Message |
 |-----|---------|
-| `26d71a4` | fix(pass5): seed Zigbee policies on fleet for Wet/Problem path |
+| `7443d99` | fix(pass5): seed Zigbee policies on fleet for Wet/Problem path |
 
 Not pushed.
 
