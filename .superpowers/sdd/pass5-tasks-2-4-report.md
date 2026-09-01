@@ -58,7 +58,7 @@
 |-----|---------|
 | `d490904` | prove(pass5): require energy confirm=false HTTP 400 |
 | `7b317d9` | docs(pass5): close CannaLib prod offset verify (MP-030/034) |
-| `TBD` | docs(pass5): graduate FlowSankey verify and report Tasks 2-4 |
+| `f9ecda4` | docs(pass5): graduate FlowSankey verify and report Tasks 2-4 |
 
 ## Remains (out of this brief)
 
