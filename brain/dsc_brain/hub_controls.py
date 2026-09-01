@@ -21,6 +21,8 @@ HUB_SWITCH_ENTITY_TO_OID: dict[str, str] = {
     "switch.dsc_hub_humidifier_intake_routing": "humidifier_intake_routing",
     "switch.dsc_hub_recirc_de_strat_pulse": "recirc_de-strat_pulse",
     "switch.dsc_hub_auto_photoperiod": "auto_photoperiod",
+    # LIGHT-only schedule hold — operator clear via SPA/API (Pass 5).
+    "switch.dsc_hub_manual_light_hold": "manual_light_hold_switch",
 }
 
 HUB_SWITCH_OID_TO_ENTITY: dict[str, str] = {
@@ -41,8 +43,8 @@ HUB_SWITCH_OID_TO_ENTITY: dict[str, str] = {
     "recirc_de_strat_pulse": "switch.dsc_hub_recirc_de_strat_pulse",
     "auto_photoperiod": "switch.dsc_hub_auto_photoperiod",
     "photoperiod_switch": "switch.dsc_hub_auto_photoperiod",
-    # --- Informational (non-critical) hub switches — ingest only, no HUB_SWITCH_ENTITY_TO_OID
-    # control proxy rows. Slug + legacy internal-id variants, same as the demand switches.
+    # --- Informational / policy switches — ingest aliases (control rows only where
+    # listed in HUB_SWITCH_ENTITY_TO_OID). Slug + legacy internal-id variants.
     "lock_wifi_ap": "switch.dsc_hub_lock_wifi_ap",
     "wifi_ap_lock": "switch.dsc_hub_lock_wifi_ap",
     "manual_light_hold": "switch.dsc_hub_manual_light_hold",

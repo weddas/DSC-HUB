@@ -1,8 +1,8 @@
 # Live UX Pass 5 — Follow-up backlog closeout — Design
 
 **Date:** 2026-09-01  
-**Status:** **approved for implementation** — plan [`2026-09-01-live-ux-pass5-followup.md`](../plans/2026-09-01-live-ux-pass5-followup.md)  
-**Parent:** [`2026-09-01-live-ux-honesty-program-design.md`](2026-09-01-live-ux-honesty-program-design.md) (Passes 1–4 proven; Pass 5 closes the program)  
+**Status:** **proven** (2026-09-01) — gate GREEN; walk [`LIVE-UX-PASS5-WALK-2026-09.md`](../../qa/LIVE-UX-PASS5-WALK-2026-09.md); report `.superpowers/sdd/pass5-gate-report.md`  
+**Parent:** [`2026-09-01-live-ux-honesty-program-design.md`](2026-09-01-live-ux-honesty-program-design.md) (Passes 1–5 proven; five-pass Live UX closed)  
 **Domain:** Pass 4 parks + operator queue (CannaLib prod · FlowSankey verify · Zigbee one-recipe) + soak / three-desk re-walk
 
 ## Problem
@@ -128,10 +128,10 @@ Parent program status → **Pass 5 proven** (five-pass Live UX closed).
 
 ## Success criteria
 
-- [ ] Parks closed or honestly parked with reason  
-- [ ] CannaLib prod offset + Pi Load more green  
-- [ ] FlowSankey verify graduated in FOLLOWUPS  
-- [ ] Zigbee Wet→Problem one-recipe path green  
-- [ ] Three-desk re-walk green  
-- [ ] Gate GREEN + FOLLOWUPS committed  
-- [ ] Parent design: Pass 5 proven  
+- [x] Parks closed or honestly parked with reason  
+- [x] CannaLib prod offset + Pi Load more green  
+- [x] FlowSankey verify graduated in FOLLOWUPS  
+- [x] Zigbee Wet→Problem one-recipe path green  
+- [x] Three-desk re-walk green  
+- [x] Gate GREEN + FOLLOWUPS committed  
+- [x] Parent design: Pass 5 proven  

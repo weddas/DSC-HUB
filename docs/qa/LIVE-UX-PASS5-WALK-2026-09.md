@@ -2,60 +2,61 @@
 
 **Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-pass5-followup-design.md`](../superpowers/specs/2026-09-01-live-ux-pass5-followup-design.md)  
 **Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-pass5-followup.md`](../superpowers/plans/2026-09-01-live-ux-pass5-followup.md)  
-**Status:** Tasks 2–4 done; Task 5 **blocked** on Pi recovery after hotpatch kill; Hold + soak/gate remain
+**Status:** **Pass 5 proven** — Tasks 2–7 complete; gate **GREEN**  
+**Evidence:** `.audit/live-ux-pass5-prove-evidence.json` · `.audit/live-ux-pass5-task5-evidence.json` · `docs/qa-screenshots-2026-09-01-live-ux/pass5-*`
 
 ## Parks
 
 | Item | Result | Notes |
 |------|--------|-------|
-| Manual Light Hold clear (operator confirm) | pending | **Not cleared** this pass — operator confirm still required |
-| Energy confirm=false → 400 | **pass** | Both `4x8`/`2x4` POST `/energy/shift/plan` → **400**; `.audit/live-ux-pass5-prove.ps1` asserts exact 400 (not 422); evidence `.audit/live-ux-pass5-prove-evidence.json` |
-| GPIO5 soft-gate or optical | **pass (soft-gate)** | Pre-hotpatch: `light.dsc_hub_twin_sf1000` present (`off`, bri=255). Light SPA: GPIO5 **reserved / not physically wired** — no optical claim. Optical N/A until wire-up |
-| Wet/Dry + Problem (via Zigbee task) | **blocked** | Code+bindings ready; live MQTT prove interrupted when Pi hung after `docker kill` (see Zigbee section) |
+| Manual Light Hold clear (operator confirm) | **pass** | Operator confirm (Tasks 6–7). Control map gap fixed: `switch.dsc_hub_manual_light_hold` → `HUB_SWITCH_ENTITY_TO_OID` (`manual_light_hold_switch`). Cleared via `POST /control/service` `{domain:switch,service:turn_off,data:{entity_id}}`. Live `hass_extras` **off**; SPA **MANUAL LIGHT HOLD OFF**; no “hold is on” banner |
+| Energy confirm=false → 400 | **pass** | Both `4x8`/`2x4` POST `/energy/shift/plan` → **400**; GATE prove asserts exact 400 |
+| GPIO5 soft-gate or optical | **pass (soft-gate)** | Twin present (`off`, bri=255). Light SPA: GPIO5 **reserved / not physically wired**. Optical N/A |
+| Wet/Dry + Problem (via Zigbee task) | **pass** | Task 5 resume evidence `.audit/live-ux-pass5-task5-evidence.json` `ok=true`; GATE re-seed dry MQTT; `policy_state.problem=false` both desks |
 
 ## CannaLib prod
 
 | Check | Result | Notes |
 |-------|--------|-------|
-| Prod offset HTTP distinct pages | **pass** | Prod HTTPS + LAN `:8790` `q=kush&limit=3&offset=0\|3` distinct (`0.2.2-stdlib`); ids `strain_kush…` vs `strain_afghani_kush` |
-| Pi Load more / Test CannaLib vs prod | **pass** | `test-cannalib` ok; catalog status `remote_api`; brain proxy offset 0 vs 3 and Load-more `limit=50&offset=50` distinct. Temporarily pointed Settings URL at prod HTTPS — same green — then restored LAN `http://192.168.86.2:8790`. **No redeploy.** |
-| MP-030/034 closed | **pass** | FOLLOWUPS notes updated 2026-09-01; secrets not recorded |
+| Prod offset HTTP distinct pages | **pass** | Prod HTTPS + LAN `:8790` `q=kush&limit=3&offset=0\|3` distinct (`0.2.2-stdlib`) |
+| Pi Load more / Test CannaLib vs prod | **pass** | `test-cannalib` ok; catalog `remote_api`; Load-more distinct. **No redeploy.** |
+| MP-030/034 closed | **pass** | FOLLOWUPS notes updated 2026-09-01 |
 
 ## FlowSankey verify
 
 | Check | Result | Notes |
 |-------|--------|-------|
-| Cascade ≠ intake 2×4 HTTP | **pass** | `sensor.dsc_cfm_cascade_2x4_allocated`=**83.3** ≠ `sensor.dsc_cfm_intake_2x4_allocated`=**96.2** |
-| Air CFM / no EXPERIMENTAL / mass gated | **pass** | Browser Climate Air path: **AIR CFM** + **MASS CHIP GATED**; no EXPERIMENTAL; Sankey honesty copy present |
-| AirPathMap cascade allocated | **pass** | SVG shows **cascade 83** beside intake 96 / 58; Climate wires `dsc_cfm_cascade_2x4_allocated` |
-| Graduate in FOLLOWUPS | **pass** | FlowSankey verify/graduate marked done in FOLLOWUPS |
+| Cascade ≠ intake 2×4 HTTP | **pass** | cascade **83.3** ≠ intake **96.2** (GATE) |
+| Air CFM / no EXPERIMENTAL / mass gated | **pass** | Browser: **AIR CFM** + **MASS CHIP GATED**; no EXPERIMENTAL |
+| AirPathMap cascade allocated | **pass** | **cascade 83** (not 96) |
+| Graduate in FOLLOWUPS | **pass** | Graduated |
 
 ## Zigbee one-recipe Wet/Problem
 
 | Check | Result | Notes |
 |-------|--------|-------|
-| by_role / bindings populated | **pass (pre-kill)** | Pre-hotpatch `/fleet`: by_role keys `canopy_4x8`, `leak_tank`, `leak_floor_room`, `leak_floor_4x8` (stubs). Bindings + policies: room/`4x8` desks → `floor_flood_alert`; tank → `tank_full_appliance`. Brain now seeds `zigbee_device_policies` on reapply (pytest green). **Re-prove after Pi up** |
-| Wet/Dry MQTT live | **blocked** | Script `.audit/live-ux-pass5-task5-zigbee-prove.ps1` copies brain + `docker kill`+`start`; Pi went unreachable (no ping) mid-prove before occupancy inject evidence. Resume: power-cycle Pi → re-run prove (occupancy wet/dry on desk ieee) |
-| Problem/Clear from policy_state | **blocked** | Same — `floor_flood_alert` bound; evaluate needs MQTT. SPA still reads `policy_state.problem` only (no wet→problem inference). pytest wet≠problem green locally |
-| leak_floor_2x4 | **parked** | No HW in devices list (4 end-devices: canopy + tank + 2 desk floods). Park until 2×4 floor sensor present (MP-042) |
+| by_role / bindings populated | **pass** | Keys: `canopy_4x8`, `leak_tank`, `leak_floor_room`, `leak_floor_4x8`. Policies: desks `floor_flood_alert`; tank `tank_full_appliance` |
+| Wet/Dry MQTT live | **pass** | Resume script (no docker kill) occupancy wet→dry room + 4×8; by_role wet false at dry end; evidence JSON |
+| Problem/Clear from policy_state | **pass** | `floor_flood_alert`; `problem` bool only from policy_state (SPA no wet→problem inference). GATE: both desks `problem=false` after dry re-seed |
+| leak_floor_2x4 | **parked** | No HW — MP-042 |
 
 ## Soak + re-walk
 
 | Desk | Result | Notes |
 |------|--------|-------|
-| Soak | pending | short |
-| Light both tents | pending | |
-| Climate both tents | pending | |
-| Overview both tents | pending | |
+| Soak | **pass** | Short soak after Hold clear + Zigbee re-seed + GATE HTTP |
+| Light both tents | **pass** | `#/live/light` — Got·Twin; GPIO5 reserved; Twin OFF; MANUAL LIGHT HOLD **OFF**; 2×4 WINDOW; both DARK. `pass5-light.png` |
+| Climate both tents | **pass** | KIT HONEST; AIR CFM + MASS CHIP GATED; cascade 83; Wet/Dry + Problem/Clear honesty; Climate Mode Follow 4x8. `pass5-climate*.png` |
+| Overview both tents | **pass** | HUB ONLINE; Canopy stub; both DARK / Follow; journals; Root Want. `pass5-overview*.png` |
 
 ## Gate
 
 | Gate | Result | Notes |
 |------|--------|-------|
-| G0 hotpatch/sha | pending | |
-| G1 pytest | pending | |
-| G2 HTTP | pending | |
-| G3 browser | pending | |
-| G4 restore | pending | |
-| G5 walk filled | pending | |
-| G6 FOLLOWUPS write-up | pending | blocking |
+| G0 hotpatch/sha | **pass** | Live = local `assets/index-BoyhWWR_.js`; index.html sha256 `d00bd5a4be5f2188c566b62618e7be3de828d26990e435915974c1bcd4cb92c8`. **No SPA hotpatch.** Brain Hold map: docker **stop+start** (not kill) |
+| G1 pytest | **pass** | 122 passed — live_ux twin/climate/light/overview + zigbee_policies + brain_pi + space_energy_stress |
+| G2 HTTP | **pass** | Twin round-trip; cascade 83.3; energy 400; journals; zigbee by_role + policy_state; Hold off; DutyStrip |
+| G3 browser | **pass** | Three desks inventory `pass5-g-browser-inventory.json` — no honesty fails |
+| G4 restore | **pass** | Twin off; pause plans cancelled; `pending_flips=[]`; lights-on unchanged |
+| G5 walk filled | **pass** | this file |
+| G6 FOLLOWUPS write-up | **pass** | dated Pass 5 gate section |

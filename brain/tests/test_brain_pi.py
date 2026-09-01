@@ -315,6 +315,8 @@ def test_hub_ingest_informational_oids_mapped() -> None:
     assert HUB_TEXT_SENSOR_OID_TO_KEY["ip_address"] == "ip_address"
     assert HUB_TEXT_SENSOR_OID_TO_KEY["esphome_version"] == "esphome_version"
     assert HUB_TEXT_SENSOR_OID_TO_KEY["last_evt_ts"] == "last_evt"
+    # Manual light hold is operator-cleared via control proxy (Pass 5).
+    assert HUB_SWITCH_ENTITY_TO_OID["switch.dsc_hub_manual_light_hold"] == "manual_light_hold_switch"
     # ingest-only: informational entities gain no write/control-proxy rows
     assert "switch.dsc_hub_pot3_in_service" not in HUB_SWITCH_ENTITY_TO_OID
     assert "switch.dsc_hub_heater_auto" not in HUB_SWITCH_ENTITY_TO_OID

@@ -79,3 +79,13 @@ Pass4 Task6: Phase C 083c178
 
 Pass4 Task7: gate GREEN `4a40589`..`6d6c592` ? full stress + FOLLOWUPS; bundle `index-BoyhWWR_.js`; Pass 4 proven
 
+Pass4 Task7: gate GREEN 4a40589
+
+# Pass 5 Follow-up SDD
+Plan: docs/superpowers/plans/2026-09-01-live-ux-pass5-followup.md
+
+Pass5 Tasks 2?4: energy 400 / CannaLib / FlowSankey ? done
+Pass5 Task 5: Zigbee Wet?Problem LIVE GREEN (resume no-kill; evidence live-ux-pass5-task5-evidence.json)
+Pass5 Tasks 6?7: soak + three-desk re-walk + GATE GREEN ? Hold clear + FOLLOWUPS; program proven
+
+

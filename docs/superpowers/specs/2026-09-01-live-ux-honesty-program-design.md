@@ -1,7 +1,7 @@
 # Live UX honesty program (five-pass) — Design
 
 **Date:** 2026-09-01  
-**Status:** **Passes 1–3 implemented/proven** (2026-09-01 Overview gate green) — plan [`2026-09-01-live-ux-honesty-program.md`](../plans/2026-09-01-live-ux-honesty-program.md). **Pass 4** design [`2026-09-01-live-ux-pass4-twin-integrated-design.md`](2026-09-01-live-ux-pass4-twin-integrated-design.md) — **proven** 2026-09-01 (`index-BoyhWWR_.js`). **Pass 5** remains stub pending `/brainstorming` after Pass 4 gate.
+**Status:** **Passes 1–5 proven** (2026-09-01). Five-pass Live UX honesty program **closed** — Pass 5 design [`2026-09-01-live-ux-pass5-followup-design.md`](2026-09-01-live-ux-pass5-followup-design.md) · walk [`LIVE-UX-PASS5-WALK-2026-09.md`](../qa/LIVE-UX-PASS5-WALK-2026-09.md).
 **Domain:** Operator Live desks (Light → Climate → Overview); Pi brain SoT; honesty + light UX  
 **Related:** space-energy journals (implemented); kit honesty (pot3/4 planned OOS); `dsc-space-energy.mdc`, `dsc-pi-hotpatch.mdc`
 

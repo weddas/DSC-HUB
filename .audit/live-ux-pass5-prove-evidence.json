@@ -1,6 +1,6 @@
 ﻿{
-    "ts":  1788266657,
-    "phase":  "ENERGY",
+    "ts":  1788269543,
+    "phase":  "GATE",
     "base":  "http://192.168.86.48:8787",
     "gates":  {
                   "E_estimate_4x8":  {
@@ -44,11 +44,289 @@
                                                                  "status":  400
                                                              },
                                                   "ok":  true
-                                              }
+                                              },
+                  "G0_index_bundle":  {
+                                          "detail":  {
+                                                         "expected":  "assets/index-BoyhWWR_.js",
+                                                         "local":  "assets/index-BoyhWWR_.js",
+                                                         "live":  "assets/index-BoyhWWR_.js",
+                                                         "live_sha256":  "d00bd5a4be5f2188c566b62618e7be3de828d26990e435915974c1bcd4cb92c8",
+                                                         "local_sha256":  "d00bd5a4be5f2188c566b62618e7be3de828d26990e435915974c1bcd4cb92c8"
+                                                     },
+                                          "ok":  true
+                                      },
+                  "G0_health":  {
+                                    "detail":  {
+                                                   "status":  "ok",
+                                                   "version":  "7.4.0",
+                                                   "surface":  "7.4.0",
+                                                   "expected_firmware":  "7.0.0.0",
+                                                   "mode":  "live",
+                                                   "zigbee":  {
+                                                                  "mqtt_connected":  true,
+                                                                  "bridge_state":  "online",
+                                                                  "bridge_state_updated_at":  1788269205.4913046,
+                                                                  "radio_up":  true,
+                                                                  "radio_note":  "Coordinator online",
+                                                                  "device_count":  5,
+                                                                  "end_device_count":  4,
+                                                                  "devices_updated_at":  1788269205.4560084,
+                                                                  "canopy_updated_at":  null,
+                                                                  "permit_join":  false,
+                                                                  "permit_join_end":  null
+                                                              }
+                                               },
+                                    "ok":  true
+                                },
+                  "G2_twin_entity_available":  {
+                                                   "detail":  {
+                                                                  "state":  "off",
+                                                                  "brightness":  255
+                                                              },
+                                                   "ok":  true
+                                               },
+                  "G2_twin_turn_on_brightness":  {
+                                                     "detail":  {
+                                                                    "status":  200,
+                                                                    "body":  {
+                                                                                 "entity_id":  "light.dsc_hub_twin_sf1000",
+                                                                                 "state":  "on",
+                                                                                 "brightness":  128
+                                                                             },
+                                                                    "optical":  "N/A"
+                                                                },
+                                                     "ok":  true
+                                                 },
+                  "G2_twin_restore":  {
+                                          "detail":  {
+                                                         "pre":  "off",
+                                                         "off_http":  200,
+                                                         "post":  "off"
+                                                     },
+                                          "ok":  true
+                                      },
+                  "G2_fleet":  {
+                                   "detail":  {
+                                                  "keys":  [
+                                                               "version",
+                                                               "surface",
+                                                               "expected_firmware",
+                                                               "hub",
+                                                               "panel",
+                                                               "pots",
+                                                               "sonoffs",
+                                                               "canopy",
+                                                               "system",
+                                                               "updated_at",
+                                                               "inventory",
+                                                               "root_steering"
+                                                           ]
+                                              },
+                                   "ok":  true
+                               },
+                  "G2_fleet_computed":  {
+                                            "detail":  {
+                                                           "keys":  [
+                                                                        "hass_extras"
+                                                                    ]
+                                                       },
+                                            "ok":  true
+                                        },
+                  "G2_cfm_cascade":  {
+                                         "detail":  {
+                                                        "distinct_from_intake":  true,
+                                                        "intake_2x4":  "96.2",
+                                                        "cascade":  "83.3"
+                                                    },
+                                         "ok":  true
+                                     },
+                  "G2_energy_estimate_4x8":  {
+                                                 "detail":  {
+                                                                "status":  200
+                                                            },
+                                                 "ok":  true
+                                             },
+                  "G2_energy_suggestions_4x8":  {
+                                                    "detail":  {
+                                                                   "count":  4
+                                                               },
+                                                    "ok":  true
+                                                },
+                  "G2_energy_confirm_400_4x8":  {
+                                                    "detail":  {
+                                                                   "status":  400
+                                                               },
+                                                    "ok":  true
+                                                },
+                  "G2_energy_estimate_2x4":  {
+                                                 "detail":  {
+                                                                "status":  200
+                                                            },
+                                                 "ok":  true
+                                             },
+                  "G2_energy_suggestions_2x4":  {
+                                                    "detail":  {
+                                                                   "count":  4
+                                                               },
+                                                    "ok":  true
+                                                },
+                  "G2_energy_confirm_400_2x4":  {
+                                                    "detail":  {
+                                                                   "status":  400
+                                                               },
+                                                    "ok":  true
+                                                },
+                  "G2_journal_space_4x8":  {
+                                               "detail":  {
+                                                              "status":  200
+                                                          },
+                                               "ok":  true
+                                           },
+                  "G2_journal_space_2x4":  {
+                                               "detail":  {
+                                                              "status":  200
+                                                          },
+                                               "ok":  true
+                                           },
+                  "G2_journal_room":  {
+                                          "detail":  {
+                                                         "status":  200
+                                                     },
+                                          "ok":  true
+                                      },
+                  "G2_journal_core":  {
+                                          "detail":  {
+                                                         "status":  200
+                                                     },
+                                          "ok":  true
+                                      },
+                  "G2_zigbee_by_role":  {
+                                            "detail":  {
+                                                           "leak_floor_2x4":  false,
+                                                           "roles":  [
+                                                                         "canopy_4x8",
+                                                                         "leak_tank",
+                                                                         "leak_floor_room",
+                                                                         "leak_floor_4x8"
+                                                                     ]
+                                                       },
+                                            "ok":  true
+                                        },
+                  "G2_zigbee_policy_state":  {
+                                                 "detail":  {
+                                                                "room":  {
+                                                                             "recipe_id":  "floor_flood_alert",
+                                                                             "active":  false,
+                                                                             "problem":  false,
+                                                                             "problem_when":  "active",
+                                                                             "friendly_name":  "0xa4c1385a686af7df",
+                                                                             "updated_at":  1788269526.6212933
+                                                                         },
+                                                                "four_recipe":  "floor_flood_alert",
+                                                                "room_recipe":  "floor_flood_alert",
+                                                                "four":  {
+                                                                             "recipe_id":  "floor_flood_alert",
+                                                                             "active":  false,
+                                                                             "problem":  false,
+                                                                             "problem_when":  "active",
+                                                                             "friendly_name":  "0xa4c1380d734f2033",
+                                                                             "updated_at":  1788269526.9136126
+                                                                         }
+                                                            },
+                                                 "ok":  true
+                                             },
+                  "G2_manual_hold_off":  {
+                                             "detail":  {
+                                                            "state":  "off",
+                                                            "row":  {
+                                                                        "entity_id":  "switch.dsc_hub_manual_light_hold",
+                                                                        "state":  "off",
+                                                                        "attributes":  {
+
+                                                                                       }
+                                                                    }
+                                                        },
+                                             "ok":  true
+                                         },
+                  "G2_dutystrip_entities":  {
+                                                "detail":  {
+                                                               "got_4x8":  "0.05",
+                                                               "got_2x4":  "12.001388549804688"
+                                                           },
+                                                "ok":  true
+                                            },
+                  "G4_restore":  {
+                                     "detail":  {
+                                                    "post_lights_on":  {
+                                                                           "4x8":  "06:00:00",
+                                                                           "2x4":  null
+                                                                       },
+                                                    "cancelled":  [
+                                                                      {
+                                                                          "cancel_status":  200,
+                                                                          "sid":  "4x8",
+                                                                          "id":  13
+                                                                      },
+                                                                      {
+                                                                          "cancel_status":  200,
+                                                                          "sid":  "2x4",
+                                                                          "id":  14
+                                                                      }
+                                                                  ],
+                                                    "pre_lights_on":  {
+                                                                          "4x8":  "06:00:00",
+                                                                          "2x4":  null
+                                                                      },
+                                                    "pending_flips":  [
+
+                                                                      ]
+                                                },
+                                     "ok":  true
+                                 },
+                  "G4_twin_off":  {
+                                      "detail":  {
+                                                     "state":  "off"
+                                                 },
+                                      "ok":  true
+                                  }
               },
+    "restore":  {
+                    "twin":  {
+                                 "pre":  "off",
+                                 "off":  {
+                                             "entity_id":  "light.dsc_hub_twin_sf1000",
+                                             "state":  "off",
+                                             "brightness":  0
+                                         },
+                                 "post":  "off"
+                             },
+                    "pre_lights_on":  {
+                                          "4x8":  "06:00:00",
+                                          "2x4":  null
+                                      },
+                    "cancelled":  [
+                                      {
+                                          "cancel_status":  200,
+                                          "sid":  "4x8",
+                                          "id":  13
+                                      },
+                                      {
+                                          "cancel_status":  200,
+                                          "sid":  "2x4",
+                                          "id":  14
+                                      }
+                                  ],
+                    "pending_flips":  [
+
+                                      ],
+                    "post_lights_on":  {
+                                           "4x8":  "06:00:00",
+                                           "2x4":  null
+                                       }
+                },
     "errors":  [
 
                ],
-    "note":  "Pass 5: energy confirm=false must be HTTP 400 (not 422). Hold clear is operator-gated - not in this script.",
+    "note":  "Pass 5: energy confirm=false must be HTTP 400 (not 422). Hold clear is operator-gated.",
     "ok":  true
 }

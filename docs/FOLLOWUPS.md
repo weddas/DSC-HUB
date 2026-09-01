@@ -3909,9 +3909,9 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 |------|--------|-------|
 | Passes 1?3 desk gates | **done (live)** | Shared honesty contract held; both tents parity each pass |
 | Pass 4 Integrated | **proven** | Twin software + Phase B/C + gate GREEN 2026-09-01 ? `index-BoyhWWR_.js`; GPIO5 reserved handoff in Pass 4 gate FOLLOWUPS |
-| Pass 5 Follow-up | **in progress** | Spec/plan/walk scaffold 2026-09-01 ? parks + CannaLib prod + FlowSankey verify + Zigbee Wet/Problem one-recipe + soak/re-walk |
-| Operator queue (outside 1?3) | **in Pass 5** | CannaLib prod ? FlowSankey verify ? Zigbee one-recipe ? finishing in Pass 5 |
-| Hardware | **parked** | GPIO5 Twin PWM physical wire-up (operator); Zigbee new recipes stay locked until unlock |
+| Pass 5 Follow-up | **proven** | Gate GREEN 2026-09-01 ? walk [`LIVE-UX-PASS5-WALK-2026-09.md`](qa/LIVE-UX-PASS5-WALK-2026-09.md); report `.superpowers/sdd/pass5-gate-report.md` |
+| Operator queue (outside 1?3) | **done (Pass 5)** | CannaLib prod ? FlowSankey verify ? Zigbee one-recipe ? Hold clear ? soak/gate |
+| Hardware | **parked** | GPIO5 Twin PWM physical wire-up (operator); Zigbee `leak_floor_2x4` / new recipes locked until unlock |
 
 ---
 
@@ -3976,8 +3976,8 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 
 | Severity | Item | Notes |
 |----------|------|-------|
-| P2 | Wet/Dry live reading | **Pass 5 Task 5 in progress** ? pre-kill Safety stubs present; live occupancy prove blocked on Pi hang (see Pass 5 Task 5 residuals) |
-| P2 | `zigbee_by_role` empty on live fleet | **Superseded pre-kill** ? by_role had canopy + leak stubs; brain seeds policies on reapply. Re-check after Pi recovery |
+| P2 | Wet/Dry live reading | **Closed Pass 5** ? MQTT Wet?Problem proven; see Pass 5 gate |
+| P2 | `zigbee_by_role` empty on live fleet | **Closed Pass 5** ? by_role populated at gate |
 | P3 | Historical SF1000 ? `sf1000_on` | Not backfilled; DutyStrip honesty improves going forward after hotpatch |
 | P3 | Twin Actual `0.0H` while OFF | Brief Phase A/gate cycles; sub-0.1h rounding expected ? not a park |
 
@@ -3985,11 +3985,11 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 
 | ID | Reason |
 |----|--------|
-| Manual Light Hold sticky ON | Intentional after Phase A/gate stress; confirm/clear with operator ? do not auto-mutate |
-| Energy `confirm=false` status-code normalize | **done (Pass 5 Task 2)** ? live 400 both tents; prove script asserts 400 |
-| Live Wet?Problem MQTT prove | **Pass 5 Task 5 blocked** ? Pi unreachable after hotpatch kill; resume prove script after power-cycle |
-| Optical / PWM verify | Blocked on physical GPIO5 wire-up (soft-gate recorded in Pass 5 walk) |
-| `leak_floor_2x4` bind | **parked** ? no HW (Pass 5 Task 5) |
+| Manual Light Hold sticky ON | **cleared Pass 5** ? control map + operator clear; off at gate |
+| Energy `confirm=false` status-code normalize | **done (Pass 5 Task 2)** ? live 400 both tents |
+| Live Wet?Problem MQTT prove | **done (Pass 5)** ? evidence + gate |
+| Optical / PWM verify | Blocked on physical GPIO5 wire-up (soft-gate) |
+| `leak_floor_2x4` bind | **parked** ? no HW |
 
 ### Twin software status + GPIO5 reserved handoff
 
@@ -3999,7 +3999,7 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 
 ### Parent program pointer
 
-Passes 1?3 desk gates remain **GREEN**. Pass 4 integrated gate **GREEN**. **Pass 5 in progress** ? [`2026-09-01-live-ux-pass5-followup-design.md`](superpowers/specs/2026-09-01-live-ux-pass5-followup-design.md) ? walk [`LIVE-UX-PASS5-WALK-2026-09.md`](qa/LIVE-UX-PASS5-WALK-2026-09.md).
+Passes 1?3 desk gates remain **GREEN**. Pass 4 integrated gate **GREEN**. **Pass 5 proven** ? five-pass Live UX honesty program **closed** ? [`2026-09-01-live-ux-pass5-followup-design.md`](superpowers/specs/2026-09-01-live-ux-pass5-followup-design.md) ? walk [`LIVE-UX-PASS5-WALK-2026-09.md`](qa/LIVE-UX-PASS5-WALK-2026-09.md).
 
 ---
 
@@ -4007,22 +4007,106 @@ Passes 1?3 desk gates remain **GREEN**. Pass 4 integrated gate **GREEN**. **Pass
 
 **Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-pass5-followup-design.md`](superpowers/specs/2026-09-01-live-ux-pass5-followup-design.md)  
 **Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-pass5-followup.md`](superpowers/plans/2026-09-01-live-ux-pass5-followup.md)  
-**Walk:** [`docs/qa/LIVE-UX-PASS5-WALK-2026-09.md`](qa/LIVE-UX-PASS5-WALK-2026-09.md) ? energy / CannaLib / Sankey filled; Hold + Zigbee + soak/gate remain
+**Walk:** [`docs/qa/LIVE-UX-PASS5-WALK-2026-09.md`](qa/LIVE-UX-PASS5-WALK-2026-09.md) ? superseded by gate section below
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Parks + queue closeout | **in progress** | Hold (operator confirm) + Zigbee live MQTT prove (Pi hung) + soak/re-walk + gate remain; energy 400 + CannaLib + FlowSankey + GPIO5 soft-gate **done** |
-| Energy confirm=false ? 400 | **done** | Live both tents HTTP 400; `.audit/live-ux-pass5-prove.ps1` asserts exact 400 (rejects 422 drift) |
-| CannaLib prod offset HTTP | **done (verify-close)** | Prod+LAN distinct; Pi Test CannaLib + proxy Load more (incl. temporary prod URL) green; MP-030/034 closed; **no redeploy** |
-| FlowSankey verify / graduate | **done** | Cascade 83.3 ? intake 96.2; browser AIR CFM + MASS CHIP GATED + AirPathMap cascade; soak doc stays closed |
-| GPIO5 soft-gate | **done (soft)** | Twin entity present; SPA reserved/unwired honesty; optical N/A |
-| Zigbee one-recipe Wet?Problem | **blocked (Pi down)** | Pre-kill: by_role stubs + `floor_flood_alert` policies on desk ieee; brain seeds policies on reapply (pytest). Live occupancy inject blocked ? `docker kill` mid Task 5 left Pi unreachable (no ping). **Operator: power-cycle Pi**, then `.audit/live-ux-pass5-task5-zigbee-prove.ps1` |
-| `leak_floor_2x4` | **parked** | No HW among Z2M end-devices; MP-042 remains |
+| Parks + queue closeout | **done at gate** | See Pass 5 gate section |
+| Energy confirm=false ? 400 | **done** | Live both tents HTTP 400; prove asserts exact 400 |
+| CannaLib prod offset HTTP | **done (verify-close)** | Prod+LAN distinct; Pi Load more green; **no redeploy** |
+| FlowSankey verify / graduate | **done** | Cascade 83.3 ? intake 96.2; AIR CFM + MASS CHIP GATED |
+| GPIO5 soft-gate | **done (soft)** | Twin entity; SPA reserved/unwired; optical N/A |
+| Zigbee one-recipe Wet?Problem | **done** | Task 5 resume evidence `ok=true`; GATE policy_state dry |
+| `leak_floor_2x4` | **parked** | No HW; MP-042 |
 
-### Pass 5 Task 5 residuals (2026-09-01)
+### Pass 5 Task 5 residuals (2026-09-01) ? closed at gate
 
 | Severity | Item | Notes |
 |----------|------|-------|
-| P0 | Pi `192.168.86.48` unreachable | After Task 5 hotpatch `docker kill`+`start`; host no longer pings. Needs power-cycle / physical recovery before Wet/Problem MQTT prove |
-| P2 | Live Wet/Dry + Problem/Clear MQTT | Resume after Pi up ? occupancy inject on `0xa4c1385a686af7df` / `0xa4c1380d734f2033`; expect Wet?Problem inference (policy_state only) |
-| P3 | Pass 4 residual `zigbee_by_role` empty | Superseded pre-kill: by_role had safety stubs; re-verify after recovery |
+| ~~P0~~ | Pi unreachable | **Closed** ? power-cycle recovered; resume prove without docker kill |
+| ~~P2~~ | Live Wet/Dry + Problem/Clear MQTT | **Closed** ? evidence JSON + GATE dry re-seed |
+| ~~P3~~ | `zigbee_by_role` empty | **Closed** ? by_role populated at gate |
+
+---
+
+## 2026-09-01 ? Live UX Pass 5 gate (follow-up closeout) ? **GREEN**
+
+**Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-pass5-followup-design.md`](superpowers/specs/2026-09-01-live-ux-pass5-followup-design.md)  
+**Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-pass5-followup.md`](superpowers/plans/2026-09-01-live-ux-pass5-followup.md)  
+**Walk:** [`docs/qa/LIVE-UX-PASS5-WALK-2026-09.md`](qa/LIVE-UX-PASS5-WALK-2026-09.md) ? parks / CannaLib / Sankey / Zigbee / soak / gate filled  
+**Evidence:** `.audit/live-ux-pass5-prove-evidence.json` ? `.audit/live-ux-pass5-task5-evidence.json` ? browser `docs/qa-screenshots-2026-09-01-live-ux/pass5-*`  
+**Report:** `.superpowers/sdd/pass5-gate-report.md`
+
+### Hashes / bundle
+
+| Artifact | Value |
+|----------|-------|
+| SPA bundle | `assets/index-BoyhWWR_.js` |
+| index.html sha256 | `d00bd5a4be5f2188c566b62618e7be3de828d26990e435915974c1bcd4cb92c8` |
+| Deploy | SPA unchanged (hash match). Brain `hub_controls.py` Hold control map ? `docker stop -t 20` + `start` (no kill) |
+| Brain surface | `7.4.0` health ok; Zigbee radio_up; 4 end-devices |
+
+### Passed at gate
+
+| Area | Result |
+|------|--------|
+| G0 index | Live index matches spa-dist `index-BoyhWWR_.js` + sha256 |
+| G1 pytest | 122 passed (twin/climate/light/overview honesty + zigbee_policies + brain_pi + space_energy_stress) |
+| G2 Twin HTTP | Entity available; turn_on bri=128 accepted (optical N/A); restore off |
+| G2 energy | Estimate + suggestions both tents; confirm=false ? **400** only |
+| G2 journals / fleet | Space 4?8/2?4 + room + core 200; fleet + computed ok |
+| G2 CFM cascade | cascade **83.3** ? intake **96.2** |
+| G2 Zigbee | by_role desks+tank; `floor_flood_alert` policy_state problem=false after dry MQTT |
+| G2 Manual Hold | **off** (control proxy + hass_extras + SPA OFF) |
+| G3 browser Light | Got?Twin; GPIO5 reserved; Twin OFF; HOLD OFF; both DARK |
+| G3 browser Climate | KIT HONEST; cascade 83; AIR CFM + MASS CHIP GATED; Wet/Problem honesty; no EXPERIMENTAL |
+| G3 browser Overview | HUB ONLINE; Canopy; both DARK/Follow; journals; Root Want |
+| G4 restore | Twin off; plans cancelled; pending_flips=[]; lights-on unchanged |
+| CannaLib | Prod+LAN offset verify-close; no redeploy |
+| FlowSankey | Graduated; live re-proved |
+| Zigbee Wet?Problem | Task 5 evidence `ok=true` (resume, no docker kill) |
+
+### Failed at gate
+
+| Item | Result |
+|------|--------|
+| _(none)_ | No gate-blocking failures |
+
+### Flakes
+
+| Item | Notes |
+|------|-------|
+| Hold fleet lag | After `turn_off`, hass_extras may stay `on` for ~1 poll (~5?10s) before catching hub state |
+| Twin fleet persist on | Command accepts on/bri; fleet mirror may lag without GPIO5 PWM ? software path green (optical N/A) |
+| policy_state after brain restart | Cleared until MQTT occupancy event; GATE dry-pub re-seeds |
+
+### Residuals (non-blocking)
+
+| Severity | Item | Notes |
+|----------|------|-------|
+| P3 | Historical SF1000 ? `sf1000_on` | Not backfilled; DutyStrip honesty improves going forward |
+| P3 | Twin Actual ~0.05H while OFF | Brief gate cycles; sub-0.1h rounding |
+| P3 | Prefer stop+start over kill | Task 5 kill hung Pi; Pass 5 gate used stop+start successfully ? keep in hotpatch habit |
+
+### Parks remaining (hardware / out of Pass 5)
+
+| ID | Reason |
+|----|--------|
+| Optical / PWM verify | Blocked on physical GPIO5 wire-up |
+| `leak_floor_2x4` bind | No HW (MP-042) |
+| New Zigbee recipe IDs | Locked until operator unlock |
+
+### CannaLib / Sankey / Zigbee / GPIO5 / Hold summary
+
+- **CannaLib:** prod+LAN offset + Pi Load more **green**; MP-030/034 closed; no redeploy  
+- **FlowSankey:** graduated; cascade 83 ? intake 96; AIR CFM + mass gated  
+- **Zigbee:** `floor_flood_alert` Wet?Problem path **proven**; `leak_floor_2x4` parked  
+- **GPIO5:** soft-gate reserved/unwired; Twin software SoT  
+- **Hold:** control map fixed + cleared **off**
+
+### Parent program pointer
+
+**Passes 1?5 proven.** Five-pass Live UX honesty program **closed**. Do not invent Pass 6 ? park true OOS here.
+
+---
+

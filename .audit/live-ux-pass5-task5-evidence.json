@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "by_role_keys": [
+    "canopy_4x8",
+    "leak_floor_4x8",
+    "leak_floor_room",
+    "leak_tank"
+  ],
+  "leak_floor_2x4_present": false,
+  "room_wet": false,
+  "four_wet": false,
+  "room_policy": {
+    "recipe_id": "floor_flood_alert",
+    "active": false,
+    "problem": false,
+    "problem_when": "active",
+    "friendly_name": "0xa4c1385a686af7df",
+    "updated_at": 1788268990.681912
+  },
+  "four_policy": {
+    "recipe_id": "floor_flood_alert",
+    "active": false,
+    "problem": false,
+    "problem_when": "active",
+    "friendly_name": "0xa4c1380d734f2033",
+    "updated_at": 1788268997.8958848
+  },
+  "room_recipe": "floor_flood_alert",
+  "four_recipe": "floor_flood_alert",
+  "banners": [],
+  "twin": {
+    "state": "off",
+    "brightness": 255
+  },
+  "gpio5": "reserved_unwired_soft_gate",
+  "manual_hold": "on",
+  "resume": "no_docker_kill"
+}
