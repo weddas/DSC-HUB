@@ -107,6 +107,21 @@ export function tentPhotoperiodFollowsMain(state: (id: string, fb?: string) => s
   return state("select.dsc_hub_clone_photoperiod", "Follow 4x8") !== "Independent";
 }
 
+/** Prefer time.* helpers; fall back to datetime.* only when it parses as HH:MM. */
+export function resolveLightsOnClock(
+  state: (id: string, fb?: string) => string,
+  timeEntity: string,
+  datetimeEntity?: string,
+): string {
+  const primary = state(timeEntity, "");
+  if (parseTimeToMinutes(primary) != null) return primary;
+  if (datetimeEntity) {
+    const fallback = state(datetimeEntity, "");
+    if (parseTimeToMinutes(fallback) != null) return fallback;
+  }
+  return "";
+}
+
 export function readTentPhotoperiodInput(
   tent: TentPhotoperiodId,
   state: (id: string, fb?: string) => string,
@@ -114,15 +129,19 @@ export function readTentPhotoperiodInput(
 ): LightScheduleInput {
   if (tent === "main") {
     return {
-      lightsOnTime: state("time.dsc_hub_lights_on_time", ""),
+      lightsOnTime: resolveLightsOnClock(
+        state,
+        "time.dsc_hub_lights_on_time",
+        "datetime.dsc_hub_lights_on_time",
+      ),
       expectedHours: num("sensor.dsc_expected_light_hours", 12),
     };
   }
   const follows = tentPhotoperiodFollowsMain(state);
   return {
     lightsOnTime: follows
-      ? state("time.dsc_hub_lights_on_time", "")
-      : state("time.dsc_hub_clone_lights_on_time", ""),
+      ? resolveLightsOnClock(state, "time.dsc_hub_lights_on_time", "datetime.dsc_hub_lights_on_time")
+      : resolveLightsOnClock(state, "time.dsc_hub_clone_lights_on_time"),
     expectedHours: follows
       ? num("sensor.dsc_expected_light_hours", 12)
       : num("sensor.dsc_clone_expected_light_hours", 18),

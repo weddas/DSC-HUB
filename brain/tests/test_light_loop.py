@@ -35,6 +35,22 @@ def test_missing_main_on_time_invalidates_follow_schedule():
     assert "no schedule" in snap.honesty.lower() or "unset" in snap.honesty.lower()
 
 
+def test_date_only_datetime_helper_does_not_count_as_schedule():
+    """Hub sometimes parks a calendar date in datetime.dsc_hub_lights_on_time — not HH:MM."""
+    snap = build_light_loop(
+        helpers={
+            "datetime.dsc_hub_lights_on_time": "2026-08-29",
+            "select.dsc_hub_clone_photoperiod": "Follow 4x8",
+            "switch.dsc_hub_auto_photoperiod": "on",
+        },
+        hub_values={},
+        now_ts=0.0,
+    )
+    assert snap.main_on_time is None
+    assert snap.schedule_valid is False
+    assert "no schedule" in snap.honesty.lower() or "unset" in snap.honesty.lower()
+
+
 def test_independent_clone_does_not_claim_follow():
     snap = build_light_loop(
         helpers={

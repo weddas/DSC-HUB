@@ -49,4 +49,14 @@ assert.equal(followNoSchedule.scheduleValid, false);
 assert.equal(followNoSchedule.headerLabel, "SF1000 ON · 0%");
 assert.match(followNoSchedule.scheduleHonesty, /no schedule|unset/i);
 
+const dateOnlyIsUnset = buildCloneLightDesk(
+  mockBus({
+    "light.dsc_hub_sf1000_dimmer": { state: "off" },
+    "select.dsc_hub_clone_photoperiod": { state: "Follow 4x8" },
+    "datetime.dsc_hub_lights_on_time": { state: "2026-08-29" },
+    "time.dsc_hub_lights_on_time": { state: "" },
+  }),
+);
+assert.equal(dateOnlyIsUnset.scheduleValid, false);
+
 console.log("lightViewModel tests ok");

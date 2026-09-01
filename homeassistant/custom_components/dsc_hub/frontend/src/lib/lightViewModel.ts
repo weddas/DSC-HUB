@@ -1,4 +1,4 @@
-import { tentPhotoperiodFollowsMain } from "./lightSchedule";
+import { parseTimeToMinutes, resolveLightsOnClock, tentPhotoperiodFollowsMain } from "./lightSchedule";
 
 /** Bus slice used by the clone light desk (HA or Pi fleet). */
 export type LightDeskBus = {
@@ -56,7 +56,9 @@ export function readSfBrightnessPct(
 
 function timeUnset(val: string): boolean {
   const t = String(val || "").trim();
-  return !t || t === "—" || t === "unknown" || t === "unavailable" || t === "none";
+  if (!t || t === "—" || t === "unknown" || t === "unavailable" || t === "none") return true;
+  // Date-only helpers (YYYY-MM-DD) must not count as a lights-on clock.
+  return parseTimeToMinutes(t) == null;
 }
 
 /**
@@ -70,8 +72,12 @@ export function buildCloneLightDesk(bus: LightDeskBus): LightDeskModel {
   const sfBrightness = readSfBrightnessPct(sfEntity);
 
   const followsMain = tentPhotoperiodFollowsMain(state);
-  const mainOnTime = state("time.dsc_hub_lights_on_time", "");
-  const cloneOnTime = state("time.dsc_hub_clone_lights_on_time", "");
+  const mainOnTime = resolveLightsOnClock(
+    state,
+    "time.dsc_hub_lights_on_time",
+    "datetime.dsc_hub_lights_on_time",
+  );
+  const cloneOnTime = resolveLightsOnClock(state, "time.dsc_hub_clone_lights_on_time");
 
   const honestyFrom =
     entity("sensor.dsc_clone_expected_light_hours")?.attributes?.honesty ??

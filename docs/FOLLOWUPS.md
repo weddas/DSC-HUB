@@ -3814,3 +3814,32 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Surface version | **7.4.0** brain + SPA defaults + Pi live (`/health` 7.4.0/7.4.0, SPA `index-K2_ziUnM.js`) |
 | Git tag `v7.4.0` | **done** — operator signed off 2026-09-01 on `3eeecab` |
 
+---
+
+## 2026-09-01 — Space energy / journals (local implement)
+
+**Spec:** [`docs/superpowers/specs/2026-09-01-space-energy-journal-design.md`](superpowers/specs/2026-09-01-space-energy-journal-design.md)  
+**Plan:** [`docs/superpowers/plans/2026-09-01-space-energy-journal.md`](superpowers/plans/2026-09-01-space-energy-journal.md)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Space/device + journals + energy/shift/learning modules | **done (code)** | SQLite in `dsc_ops`; kit `4x8`/`2x4` seed |
+| HTTP + fleetApi | **done (code)** | `/journal/*`, `/spaces`, `/energy/*`; confirm required for shift plans |
+| SPA PlantMiniJournal / TentOccupancyJournal / LightEnergyPanel / Settings Brain card | **done (code)** | `build:spa` → `index-DMMGdgxP.js`; synced `brain/static` |
+| Brain pytest | **done** | 178 passed |
+| Pi hotpatch (new modules + SPA) | **next-plan** | plink/pscp; do not full-replace api.py blindly if image lags — copy new modules |
+| Live evidence (estimate, confirm-only ramp, flip banner) | **deferred** | Mark spec **implemented** only after Pi walk |
+| Cannabis-domain skill fragment (space-owned photoperiod + journals) | **done** | Project skill `.cursor/skills/dsc-space-photoperiod-journal/SKILL.md`; cannabis-domain LEARNED + index pointer |
+
+**Invariants:** no silent lights-on mutate; Learning never auto-apply; suggest move never auto-move.
+
+---
+
+## 2026-09-01 — Capacity offline named POT4 (honesty)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| `_reduced_kit` treated pot4 as live kit | **fixed (code)** | pot4 → planned_oos with pot3; live probes = 1–2 only |
+| Default inventory pot4 | **fixed** | `in_service: False` + `pot4_retired_gate` one-shot |
+| Pi hotpatch `dash_computed.py` (+ settings gate) | **next-plan** | Banner clears once brain recomputes |
+

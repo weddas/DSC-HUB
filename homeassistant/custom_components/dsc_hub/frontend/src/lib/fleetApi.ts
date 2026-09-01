@@ -603,3 +603,256 @@ export async function listSoilTests(
   const data = (await resp.json()) as { tests?: SoilTestRecord[] };
   return data.tests ?? [];
 }
+
+/* --- Space energy / journals --- */
+
+export type JournalEntry = {
+  id: number;
+  plant_id?: string;
+  space_id?: string;
+  occurred_at: number;
+  note: string;
+  source: string;
+  tags: string[];
+  provenance?: "plant" | "space";
+  created_at?: number;
+};
+
+export async function getPlantJournal(plantId: string, limit = 100): Promise<JournalEntry[]> {
+  const resp = await fetch(`/journal/plant/${encodeURIComponent(plantId)}?limit=${limit}`);
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "plant journal failed"));
+  const data = (await resp.json()) as { entries?: JournalEntry[] };
+  return data.entries ?? [];
+}
+
+export async function postPlantJournal(
+  plantId: string,
+  body: { note: string; occurred_at?: number; tags?: string[] },
+): Promise<JournalEntry> {
+  const resp = await fetch(`/journal/plant/${encodeURIComponent(plantId)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "plant journal save failed"));
+  return resp.json();
+}
+
+export async function getSpaceJournal(spaceId: string, limit = 100): Promise<JournalEntry[]> {
+  const resp = await fetch(`/journal/space/${encodeURIComponent(spaceId)}?limit=${limit}`);
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "space journal failed"));
+  const data = (await resp.json()) as { entries?: JournalEntry[] };
+  return data.entries ?? [];
+}
+
+export async function postSpaceJournal(
+  spaceId: string,
+  body: { note: string; occurred_at?: number; tags?: string[] },
+): Promise<JournalEntry> {
+  const resp = await fetch(`/journal/space/${encodeURIComponent(spaceId)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "space journal save failed"));
+  return resp.json();
+}
+
+export type SpaceDevice = {
+  space_id: string;
+  device_id: string;
+  label: string;
+  watts: number;
+  duty_source: string;
+  enabled: boolean;
+};
+
+export async function getSpaces(): Promise<
+  Array<{ space_id: string; size_label?: string; devices: SpaceDevice[] }>
+> {
+  const resp = await fetch("/spaces");
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "spaces failed"));
+  const data = (await resp.json()) as { spaces?: Array<{ space_id: string; devices: SpaceDevice[] }> };
+  return data.spaces ?? [];
+}
+
+export async function putSpaceDevice(
+  spaceId: string,
+  deviceId: string,
+  patch: Partial<SpaceDevice>,
+): Promise<SpaceDevice> {
+  const resp = await fetch(`/spaces/${encodeURIComponent(spaceId)}/devices/${encodeURIComponent(deviceId)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "space device update failed"));
+  return resp.json();
+}
+
+export type EnergyEstimate = {
+  ok: boolean;
+  honesty?: string;
+  estimate_label?: string;
+  total_kwh?: number;
+  total_cost?: number;
+  by_band?: Record<string, number>;
+  devices?: Array<{ device_id: string; label: string; watts: number; kwh: number; cost: number }>;
+};
+
+export async function getEnergyEstimate(
+  spaceId: string,
+  lightsOn: string,
+  wantHours: number,
+): Promise<EnergyEstimate> {
+  const q = new URLSearchParams({
+    space_id: spaceId,
+    lights_on: lightsOn,
+    want_hours: String(wantHours),
+  });
+  const resp = await fetch(`/energy/estimate?${q}`);
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "energy estimate failed"));
+  return resp.json();
+}
+
+export type EnergySuggestion = {
+  id: string;
+  label: string;
+  lights_on: string;
+  want_hours: number;
+  total_cost: number;
+  delta_vs_current: number;
+  apply: boolean;
+  learning?: { planning_signal?: boolean; reason?: string; apply?: boolean };
+};
+
+export async function getEnergySuggestions(
+  spaceId: string,
+  lightsOn: string,
+  wantHours: number,
+): Promise<EnergySuggestion[]> {
+  const q = new URLSearchParams({
+    space_id: spaceId,
+    lights_on: lightsOn,
+    want_hours: String(wantHours),
+  });
+  const resp = await fetch(`/energy/suggestions?${q}`);
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "energy suggestions failed"));
+  const data = (await resp.json()) as { suggestions?: EnergySuggestion[] };
+  return data.suggestions ?? [];
+}
+
+export async function getEnergyTariff(): Promise<
+  Array<{ band_id: string; label: string; start_min: number; end_min: number; rate_per_kwh: number }>
+> {
+  const resp = await fetch("/energy/tariff");
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "tariff failed"));
+  const data = (await resp.json()) as { bands?: Array<{ band_id: string; label: string; start_min: number; end_min: number; rate_per_kwh: number }> };
+  return data.bands ?? [];
+}
+
+export async function putEnergyTariffBand(band: {
+  band_id: string;
+  label?: string;
+  start_min?: number;
+  end_min?: number;
+  rate_per_kwh?: number;
+}): Promise<unknown> {
+  const resp = await fetch("/energy/tariff", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(band),
+  });
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "tariff update failed"));
+  return resp.json();
+}
+
+export type EnergyLearningSettings = {
+  enabled: boolean;
+  prefer_growth_outliers: boolean;
+  outlier_days: number;
+  norm_days: number;
+};
+
+export async function getEnergyLearning(): Promise<EnergyLearningSettings> {
+  const resp = await fetch("/energy/learning");
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "learning settings failed"));
+  return resp.json();
+}
+
+export async function patchEnergyLearning(
+  patch: Partial<EnergyLearningSettings>,
+): Promise<EnergyLearningSettings> {
+  const resp = await fetch("/energy/learning", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "learning patch failed"));
+  return resp.json();
+}
+
+export async function postShiftPlan(body: {
+  space_id: string;
+  from_on: string;
+  to_on: string;
+  want_hours: number;
+  policy: "pause" | "flower_strict" | "veg_style";
+  confirm: boolean;
+}): Promise<Record<string, unknown>> {
+  const resp = await fetch("/energy/shift/plan", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "shift plan failed"));
+  return resp.json();
+}
+
+export async function cancelShiftPlan(planId: number): Promise<Record<string, unknown>> {
+  const resp = await fetch(`/energy/shift/${planId}/cancel`, { method: "POST" });
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "cancel shift failed"));
+  return resp.json();
+}
+
+export type PendingFlip = {
+  id: number;
+  space_id: string;
+  plant_id?: string | null;
+  from_hours?: number;
+  to_hours?: number;
+  status: string;
+  note?: string;
+};
+
+export async function getPendingFlips(): Promise<PendingFlip[]> {
+  const resp = await fetch("/energy/shift/pending-flips");
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "pending flips failed"));
+  const data = (await resp.json()) as { flips?: PendingFlip[] };
+  return data.flips ?? [];
+}
+
+export async function resolveFlip(reqId: number, approve: boolean): Promise<PendingFlip> {
+  const resp = await fetch(`/energy/flip/${reqId}/resolve`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ approve }),
+  });
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "flip resolve failed"));
+  return resp.json();
+}
+
+export async function getEnergyConflicts(params: {
+  space_id: string;
+  plant_id?: string;
+  plant_want_hours?: number;
+  space_want_hours?: number;
+}): Promise<{ banners: Array<Record<string, unknown>>; pending_flips: PendingFlip[]; auto_apply: boolean }> {
+  const q = new URLSearchParams({ space_id: params.space_id });
+  if (params.plant_id) q.set("plant_id", params.plant_id);
+  if (params.plant_want_hours != null) q.set("plant_want_hours", String(params.plant_want_hours));
+  if (params.space_want_hours != null) q.set("space_want_hours", String(params.space_want_hours));
+  const resp = await fetch(`/energy/conflicts?${q}`);
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "conflicts failed"));
+  return resp.json();
+}

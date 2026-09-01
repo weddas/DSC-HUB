@@ -207,6 +207,56 @@ class RosterMoveBody(BaseModel):
     to_pot: int
 
 
+class JournalEntryBody(BaseModel):
+    note: str = ""
+    occurred_at: float | None = None
+    tags: list[str] | None = None
+
+
+class SpaceDeviceBody(BaseModel):
+    label: str | None = None
+    watts: float | None = None
+    duty_source: str | None = None
+    enabled: bool | None = None
+    extra: dict[str, Any] | None = None
+
+
+class TariffBandBody(BaseModel):
+    band_id: str
+    label: str | None = None
+    start_min: int | None = None
+    end_min: int | None = None
+    rate_per_kwh: float | None = None
+
+
+class EnergyLearningPatch(BaseModel):
+    enabled: bool | None = None
+    prefer_growth_outliers: bool | None = None
+    outlier_days: int | None = None
+    norm_days: int | None = None
+
+
+class ShiftPlanBody(BaseModel):
+    space_id: str
+    from_on: str
+    to_on: str
+    want_hours: float = 12.0
+    policy: str = "veg_style"
+    confirm: bool = False
+
+
+class FlipRequestBody(BaseModel):
+    space_id: str
+    plant_id: str | None = None
+    from_hours: float
+    to_hours: float
+    note: str = ""
+
+
+class FlipResolveBody(BaseModel):
+    approve: bool
+
+
 class SoilTestStartBody(BaseModel):
     probe_seat_id: str
     target_pot_id: str
@@ -244,6 +294,14 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
     from .soft_cal_history import init_soft_cal_history
 
     init_soft_cal_history()
+    try:
+        from .energy_model import ensure_default_tariff
+        from .space_model import ensure_kit_spaces
+
+        ensure_kit_spaces()
+        ensure_default_tariff()
+    except Exception:  # noqa: BLE001
+        pass
     reload_catalogs()
     try:
         from .plant_probe import migrate_legacy_plant_ids
@@ -1016,6 +1074,237 @@ def tick(body: TickBody) -> dict[str, Any]:
         manual_takeover=body.manual_takeover,
         emit=body.emit,
     )
+
+
+# --- Space energy / journals (approve-only schedule) ---
+
+
+@app.get("/journal/plant/{plant_id}")
+def journal_plant_get(plant_id: str, limit: int = Query(100, ge=1, le=500)) -> dict[str, Any]:
+    from .plant_journal import list_plant_journal
+
+    return {"plant_id": plant_id, "entries": list_plant_journal(plant_id, limit=limit)}
+
+
+@app.post("/journal/plant/{plant_id}")
+def journal_plant_post(plant_id: str, body: JournalEntryBody) -> dict[str, Any]:
+    from .plant_journal import add_plant_entry
+
+    try:
+        return add_plant_entry(
+            plant_id,
+            body.occurred_at,
+            body.note,
+            source="operator",
+            tags=body.tags,
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.get("/journal/space/{space_id}")
+def journal_space_get(space_id: str, limit: int = Query(100, ge=1, le=500)) -> dict[str, Any]:
+    from .space_journal import list_space_journal
+    from .space_occupants import occupant_plant_ids_for_space
+
+    return {
+        "space_id": space_id,
+        "entries": list_space_journal(
+            space_id,
+            limit=limit,
+            resolve_occupants=occupant_plant_ids_for_space,
+        ),
+    }
+
+
+@app.post("/journal/space/{space_id}")
+def journal_space_post(space_id: str, body: JournalEntryBody) -> dict[str, Any]:
+    from .space_journal import add_space_entry
+
+    try:
+        return add_space_entry(
+            space_id,
+            body.occurred_at,
+            body.note,
+            source="operator",
+            tags=body.tags,
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.get("/spaces")
+def spaces_get() -> dict[str, Any]:
+    from .space_model import ensure_kit_spaces, list_space_devices, list_spaces
+
+    spaces = ensure_kit_spaces()
+    return {
+        "spaces": [
+            {**s, "devices": list_space_devices(s["space_id"])} for s in spaces
+        ]
+    }
+
+
+@app.post("/spaces")
+def spaces_ensure() -> dict[str, Any]:
+    return spaces_get()
+
+
+@app.put("/spaces/{space_id}/devices/{device_id}")
+def spaces_device_put(space_id: str, device_id: str, body: SpaceDeviceBody) -> dict[str, Any]:
+    from .space_model import upsert_space_device
+
+    patch = body.model_dump(exclude_none=True)
+    patch["device_id"] = device_id
+    try:
+        return upsert_space_device(space_id, patch)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.get("/energy/estimate")
+def energy_estimate(
+    space_id: str = Query(...),
+    lights_on: str = Query(""),
+    want_hours: float = Query(12.0, ge=0.0, le=24.0),
+) -> dict[str, Any]:
+    from .energy_model import estimate_space_day
+
+    return estimate_space_day(space_id, lights_on=lights_on, want_hours=want_hours)
+
+
+@app.get("/energy/suggestions")
+def energy_suggestions(
+    space_id: str = Query(...),
+    lights_on: str = Query(""),
+    want_hours: float = Query(12.0, ge=0.0, le=24.0),
+) -> dict[str, Any]:
+    from .energy_learning import planning_signal
+    from .energy_model import suggest_slides
+
+    items = suggest_slides(space_id, current_on=lights_on, want_hours=want_hours)
+    enriched = []
+    for s in items:
+        sig = planning_signal(space_id, str(s.get("id") or ""), db_path=None)
+        enriched.append({**s, "apply": False, "learning": sig})
+    return {"space_id": space_id, "suggestions": enriched, "apply": False}
+
+
+@app.get("/energy/tariff")
+def energy_tariff_get() -> dict[str, Any]:
+    from .energy_model import ensure_default_tariff, list_tariff
+
+    ensure_default_tariff()
+    return {"bands": list_tariff()}
+
+
+@app.put("/energy/tariff")
+def energy_tariff_put(body: TariffBandBody) -> dict[str, Any]:
+    from .energy_model import upsert_tariff_band
+
+    try:
+        return upsert_tariff_band(body.model_dump(exclude_none=True))
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.get("/energy/learning")
+def energy_learning_get() -> dict[str, Any]:
+    from .energy_learning import get_learning_settings
+
+    return get_learning_settings()
+
+
+@app.patch("/energy/learning")
+def energy_learning_patch(body: EnergyLearningPatch) -> dict[str, Any]:
+    from .energy_learning import set_learning_settings
+
+    return set_learning_settings(body.model_dump(exclude_none=True))
+
+
+@app.post("/energy/shift/plan")
+def energy_shift_plan(body: ShiftPlanBody) -> dict[str, Any]:
+    from .schedule_shift import create_shift_plan
+
+    try:
+        return create_shift_plan(
+            body.space_id,
+            from_on=body.from_on,
+            to_on=body.to_on,
+            want_hours=body.want_hours,
+            policy=body.policy,
+            confirm=body.confirm,
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.post("/energy/shift/{plan_id}/cancel")
+def energy_shift_cancel(plan_id: int) -> dict[str, Any]:
+    from .schedule_shift import cancel_shift_plan
+
+    try:
+        return cancel_shift_plan(plan_id)
+    except KeyError as exc:
+        raise HTTPException(404, str(exc)) from exc
+
+
+@app.get("/energy/shift/pending-flips")
+def energy_pending_flips() -> dict[str, Any]:
+    from .schedule_shift import list_pending_flips
+
+    return {"flips": list_pending_flips()}
+
+
+@app.post("/energy/flip/request")
+def energy_flip_request(body: FlipRequestBody) -> dict[str, Any]:
+    from .schedule_shift import request_flip
+
+    return request_flip(
+        body.space_id,
+        plant_id=body.plant_id,
+        from_hours=body.from_hours,
+        to_hours=body.to_hours,
+        note=body.note,
+    )
+
+
+@app.post("/energy/flip/{req_id}/resolve")
+def energy_flip_resolve(req_id: int, body: FlipResolveBody) -> dict[str, Any]:
+    from .schedule_shift import resolve_flip
+
+    try:
+        return resolve_flip(req_id, approve=body.approve)
+    except KeyError as exc:
+        raise HTTPException(404, str(exc)) from exc
+
+
+@app.get("/energy/conflicts")
+def energy_conflicts(
+    space_id: str = Query(...),
+    plant_id: str | None = Query(None),
+    plant_want_hours: float | None = Query(None),
+    space_want_hours: float | None = Query(None),
+) -> dict[str, Any]:
+    from .photoperiod_conflict import space_conflict_banners
+    from .schedule_shift import list_pending_flips
+    from .space_occupants import occupant_plant_ids_for_space
+
+    mates = occupant_plant_ids_for_space(space_id)
+    mate_count = max(0, len(mates) - (1 if plant_id and plant_id in mates else 0))
+    banners = space_conflict_banners(
+        space_id,
+        plant_id=plant_id,
+        plant_want_hours=plant_want_hours,
+        space_want_hours=space_want_hours,
+        mate_count=mate_count if mate_count else len(mates),
+    )
+    return {
+        "space_id": space_id,
+        "banners": banners,
+        "pending_flips": [f for f in list_pending_flips() if f.get("space_id") == space_id],
+        "auto_apply": False,
+    }
 
 
 @app.get("/")

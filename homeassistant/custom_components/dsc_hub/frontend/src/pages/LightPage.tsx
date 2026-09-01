@@ -23,6 +23,8 @@ import { draftTone, tentWantRail } from "../lib/tentWant";
 import { readTentPhotoperiodInput } from "../lib/lightSchedule";
 import { dliFromPpfdHours, fmtDli, readCalibratedPpfd } from "../lib/dliEstimate";
 import { buildCloneLightDesk } from "../lib/lightViewModel";
+import { LightEnergyPanel } from "../components/energy/LightEnergyPanel";
+import { TentOccupancyJournal } from "../components/journal/TentOccupancyJournal";
 
 function fmt(n: number, digits = 1): string {
   return Number.isFinite(n) ? n.toFixed(digits) : "—";
@@ -408,6 +410,33 @@ export function LiveLightPage() {
 
         <div className="dsc-col-12">
           <CropScheduler />
+        </div>
+
+        <div className="dsc-col-6">
+          <LightEnergyPanel
+            spaceId="4x8"
+            lightsOn={mainOnTime !== "—" && mainOnTime !== "unknown" ? mainOnTime : ""}
+            wantHours={Number.isFinite(hours4) ? hours4 : 12}
+          />
+        </div>
+        <div className="dsc-col-6">
+          <LightEnergyPanel
+            spaceId="2x4"
+            lightsOn={
+              independent
+                ? state("time.dsc_hub_clone_lights_on_time", "")
+                : mainOnTime !== "—" && mainOnTime !== "unknown"
+                  ? mainOnTime
+                  : ""
+            }
+            wantHours={Number.isFinite(hours2) ? hours2 : 18}
+          />
+        </div>
+        <div className="dsc-col-6">
+          <TentOccupancyJournal spaceId="4x8" />
+        </div>
+        <div className="dsc-col-6">
+          <TentOccupancyJournal spaceId="2x4" />
         </div>
       </div>
     </div>

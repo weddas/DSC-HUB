@@ -69,6 +69,11 @@ def _inventory_in_service(inventory: list[dict[str, Any]] | None, seat_id: str, 
 
 
 def _reduced_kit(inventory: list[dict[str, Any]] | None) -> tuple[bool, dict[str, str]]:
+    """Warn only when expected *live kit* capacity is missing — not deliberate OOS seats.
+
+    Kit probes are pot1/pot2. pot3/pot4, AC, clone mister, and tank are planned OOS
+    (retired / on hold) and belong in planned_oos, never in the Capacity offline lead.
+    """
     planned: list[str] = []
     offline: list[str] = []
     if not _inventory_in_service(inventory, "ac", False):
@@ -77,6 +82,8 @@ def _reduced_kit(inventory: list[dict[str, Any]] | None) -> tuple[bool, dict[str
         planned.append("Clone mister")
     if not _inventory_in_service(inventory, "pot3", False):
         planned.append("POT3")
+    if not _inventory_in_service(inventory, "pot4", False):
+        planned.append("POT4")
     if not _inventory_in_service(inventory, "tank", False):
         planned.append("Tank")
     for label, key in (
@@ -89,7 +96,7 @@ def _reduced_kit(inventory: list[dict[str, Any]] | None) -> tuple[bool, dict[str
     ):
         if get_helper(key, "off") == "on":
             offline.append(label)
-    for n in (1, 2, 4):
+    for n in (1, 2):  # KIT_PROBE_NUMBERS — pot3/4 are planned OOS above
         if not _inventory_in_service(inventory, f"pot{n}", True):
             offline.append(f"POT{n}")
     active = len(offline) > 0
@@ -300,6 +307,15 @@ def emit_dash_entities(
     set_entity(states, "binary_sensor.dsc_clone_dark_period_violation", "on" if dark_violation else "off", available=True)
     if dark_violation and not _PREV_DARK_VIOLATION:
         record_grow_log("⚠ Clone dark-period violation — SF1000 on outside the 2x4 window")
+        try:
+            from .photoperiod_conflict import record_dark_violation
+
+            record_dark_violation(
+                "2x4",
+                "Dark-period violation — SF1000 on outside the 2x4 window",
+            )
+        except Exception:  # noqa: BLE001
+            pass
     _PREV_DARK_VIOLATION = dark_violation
 
     emit_sensor_trust(states, fleet, set_entity=set_entity, inventory=inventory)

@@ -384,11 +384,32 @@ def _num_state(states: dict[str, dict[str, Any]], eid: str) -> float | None:
         return None
 
 
+def _tick_schedule_shift_plans() -> None:
+    """Advance approve-only slide plans; never raise into computed."""
+    try:
+        from .compose_store import set_helper
+        from .schedule_shift import tick_shift_plans
+
+        def set_lights_on(space_id: str, lights_on: str) -> None:
+            sid = str(space_id or "").strip()
+            entity = (
+                "time.dsc_hub_lights_on_time"
+                if sid in ("4x8", "main")
+                else "time.dsc_hub_clone_lights_on_time"
+            )
+            set_helper(entity, lights_on)
+
+        tick_shift_plans(set_lights_on=set_lights_on)
+    except Exception:  # noqa: BLE001
+        _logger.debug("schedule shift tick skipped", exc_info=True)
+
+
 def build_computed_hass_states(
     fleet: Any,
     inventory: list[dict[str, Any]] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Emit HA-shaped computed entities for Pi compat layer."""
+    _tick_schedule_shift_plans()
     controls = (fleet.hub.values.get("controls") or {}) if fleet.hub else {}
     controls_key = json.dumps(controls, sort_keys=True, default=str)
     inv_key = _inventory_cache_key(inventory)

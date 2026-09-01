@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import dataclass
 from typing import Any, Callable
+
+_CLOCK_TIME_RE = re.compile(r"^(\d{1,2}):(\d{2})(?::(\d{2}))?$")
 
 
 @dataclass
@@ -63,6 +66,24 @@ def _helper_str(helpers: dict, *keys: str, default: str = "") -> str:
     return default
 
 
+def _normalize_clock_time(raw: Any) -> str | None:
+    """Accept HH:MM[:SS] only. Reject dates / empty (e.g. datetime helper stuck on YYYY-MM-DD)."""
+    if raw is None:
+        return None
+    text = str(raw).strip()
+    if not text or text.lower() in ("unavailable", "unknown", "none", "—", "-"):
+        return None
+    match = _CLOCK_TIME_RE.match(text)
+    if not match:
+        return None
+    hour = int(match.group(1))
+    minute = int(match.group(2))
+    second = int(match.group(3) or "0")
+    if hour > 23 or minute > 59 or second > 59:
+        return None
+    return f"{hour:02d}:{minute:02d}:{second:02d}"
+
+
 def _main_want_hours(helpers: dict) -> float | None:
     direct = _opt_float(helpers.get("sensor.dsc_expected_light_hours"))
     if direct is not None:
@@ -108,15 +129,9 @@ def build_light_loop(*, helpers: dict, hub_values: dict, now_ts: float) -> Light
     helpers = helpers or {}
     hub_values = hub_values or {}
 
-    main_on_raw = helpers.get("time.dsc_hub_lights_on_time")
-    if main_on_raw is None:
-        main_on_raw = helpers.get("datetime.dsc_hub_lights_on_time")
-    main_on_time: str | None
-    if main_on_raw is None:
-        main_on_time = None
-    else:
-        text = str(main_on_raw).strip()
-        main_on_time = text if text else None
+    main_on_time = _normalize_clock_time(helpers.get("time.dsc_hub_lights_on_time"))
+    if main_on_time is None:
+        main_on_time = _normalize_clock_time(helpers.get("datetime.dsc_hub_lights_on_time"))
 
     photoperiod = _helper_str(
         helpers,

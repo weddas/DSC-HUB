@@ -16,7 +16,7 @@
 ## Learned Workspace Facts
 
 - Product path is ESPHome hub/panel/probes plus Pi DSC-Brain (SPA on `:8787`); Home Assistant is optional lab soak, not product SoT.
-- Live kit probes are 1–2 (`KIT_PROBE_NUMBERS`); pot3/4 are retired from the kit (Device inventory / Advanced restore only).
+- Live kit probes are 1–2 (`KIT_PROBE_NUMBERS`); pot3/4 are retired from the kit (Device inventory / Advanced restore only); F-001 AC relay and F-002 clone mister are on hold indefinitely (honest OOS UI stays — not version gates or pending install work).
 - Domain model is probe · plant · assignment: `assigned_plant_id` (roster | None) is separate from `idle_home` (Soil Test dock). Roster has 10 slots; retire/delete by slot number, not probe-only — stock and detached must be deletable.
 - Pi brain/SPA hotpatch from Windows uses PuTTY `plink`/`pscp` with `-batch -hostkey`, not OpenSSH `scp` (password prompt hangs in agent shells); see `.audit/stress-*-hotpatch.ps1` and `dsc-pi-hotpatch.mdc`.
 - Roster UI refresh: serialize `/fleet/computed` fetches, cache-bust GETs, bump brain tick after mutations; prove roster/probe edges in `brain/tests/test_roster_stress.py` (browser stress alone insufficient).

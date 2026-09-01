@@ -27,6 +27,8 @@ import { VesselGlyph } from "./VesselGlyph";
 import { useBrainContext } from "../hooks/useBrain";
 import { useFleet } from "../hooks/useFleet";
 import { phaseLabel, potSteering, type RootSteeringSnapshot } from "../lib/rootSteering";
+import { probeAssignedPlantId } from "../lib/probeAssignment";
+import { PlantMiniJournal } from "./journal/PlantMiniJournal";
 
 type FieldBaseline = {
   name: string;
@@ -165,6 +167,7 @@ export function PlantSeatPanel({
     seat.strainDisplay === "—" ||
     /generic/i.test(seat.strainDisplay);
   const hasRosterSlot = seat.rosterSlot != null;
+  const plantId = probeAssignedPlantId(pot, fleet, state);
 
   const applyTent = async (tent: TentId, photoTemplate?: boolean) => {
     setApplyErr(null);
@@ -616,6 +619,9 @@ export function PlantSeatPanel({
                 </Link>
               </div>
             </Card>
+            <div style={{ marginTop: 12 }}>
+              <PlantMiniJournal plantId={plantId} />
+            </div>
           </div>
 
           <div className="dsc-col-6">

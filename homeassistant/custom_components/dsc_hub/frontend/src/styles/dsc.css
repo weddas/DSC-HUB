@@ -808,6 +808,18 @@ body {
   align-items: center;
 }
 
+.dsc-journal-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+}
+
+.dsc-journal-row {
+  border-top: 1px solid color-mix(in srgb, var(--dsc-border, #3a4452) 70%, transparent);
+  padding: 8px 0;
+  font-size: 13px;
+}
+
 .dsc-help-tip {
   position: relative;
   display: inline-block;

@@ -68,7 +68,7 @@ DEFAULT_INVENTORY: list[dict[str, Any]] = [
     {"seat_id": "pot1", "role": "pot", "host": "10.42.0.21"},
     {"seat_id": "pot2", "role": "pot", "host": "10.42.0.22"},
     {"seat_id": "pot3", "role": "pot", "host": "10.42.0.23", "in_service": False},
-    {"seat_id": "pot4", "role": "pot", "host": "10.42.0.24"},
+    {"seat_id": "pot4", "role": "pot", "host": "10.42.0.24", "in_service": False},
     {"seat_id": "heater", "role": "sonoff_heater", "host": "10.42.0.50"},
     {"seat_id": "heatmat", "role": "sonoff_heatmat", "host": "10.42.0.51"},
     {"seat_id": "humidifier", "role": "sonoff_humidifier", "host": "10.42.0.54"},
@@ -125,6 +125,12 @@ def init_settings_db(db_path: Path | None = None) -> None:
         conn.execute("UPDATE fleet_inventory SET in_service=0 WHERE seat_id='pot3'")
         conn.execute(
             "INSERT INTO settings(key, value) VALUES('pot3_f003_gate', 'applied') "
+            "ON CONFLICT(key) DO UPDATE SET value='applied'"
+        )
+    if get_setting("pot4_retired_gate", "", db_path) != "applied":
+        conn.execute("UPDATE fleet_inventory SET in_service=0 WHERE seat_id='pot4'")
+        conn.execute(
+            "INSERT INTO settings(key, value) VALUES('pot4_retired_gate', 'applied') "
             "ON CONFLICT(key) DO UPDATE SET value='applied'"
         )
     conn.execute("DELETE FROM fleet_inventory WHERE seat_id='bridge'")

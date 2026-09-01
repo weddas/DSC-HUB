@@ -6,7 +6,7 @@ export type PlaybookEntry = {
 
 const FLEET: PlaybookEntry = {
   title: "Fleet version",
-  what: "A device is missing firmware or running a different version than expected. Devices deliberately out of service (AC, clone mister, pot 3) are not counted here.",
+  what: "A device is missing firmware or running a different version than expected. Devices deliberately out of service (AC, clone mister, pot 3–4, tank) are not counted here.",
   fix: "Open Fleet and update the outdated device. If the device is not built yet, leave it out of service — that is not a failure.",
 };
 

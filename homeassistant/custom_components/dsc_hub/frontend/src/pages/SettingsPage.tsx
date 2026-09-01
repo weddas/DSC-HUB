@@ -19,6 +19,7 @@ import {
 } from "../components/settings/settingsConstants";
 import { inventoryGroup, pickSettings, resolveSeat, taskParamDefaults } from "../components/settings/settingsHelpers";
 import { ZigbeeBindRow } from "../components/settings/ZigbeeBindRow";
+import { SpaceEnergySettingsCard } from "../components/settings/SpaceEnergySettingsCard";
 import {
   apply_network,
   backup_export_url,
@@ -876,6 +877,10 @@ export function SettingsPage() {
         >
           <p>Re-reads on-Pi catalog indexes. Compose and Research pick up changes after reload.</p>
         </DecisionLayer>
+      </section>
+
+      <section hidden={section !== "brain"}>
+        <SpaceEnergySettingsCard />
       </section>
 
       <section className="dsc-card" hidden={section !== "device" && section !== "server"}>
