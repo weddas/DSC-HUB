@@ -3678,7 +3678,7 @@ Source: browser-only stress pass on live Pi SPA (`192.168.86.48:8787`). Goal: 10
 
 Source: `/reflect` + `/interrogate` + `test_roster_stress.py` + react-doctor pass on SPA.
 
-### Fixes this audit pass (local, not yet pushed)
+### Fixes this audit pass (landed `3a452f0` + Pi hotpatch `index-D7pAmjOB.js`)
 
 | Fix | File | Category |
 |-----|------|----------|
@@ -3722,5 +3722,5 @@ Source: `/reflect` + `/interrogate` + `test_roster_stress.py` + react-doctor pas
 | 4 | Browser catalog picks need JS `.click()` on hit buttons; coordinate clicks fail silently. | `docs/FOLLOWUPS.md` automation recipe |
 | 5 | Stress-test completion requires brain tests for slot/probe edge matrix, not browser alone. | `brain/tests/test_roster_stress.py` as template |
 
-**Approve reflect routings?** Reply with which rows to encode into skills/rules.
+**Approve reflect routings?** Encoded in `.cursor/rules/dsc-roster-probe.mdc` and `.cursor/rules/dsc-pi-hotpatch.mdc` (`3a452f0`).
 
