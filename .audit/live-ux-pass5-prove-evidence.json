@@ -1,0 +1,54 @@
+﻿{
+    "ts":  1788266657,
+    "phase":  "ENERGY",
+    "base":  "http://192.168.86.48:8787",
+    "gates":  {
+                  "E_estimate_4x8":  {
+                                         "detail":  {
+                                                        "status":  200,
+                                                        "label":  null
+                                                    },
+                                         "ok":  true
+                                     },
+                  "E_suggestions_4x8":  {
+                                            "detail":  {
+                                                           "count":  4,
+                                                           "status":  200
+                                                       },
+                                            "ok":  true
+                                        },
+                  "E_confirm_false_400_4x8":  {
+                                                  "detail":  {
+                                                                 "body":  null,
+                                                                 "status":  400
+                                                             },
+                                                  "ok":  true
+                                              },
+                  "E_estimate_2x4":  {
+                                         "detail":  {
+                                                        "status":  200,
+                                                        "label":  null
+                                                    },
+                                         "ok":  true
+                                     },
+                  "E_suggestions_2x4":  {
+                                            "detail":  {
+                                                           "count":  4,
+                                                           "status":  200
+                                                       },
+                                            "ok":  true
+                                        },
+                  "E_confirm_false_400_2x4":  {
+                                                  "detail":  {
+                                                                 "body":  null,
+                                                                 "status":  400
+                                                             },
+                                                  "ok":  true
+                                              }
+              },
+    "errors":  [
+
+               ],
+    "note":  "Pass 5: energy confirm=false must be HTTP 400 (not 422). Hold clear is operator-gated - not in this script.",
+    "ok":  true
+}
