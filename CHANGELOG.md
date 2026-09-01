@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## Pi appliance — **v7.4.0** (2026-09-01)
+
+Phase 0 closed (z2m + live walk + FlowSankey soak); surface unified to **7.4.0**; git tag `v7.4.0` signed off. See [`docs/qa/AUDIT-CLOSURE-7.4.md`](docs/qa/AUDIT-CLOSURE-7.4.md) · developer SoT [`docs/brain/SURFACE-VERSION.md`](docs/brain/SURFACE-VERSION.md) · [`docs/brain/FLOW-SANKEY.md`](docs/brain/FLOW-SANKEY.md).
+
+- **Version** — brain `__version__` / `SURFACE_VERSION` / SPA defaults / hub const / Pi `.env` → `7.4.0`; spa-dist `index-K2_ziUnM.js`.
+- **FlowSankey** — air CFM only; heat/humidity estimated splits removed; `massBalanceOk={null}`; soak closed ([`FLOW-SANKEY-SOAK-7.3.md`](docs/qa/FLOW-SANKEY-SOAK-7.3.md)).
+- **Kit scope** — Probe 1–2 live; pot3/4 Advanced restore; F-001/F-002 on hold (honest OOS).
+- **Post-mega** — Settings / PlantWizard / Roster quality splits; R3F wraps; Zigbee Wet/Dry vs Problem chips (prior tips `a307dc7` / `f029702`).
+- **Tests** — **161/161** brain pytest green after bump.
+- **Residual** — Climate cascade resolve still uses non-`_2x4` entity ids (cascade link omitted); SoftCal→ESP NVS; SoftCalWizard→`POST /soft-cal/sessions`.
+
 ## Pi appliance — **v7.3.0** (2026-08-27)
 
 Full software closure: version truth, graph QoL, flow Sankey (air/heat/humidity), lab wet cal, R3F Twin on Pi SPA, Lovelace YAML retired. See [`docs/qa/AUDIT-CLOSURE-7.3.md`](docs/qa/AUDIT-CLOSURE-7.3.md).
