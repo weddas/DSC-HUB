@@ -3907,18 +3907,28 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Item | Status | Notes |
 |------|--------|-------|
 | Passes 1?3 desk gates | **done (live)** | Shared honesty contract held; both tents parity each pass |
-| Pass 4 Integrated | **stub** | Pending `/brainstorming` ? may absorb parked UX (GAUGE-P0-1 moisture band, DutyStrip SV-P1-6, AirPathMap cascade alias) |
+| Pass 4 Twin-first | **Phase A GREEN + Phase B DONE_WITH_CONCERNS** | Tip `83af94c` Tasks 1-5. Phase C + Task 7 gate open. GPIO5 reserved. SoT: `docs/brain/LIVE-UX-HONESTY.md` / `docs/ops/TWIN-SF1000.md` |
 | Pass 5 Follow-up | **stub** | Pending `/brainstorming` after Pass 4 |
 | Operator queue (outside 1?3) | **next-plan** | CannaLib prod ? FlowSankey verify ? Zigbee one-recipe ? unless Pass 4 reorders |
 | Hardware | **parked** | Twin PWM / Zigbee new recipes stay locked until operator unlocks |
 
 ---
 
-## 2026-09-01 ? Live UX Pass 4 (scaffold)
+## 2026-09-01 - Live UX Pass 4 Twin-first (Phase A GREEN + Phase B DONE_WITH_CONCERNS)
 
-**Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-pass4-twin-integrated-design.md`](superpowers/specs/2026-09-01-live-ux-pass4-twin-integrated-design.md)  
-**Walk:** [`docs/qa/LIVE-UX-PASS4-WALK-2026-09.md`](qa/LIVE-UX-PASS4-WALK-2026-09.md) ? scaffold only (Task 1)
+**Design:** [`docs/superpowers/specs/2026-09-01-live-ux-pass4-twin-integrated-design.md`](superpowers/specs/2026-09-01-live-ux-pass4-twin-integrated-design.md)
+**Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-pass4-twin-integrated.md`](superpowers/plans/2026-09-01-live-ux-pass4-twin-integrated.md)
+**Walk:** [`docs/qa/LIVE-UX-PASS4-WALK-2026-09.md`](qa/LIVE-UX-PASS4-WALK-2026-09.md) - Phase A pass; Phase B filled (B6 fail); C/gate pending
+**Developer runbook:** [`docs/brain/LIVE-UX-HONESTY.md`](brain/LIVE-UX-HONESTY.md) / [`docs/ops/TWIN-SF1000.md`](ops/TWIN-SF1000.md) (tip `83af94c` / spa `index-BEjnawnp.js`)
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Hub GPIO5 | **reserved** | Twin SF1000 PWM ? physical wire-up later; expand at Pass 4 gate |
+| Pass 4 design + plan | **done (repo)** | Twin-first -> re-walk -> debt -> full-stress gate |
+| Task 1 walk scaffold | **done** | `LIVE-UX-PASS4-WALK-2026-09.md` + GPIO5 stub |
+| Phase A hybrid Got + Twin on ingest | **done** (`b4ca126`) | `got_source` twin/window; pytest `test_live_ux_pass4_twin.py` |
+| Phase A Light Twin + DutyStrip Actual | **done** (`5144978`) | spa `index-BEjnawnp.js` |
+| Task 4 Pi smoke + brightness scale | **Phase A GREEN** (`48b443d`) | A1-A8 pass; evidence `.audit/live-ux-pass4-prove-evidence.json`; hub light 0-255->0-1 |
+| Phase B inventory re-walk | **DONE_WITH_CONCERNS** (`84a3387..83af94c`) | B1-B5,B7-B12 pass; **B6 fail** (Wet/Dry UI absent - zigbee_by_role empty); inventory `.audit/live-ux-pass4-phaseb-inventory.json` |
+| Phase C named parks | **open** | SV-P1-6 / AirPathMap cascade<-intakeClone / GAUGE-P0-1 / canopy+zigbee empty planes |
+| Hub GPIO5 Twin PWM | **reserved** | Software Twin live; physical PWM wire-up = operator handoff (do not claim wired) |
+| Pass 4 gate prove | **not started** | Task 7 extends `.audit/live-ux-pass4-prove.*` |
