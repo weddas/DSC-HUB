@@ -40,5 +40,5 @@ Task 5: complete (commits 2feb837..8709c52, Climate SPA honesty + light UX)
 
 Task 5: complete (commits 2feb837..2b9d8e4 approx, Climate SPA honesty; AirPathMap cascade alias parked)
 
-Task 6: complete (Climate Pi prove + walk fill; gate GREEN; AirPathMap cascade alias remains parked)
+Task 6: complete (commit bb6cf1a, Climate Pi prove + walk fill; gate GREEN; AirPathMap cascade alias remains parked)
 

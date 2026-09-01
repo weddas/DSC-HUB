@@ -2,7 +2,8 @@
 
 **Status:** complete (gate **GREEN**)  
 **Branch:** master  
-**Date:** 2026-09-01
+**Date:** 2026-09-01  
+**Commit:** `bb6cf1a` — prove(climate): Pass 2 Pi hotpatch walk gate green
 
 ## Summary
 
