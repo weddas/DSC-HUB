@@ -3838,7 +3838,8 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 ## 2026-09-01 — Space-energy Pi closure (room + DSC-Core)
 
 **Spec:** [`docs/superpowers/specs/2026-09-01-space-energy-pi-closure-design.md`](superpowers/specs/2026-09-01-space-energy-pi-closure-design.md)  
-**Plan:** [`docs/superpowers/plans/2026-09-01-space-energy-pi-closure.md`](superpowers/plans/2026-09-01-space-energy-pi-closure.md)
+**Plan:** [`docs/superpowers/plans/2026-09-01-space-energy-pi-closure.md`](superpowers/plans/2026-09-01-space-energy-pi-closure.md)  
+**Developer runbook:** [`docs/brain/SPACE-ENERGY-JOURNAL.md`](brain/SPACE-ENERGY-JOURNAL.md) (tip `78a8397`)
 
 | Item | Status | Notes |
 |------|--------|-------|
@@ -3846,6 +3847,7 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Stress pytest + Pi HTTP + force-tick both tents | **done** | Restored lights-on 4x8=`06:00:00`, 2x4=`20:00:00`; intentional dark-floor steps |
 | Capacity offline pot3/4 honesty | **done (live)** | `planned_oos` includes POT3,POT4; offline not POT4-led; KIT HONEST |
 | Parent space-energy spec | **implemented** | Walk filled; screenshots under `docs/qa-screenshots-2026-09-01-space-energy/` |
+| Tip SoT runbook on master | **in progress** | Docs PR [#161](https://github.com/weddas/DSC-HUB/pull/161) — supersedes #160 ABSENT wording |
 
 ---
 
