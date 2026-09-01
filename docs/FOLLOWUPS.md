@@ -27,8 +27,8 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Operator visual smoke (browser) | **done (live)** | All cal tabs What/Process/Expected; Fan+Light hold copy; SoftCal chips; Roster Detach on assigned rows |
 | CreateGoal completion gate | **done** | 2026-08-31 ? fan HW parked per objective; genus CC0 strain reference live on Pi Research |
 | Waves 2?5 (CannaLib, PPFD, Twin, polish) | **next-plan** | Same CreateGoal objective; Zigbee+extra HW parked |
-| Wave 2 CannaLib (in progress) | **in progress** | Brain/SPA offset + Load more; type icons; hydrate media slot; live CannaLib still ignores offset until deploy ? brain falls back to local OFFSET when head-page repeats |
-| Live CannaLib offset deploy | **deferred** | Hub trampoline `standalone_server.py` has offset; production `cannalib.plausible-deniability.net` needs same |
+| Wave 2 CannaLib (in progress) | **done (live)** | Brain/SPA offset + Load more; prod+LAN `0.2.2-stdlib` distinct pages; Pi proxy Load more green (Pass 5 Task 3) |
+| Live CannaLib offset deploy | **done (verify-close)** | Prod HTTPS + LAN `:8790` paginate `offset`; Pi Test CannaLib + catalogs proxy Load more green ? **no redeploy** required 2026-09-01 |
 | Wave 3 PPFD local crops | **done (kit)** | SF1000/SF2000/SE7000/TS1000 archived under `/dsc-catalog/ppfd/`; SPA refuses CDN; Pi serves maps (`scripts/fetch_kit_ppfd_maps.py`) |
 | Wave 4 Sankey air-only | **done (live)** | Heat/humidity estimated modes removed; MASS IMBALANCE stays gated (`massBalanceOk={null}`) |
 | Wave 4 UUID migrate verify | **done (Pi)** | inventory + roster: zero `slot:`; pot1/pot2 `plant:?` (`.audit/uuid-migrate-smoke.sh`) |
@@ -448,7 +448,7 @@ Remaining goal work: mid-reflect skill/rule drafts still await your **yes** befo
 |-------|--------|
 | 0 | Close 7.3 gates: FlowSankey 48h soak (~Aug 29), z2m stick + TS0201 |
 | A | Hardware unblockers F-001?F-008, N-016 lab wet, N-020..023 trust soak |
-| B | FlowSankey graduate from experimental (post-soak) |
+| B | FlowSankey graduate from experimental (post-soak) | **done (Pass 5)** ? live Climate Air CFM + mass gated; cascade ? intake |
 | C | Zigbee UI once `radio_up` |
 | D | UX polish: compose, photoperiod, icons (after ~1 week live) |
 | E | Version 7.4.0 + AUDIT-CLOSURE-7.4 |
@@ -3752,7 +3752,8 @@ Source: `/reflect` + `/interrogate` + `test_roster_stress.py` + react-doctor pas
 
 ### Still open (deferred from mega pass)
 
-- CannaLib prod offset ? ops deploy (`MP-030`).
+- ~~CannaLib prod offset ? ops deploy (`MP-030`).~~ **closed 2026-09-01** ? prod+LAN offset + Pi Load more verify-close (Pass 5 Task 3); no redeploy.
+- ~~MP-034 CannaLib Pi Load more / false local OFFSET fallback~~ **closed 2026-09-01** with MP-030.
 - Zigbee new recipes / `leak_floor_2x4` ? hardware pick (`MP-040?045`).
 - 7.4 hardware F-001?F-008 (`MP-062`).
 - `test_zigbee_save_bindings_reroutes_cached_state` flake ? **fixed** (isolated ieee + offset monkeypatch); 161/161 green.
@@ -3908,8 +3909,8 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 |------|--------|-------|
 | Passes 1?3 desk gates | **done (live)** | Shared honesty contract held; both tents parity each pass |
 | Pass 4 Integrated | **proven** | Twin software + Phase B/C + gate GREEN 2026-09-01 ? `index-BoyhWWR_.js`; GPIO5 reserved handoff in Pass 4 gate FOLLOWUPS |
-| Pass 5 Follow-up | **stub** | Pending `/brainstorming` after Pass 4 ? Manual Hold hygiene, energy 400/422 normalize, Wet/Dry MQTT prove, optical PWM |
-| Operator queue (outside 1?3) | **next-plan** | CannaLib prod ? FlowSankey verify ? Zigbee one-recipe ? unless Pass 5 reorders |
+| Pass 5 Follow-up | **in progress** | Spec/plan/walk scaffold 2026-09-01 ? parks + CannaLib prod + FlowSankey verify + Zigbee Wet/Problem one-recipe + soak/re-walk |
+| Operator queue (outside 1?3) | **in Pass 5** | CannaLib prod ? FlowSankey verify ? Zigbee one-recipe ? finishing in Pass 5 |
 | Hardware | **parked** | GPIO5 Twin PWM physical wire-up (operator); Zigbee new recipes stay locked until unlock |
 
 ---
@@ -3968,7 +3969,7 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 
 | Item | Notes |
 |------|-------|
-| Energy confirm status code | Phase B inventory saw **422**; gate prove saw **400**. Both block silent shift ? status-code drift only (Pass 5 park) |
+| Energy confirm status code | Phase B inventory saw **422**; Pass 5 Task 2 live prove + `.audit/live-ux-pass5-prove.ps1` now require **400** only (canonical) |
 | Twin fleet persist on | Command response acknowledges `on` + bri=128; fleet mirror sometimes stays `off` without GPIO5 PWM ? software accept path still green (optical N/A) |
 
 ### Residuals (non-blocking)
@@ -3985,7 +3986,7 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | ID | Reason |
 |----|--------|
 | Manual Light Hold sticky ON | Intentional after Phase A/gate stress; confirm/clear with operator ? do not auto-mutate |
-| Energy `confirm=false` status-code normalize | Still blocks; 400 vs 422 drift only |
+| Energy `confirm=false` status-code normalize | **done (Pass 5 Task 2)** ? live 400 both tents; prove script asserts 400 |
 | Live Wet?Problem MQTT prove | Needs sensor payload + optional bound `policy_state` recipe (Zigbee one-recipe queue) |
 | Optical / PWM verify | Blocked on physical GPIO5 wire-up |
 
@@ -3997,4 +3998,19 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 
 ### Parent program pointer
 
-Passes 1?3 desk gates remain **GREEN**. Pass 4 integrated gate **GREEN**. Pass 5 remains stub ? offer `/brainstorming` for soak leftovers and deferred parks above (do not invent Pass 5 work in this section).
+Passes 1?3 desk gates remain **GREEN**. Pass 4 integrated gate **GREEN**. **Pass 5 in progress** ? [`2026-09-01-live-ux-pass5-followup-design.md`](superpowers/specs/2026-09-01-live-ux-pass5-followup-design.md) ? walk [`LIVE-UX-PASS5-WALK-2026-09.md`](qa/LIVE-UX-PASS5-WALK-2026-09.md).
+
+---
+
+## 2026-09-01 ? Live UX Pass 5 (Tasks 2?4 landed)
+
+**Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-pass5-followup-design.md`](superpowers/specs/2026-09-01-live-ux-pass5-followup-design.md)  
+**Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-pass5-followup.md`](superpowers/plans/2026-09-01-live-ux-pass5-followup.md)  
+**Walk:** [`docs/qa/LIVE-UX-PASS5-WALK-2026-09.md`](qa/LIVE-UX-PASS5-WALK-2026-09.md) ? energy / CannaLib / Sankey filled; Hold + Zigbee + soak/gate remain
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Parks + queue closeout | **in progress** | Hold (operator confirm) + GPIO5 + Zigbee Wet/Problem + soak/re-walk + gate remain; energy 400 + CannaLib + FlowSankey **done** |
+| Energy confirm=false ? 400 | **done** | Live both tents HTTP 400; `.audit/live-ux-pass5-prove.ps1` asserts exact 400 (rejects 422 drift) |
+| CannaLib prod offset HTTP | **done (verify-close)** | Prod+LAN distinct; Pi Test CannaLib + proxy Load more (incl. temporary prod URL) green; MP-030/034 closed; **no redeploy** |
+| FlowSankey verify / graduate | **done** | Cascade 83.3 ? intake 96.2; browser AIR CFM + MASS CHIP GATED + AirPathMap cascade; soak doc stays closed |
