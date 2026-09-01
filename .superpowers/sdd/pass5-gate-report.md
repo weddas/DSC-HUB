@@ -14,6 +14,7 @@ Pass 5 Tasks 6–7 closed the five-pass Live UX program: Manual Hold cleared (co
 | SHA | Message |
 |-----|---------|
 | `d07cbd9` | feat(pass5): clear Hold, GATE GREEN, close Live UX program |
+| `823519c` | docs(pass5): record gate commit SHA in report |
 
 ## Hashes
 
