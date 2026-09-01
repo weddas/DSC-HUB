@@ -2,7 +2,7 @@
 
 **Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-pass5-followup-design.md`](../superpowers/specs/2026-09-01-live-ux-pass5-followup-design.md)  
 **Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-pass5-followup.md`](../superpowers/plans/2026-09-01-live-ux-pass5-followup.md)  
-**Status:** Tasks 2–4 in progress (energy / CannaLib / Sankey); Hold + Zigbee + soak/gate remain
+**Status:** Tasks 2–4 done; Task 5 **blocked** on Pi recovery after hotpatch kill; Hold + soak/gate remain
 
 ## Parks
 
@@ -10,8 +10,8 @@
 |------|--------|-------|
 | Manual Light Hold clear (operator confirm) | pending | **Not cleared** this pass — operator confirm still required |
 | Energy confirm=false → 400 | **pass** | Both `4x8`/`2x4` POST `/energy/shift/plan` → **400**; `.audit/live-ux-pass5-prove.ps1` asserts exact 400 (not 422); evidence `.audit/live-ux-pass5-prove-evidence.json` |
-| GPIO5 soft-gate or optical | pending | Reserved / unwired — optical N/A |
-| Wet/Dry + Problem (via Zigbee task) | pending | Owned by Task 5 |
+| GPIO5 soft-gate or optical | **pass (soft-gate)** | Pre-hotpatch: `light.dsc_hub_twin_sf1000` present (`off`, bri=255). Light SPA: GPIO5 **reserved / not physically wired** — no optical claim. Optical N/A until wire-up |
+| Wet/Dry + Problem (via Zigbee task) | **blocked** | Code+bindings ready; live MQTT prove interrupted when Pi hung after `docker kill` (see Zigbee section) |
 
 ## CannaLib prod
 
@@ -34,10 +34,10 @@
 
 | Check | Result | Notes |
 |-------|--------|-------|
-| by_role / bindings populated | pending | |
-| Wet/Dry MQTT live | pending | liquid occupancy |
-| Problem/Clear from policy_state | pending | floor_flood preferred |
-| leak_floor_2x4 | pending | bind or park |
+| by_role / bindings populated | **pass (pre-kill)** | Pre-hotpatch `/fleet`: by_role keys `canopy_4x8`, `leak_tank`, `leak_floor_room`, `leak_floor_4x8` (stubs). Bindings + policies: room/`4x8` desks → `floor_flood_alert`; tank → `tank_full_appliance`. Brain now seeds `zigbee_device_policies` on reapply (pytest green). **Re-prove after Pi up** |
+| Wet/Dry MQTT live | **blocked** | Script `.audit/live-ux-pass5-task5-zigbee-prove.ps1` copies brain + `docker kill`+`start`; Pi went unreachable (no ping) mid-prove before occupancy inject evidence. Resume: power-cycle Pi → re-run prove (occupancy wet/dry on desk ieee) |
+| Problem/Clear from policy_state | **blocked** | Same — `floor_flood_alert` bound; evaluate needs MQTT. SPA still reads `policy_state.problem` only (no wet→problem inference). pytest wet≠problem green locally |
+| leak_floor_2x4 | **parked** | No HW in devices list (4 end-devices: canopy + tank + 2 desk floods). Park until 2×4 floor sensor present (MP-042) |
 
 ## Soak + re-walk
 

@@ -361,6 +361,14 @@ def _reapply_bindings_to_fleet() -> None:
     fleet_state.system["zigbee_by_role"] = dict(_ingest._by_role)
     fleet_state.system["zigbee_placements"] = _placement_map()
     fleet_state.system["zigbee_device_bindings"] = load_zigbee_bindings()
+    # Seed policies so Climate Problem/Clear can resolve recipe_id without waiting for MQTT.
+    # policy_state.problem still only appears after evaluate_device_policies (never inferred from wet).
+    try:
+        from .zigbee_policies import load_zigbee_policies
+
+        fleet_state.system["zigbee_device_policies"] = load_zigbee_policies()
+    except Exception as exc:  # noqa: BLE001
+        _logger.debug("zigbee policy seed on reapply skipped: %s", exc)
     update_fleet_state(fleet_state)
 
 
@@ -894,6 +902,13 @@ def apply_zigbee_cache_to_state(state: FleetState) -> None:
     for key in ("critical_banners", "zigbee_policy_state", "zigbee_device_policies"):
         if key in live_sys:
             state.system[key] = live_sys[key]
+    # Always prefer persisted policies so SPA recipe_id is available before first MQTT evaluate.
+    try:
+        from .zigbee_policies import load_zigbee_policies
+
+        state.system["zigbee_device_policies"] = load_zigbee_policies()
+    except Exception as exc:  # noqa: BLE001
+        _logger.debug("zigbee policy seed on apply_cache skipped: %s", exc)
 
 def get_zigbee_health() -> dict[str, Any]:
     if _permit_end_still_open(_ingest._permit_join_end):

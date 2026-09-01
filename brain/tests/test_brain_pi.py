@@ -1347,6 +1347,52 @@ def test_zigbee_reapply_keeps_safety_roles_and_seeds_stubs(
     assert "wet" in leak
 
 
+def test_zigbee_reapply_seeds_device_policies_for_spa_recipe(
+    temp_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Pass 5 Task 5: fleet_id must be on fleet without waiting for MQTT evaluate."""
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain.fleet_state import get_fleet_state
+    from dsc_brain.zigbee_mqtt import _ingest, _reapply_bindings_to_fleet, save_zigbee_bindings
+    from dsc_brain.zigbee_policies import save_zigbee_policies
+
+    save_zigbee_bindings(
+        {
+            "0xflood": {
+                "role": "leak_floor_room",
+                "zone": "room",
+                "enabled": True,
+                "friendly_name": "desk_flood",
+            },
+        }
+    )
+    save_zigbee_policies(
+        {
+            "0xflood": {
+                "recipe_id": "floor_flood_alert",
+                "enabled": True,
+                "params": {"problem_when": "active", "banner": "Floor water detected"},
+            }
+        }
+    )
+    _ingest._devices = [
+        {"ieee_address": "0xflood", "friendly_name": "desk_flood", "type": "EndDevice"},
+    ]
+    _ingest._device_states = {}
+    _ingest._by_role = {}
+    _ingest._canopy = {}
+    _reapply_bindings_to_fleet()
+
+    fleet = get_fleet_state()
+    pol = (fleet.system.get("zigbee_device_policies") or {}).get("0xflood") or {}
+    assert pol.get("recipe_id") == "floor_flood_alert"
+    # Wet/Problem contract: no policy_state until evaluate — SPA must not invent problem from stub.
+    assert "0xflood" not in (fleet.system.get("zigbee_policy_state") or {})
+    stub = (fleet.system.get("zigbee_by_role") or {}).get("leak_floor_room") or {}
+    assert stub.get("bound_stub") is True
+    assert "wet" not in stub or stub.get("wet") is None
+
+
 def test_zigbee_apply_cache_seeds_by_role_from_bindings_alone(
     temp_db: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

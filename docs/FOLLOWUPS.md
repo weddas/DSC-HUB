@@ -3976,8 +3976,8 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 
 | Severity | Item | Notes |
 |----------|------|-------|
-| P2 | Wet/Dry live reading | Climate Safety cards render; Wet/Dry shows `?` until leak/occupancy MQTT publishes. Problem/Clear still requires bound task `policy_state` (no SPA wet?problem inference) |
-| P2 | `zigbee_by_role` empty on live fleet | Canopy stub present; safety Wet/Dry UI still mounts from bindings path. Full by_role population needs live MQTT / reapply soak |
+| P2 | Wet/Dry live reading | **Pass 5 Task 5 in progress** ? pre-kill Safety stubs present; live occupancy prove blocked on Pi hang (see Pass 5 Task 5 residuals) |
+| P2 | `zigbee_by_role` empty on live fleet | **Superseded pre-kill** ? by_role had canopy + leak stubs; brain seeds policies on reapply. Re-check after Pi recovery |
 | P3 | Historical SF1000 ? `sf1000_on` | Not backfilled; DutyStrip honesty improves going forward after hotpatch |
 | P3 | Twin Actual `0.0H` while OFF | Brief Phase A/gate cycles; sub-0.1h rounding expected ? not a park |
 
@@ -3987,8 +3987,9 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 |----|--------|
 | Manual Light Hold sticky ON | Intentional after Phase A/gate stress; confirm/clear with operator ? do not auto-mutate |
 | Energy `confirm=false` status-code normalize | **done (Pass 5 Task 2)** ? live 400 both tents; prove script asserts 400 |
-| Live Wet?Problem MQTT prove | Needs sensor payload + optional bound `policy_state` recipe (Zigbee one-recipe queue) |
-| Optical / PWM verify | Blocked on physical GPIO5 wire-up |
+| Live Wet?Problem MQTT prove | **Pass 5 Task 5 blocked** ? Pi unreachable after hotpatch kill; resume prove script after power-cycle |
+| Optical / PWM verify | Blocked on physical GPIO5 wire-up (soft-gate recorded in Pass 5 walk) |
+| `leak_floor_2x4` bind | **parked** ? no HW (Pass 5 Task 5) |
 
 ### Twin software status + GPIO5 reserved handoff
 
@@ -4010,7 +4011,18 @@ Passes 1?3 desk gates remain **GREEN**. Pass 4 integrated gate **GREEN**. **Pass
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Parks + queue closeout | **in progress** | Hold (operator confirm) + GPIO5 + Zigbee Wet/Problem + soak/re-walk + gate remain; energy 400 + CannaLib + FlowSankey **done** |
+| Parks + queue closeout | **in progress** | Hold (operator confirm) + Zigbee live MQTT prove (Pi hung) + soak/re-walk + gate remain; energy 400 + CannaLib + FlowSankey + GPIO5 soft-gate **done** |
 | Energy confirm=false ? 400 | **done** | Live both tents HTTP 400; `.audit/live-ux-pass5-prove.ps1` asserts exact 400 (rejects 422 drift) |
 | CannaLib prod offset HTTP | **done (verify-close)** | Prod+LAN distinct; Pi Test CannaLib + proxy Load more (incl. temporary prod URL) green; MP-030/034 closed; **no redeploy** |
 | FlowSankey verify / graduate | **done** | Cascade 83.3 ? intake 96.2; browser AIR CFM + MASS CHIP GATED + AirPathMap cascade; soak doc stays closed |
+| GPIO5 soft-gate | **done (soft)** | Twin entity present; SPA reserved/unwired honesty; optical N/A |
+| Zigbee one-recipe Wet?Problem | **blocked (Pi down)** | Pre-kill: by_role stubs + `floor_flood_alert` policies on desk ieee; brain seeds policies on reapply (pytest). Live occupancy inject blocked ? `docker kill` mid Task 5 left Pi unreachable (no ping). **Operator: power-cycle Pi**, then `.audit/live-ux-pass5-task5-zigbee-prove.ps1` |
+| `leak_floor_2x4` | **parked** | No HW among Z2M end-devices; MP-042 remains |
+
+### Pass 5 Task 5 residuals (2026-09-01)
+
+| Severity | Item | Notes |
+|----------|------|-------|
+| P0 | Pi `192.168.86.48` unreachable | After Task 5 hotpatch `docker kill`+`start`; host no longer pings. Needs power-cycle / physical recovery before Wet/Problem MQTT prove |
+| P2 | Live Wet/Dry + Problem/Clear MQTT | Resume after Pi up ? occupancy inject on `0xa4c1385a686af7df` / `0xa4c1380d734f2033`; expect Wet?Problem inference (policy_state only) |
+| P3 | Pass 4 residual `zigbee_by_role` empty | Superseded pre-kill: by_role had safety stubs; re-verify after recovery |

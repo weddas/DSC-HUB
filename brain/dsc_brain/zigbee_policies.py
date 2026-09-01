@@ -152,6 +152,14 @@ def save_zigbee_policies(policies: dict[str, Any]) -> dict[str, dict[str, Any]]:
             "params": params,
         }
     set_setting(SETTING_POLICIES, json.dumps(cleaned))
+    # Mirror onto fleet so Climate/Settings recipe_id is live without MQTT.
+    try:
+        fleet = get_fleet_state()
+        fleet.system = dict(fleet.system)
+        fleet.system["zigbee_device_policies"] = cleaned
+        update_fleet_state(fleet)
+    except Exception as exc:  # noqa: BLE001
+        _logger.debug("fleet policy mirror skipped: %s", exc)
     return cleaned
 
 
