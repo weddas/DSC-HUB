@@ -238,11 +238,11 @@ Historical step checkboxes below remain as the original TDD trail; use the table
 - Modify: `docs/FOLLOWUPS.md`, optional `docs/qa/AUDIT-CLOSURE-*.md`
 - Offer (do not write until yes): cannabis-domain / DSC skill fragment for space-owned photoperiod + journals
 
-- [ ] **Step 1: Dated FOLLOWUPS section**
+- [x] **Step 1: Dated FOLLOWUPS section** (2026-09-01 — Space energy / journals)
 
-- [ ] **Step 2: Mark spec status implemented** when Pi evidence collected
+- [ ] **Step 2: Mark spec status implemented** when Pi evidence collected (local-only until Pi closure G0–G4)
 
-- [ ] **Step 3: Full brain pytest** `161+` green
+- [x] **Step 3: Full brain pytest** `161+` green (178 passed on ship)
 
 ---
 
