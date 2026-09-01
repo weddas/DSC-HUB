@@ -1,8 +1,10 @@
 # Mega Pass 2026-09 — Triage manifest
 
-**Date:** 2026-09-01 · **Pi:** `192.168.86.48:8787` · **Git:** `a2f5f08` · **SPA:** `index-D7pAmjOB.js`
+**Date:** 2026-09-01 · **Pi:** `192.168.86.48:8787` · **Git:** `a307dc7` · **SPA:** `index-DlMHgtYz.js`
 
-Register: [`MEGA-PASS-2026-09-ISSUE-REGISTER.md`](MEGA-PASS-2026-09-ISSUE-REGISTER.md)
+Register: [`MEGA-PASS-2026-09-ISSUE-REGISTER.md`](MEGA-PASS-2026-09-ISSUE-REGISTER.md) · Closure: [`AUDIT-CLOSURE-2026-09.md`](AUDIT-CLOSURE-2026-09.md) · Developer SoT: [`../brain/ROSTER-STOCK.md`](../brain/ROSTER-STOCK.md) · [`../brain/R3F-CANVAS.md`](../brain/R3F-CANVAS.md) · [`../brain/ZIGBEE-POLICY-UI.md`](../brain/ZIGBEE-POLICY-UI.md)
+
+> Triage tables below retain pre-closure tags (`fix` / `verify-close`) as the historical work queue. Operational status SoT after land is the **Issue register** (all P0/P1 closed or deferred).
 
 ## Triage legend
 

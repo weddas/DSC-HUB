@@ -3757,3 +3757,11 @@ Source: `/reflect` + `/interrogate` + `test_roster_stress.py` + react-doctor pas
 - 7.4 hardware F-001…F-008 (`MP-062`).
 - `test_zigbee_save_bindings_reroutes_cached_state` flake — **fixed** (isolated ieee + offset monkeypatch); 161/161 green.
 
+### Docs residual (developer SoT)
+
+| Item | Notes |
+|------|-------|
+| Developer SoT for tip `a307dc7` (sprout-on-assign, vacantProbes, R3F wraps, Zigbee policy chips, roster audit) | `docs/brain/ROSTER-STOCK.md` · `PLANT-PROBE-LIFECYCLE.md` · `PLANT-WIZARD.md` · `R3F-CANVAS.md` · `ZIGBEE-POLICY-UI.md` · `WEBUI.md` · `docs/ops/PI-HOTPATCH.md` |
+| Prefer merge tip-aligned docs PR over stale #153 (`a2f5f08` hashes) / #152 | Operator polish SoftCal SoT remains draft #151 until rebased |
+| SoftCal→ESP NVS dual-stack gate · live CannaLib CDN offset · ST-P0-7 soft (~5s poll) | Still residual — do not invent chem/PPFD/NPK; no secrets in Wiki/PR |
+

@@ -33,10 +33,10 @@
 
 ## Code landed (this pass)
 
-- R3F: `AirflowParticleScene`, `DscTwinCanvas`, `dsc.css` canvas wraps
-- Operator: `PlantWizard` preset review, `GrowPages` vacantProbes, `seatModel` sprout/stage fallback
+- R3F: `AirflowParticleScene`, `DscTwinCanvas`, `dsc.css` canvas wraps — SoT [`../brain/R3F-CANVAS.md`](../brain/R3F-CANVAS.md)
+- Operator: `PlantWizard` preset review, `GrowPages` vacantProbes, `seatModel` sprout/stage fallback — SoT [`../brain/ROSTER-STOCK.md`](../brain/ROSTER-STOCK.md) · [`../brain/PLANT-WIZARD.md`](../brain/PLANT-WIZARD.md)
 - Brain: `assign_to_pot` sprout on slot; `test_commit_and_assign_carries_sprout_to_pot_and_slot`
-- Zigbee: Settings live policy chips; pytest reroute isolation + offset monkeypatch
+- Zigbee: Settings live policy chips; pytest reroute isolation + offset monkeypatch — SoT [`../brain/ZIGBEE-POLICY-UI.md`](../brain/ZIGBEE-POLICY-UI.md)
 - Quality: `CatalogPicker` pure updater, `--dsc-muted`, `composePlantLogic.smoke.ts`
 
 ## Deferred (explicit)
