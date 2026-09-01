@@ -21,6 +21,7 @@ class LightLoopSnapshot:
     sf_brightness: float | None
     got_hours_2x4: float | None
     got_hours_4x8: float | None
+    got_hours_4x8_source: str | None
     deviation_2x4: float | None
     schedule_valid: bool
     honesty: str
@@ -161,6 +162,10 @@ def build_light_loop(*, helpers: dict, hub_values: dict, now_ts: float) -> Light
     delivered = _opt_float(hub_values.get("light_delivered_hours"))
     got_2x4 = delivered if delivered is not None else _opt_float(hub_values.get("got_hours_2x4"))
     got_4x8 = _opt_float(hub_values.get("got_hours_4x8"))
+    raw_src = hub_values.get("got_hours_4x8_source")
+    got_src = str(raw_src).strip().lower() if raw_src is not None else None
+    if got_src not in ("twin", "window"):
+        got_src = None
 
     deviation: float | None = None
     if got_2x4 is not None and clone_want is not None:
@@ -183,6 +188,7 @@ def build_light_loop(*, helpers: dict, hub_values: dict, now_ts: float) -> Light
         sf_brightness=sf_brightness,
         got_hours_2x4=got_2x4,
         got_hours_4x8=got_4x8,
+        got_hours_4x8_source=got_src,
         deviation_2x4=deviation,
         schedule_valid=schedule_valid,
         honesty=honesty,
@@ -221,12 +227,19 @@ def emit_light_loop(states: dict, snapshot: LightLoopSnapshot, set_entity: SetEn
             attributes=dict(schedule_attrs),
         )
     if snapshot.got_hours_4x8 is not None:
+        attrs_4x8 = dict(schedule_attrs)
+        if snapshot.got_hours_4x8_source:
+            attrs_4x8["got_source"] = snapshot.got_hours_4x8_source
+            if snapshot.got_hours_4x8_source == "window":
+                attrs_4x8["honesty"] = (
+                    "got via photoperiod window (Twin unavailable or history unhealthy)"
+                )
         set_entity(
             states,
             "sensor.dsc_lights_on_today_4x8",
             snapshot.got_hours_4x8,
             available=True,
-            attributes=dict(schedule_attrs),
+            attributes=attrs_4x8,
         )
     if snapshot.deviation_2x4 is not None:
         set_entity(

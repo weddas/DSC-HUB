@@ -358,6 +358,8 @@ def _record_hub_chart_history(
         on = twin.get("state") == "on"
         bri = float(twin.get("brightness") or 0)
         val = (bri / 255.0 * 100.0) if on and bri > 0 else 0.0
+        # Binary on for Got / DutyStrip; brightness kept for charts.
+        record_history("hub", "twin_sf1000_on", 1.0 if on else 0.0, now)
         record_history("hub", "twin_sf1000_brightness", val, now)
     for eid, metric in _WINDOW_HISTORY_METRICS.items():
         if eid not in binaries:

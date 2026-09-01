@@ -757,11 +757,52 @@ def _helpers_for_light_loop(helpers: dict[str, Any], fleet: Any) -> dict[str, An
     return merged
 
 
+_TWIN_ENTITY = "light.dsc_hub_twin_sf1000"
+_TWIN_ON_METRIC = "twin_sf1000_on"
+_TWIN_BRI_METRIC = "twin_sf1000_brightness"
+_WINDOW_4X8_METRIC = "window_4x8_open"
+
+
+def _twin_control_available(fleet: Any) -> bool:
+    """True when Twin SF1000 control is present with a usable state."""
+    if not fleet.hub:
+        return False
+    controls = fleet.hub.values.get("controls") or {}
+    twin = controls.get(_TWIN_ENTITY)
+    if not isinstance(twin, dict):
+        return False
+    st = str(twin.get("state", "")).strip().lower()
+    return st not in ("", "unavailable", "unknown", "none")
+
+
+def _twin_history_healthy(runtime: RuntimeMemo) -> bool:
+    """Healthy = at least one Twin on/brightness sample since local midnight."""
+    since = runtime.midnight_ts
+    if runtime.history.rows("hub", _TWIN_ON_METRIC, since):
+        return True
+    if runtime.history.rows("hub", _TWIN_BRI_METRIC, since):
+        return True
+    return False
+
+
+def _got_hours_4x8_hybrid(fleet: Any, runtime: RuntimeMemo) -> tuple[float, str]:
+    """Prefer Twin-derived hours when entity available + healthy history; else window."""
+    window_h = runtime.hours_today("hub", _WINDOW_4X8_METRIC)
+    if not (_twin_control_available(fleet) and _twin_history_healthy(runtime)):
+        return window_h, "window"
+    on_rows = runtime.history.rows("hub", _TWIN_ON_METRIC, runtime.midnight_ts)
+    if on_rows:
+        return runtime.hours_today("hub", _TWIN_ON_METRIC), "twin"
+    return runtime.hours_today("hub", _TWIN_BRI_METRIC), "twin"
+
+
 def _hub_values_for_light_loop(fleet: Any, runtime: RuntimeMemo) -> dict[str, Any]:
     """SF dimmer + delivered/got hours for light_loop (never invent ON from gauges)."""
+    got_4x8, got_source = _got_hours_4x8_hybrid(fleet, runtime)
     out: dict[str, Any] = {
         "got_hours_2x4": runtime.hours_today("hub", "window_2x4_open"),
-        "got_hours_4x8": runtime.hours_today("hub", "window_4x8_open"),
+        "got_hours_4x8": got_4x8,
+        "got_hours_4x8_source": got_source,
     }
     if not fleet.hub:
         out["sf1000_on"] = False
