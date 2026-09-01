@@ -7,7 +7,7 @@
 
 ## Commits
 
-(see git log after this report lands)
+- `48b443d` — prove(pass4): Phase A Twin Pi smoke and hub light brightness scale
 
 ## What landed
 
