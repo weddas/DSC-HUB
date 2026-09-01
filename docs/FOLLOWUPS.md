@@ -3830,6 +3830,7 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Pi hotpatch (new modules + SPA) | **next-plan** | plink/pscp; do not full-replace api.py blindly if image lags — copy new modules |
 | Live evidence (estimate, confirm-only ramp, flip banner) | **deferred** | Mark spec **implemented** only after Pi walk |
 | Cannabis-domain skill fragment (space-owned photoperiod + journals) | **done** | Project skill `.cursor/skills/dsc-space-photoperiod-journal/SKILL.md`; cannabis-domain LEARNED + index pointer |
+| Developer tip SoT docs | **done (docs)** | `docs/brain/SPACE-ENERGY-JOURNAL.md` + WEBUI/PHOTOPERIOD retip for `a22050a` / `index-DMMGdgxP.js` |
 
 **Invariants:** no silent lights-on mutate; Learning never auto-apply; suggest move never auto-move.
 
