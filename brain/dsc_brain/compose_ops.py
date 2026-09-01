@@ -255,6 +255,7 @@ def retire_roster_slot(slot_num: int) -> dict[str, Any]:
             "pot": "none",
             "notes": "",
             STASH_KEY: "",
+            "plant_uuid": "",
         },
     )
     return {"slot": sn, "retired": True, "removed_seat": removed_seat}

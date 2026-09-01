@@ -1,0 +1,30 @@
+---
+description: Pi brain/SPA hotpatch on Windows — plink/pscp, not OpenSSH scp
+globs: .audit/**
+alwaysApply: false
+---
+
+# Pi hotpatch (Windows)
+
+## Deploy path
+
+- Target: `dsc@192.168.86.48`, container `dsc-hub-brain`, static at `/app/static/`.
+- Use **PuTTY `plink` + `pscp`** with `-batch -hostkey` and `-pw` — OpenSSH `scp` hangs on password prompt in agent shells.
+
+## Scripts
+
+| Script | Scope |
+|--------|--------|
+| `.audit/stress-spa-only-hotpatch.ps1` | SPA tarball → `/app/static/` |
+| `.audit/stress-roster-hotpatch.ps1` | SPA + brain tarball + restart |
+
+## SPA-only flow
+
+1. `tar -czf %TEMP%\stress-spa.tgz -C frontend/spa-dist .`
+2. Run spa-only hotpatch (or inline pscp + docker cp per script).
+3. Verify: `curl http://127.0.0.1:8787/` index hash matches built `spa-dist/index.html`.
+
+## Do not
+
+- Rely on `powershell -File` if execution policy blocks — invoke `pscp`/`plink` directly.
+- Commit Pi passwords to git; scripts may contain lab creds — rotate if repo is shared.

@@ -1,0 +1,40 @@
+---
+description: Roster slot ↔ probe relationships, compose flush, computed refresh, stress-test edge cases
+globs: "{brain/dsc_brain/**,homeassistant/custom_components/dsc_hub/frontend/src/**}"
+alwaysApply: false
+---
+
+# Roster · probe · compose
+
+## Domain
+
+- **Roster slot** (1–10) holds plant identity (`plant_uuid`, stash, stock/detached/active).
+- **Probe** (kit 1–2) is live assignment; `assigned_plant_id` is inventory SoT.
+- Retire/delete by **slot number** (`POST /roster/slots/{n}/retire`), not probe-only — stock and detached must be deletable.
+
+## Entity-bus vs local draft
+
+- Wizard Next and Add must not wait on bus round-trip; local picks/drafts are SoT until flush.
+- Before every step advance and commit: flush strain, nickname, sprout to helpers (`syncComposeTextToBus` + `flushEntityTextDrafts`).
+- Catalog strain pick is async — never commit until picked label is on the bus.
+
+## Probe conflict hygiene (brain)
+
+- On assign/commit to a probe: call `release_conflicting_slot_pots(pot, keep_slot)` so only one slot claims a probe.
+- On slot retire: clear probe helpers, inventory `assigned_plant_id`, and **`plant_uuid`** on the emptied slot.
+
+## SPA refresh after roster mutations
+
+- Serialize `/fleet/computed` fetches (promise chain); bump brain `tick` on computed update.
+- Cache-bust computed GET (`?_=` timestamp).
+- After delete: close probe drawer with captured `retirePot === pot` — do not read stale roster from closure.
+
+## Verification
+
+- Roster/probe edge matrix belongs in `brain/tests/test_roster_stress.py` + `test_plant_probe.py` — browser stress alone is not sufficient proof.
+
+## Browser compose automation (Pi SPA)
+
+- Catalog hits: **JS `.click()`** on `.dsc-catalog-hits button` (coordinate clicks fail silently).
+- Footer Next: `.dsc-btn-primary.click()` with ~3s wait between steps.
+- Stock commit: review card **Add to roster (stock)** then modal **Add to Roster stock (no probe)**.

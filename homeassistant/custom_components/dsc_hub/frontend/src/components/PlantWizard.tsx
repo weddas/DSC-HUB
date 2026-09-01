@@ -151,7 +151,6 @@ export function PlantWizard() {
     await flushEntityTextDrafts(callService);
   };
 
-  /** Catalog pick writes strain async; commit reads helpers — sync picked label first. */
   const syncStrainToBus = async () => {
     const label = strainLabel.trim();
     if (!label) return;
@@ -166,7 +165,6 @@ export function PlantWizard() {
 
   const syncComposeTextToBus = async () => {
     await syncStrainToBus();
-    // Prefer live DOM over draft map — native setters / mid-blur races can leave the map empty.
     const domNick = document
       .querySelector<HTMLInputElement>('input[data-entity-id="input_text.dsc_build_nickname"]')
       ?.value?.trim();
@@ -214,10 +212,7 @@ export function PlantWizard() {
     if (step.id === "plant") await syncComposeTextToBus();
     await flushEntityDrafts();
     if (step.id === "feed") setSkippedFeed(nutrients.length === 0);
-    if (step.id === "light") {
-      // Footer Next is skip-equivalent when no fixture is chosen — don't strand on the light catalog.
-      setSkippedLight(!light || light === "unknown");
-    }
+    if (step.id === "light") setSkippedLight(!light || light === "unknown");
     setStepIdx((i) => Math.min(i + 1, STEPS.length - 1));
   };
 

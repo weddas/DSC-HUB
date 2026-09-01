@@ -82,7 +82,6 @@ export function BrainProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-  /** Serialize computed fetches so refresh() never no-ops on an in-flight poll (stale roster after retire). */
   const computedChain = useRef(Promise.resolve());
 
   const refreshComputed = useCallback(() => {

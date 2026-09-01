@@ -3657,18 +3657,70 @@ Source: browser-only stress pass on live Pi SPA (`192.168.86.48:8787`). Goal: 10
 
 ### Browser automation recipe (verified)
 
-1. Coordinate-click `.dsc-catalog-hits button` (not `.click()`).
-2. **JS** `button.dsc-btn-primary.click()` for Next (coordinate clicks unreliable).
+1. **JS** `.click()` on `.dsc-catalog-hits button` (coordinate clicks fail silently on catalog).
+2. Footer **Next** via `.dsc-btn-primary.click()` with ~3s wait between steps.
 3. After catalog pick: set strain/nick/sprout via `/control/service` **or** wait for bus; reload compose if draft polluted.
 4. Confirm stock via modal **"Add to Roster stock (no probe)"** — primary footer button alone is not enough.
-5. Hard reload roster after retire before trusting table.
+5. Roster refresh after retire should catch up within one computed poll (~5s); hard reload if still stale.
 
 ### Code fixes pending Pi hotpatch
 
-| Fix | File |
-|-----|------|
-| `syncComposeTextToBus` (strain + nickname before flush/commit) | `PlantWizard.tsx` |
-| Sprout cleared on `clearComposeDraft` | `composePlantLogic.ts` |
-| Probe move + soil cal | Not started |
-| Page review pass | Not started |
+| Fix | File | Status |
+|-----|------|--------|
+| `syncComposeTextToBus` (strain + nickname before flush/commit) | `PlantWizard.tsx` | **Landed** `149657d` + Pi hotpatch |
+| Sprout cleared on `clearComposeDraft` | `composePlantLogic.ts` | **Landed** `15d7016` |
+| Serialize computed refresh / cache-bust | `useBrain.tsx`, `fleetApi.ts` | **Landed** `149657d` |
+| Slot-based delete (stock + detached) | `GrowPages.tsx`, `fleetApi.ts` | **Landed** `15d7016` |
+
+---
+
+## 2026-09-01 — Post-stress audit (reflect / interrogate / tests)
+
+Source: `/reflect` + `/interrogate` + `test_roster_stress.py` + react-doctor pass on SPA.
+
+### Fixes this audit pass (local, not yet pushed)
+
+| Fix | File | Category |
+|-----|------|----------|
+| Retire clears `plant_uuid` on empty slot | `compose_ops.py` | Logic / relationships |
+| Delete drawer close uses `retirePot === pot` (not stale roster closure) | `GrowPages.tsx` | Sequential / React |
+| Deslop: trim stress-pass comment noise | `PlantWizard.tsx`, `useBrain.tsx` | Deslop |
+| 11 edge-case tests (10-slot migrate, full roster, retire API, probe conflicts) | `test_roster_stress.py` | Verification |
+
+### Interrogate verdict (stress-test commits `15d7016`…`149657d`)
+
+**Act on (fixed above):**
+- Stale closure in `confirmRetire` after `refreshBrain()` — drawer could stay open with deleted plant.
+- `retire_roster_slot` left `plant_uuid` on emptied slots — re-compose could inherit wrong identity.
+
+**Consider (not fixed — product decision):**
+- `syncComposeTextToBus` uses global `document.querySelector` — works for single wizard instance; fragile if compose mounts twice.
+- `get_roster_slots()` auto-persists 8→10 migration on read — convenient but side-effect on GET path.
+- CropScheduler stock lanes use synthetic `PlantSeat` (`pot: 0`) — honest for display but not navigable.
+
+**Noted:**
+- React-doctor score 40/100 is repo-wide debt; stress-touch files (`PlantWizard`, `useBrain`, `GrowPages`) have no new critical findings beyond giant-component warnings.
+- One unrelated brain test flake: `test_zigbee_save_bindings_reroutes_cached_state`.
+
+### Recurring patterns (brainstorm)
+
+| Pattern | Where it repeats | Easier process |
+|---------|------------------|----------------|
+| Entity-bus lag vs local draft | Compose nick/strain/sprout, wizard Next | Local draft is SoT until commit; flush before every step advance and commit |
+| Probe ↔ slot dual claim | Assign, move, retire | Brain `release_conflicting_slot_pots` on every assign path; UI delete by slot not probe |
+| SPA stale computed | Retire, delete, assign | Serialized computed chain + cache-bust + tick bump |
+| Pi deploy on Windows | Hotpatch scripts | `plink`/`pscp` only; OpenSSH `scp` hangs on password |
+| Browser automation | Catalog, Next, modals | Documented recipe in FOLLOWUPS; prefer JS `.click()` on catalog hits |
+
+### Reflect learnings (for skill approval)
+
+| # | Principle | Routing |
+|---|-----------|---------|
+| 1 | Operator primary actions must not wait on entity-bus round-trip — local drafts until commit/flush. | `AGENTS.md` / `.cursor/rules/dsc-kit-sot.mdc` |
+| 2 | Roster mutations need slot-keyed API + computed refresh serialization, not probe-only retire. | `docs/FOLLOWUPS.md` pattern → offer project rule |
+| 3 | Pi SPA hotpatch on Windows: plink/pscp batch scripts, not OpenSSH scp. | `.audit/stress-spa-only-hotpatch.ps1` + offer ops skill |
+| 4 | Browser catalog picks need JS `.click()` on hit buttons; coordinate clicks fail silently. | `docs/FOLLOWUPS.md` automation recipe |
+| 5 | Stress-test completion requires brain tests for slot/probe edge matrix, not browser alone. | `brain/tests/test_roster_stress.py` as template |
+
+**Approve reflect routings?** Reply with which rows to encode into skills/rules.
 

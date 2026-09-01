@@ -151,10 +151,9 @@ export function GrowRosterPage() {
       try {
         await retireRosterSlot(retireSlot);
         await refreshBrain();
-        if (pot != null && slots.some((s) => Number(s.slot) === retireSlot && Number(s.pot) === pot)) {
-          closePot();
-        }
+        if (retirePot != null && pot === retirePot) closePot();
         setRetireSlot(null);
+        setRetirePot(null);
       } catch (exc) {
         setRetireErr(exc instanceof Error ? exc.message : "Delete failed");
       }

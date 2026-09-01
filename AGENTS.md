@@ -24,4 +24,4 @@
 - Twin SF1000 and Zigbee/Z2M/SkyConnect are in-scope product surfaces; Zigbee onboarding is role/task binding with `capability_class` (optional `capability_override`) and operator-chosen `problem_when`, not bare device join alone. `tank_full_appliance` may OOS; `floor_flood_alert` is banner-only (never OOS). Space leak roles: `leak_floor_room` / `leak_floor_4x8` / `leak_floor_2x4`.
 - Some kit Zigbee leak/liquid sensors expose wet/dry as `occupancy` (liquid present), not PIR motion — do not treat occupancy as motion for those SKUs. Climate Wet/Dry is that raw reading; Problem/Clear comes only from bound `policy_state` (SPA must not infer problem from wet).
 - Light fixture PPFD maps are local static assets under `/dsc-catalog/ppfd/` (manifest + images), not vendor CDN hotlinks in the SPA.
-- Recurring friction is encoded only after approval (e.g. `.cursor/rules/dsc-kit-sot.mdc`, `dsc-viz-honesty.mdc`); durable ops debt stays in `docs/FOLLOWUPS.md`.
+- Recurring friction is encoded only after approval (e.g. `.cursor/rules/dsc-kit-sot.mdc`, `dsc-viz-honesty.mdc`, `dsc-roster-probe.mdc`, `dsc-pi-hotpatch.mdc`); durable ops debt stays in `docs/FOLLOWUPS.md`.
