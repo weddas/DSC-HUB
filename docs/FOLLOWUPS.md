@@ -3887,6 +3887,12 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 
 ## 2026-09-01 - Live UX honesty Pass 3 (Overview SPA)
 
+**Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-honesty-program-design.md`](superpowers/specs/2026-09-01-live-ux-honesty-program-design.md)
+**Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-honesty-program.md`](superpowers/plans/2026-09-01-live-ux-honesty-program.md)
+**Walk:** [`docs/qa/LIVE-UX-OVERVIEW-WALK-2026-09.md`](qa/LIVE-UX-OVERVIEW-WALK-2026-09.md) -- gate **GREEN**
+**Developer runbook:** [`docs/brain/LIVE-UX-HONESTY.md`](brain/LIVE-UX-HONESTY.md) (tip `5a7ada4` / spa `index-C8GkS5XE.js`)
+**Prove:** `.audit/live-ux-overview-prove.ps1` · evidence `.audit/live-ux-overview-prove-evidence.json`
+
 | Item | Status | Notes |
 |------|--------|-------|
 | Overview SPA honesty (Task 8) | **done (repo)** | Journal provenance/Save UX; root OOS grey; grow-log history caption; photoperiod glance SoT copy ? see `.superpowers/sdd/task-8-report.md`. Bundle `index-C8GkS5XE.js` |
