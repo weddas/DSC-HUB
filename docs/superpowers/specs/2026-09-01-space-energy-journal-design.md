@@ -1,7 +1,7 @@
 # Space-owned photoperiod, energy learning & journal hierarchy — Design
 
 **Date:** 2026-09-01  
-**Status:** draft — awaiting user review of this file before implementation plan  
+**Status:** approved 2026-09-01 — implementation plan next  
 **Domain:** cannabis-domain honesty; Pi brain local SoT  
 **Related:** Light clocks/timeline (`lightSchedule`, `TentLightClock`), `dsc_ops.sqlite3`, roster plant UUIDs, dark-period violation sensors
 
