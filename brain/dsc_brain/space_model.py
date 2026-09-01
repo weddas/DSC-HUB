@@ -87,25 +87,33 @@ def init_space_tables(db_path: Path | None = None) -> None:
 def list_spaces(db_path: Path | None = None) -> list[dict[str, Any]]:
     init_space_tables(db_path)
     with _connect(db_path) as conn:
-        rows = conn.execute(
-            "SELECT space_id, kind, size_label, size_m2, extra_json, updated_at FROM space ORDER BY space_id"
-        ).fetchall()
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(space)").fetchall()}
+        has_room = "room_id" in cols
+        if has_room:
+            rows = conn.execute(
+                "SELECT space_id, kind, size_label, size_m2, extra_json, updated_at, room_id FROM space ORDER BY space_id"
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT space_id, kind, size_label, size_m2, extra_json, updated_at FROM space ORDER BY space_id"
+            ).fetchall()
     out: list[dict[str, Any]] = []
     for r in rows:
         try:
             extra = json.loads(r["extra_json"] or "{}")
         except json.JSONDecodeError:
             extra = {}
-        out.append(
-            {
-                "space_id": r["space_id"],
-                "kind": r["kind"],
-                "size_label": r["size_label"],
-                "size_m2": r["size_m2"],
-                "extra": extra,
-                "updated_at": r["updated_at"],
-            }
-        )
+        item = {
+            "space_id": r["space_id"],
+            "kind": r["kind"],
+            "size_label": r["size_label"],
+            "size_m2": r["size_m2"],
+            "extra": extra,
+            "updated_at": r["updated_at"],
+        }
+        if has_room:
+            item["room_id"] = r["room_id"]
+        out.append(item)
     return out
 
 

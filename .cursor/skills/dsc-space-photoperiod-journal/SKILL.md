@@ -39,14 +39,17 @@ Kit live grow stays two tents; model may grow.
 ```text
 Plant journal  →  follows plant_id for life (source: operator | system)
        ↓ (while occupying)
-Space journal  →  space-native + read-time rollup of occupant plant rows
+Tent space journal  →  space-native + read-time rollup of occupant plant rows
+       ↓ room_id
+Room journal (`grow_room`)  →  room-native + child tent rollups
        ↓
-Room journal   →  same pattern when used
+DSC-Core journal  →  facility/system-native + rollup of all rooms
 ```
 
-- Collate at **read time**; provenance chips (`plant` | `space`). Never squash plant notes into one tent blob.
-- System rows: dark violations, flip lifecycle, ramp start/step/cancel/complete, moves.
+- Collate at **read time**; provenance chips (`plant` | `space` | `room` | `core`). Never squash plant notes into one tent blob.
+- System rows: dark violations, flip lifecycle, ramp start/step/cancel/complete, moves — bubble to room + Core via `facility_journal.bubble_facility_system`.
 - Operator notes are **observations**, not diagnoses. Do not infer herm from keywords alone; contested science labeled contested.
+- Overview hosts Room + DSC-Core UI; Light desks host tent occupancy journals; plant card = mini journal only.
 
 ## Ramp policies (operator picks A/B/C)
 
@@ -69,11 +72,13 @@ Tick via computed path with `set_lights_on` → hub time helpers (`time.dsc_hub_
 | Concern | Module / surface |
 |---------|------------------|
 | Spaces/devices | `brain/dsc_brain/space_model.py` |
-| Journals | `plant_journal.py`, `space_journal.py`, `space_occupants.py` |
+| Rooms | `room_model.py` (`grow_room` seeds both kit tents) |
+| Journals | `plant_journal.py`, `space_journal.py`, `room_journal.py`, `dsc_core_journal.py`, `facility_journal.py`, `space_occupants.py` |
 | Energy | `energy_model.py`, `energy_learning.py` |
 | Shift/flip | `schedule_shift.py` |
 | Conflict/dark | `photoperiod_conflict.py`; dark hook in `dash_computed.py` |
-| HTTP | `/journal/*`, `/spaces`, `/energy/*` in `api.py` |
+| HTTP | `/journal/*`, `/spaces`, `/rooms`, `/energy/*` in `api.py` |
+| Pi closure | `.audit/space-energy-pi-closure.ps1`; walk `docs/qa/SPACE-ENERGY-PI-WALK-2026-09.md` |
 | SPA | `components/journal/*`, `components/energy/LightEnergyPanel.tsx`, Settings Brain `SpaceEnergySettingsCard` |
 | Client | `fleetApi.ts` journal/energy helpers |
 

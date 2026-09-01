@@ -1,7 +1,7 @@
 # Space-energy Pi closure & journal hierarchy level-up — Design
 
 **Date:** 2026-09-01  
-**Status:** approved (brainstorm) — awaiting implementation plan  
+**Status:** implemented 2026-09-01 — walk [`docs/qa/SPACE-ENERGY-PI-WALK-2026-09.md`](../../qa/SPACE-ENERGY-PI-WALK-2026-09.md); parent space-energy **implemented**
 **Parent feature:** [`2026-09-01-space-energy-journal-design.md`](2026-09-01-space-energy-journal-design.md) (code shipped `a22050a`; Pi prove incomplete)  
 **Domain:** cannabis-domain honesty; Pi brain local SoT; space-owned photoperiod
 

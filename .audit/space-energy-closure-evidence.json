@@ -1,0 +1,169 @@
+{
+  "ts": 1788250974.2327883,
+  "gates": {
+    "G0_health": {
+      "ok": true,
+      "detail": {
+        "status": "ok",
+        "version": "7.4.0",
+        "surface": "7.4.0",
+        "expected_firmware": "7.0.0.0",
+        "mode": "live",
+        "zigbee": {
+          "mqtt_connected": true,
+          "bridge_state": "online",
+          "bridge_state_updated_at": 1788250968.028872,
+          "radio_up": true,
+          "radio_note": "Coordinator online",
+          "device_count": 5,
+          "end_device_count": 4,
+          "devices_updated_at": 1788250968.0284364,
+          "canopy_updated_at": null,
+          "permit_join": false,
+          "permit_join_end": null
+        }
+      }
+    },
+    "G0_spaces": {
+      "ok": true,
+      "detail": [
+        "2x4",
+        "4x8"
+      ]
+    },
+    "G1b_rooms": {
+      "ok": true,
+      "detail": [
+        "grow_room"
+      ]
+    },
+    "G0_fleet": {
+      "ok": true,
+      "detail": {
+        "keys": [
+          "hass_extras"
+        ]
+      }
+    },
+    "G1_honesty_probe": {
+      "ok": true,
+      "detail": {
+        "note": "browser/G1 attrs checked in walk",
+        "attrs_hint": {}
+      }
+    },
+    "E1_estimate_4x8": {
+      "ok": true,
+      "detail": "Estimate"
+    },
+    "E1_suggestions_4x8": {
+      "ok": true,
+      "detail": false
+    },
+    "E2_confirm_gate_4x8": {
+      "ok": true,
+      "detail": {
+        "detail": "confirm=true required \u2014 no silent schedule changes"
+      }
+    },
+    "E1_estimate_2x4": {
+      "ok": true,
+      "detail": "Estimate"
+    },
+    "E1_suggestions_2x4": {
+      "ok": true,
+      "detail": false
+    },
+    "E2_confirm_gate_2x4": {
+      "ok": true,
+      "detail": {
+        "detail": "confirm=true required \u2014 no silent schedule changes"
+      }
+    },
+    "X2_X3_room_rollup": {
+      "ok": true,
+      "detail": "room closure note tent 4x8 closure tent 2x4 closure"
+    },
+    "X3_X4_core_rollup": {
+      "ok": true,
+      "detail": "core facility note room closure note tent 4x8 closure tent 2x4 closure"
+    },
+    "E3_pause_4x8": {
+      "ok": true,
+      "detail": {
+        "id": 1,
+        "space_id": "4x8",
+        "from_on": "20:00:00",
+        "to_on": "22:00:00",
+        "want_hours": 12.0,
+        "policy": "pause",
+        "status": "paused",
+        "next_step_at": null,
+        "created_at": 1788250980.949239,
+        "updated_at": 1788250980.949239
+      }
+    },
+    "E3_cancel_4x8": {
+      "ok": true,
+      "detail": {
+        "id": 1
+      }
+    },
+    "E3_pause_2x4": {
+      "ok": true,
+      "detail": {
+        "id": 2,
+        "space_id": "2x4",
+        "from_on": "20:00:00",
+        "to_on": "22:00:00",
+        "want_hours": 12.0,
+        "policy": "pause",
+        "status": "paused",
+        "next_step_at": null,
+        "created_at": 1788250981.026513,
+        "updated_at": 1788250981.026513
+      }
+    },
+    "E3_cancel_2x4": {
+      "ok": true,
+      "detail": {
+        "id": 2
+      }
+    },
+    "E8_flip_request": {
+      "ok": true,
+      "detail": {
+        "id": 1,
+        "space_id": "2x4",
+        "plant_id": "plant:pi-closure-a",
+        "from_hours": 18.0,
+        "to_hours": 12.0,
+        "status": "pending",
+        "note": "",
+        "created_at": 1788250981.089135,
+        "updated_at": 1788250981.089135
+      }
+    },
+    "E8_flip_deny": {
+      "ok": true,
+      "detail": {
+        "id": 1
+      }
+    },
+    "E8_flip_approve": {
+      "ok": true,
+      "detail": {
+        "id": 2
+      }
+    },
+    "E9_conflicts": {
+      "ok": true,
+      "detail": false
+    },
+    "X6_parallel": {
+      "ok": true,
+      "detail": 45
+    }
+  },
+  "errors": []
+}

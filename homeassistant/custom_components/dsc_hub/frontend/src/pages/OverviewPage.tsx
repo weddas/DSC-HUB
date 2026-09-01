@@ -10,6 +10,8 @@ import {
   DashRunningChips,
 } from "../components/DashHomeSections";
 import { TentLightClockStrip } from "../components/TentLightClock";
+import { RoomJournal } from "../components/journal/RoomJournal";
+import { CoreJournal } from "../components/journal/CoreJournal";
 import { BAND_CHART_TITLES, useBandChart, type BandChartKind } from "../components/BandChartHost";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleet } from "../hooks/useFleet";
@@ -197,6 +199,15 @@ export function OverviewPage() {
           </Button>
         </div>
       </Card>
+
+      <div className="dsc-grid" style={{ marginTop: 12 }}>
+        <div className="dsc-col-6">
+          <RoomJournal />
+        </div>
+        <div className="dsc-col-6">
+          <CoreJournal />
+        </div>
+      </div>
 
       <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
         <span className="dsc-muted" style={{ fontSize: 12, alignSelf: "center" }}>

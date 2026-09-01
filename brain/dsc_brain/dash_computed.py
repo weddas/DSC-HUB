@@ -314,6 +314,13 @@ def emit_dash_entities(
                 "2x4",
                 "Dark-period violation — SF1000 on outside the 2x4 window",
             )
+            from .facility_journal import bubble_facility_system
+
+            bubble_facility_system(
+                "Dark-period violation — SF1000 on outside the 2x4 window",
+                tags=["dark_violation"],
+                space_id="2x4",
+            )
         except Exception:  # noqa: BLE001
             pass
     _PREV_DARK_VIOLATION = dark_violation

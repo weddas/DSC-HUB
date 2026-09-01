@@ -1,7 +1,7 @@
 # Space-owned photoperiod, energy learning & journal hierarchy — Design
 
 **Date:** 2026-09-01  
-**Status:** implemented locally 2026-09-01 — Pi hotpatch + live walk pending  
+**Status:** implemented 2026-09-01 — Pi hotpatch + walk [`docs/qa/SPACE-ENERGY-PI-WALK-2026-09.md`](../../qa/SPACE-ENERGY-PI-WALK-2026-09.md)
 **Domain:** cannabis-domain honesty; Pi brain local SoT  
 **Related:** Light clocks/timeline (`lightSchedule`, `TentLightClock`), `dsc_ops.sqlite3`, roster plant UUIDs, dark-period violation sensors
 

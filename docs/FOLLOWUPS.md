@@ -3827,11 +3827,25 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | HTTP + fleetApi | **done (code)** | `/journal/*`, `/spaces`, `/energy/*`; confirm required for shift plans |
 | SPA PlantMiniJournal / TentOccupancyJournal / LightEnergyPanel / Settings Brain card | **done (code)** | `build:spa` → `index-DMMGdgxP.js`; synced `brain/static` |
 | Brain pytest | **done** | 178 passed |
-| Pi hotpatch (new modules + SPA) | **next-plan** | plink/pscp; do not full-replace api.py blindly if image lags — copy new modules |
-| Live evidence (estimate, confirm-only ramp, flip banner) | **deferred** | Mark spec **implemented** only after Pi walk |
+| Pi hotpatch (new modules + SPA) | **done** | 2026-09-01 closure: `index-B79UQDGB.js`; room/Core modules live |
+| Live evidence (estimate, confirm-only ramp, flip banner) | **done** | Walk [`docs/qa/SPACE-ENERGY-PI-WALK-2026-09.md`](qa/SPACE-ENERGY-PI-WALK-2026-09.md); evidence `.audit/space-energy-closure-evidence.json` |
 | Cannabis-domain skill fragment (space-owned photoperiod + journals) | **done** | Project skill `.cursor/skills/dsc-space-photoperiod-journal/SKILL.md`; cannabis-domain LEARNED + index pointer |
 
 **Invariants:** no silent lights-on mutate; Learning never auto-apply; suggest move never auto-move.
+
+---
+
+## 2026-09-01 — Space-energy Pi closure (room + DSC-Core)
+
+**Spec:** [`docs/superpowers/specs/2026-09-01-space-energy-pi-closure-design.md`](superpowers/specs/2026-09-01-space-energy-pi-closure-design.md)  
+**Plan:** [`docs/superpowers/plans/2026-09-01-space-energy-pi-closure.md`](superpowers/plans/2026-09-01-space-energy-pi-closure.md)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Room model `grow_room` + room/Core journals | **done (live)** | Same `dsc_ops.sqlite3`; Overview Room + DSC-Core UI |
+| Stress pytest + Pi HTTP + force-tick both tents | **done** | Restored lights-on 4x8=`06:00:00`, 2x4=`20:00:00`; intentional dark-floor steps |
+| Capacity offline pot3/4 honesty | **done (live)** | `planned_oos` includes POT3,POT4; offline not POT4-led; KIT HONEST |
+| Parent space-energy spec | **implemented** | Walk filled; screenshots under `docs/qa-screenshots-2026-09-01-space-energy/` |
 
 ---
 
@@ -3841,5 +3855,5 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 |------|--------|-------|
 | `_reduced_kit` treated pot4 as live kit | **fixed (code)** | pot4 → planned_oos with pot3; live probes = 1–2 only |
 | Default inventory pot4 | **fixed** | `in_service: False` + `pot4_retired_gate` one-shot |
-| Pi hotpatch `dash_computed.py` (+ settings gate) | **next-plan** | Banner clears once brain recomputes |
+| Pi hotpatch `dash_computed.py` (+ settings gate) | **done** | Bundled in space-energy Pi closure hotpatch 2026-09-01 |
 

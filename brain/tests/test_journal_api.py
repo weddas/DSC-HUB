@@ -92,3 +92,23 @@ def test_journal_space_energy_api(temp_db: Path, monkeypatch: pytest.MonkeyPatch
     assert conflicts.status_code == 200
     assert conflicts.json()["auto_apply"] is False
     assert conflicts.json()["banners"]
+
+    rooms = client.get("/rooms")
+    assert rooms.status_code == 200
+    room_ids = {r["room_id"] for r in rooms.json()["rooms"]}
+    assert "grow_room" in room_ids
+
+    room_post = client.post("/journal/room/grow_room", json={"note": "Room HVAC observation"})
+    assert room_post.status_code == 200
+    room_list = client.get("/journal/room/grow_room")
+    assert room_list.status_code == 200
+    assert any(e["note"] == "Room HVAC observation" for e in room_list.json()["entries"])
+
+    core_post = client.post("/journal/core", json={"note": "Facility power note"})
+    assert core_post.status_code == 200
+    core_list = client.get("/journal/core")
+    assert core_list.status_code == 200
+    assert any(e["note"] == "Facility power note" for e in core_list.json()["entries"])
+    alias = client.get("/journal/dsc-core")
+    assert alias.status_code == 200
+    assert len(alias.json()["entries"]) >= 1

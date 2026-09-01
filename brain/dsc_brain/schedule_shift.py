@@ -116,6 +116,17 @@ def create_shift_plan(
         tags=["schedule_slide"],
         db_path=db_path,
     )
+    try:
+        from .facility_journal import bubble_facility_system
+
+        bubble_facility_system(
+            f"Schedule slide plan #{plan_id} started on {space_id} ({pol})",
+            tags=["schedule_slide"],
+            space_id=space_id,
+            db_path=db_path,
+        )
+    except Exception:  # noqa: BLE001
+        pass
     return get_shift_plan(plan_id, db_path=db_path)
 
 
@@ -210,6 +221,17 @@ def tick_shift_plans(
             tags=["schedule_slide"],
             db_path=db_path,
         )
+        try:
+            from .facility_journal import bubble_facility_system
+
+            bubble_facility_system(
+                f"Schedule slide #{plan['id']} on {plan['space_id']} → {new_on}",
+                tags=["schedule_slide"],
+                space_id=str(plan["space_id"]),
+                db_path=db_path,
+            )
+        except Exception:  # noqa: BLE001
+            pass
         stepped.append(get_shift_plan(int(plan["id"]), db_path=db_path))
     return stepped
 

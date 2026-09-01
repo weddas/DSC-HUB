@@ -296,9 +296,11 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
     init_soft_cal_history()
     try:
         from .energy_model import ensure_default_tariff
+        from .room_model import ensure_kit_rooms
         from .space_model import ensure_kit_spaces
 
         ensure_kit_spaces()
+        ensure_kit_rooms()
         ensure_default_tariff()
     except Exception:  # noqa: BLE001
         pass
@@ -1305,6 +1307,50 @@ def energy_conflicts(
         "pending_flips": [f for f in list_pending_flips() if f.get("space_id") == space_id],
         "auto_apply": False,
     }
+
+
+@app.get("/rooms")
+def rooms_get() -> dict[str, Any]:
+    from .room_model import ensure_kit_rooms
+
+    return {"rooms": ensure_kit_rooms()}
+
+
+@app.get("/journal/room/{room_id}")
+def journal_room_get(room_id: str, limit: int = Query(100, ge=1, le=500)) -> dict[str, Any]:
+    from .room_journal import list_room_journal
+    from .room_model import ensure_kit_rooms
+
+    ensure_kit_rooms()
+    return {"room_id": room_id, "entries": list_room_journal(room_id, limit=limit)}
+
+
+@app.post("/journal/room/{room_id}")
+def journal_room_post(room_id: str, body: JournalEntryBody) -> dict[str, Any]:
+    from .room_journal import add_room_entry
+
+    try:
+        return add_room_entry(room_id, body.occurred_at, body.note, source="operator", tags=body.tags)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.get("/journal/core")
+@app.get("/journal/dsc-core")
+def journal_core_get(limit: int = Query(100, ge=1, le=500)) -> dict[str, Any]:
+    from .dsc_core_journal import list_core_journal
+    from .room_model import ensure_kit_rooms
+
+    ensure_kit_rooms()
+    return {"entries": list_core_journal(limit=limit)}
+
+
+@app.post("/journal/core")
+@app.post("/journal/dsc-core")
+def journal_core_post(body: JournalEntryBody) -> dict[str, Any]:
+    from .dsc_core_journal import add_core_entry
+
+    return add_core_entry(body.occurred_at, body.note, source="operator", tags=body.tags)
 
 
 @app.get("/")

@@ -610,11 +610,12 @@ export type JournalEntry = {
   id: number;
   plant_id?: string;
   space_id?: string;
+  room_id?: string;
   occurred_at: number;
   note: string;
   source: string;
   tags: string[];
-  provenance?: "plant" | "space";
+  provenance?: "plant" | "space" | "room" | "core" | string;
   created_at?: number;
 };
 
@@ -854,5 +855,55 @@ export async function getEnergyConflicts(params: {
   if (params.space_want_hours != null) q.set("space_want_hours", String(params.space_want_hours));
   const resp = await fetch(`/energy/conflicts?${q}`);
   if (!resp.ok) throw new Error(formatApiError(await resp.text(), "conflicts failed"));
+  return resp.json();
+}
+
+export async function getRooms(): Promise<
+  Array<{ room_id: string; label: string; spaces: string[] }>
+> {
+  const resp = await fetch("/rooms");
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "rooms failed"));
+  const data = (await resp.json()) as { rooms?: Array<{ room_id: string; label: string; spaces: string[] }> };
+  return data.rooms ?? [];
+}
+
+export async function getRoomJournal(roomId: string, limit = 100): Promise<JournalEntry[]> {
+  const resp = await fetch(`/journal/room/${encodeURIComponent(roomId)}?limit=${limit}`);
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "room journal failed"));
+  const data = (await resp.json()) as { entries?: JournalEntry[] };
+  return data.entries ?? [];
+}
+
+export async function postRoomJournal(
+  roomId: string,
+  body: { note: string; occurred_at?: number; tags?: string[] },
+): Promise<JournalEntry> {
+  const resp = await fetch(`/journal/room/${encodeURIComponent(roomId)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "room journal save failed"));
+  return resp.json();
+}
+
+export async function getCoreJournal(limit = 100): Promise<JournalEntry[]> {
+  const resp = await fetch(`/journal/core?limit=${limit}`);
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "core journal failed"));
+  const data = (await resp.json()) as { entries?: JournalEntry[] };
+  return data.entries ?? [];
+}
+
+export async function postCoreJournal(body: {
+  note: string;
+  occurred_at?: number;
+  tags?: string[];
+}): Promise<JournalEntry> {
+  const resp = await fetch("/journal/core", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "core journal save failed"));
   return resp.json();
 }
