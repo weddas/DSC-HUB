@@ -1,0 +1,145 @@
+{
+  "ts": 1788257356.4477746,
+  "gates": {
+    "G0_index_bundle": {
+      "ok": true,
+      "detail": {
+        "local": "assets/index-CzcL7cKc.js",
+        "live": "assets/index-CzcL7cKc.js",
+        "local_sha256": "4ecda6acb935666e25b0cce883389b2b732d645253cd100c516365a460fbca02",
+        "live_sha256": "4ecda6acb935666e25b0cce883389b2b732d645253cd100c516365a460fbca02"
+      }
+    },
+    "G0_health": {
+      "ok": true,
+      "detail": {
+        "status": "ok",
+        "version": "7.4.0",
+        "surface": "7.4.0",
+        "expected_firmware": "7.0.0.0",
+        "mode": "live",
+        "zigbee": {
+          "mqtt_connected": true,
+          "bridge_state": "online",
+          "bridge_state_updated_at": 1788250968.028872,
+          "radio_up": true,
+          "radio_note": "Coordinator online",
+          "device_count": 5,
+          "end_device_count": 4,
+          "devices_updated_at": 1788250968.0284364,
+          "canopy_updated_at": 1788253865.4597826,
+          "permit_join": false,
+          "permit_join_end": null
+        }
+      }
+    },
+    "G0_fleet": {
+      "ok": true,
+      "detail": {
+        "keys": [
+          "version",
+          "surface",
+          "expected_firmware",
+          "hub",
+          "panel",
+          "pots",
+          "sonoffs",
+          "canopy",
+          "system",
+          "updated_at",
+          "inventory",
+          "root_steering"
+        ]
+      }
+    },
+    "G0_fleet_computed": {
+      "ok": true,
+      "detail": {
+        "keys": [
+          "hass_extras"
+        ]
+      }
+    },
+    "HTTP_reduced_kit_present": {
+      "ok": true,
+      "detail": {
+        "state": "off",
+        "attrs_keys": [
+          "offline",
+          "planned_oos"
+        ],
+        "planned_oos": "AC, Clone mister, POT3, POT4, Tank",
+        "offline": "a live lever is parked"
+      }
+    },
+    "HTTP_reduced_kit_pot34_planned": {
+      "ok": true,
+      "detail": {
+        "planned_oos": "AC, Clone mister, POT3, POT4, Tank",
+        "offline": "a live lever is parked",
+        "state": "off"
+      }
+    },
+    "HTTP_canopy_fields": {
+      "ok": true,
+      "detail": {
+        "canopy": {
+          "role": "canopy_4x8",
+          "friendly_name": "0xa4c1384d10f805bf",
+          "temp_c": 24.2,
+          "rh_pct": 53.0,
+          "ieee": null,
+          "updated_at": 1788253865.4597826
+        }
+      }
+    },
+    "HTTP_cfm_sensors": {
+      "ok": true,
+      "detail": {
+        "present_count": 5,
+        "states": {
+          "sensor.dsc_cfm_exhaust_out_allocated": "98.0",
+          "sensor.dsc_cfm_exhaust_recirc_allocated": "42.0",
+          "sensor.dsc_cfm_intake_main_allocated": "251.4",
+          "sensor.dsc_cfm_intake_2x4_allocated": "188.6",
+          "sensor.dsc_cfm_cascade_2x4_allocated": "146.6"
+        }
+      }
+    }
+  },
+  "errors": [],
+  "restore": {
+    "note": "HTTP-only Climate prove; no Climate Want / Mode / Full Auto mutations.",
+    "levers_stressed": false
+  },
+  "fleet_snapshot": {
+    "reduced_kit": {
+      "state": "off",
+      "planned_oos": "AC, Clone mister, POT3, POT4, Tank",
+      "offline": "a live lever is parked"
+    },
+    "full_auto": "on",
+    "clone_mode": "Follow 4x8",
+    "clone_photoperiod": "Follow 4x8",
+    "canopy": {
+      "temp_c": 24.2,
+      "rh_pct": 53.0,
+      "role": "canopy_4x8",
+      "updated_at": 1788253865.4597826,
+      "friendly_name": "0xa4c1384d10f805bf",
+      "last_topic": "zigbee2mqtt/0xa4c1385a686af7df"
+    },
+    "cfm": {
+      "sensor.dsc_cfm_exhaust_out_allocated": "98.0",
+      "sensor.dsc_cfm_exhaust_recirc_allocated": "42.0",
+      "sensor.dsc_cfm_intake_main_allocated": "251.4",
+      "sensor.dsc_cfm_intake_2x4_allocated": "188.6",
+      "sensor.dsc_cfm_cascade_2x4_allocated": "146.6"
+    },
+    "mass_balance_ok": "off",
+    "want_temp_4x8": null,
+    "want_rh_4x8": null,
+    "want_temp_2x4": null,
+    "want_rh_2x4": null
+  }
+}

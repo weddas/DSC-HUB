@@ -3877,10 +3877,10 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 
 ---
 
-## 2026-09-01 ? Live UX honesty Pass 2 (Climate SPA)
+## 2026-09-01 - Live UX honesty Pass 2 (Climate SPA)
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Climate SPA honesty (Task 5) | **done (repo)** | Cascade entity, Capacity offline SoT, canopy fleet T/RH, Wet unknown muted, mass chip gated label ? see `.superpowers/sdd/task-5-report.md` |
-| Climate walk / Pi hotpatch (Task 6) | **next-plan** | Do not fill walk until Task 6 |
-| AirPathMap cascade ? intake 2×4 | **parked** | SVG still copies `intakeClone` as cascade ribbon (not `dsc_cfm_cascade_2x4_allocated`). Sankey fixed in Task 5; map is out of ClimatePage/FlowSankey scope ? park for later CFM viz pass |
+| Climate SPA honesty (Task 5) | **done (repo)** | Cascade entity, Capacity offline SoT, canopy fleet T/RH, Wet unknown muted, mass chip gated label - see `.superpowers/sdd/task-5-report.md` |
+| Climate walk / Pi hotpatch (Task 6) | **done (live)** | Hotpatched `index-CzcL7cKc.js`; HTTP reduced_kit/canopy/CFM green; walk filled - gate **GREEN**. Evidence `.audit/live-ux-climate-prove-evidence.json` |
+| AirPathMap cascade <- intake 2x4 | **parked** | Live confirm Task 6: SVG still aliases cascade ribbon to `intakeClone` (not `dsc_cfm_cascade_2x4_allocated`). FlowSankey honesty green (AIR CFM + MASS CHIP GATED + allocated cascade) - does **not** block Pass 2 / Overview |

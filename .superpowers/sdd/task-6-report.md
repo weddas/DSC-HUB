@@ -1,79 +1,58 @@
-# Task 6 Report — Pi Bar 1 verification
+# Task 6 Report: Pass 2 — Climate Pi prove + walk fill
 
-**Status:** DONE (failover smoke closed after persist fix)  
-**Branch:** `feat/brain-control-recovery-bar1`  
-**Runtime code changed:** yes — `manual_takeover` helper persist + hass_extras overlay  
-**Docs commit:** `dadd8b8` — `docs: Bar 1 Pi verify evidence for brain control recovery`
+**Status:** complete (gate **GREEN**)  
+**Branch:** master  
+**Date:** 2026-09-01
 
-## What was done
+## Summary
 
-### 1. Hot-patch (Pi `192.168.86.48`)
+Hotpatched SPA `index-CzcL7cKc.js` to Pi `dsc@192.168.86.48`, verified index hash, HTTP-proved reduced_kit / canopy / CFM, browser-walked `#/live/climate` (zone matrix + Light schedule chips), filled the Climate walk (all gates pass), parked AirPathMap cascade alias in FOLLOWUPS, and left Overview unblocked. Did **not** push.
 
-- Packed local `spa-dist` (`index-fFZO7204.js`) + Bar 1 brain modules; `pscp` → `/tmp`; sudo `rsync` into `/opt/dsc-hub-repo/brain/{static,dsc_brain}`; `docker cp` into `dsc-hub-brain`; soft `docker restart` (no image rebuild).
-- `/health` OK; served HTML references `assets/index-fFZO7204.js`.
-- Container imports: `light_loop`, `hub_failover.note_reconnect` OK.
+## Deliverables
 
-### 2. Light acceptance — PASS
+| Item | Path | Notes |
+|------|------|-------|
+| Prove script | `.audit/live-ux-climate-prove.ps1` | Pack SPA → pscp/plink → verify live index |
+| Remote helper | `.audit/live-ux-climate-prove.sh` | docker cp static + HTTP reduced_kit/canopy/CFM |
+| Screenshot helper | `.audit/live-ux-climate-screenshots.py` | Playwright zone matrix + Light schedule |
+| Evidence JSON | `.audit/live-ux-climate-prove-evidence.json` | All prove gates `ok: true` |
+| Walk (filled) | `docs/qa/LIVE-UX-CLIMATE-WALK-2026-09.md` | Every cell pass + evidence |
+| Screenshots | `docs/qa-screenshots-2026-09-01-live-ux/climate-*` | all / 4x8 / 2x4 / room / sankey / canopy / safety / light / fullpage + text |
+| FOLLOWUPS | `docs/FOLLOWUPS.md` | Pass 2 live prove + AirPathMap park reconfirm |
 
-Live hub had `time.dsc_hub_lights_on_time` empty → honesty `no schedule: main on-time unset` (correct). Set via `datetime.set_value` → `06:00:00`, honesty `ok`.
+## Hotpatch / HTTP
 
-Browser Light desk (`?v=bar1-fFZO7204#/live/light`):
+- Local/live bundle: `assets/index-CzcL7cKc.js`
+- index.html sha256: `4ecda6acb935666e25b0cce883389b2b732d645253cd100c516365a460fbca02`
+- Brain modules: **not** redeployed (SPA-only)
+- `binary_sensor.dsc_reduced_kit=off`; planned_oos includes POT3/POT4; offline lead has neither
+- `/fleet` canopy: role `canopy_4x8`, live T/RH
+- CFM: 5/5 allocated sensors present (incl. cascade_2x4)
 
-1. Follow 4×8 with ON 06:00 · OFF 18:00 — **no** Follow + NO SCHEDULE contradiction  
-2. Header **SF1000 ON** (dimmer `on`, brightness attr `1`)  
-3. Got / Want / Deviation from sensors (~12.7h / 12h / ~0.7h), not a free-floating 0–24 lie  
+## Browser
 
-Shot: `docs/qa-screenshots-2026-08-29/bar1-light-schedule-ok.png`
+Full Auto ON (not Capacity offline); zone All/4×8/2×4/Room; Climate Mode ≠ Light SCHEDULE · FOLLOW; Sankey AIR CFM + MASS CHIP GATED; canopy bound labeled; Wet/Dry Dry + Clear from policy. Screenshots under `docs/qa-screenshots-2026-09-01-live-ux/`.
 
-### 3. Overview acceptance — PASS
+## Pytest
 
-Same tick as Climate: SF1000 ON; fans IN 4×8 **0%** / IN 2×4 **24%** / EX ROOM **20%** / EX OUT **15%**; MAT demand off. No manual-takeover banner (takeover off).
+`5 passed` — `tests/test_live_ux_climate_honesty.py` + `tests/test_reduced_kit.py`
 
-Shots: `bar1-overview-shared-air.png`, `bar1-climate-command.png`
+## Gate
 
-### 4. Failover smoke — PASS (after persist fix)
-
-Earlier: `POST /control/service` returned `state=on` but `/fleet/computed` kept takeover `off`.
-
-**Fix:** `_hub_switch` `set_helper(switch.dsc_hub_manual_takeover)`; cold computed re-applies helper over hub mirror; `_control_state` / demo path aligned. Alias OID key resolve for hub write.
-
-**Re-smoke (Pi, post hot-patch of `control_ops` / `computed_ops` / `demo_simulator`):**
-- `POST turn_on` → `{state: on}` → `GET /fleet/computed` `hass_extras.switch.dsc_hub_manual_takeover.state` = **on**
-- `POST turn_off` → `{state: off}` → computed = **off**
-- Left cleared (off).
-
-### 5. FOLLOWUPS + docs commit
-
-Section appended to `docs/FOLLOWUPS.md`; screenshots under `docs/qa-screenshots-2026-08-29/`.
-
-## Self-review
-
-| Brief check | Result |
-|-------------|--------|
-| Hot-patch SPA + brain, careful restart | yes |
-| Light: no false NO SCHEDULE when on-time set | yes |
-| Light: SF label / Got Want Deviation | yes |
-| Overview SF/MAT/fans agree | yes |
-| Failover toggle + banner + clear | **pass** (computed on→off; SPA banner path unblocked) |
-| Screenshots + FOLLOWUPS + docs commit | yes |
-
-## Concerns
-
-1. ~~**`manual_takeover` does not persist**~~ — fixed via helper + hass_extras overlay.  
-2. **`tent_manual_override` flapped** during earlier takeover attempts — still worth a hub map check (not blocking banner).  
-3. **Dimmer brightness `1`** → SPA `readSfBrightnessPct` may treat as 100% on 0–1 scale while brain `dsc_light_effectively_off` says 0.4% — header still "SF1000 ON" (acceptable for on/off; % honesty deferred).  
-4. Left live schedule at **06:00:00** (was empty).
-
-## Files touched
-
-| Path | Action |
+| Gate | Result |
 |------|--------|
-| Pi `/opt/dsc-hub-repo/brain/static` + container `/app/static` | hot-patched SPA |
-| Pi brain modules in container | hot-patched (incl. takeover persist) |
-| `brain/dsc_brain/control_ops.py` | set_helper + OID alias key |
-| `brain/dsc_brain/computed_ops.py` | helper wins in hass_extras |
-| `brain/dsc_brain/demo_simulator.py` | demo set_helper |
-| `brain/tests/test_hub_failover.py` | helper-wins test |
-| `docs/FOLLOWUPS.md` | Bar 1 section |
-| `docs/qa-screenshots-2026-08-29/bar1-*.png` | evidence |
-| `.superpowers/sdd/task-6-report.md` | this report |
+| G0–G9 | **pass** |
+| Honesty + Light UX + HTTP + Browser checklists | **pass** |
+| Overall Pass 2 Climate | **GREEN** |
+
+## Concerns / parks
+
+- **AirPathMap cascade ← intake 2×4** — SVG still aliases cascade ribbon to `intakeClone`; FlowSankey honesty green — parked, does not block Overview.
+- **Canopy unbound empty** — live kit bound; unbound never-fill proven by SPA copy + Task 5 path (no live unbind during prove).
+- CFM allocated values fluctuate with fan duty; presence + Sankey air-only / gated mass chip are the honesty gates.
+
+## Out of scope
+
+- Push to remote
+- Overview Pass 3 (Task 7+) — Climate gate is green so parent may proceed
+- AirPathMap cascade sensor wiring (parked)
