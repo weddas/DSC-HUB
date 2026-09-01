@@ -3847,7 +3847,7 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Stress pytest + Pi HTTP + force-tick both tents | **done** | Restored lights-on 4x8=`06:00:00`, 2x4=`20:00:00`; intentional dark-floor steps |
 | Capacity offline pot3/4 honesty | **done (live)** | `planned_oos` includes POT3,POT4; offline not POT4-led; KIT HONEST |
 | Parent space-energy spec | **implemented** | Walk filled; screenshots under `docs/qa-screenshots-2026-09-01-space-energy/` |
-| Tip SoT runbook on master | **next-plan (docs PR)** | Land `SPACE-ENERGY-JOURNAL` / `PHOTOPERIOD-TIMELINE` / retip `WEBUI` — supersedes draft ABSENT wording in #160 |
+| Tip SoT runbook on master | **in progress** | Docs PR [#161](https://github.com/weddas/DSC-HUB/pull/161) — supersedes #160 ABSENT wording |
 
 ---
 
