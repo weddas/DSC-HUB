@@ -1,0 +1,155 @@
+{
+  "ts": 1788263185.792637,
+  "phase": "A",
+  "gates": {
+    "A_G0_index_bundle": {
+      "ok": true,
+      "detail": {
+        "local": "assets/index-BEjnawnp.js",
+        "live": "assets/index-BEjnawnp.js",
+        "local_sha256": "040b2d0ca1826392a8baec1c0a8c07ed43c2eca239bd1719a444d7e280a977b4",
+        "live_sha256": "040b2d0ca1826392a8baec1c0a8c07ed43c2eca239bd1719a444d7e280a977b4"
+      }
+    },
+    "A_G0_health": {
+      "ok": true,
+      "detail": {
+        "status": "ok",
+        "version": "7.4.0",
+        "surface": "7.4.0",
+        "expected_firmware": "7.0.0.0",
+        "mode": "live",
+        "zigbee": {
+          "mqtt_connected": true,
+          "bridge_state": "online",
+          "bridge_state_updated_at": 1788263183.33062,
+          "radio_up": true,
+          "radio_note": "Coordinator online",
+          "device_count": 5,
+          "end_device_count": 4,
+          "devices_updated_at": 1788263183.329535,
+          "canopy_updated_at": null,
+          "permit_join": false,
+          "permit_join_end": null
+        }
+      }
+    },
+    "A7_twin_entity_available": {
+      "ok": true,
+      "detail": {
+        "http": 200,
+        "hub_online": true,
+        "source": "controls",
+        "state": "off",
+        "brightness": 128,
+        "got_state": "0.01",
+        "got_source": "twin",
+        "got_honesty": "ok",
+        "available": true
+      }
+    },
+    "A7_twin_turn_on_brightness": {
+      "ok": true,
+      "detail": {
+        "http": 200,
+        "response": {
+          "entity_id": "light.dsc_hub_twin_sf1000",
+          "state": "on",
+          "brightness": 128
+        },
+        "fleet": {
+          "http": 200,
+          "hub_online": true,
+          "source": "controls",
+          "state": "off",
+          "brightness": 128,
+          "got_state": "0.02",
+          "got_source": "twin",
+          "got_honesty": "ok",
+          "available": true
+        },
+        "target_brightness": 128,
+        "fleet_persisted_on": false,
+        "brightness_echo_or_fleet": true,
+        "optical": "N/A"
+      }
+    },
+    "A7_twin_restore": {
+      "ok": true,
+      "detail": {
+        "pre": {
+          "http": 200,
+          "hub_online": true,
+          "source": "controls",
+          "state": "off",
+          "brightness": 128,
+          "got_state": "0.01",
+          "got_source": "twin",
+          "got_honesty": "ok",
+          "available": true
+        },
+        "post": {
+          "http": 200,
+          "hub_online": true,
+          "source": "controls",
+          "state": "off",
+          "brightness": 128,
+          "got_state": "0.02",
+          "got_source": "twin",
+          "got_honesty": "ok",
+          "available": true
+        },
+        "detail": {
+          "off_http": 200,
+          "off_body": {
+            "entity_id": "light.dsc_hub_twin_sf1000",
+            "state": "off"
+          },
+          "restore_off": true
+        }
+      }
+    },
+    "A_hybrid_got_attrs": {
+      "ok": true,
+      "detail": {
+        "got_state": "0.02",
+        "got_source": "twin",
+        "got_honesty": "ok"
+      }
+    }
+  },
+  "errors": [],
+  "restore": {
+    "pre_twin": {
+      "http": 200,
+      "hub_online": true,
+      "source": "controls",
+      "state": "off",
+      "brightness": 128,
+      "got_state": "0.01",
+      "got_source": "twin",
+      "got_honesty": "ok",
+      "available": true
+    },
+    "post_twin": {
+      "http": 200,
+      "hub_online": true,
+      "source": "controls",
+      "state": "off",
+      "brightness": 128,
+      "got_state": "0.02",
+      "got_source": "twin",
+      "got_honesty": "ok",
+      "available": true
+    },
+    "detail": {
+      "off_http": 200,
+      "off_body": {
+        "entity_id": "light.dsc_hub_twin_sf1000",
+        "state": "off"
+      },
+      "restore_off": true
+    }
+  },
+  "note": "Phase A Twin software smoke; optical output N/A; GPIO5 reserved not wired"
+}

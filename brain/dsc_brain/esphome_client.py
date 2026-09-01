@@ -550,7 +550,12 @@ def _hub_controls_from_states(
         elif object_id in HUB_LIGHT_OID_TO_ENTITY:
             entity_id = HUB_LIGHT_OID_TO_ENTITY[object_id]
             on = bool(getattr(st, "state", False))
-            bri = int(getattr(st, "brightness", 0) or 0)
+            # Native API brightness is typically 0.0–1.0; tolerate legacy 0–255.
+            bri_raw = float(getattr(st, "brightness", 0) or 0)
+            if 0.0 < bri_raw <= 1.0:
+                bri = int(round(bri_raw * 255))
+            else:
+                bri = int(bri_raw)
             put(entity_id, "on" if on else "off", brightness=bri)
         elif object_id in HUB_SELECT_OID_TO_ENTITY:
             entity_id = HUB_SELECT_OID_TO_ENTITY[object_id]

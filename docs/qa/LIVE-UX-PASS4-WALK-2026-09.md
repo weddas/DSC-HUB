@@ -17,14 +17,17 @@
 
 | Check | Owner | Result | Evidence |
 |-------|-------|--------|----------|
-| A1 Hybrid Got: Twin-derived hours when available + healthy history | brain | **pending** | Task 2 — `got_hours_4x8` / `_light_runtime_snapshot` |
-| A2 Hybrid Got: window fallback when Twin unavailable or history unhealthy | brain | **pending** | Task 2 — pytest `test_live_ux_pass4_twin.py` |
-| A3 Twin on/brightness history feeds DutyStrip / Got hybrid | brain | **pending** | Task 2 — `history_ops` / hub ingest |
-| A4 Light SPA: Twin toggle/brightness when entity available | SPA | **pending** | Task 3 — `LightPage.tsx` |
-| A5 DutyStrip Actual uses Twin (or hybrid), not window-only forever | SPA | **pending** | Task 3 — `DutyStrip.tsx` / 4×8 Actual |
-| A6 Honesty copy: live actuator path; GPIO5 reserved (not “wired”) | SPA | **pending** | Task 3 |
-| A7 Pi smoke: Twin entity HTTP + on/brightness command round-trip | operator | **pending** | Task 4 — `.audit/live-ux-pass4-prove.ps1` Phase A |
-| A8 Pytest Twin hybrid guards | brain | **pending** | Task 2 — `test_live_ux_pass4_twin.py` |
+| A1 Hybrid Got: Twin-derived hours when available + healthy history | brain | **pass** | Task 2 `b4ca126`; live `got_source=twin` after Phase A hotpatch (`.audit/live-ux-pass4-prove-evidence.json`) |
+| A2 Hybrid Got: window fallback when Twin unavailable or history unhealthy | brain | **pass** | Task 2 pytest `test_got_hours_4x8_falls_back_*` (8 passed in `test_live_ux_pass4_twin.py`) |
+| A3 Twin on/brightness history feeds DutyStrip / Got hybrid | brain | **pass** | Task 2 `esphome_client` / `history_ops` Twin metrics; DutyStrip entity `light.dsc_hub_twin_sf1000` |
+| A4 Light SPA: Twin toggle/brightness when entity available | SPA | **pass** | Task 3 `index-BEjnawnp.js`; browser Light: Twin SF1000 toggle + brightness path |
+| A5 DutyStrip Actual uses Twin (or hybrid), not window-only forever | SPA | **pass** | Browser: `TWIN SF1000 24H` Actual strip (not window-only) |
+| A6 Honesty copy: live actuator path; GPIO5 reserved (not “wired”) | SPA | **pass** | Browser: “Twin SF1000 is the live 4×8 actuator… Hub GPIO5 is reserved… not physically wired” |
+| A7 Pi smoke: Twin entity HTTP + on/brightness command round-trip | operator | **pass** | Task 4 `.audit/live-ux-pass4-prove.ps1` Phase A — all gates ok; optical N/A. Post-fix: turn_on bri=128 fleet-persisted |
+| A8 Pytest Twin hybrid guards | brain | **pass** | `pytest tests/test_live_ux_pass4_twin.py` → **8 passed** |
+
+**Live bundle:** `assets/index-BEjnawnp.js` (index.html sha256 `040b2d0ca1826392…`)  
+**Phase A note:** Prefer `docker kill`+`start` over `docker restart` (restart hung Pi mid-session). Hub light brightness now normalized to aioesphomeapi 0–1.
 
 ---
 

@@ -63,3 +63,7 @@ Pass4 Task1: c8e0d95
 Pass4 Task2: b4ca126..dada591
 Pass4 Task3: 5144978 (Light Twin honesty + DutyStrip; report in pass4-task-3-report.md)
 
+Pass4 Task3: 5144978..ca106d7
+
+Pass4 Task4: Phase A Pi smoke GREEN (see pass4-task-4-report.md)
+

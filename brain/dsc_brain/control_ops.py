@@ -336,11 +336,22 @@ async def _hub_light(entity_id: str, on: bool, brightness: int | None = None) ->
     async with host_lock(host):
         try:
             await client.connect(login=True)
+            # aioesphomeapi expects brightness in 0.0–1.0; HA-shaped callers use 0–255.
             if on and brightness is not None:
-                client.light_command(key, state=True, brightness=max(0, min(255, brightness)))
-            else:
-                client.light_command(key, state=on)
-            return {"entity_id": entity_id, "state": "on" if on else "off"}
+                bri_raw = float(brightness)
+                bri_f = bri_raw / 255.0 if bri_raw > 1.0 else max(0.0, min(1.0, bri_raw))
+                client.light_command(key, state=True, brightness=bri_f)
+                return {
+                    "entity_id": entity_id,
+                    "state": "on",
+                    "brightness": int(round(bri_f * 255)),
+                }
+            if on:
+                client.light_command(key, state=True)
+                return {"entity_id": entity_id, "state": "on"}
+            # Explicit brightness=0 helps monochromatic PWM clear sticky ON.
+            client.light_command(key, state=False, brightness=0.0)
+            return {"entity_id": entity_id, "state": "off", "brightness": 0}
         finally:
             try:
                 await client.disconnect()
