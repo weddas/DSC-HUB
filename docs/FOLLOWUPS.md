@@ -3838,7 +3838,8 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 ## 2026-09-01 — Space-energy Pi closure (room + DSC-Core)
 
 **Spec:** [`docs/superpowers/specs/2026-09-01-space-energy-pi-closure-design.md`](superpowers/specs/2026-09-01-space-energy-pi-closure-design.md)  
-**Plan:** [`docs/superpowers/plans/2026-09-01-space-energy-pi-closure.md`](superpowers/plans/2026-09-01-space-energy-pi-closure.md)
+**Plan:** [`docs/superpowers/plans/2026-09-01-space-energy-pi-closure.md`](superpowers/plans/2026-09-01-space-energy-pi-closure.md)  
+**Developer runbook:** [`docs/brain/SPACE-ENERGY-JOURNAL.md`](brain/SPACE-ENERGY-JOURNAL.md) (tip `2feb837`)
 
 | Item | Status | Notes |
 |------|--------|-------|
@@ -3860,17 +3861,33 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 
 ---
 
-## 2026-09-01 � Live UX honesty Pass 1 (Light prove)
+## 2026-09-01 — Live UX honesty Pass 1 (Light prove)
 
 **Spec:** [docs/superpowers/specs/2026-09-01-live-ux-honesty-program-design.md](superpowers/specs/2026-09-01-live-ux-honesty-program-design.md)  
 **Plan:** [docs/superpowers/plans/2026-09-01-live-ux-honesty-program.md](superpowers/plans/2026-09-01-live-ux-honesty-program.md)  
-**Walk:** [docs/qa/LIVE-UX-LIGHT-WALK-2026-09.md](qa/LIVE-UX-LIGHT-WALK-2026-09.md) � **gate green**
+**Walk:** [docs/qa/LIVE-UX-LIGHT-WALK-2026-09.md](qa/LIVE-UX-LIGHT-WALK-2026-09.md) — **gate green**  
+**Developer runbook:** [`docs/brain/LIVE-UX-HONESTY.md`](brain/LIVE-UX-HONESTY.md) (tip `2feb837`)
 
 | Item | Status | Notes |
 |------|--------|-------|
 | SPA hotpatch index-DYFvyI2i.js | **done (live)** | Prove .audit/live-ux-light-prove.ps1; index.html sha256 `146bfc0dc8233e85fefccc6924939aa21e96e5ceb816a603c62e5100d3521ea9` |
-| HTTP energy both tents | **done** | estimate Estimate + suggestions `apply:false`; confirm=false ? 400; evidence .audit/live-ux-light-prove-evidence.json |
+| HTTP energy both tents | **done** | estimate Estimate + suggestions `apply:false`; confirm=false → 400; evidence .audit/live-ux-light-prove-evidence.json |
 | Browser matrix + screenshots | **done** | `docs/qa-screenshots-2026-09-01-live-ux/` |
-| Force-tick restore | **done** | 4�8 `06:00:00`; 2�4 helper `20:00:00`; no active plans / pending flips |
-| DutyStrip 2�4 `0.0H ON` vs Got ~12h | **parked** | Same hole as **SV-P1-6**; Got/Want chips honest � do not block Pass 1. History/DutyStrip map for SF1000 clone entity |
-| Climate Pass 2 | **next-plan** | Task 4+ only after this Light gate (now green) |
+| Force-tick restore | **done** | 4×8 `06:00:00`; 2×4 helper `20:00:00`; no active plans / pending flips |
+| DutyStrip 2×4 `0.0H ON` vs Got ~12h | **parked** | Same hole as **SV-P1-6**; Got/Want chips honest — do not block Pass 1. History/DutyStrip map for SF1000 clone entity |
+| Climate Pass 2 | **in progress** | Brain/API guards shipped tip `2feb837`; Climate walk still blank |
+
+---
+
+## 2026-09-01 — Live UX honesty Pass 2 (Climate pytest)
+
+**Spec:** [docs/superpowers/specs/2026-09-01-live-ux-honesty-program-design.md](superpowers/specs/2026-09-01-live-ux-honesty-program-design.md) §3  
+**Walk:** [docs/qa/LIVE-UX-CLIMATE-WALK-2026-09.md](qa/LIVE-UX-CLIMATE-WALK-2026-09.md) — desk blank  
+**Developer runbook:** [`docs/brain/LIVE-UX-HONESTY.md`](brain/LIVE-UX-HONESTY.md) (Pass 2)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Pass 2 brain/API guard tests | **done (code)** | `test_live_ux_climate_honesty.py` — pot3/4 `planned_oos` not Capacity offline; wet without recipe ≠ Problem; `problem_when=inactive` polarity |
+| SPA Wet/Dry vs Problem contract | **done (prior)** | `ClimatePage.tsx` — Problem only when Task bound + `policy_state.problem` boolean |
+| Pass 2 Pi HTTP + browser walk fill | **next-plan** | Walk G0–G9 (except G7 code) still blank; prove script planned |
+| Pass 3 Overview | **next-plan** | After Climate desk gate |

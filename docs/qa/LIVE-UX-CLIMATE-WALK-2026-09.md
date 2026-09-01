@@ -3,8 +3,11 @@
 **Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-honesty-program-design.md`](../superpowers/specs/2026-09-01-live-ux-honesty-program-design.md) §3  
 **Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-honesty-program.md`](../superpowers/plans/2026-09-01-live-ux-honesty-program.md)  
 **Prerequisite:** Light walk (Pass 1) gate green  
-**Prove script:** `.audit/live-ux-climate-prove.ps1` (Task 6)  
-**Screenshots:** `docs/qa-screenshots-2026-09-01-live-ux/`
+**Prove script:** `.audit/live-ux-climate-prove.ps1` (planned)  
+**Screenshots:** `docs/qa-screenshots-2026-09-01-live-ux/`  
+**Developer runbook:** [`docs/brain/LIVE-UX-HONESTY.md`](../brain/LIVE-UX-HONESTY.md) (Pass 2)  
+**Prerequisite status:** Light walk **GREEN** (`985a2c4`)  
+**Pytest tip:** `2feb837` — `brain/tests/test_live_ux_climate_honesty.py` **SHIPPED** (brain guards only; desk still blank)
 
 ---
 
@@ -19,7 +22,7 @@
 | G4 Sankey air-only + mass chip gated | | |
 | G5 Canopy honesty | | |
 | G6 Wet/Dry vs Problem/Clear | | |
-| G7 Pytest (`test_live_ux_climate_honesty`) | | |
+| G7 Pytest (`test_live_ux_climate_honesty`) | **code shipped** | Tip `2feb837` — fill after prove-machine re-run |
 | G8 Browser matrix | | |
 | G9 Restore | | |
 

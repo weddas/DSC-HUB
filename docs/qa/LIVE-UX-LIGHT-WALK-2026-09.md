@@ -6,7 +6,8 @@
 **Screenshots:** `docs/qa-screenshots-2026-09-01-live-ux/`  
 **Evidence:** `.audit/live-ux-light-prove-evidence.json`  
 **Live bundle:** `assets/index-DYFvyI2i.js` (sha256 index.html `146bfc0dc8233e85…`)  
-**Date:** 2026-09-01
+**Developer runbook:** [`docs/brain/LIVE-UX-HONESTY.md`](../brain/LIVE-UX-HONESTY.md)  
+**Date:** 2026-09-01 · **gate GREEN** (`985a2c4`)
 
 ---
 
