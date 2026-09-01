@@ -55,6 +55,10 @@ export function LiveLightPage() {
   const hours2 = cloneDesk.wantHours ?? num("sensor.dsc_clone_expected_light_hours");
   const got4 = num("sensor.dsc_lights_on_today_4x8");
   const got2 = cloneDesk.gotHours ?? num("sensor.dsc_lights_on_today_2x4");
+  const got4Source = String(entity("sensor.dsc_lights_on_today_4x8")?.attributes?.got_source ?? "");
+  const got4Honesty = String(entity("sensor.dsc_lights_on_today_4x8")?.attributes?.honesty ?? "");
+  const duty4Entity = twinAvailable ? twinEntity : "binary_sensor.dsc_hub_4x8_window_open";
+  const duty4Label = twinAvailable ? "Twin SF1000 24h" : "4×8 window 24h";
   const deviation = cloneDesk.deviationHours ?? num("sensor.dsc_lights_deviation_today");
   const rail4 = tentWantRail("main", { state, entity });
   const rail2 = tentWantRail("clone", { state, entity });
@@ -189,9 +193,16 @@ export function LiveLightPage() {
           <Card className="dsc-glass dsc-light-hero dsc-tent-card dsc-tent-card--main" title="4×8 photoperiod" icon="tent">
             <TentLightClock tent="main" />
             <p className="dsc-honesty" style={{ marginTop: 0 }}>
-              {twinAvailable
-                ? "Main tent — Twin SF1000 (GPIO5) is the live lamp when available; window remains photoperiod SoT for Got hours."
-                : "Main tent schedule — Got tracks the photoperiod window until a GPIO lamp exists."}
+              {twinAvailable ? (
+                <>
+                  Main tent — Twin SF1000 is the live 4×8 actuator (on/off + brightness). Hub GPIO5 is{" "}
+                  <strong>reserved</strong> for Twin PWM — not physically wired yet. Got prefers Twin on-hours when
+                  history is healthy; otherwise the photoperiod window
+                  {got4Source === "window" && got4Honesty ? ` (${got4Honesty})` : got4Source === "twin" ? " (Got · Twin)" : ""}.
+                </>
+              ) : (
+                "Main tent schedule — Got tracks the photoperiod window until a Twin lamp entity exists."
+              )}
             </p>
             <div className="dsc-chip-row">
               {twinAvailable ? (
@@ -201,6 +212,14 @@ export function LiveLightPage() {
                   label={twinOn ? "TWIN SF1000 ON" : "TWIN SF1000 OFF"}
                   tone={twinOn ? "ok" : "muted"}
                   onClick={() => open(twinEntity, "Twin SF1000", "binary")}
+                />
+              ) : null}
+              {twinAvailable && got4Source ? (
+                <StatusChip
+                  icon="analytics"
+                  label={got4Source === "twin" ? "Got · Twin" : "Got · Window"}
+                  tone={got4Source === "twin" ? "ok" : "warn"}
+                  onClick={() => open("sensor.dsc_lights_on_today_4x8", "4×8 hours today", "numeric")}
                 />
               ) : null}
               <StatusChip
@@ -240,15 +259,26 @@ export function LiveLightPage() {
               onClick={() => open("binary_sensor.dsc_hub_4x8_window_open", "4×8 window", "binary")}
             />
             <DutyStrip
-              entityId="binary_sensor.dsc_hub_4x8_window_open"
+              entityId={duty4Entity}
               hours={24}
-              label="4×8 24h"
+              label={duty4Label}
               actualWhenHistory
-              onClick={() => open("binary_sensor.dsc_hub_4x8_window_open", "4×8 window", "binary")}
+              onClick={() =>
+                open(
+                  duty4Entity,
+                  twinAvailable ? "Twin SF1000" : "4×8 window",
+                  "binary",
+                )
+              }
             />
             {twinAvailable ? (
-              <div className="dsc-chip-row" style={{ marginTop: 10 }}>
-                <EntityToggle entityId={twinEntity} label="Twin SF1000" />
+              <div className="dsc-demand-row" style={{ marginTop: 10 }}>
+                <EntityToggle
+                  entityId={twinEntity}
+                  label="Twin SF1000"
+                  icon="lighting"
+                  showBrightness
+                />
               </div>
             ) : null}
             <div className="dsc-target-grid" style={{ marginTop: 12 }}>
