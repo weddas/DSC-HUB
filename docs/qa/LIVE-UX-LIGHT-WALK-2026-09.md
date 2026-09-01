@@ -2,6 +2,7 @@
 
 **Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-honesty-program-design.md`](../superpowers/specs/2026-09-01-live-ux-honesty-program-design.md) §2  
 **Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-honesty-program.md`](../superpowers/plans/2026-09-01-live-ux-honesty-program.md)  
+**Developer runbook:** [`docs/brain/LIVE-UX-HONESTY.md`](../brain/LIVE-UX-HONESTY.md)  
 **Prove script:** `.audit/live-ux-light-prove.ps1` (Task 3)  
 **Screenshots:** `docs/qa-screenshots-2026-09-01-live-ux/`
 

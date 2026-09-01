@@ -91,6 +91,6 @@ When changing this area:
 - [ ] Plant surfaces have no lights-on / hours controls
 - [ ] Journal copy stays observation-language
 - [ ] New system events write plant and/or space journal with `source=system`
-- [ ] Tests cover confirm-gate + no-auto-apply (see `brain/tests/test_*energy*`, `test_schedule_shift`, `test_journal_api`)
+- [ ] Tests cover confirm-gate + no-auto-apply (see `brain/tests/test_*energy*`, `test_schedule_shift`, `test_journal_api`, `test_live_ux_light_honesty`)
 
 Commit / Pi hotpatch only when the operator asks.
