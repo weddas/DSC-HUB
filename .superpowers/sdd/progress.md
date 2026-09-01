@@ -77,5 +77,5 @@ Pass4 Task6: Phase C debt closeout `083c178` ? SV-P1-6 / AirPathMap cascade / GA
 
 Pass4 Task6: Phase C 083c178
 
-Pass4 Task7: gate GREEN ? full stress + FOLLOWUPS write-up; bundle `index-BoyhWWR_.js`; Pass 4 proven
+Pass4 Task7: gate GREEN `4a40589`..`6d6c592` ? full stress + FOLLOWUPS; bundle `index-BoyhWWR_.js`; Pass 4 proven
 
