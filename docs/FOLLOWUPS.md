@@ -3838,7 +3838,8 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 ## 2026-09-01 — Space-energy Pi closure (room + DSC-Core)
 
 **Spec:** [`docs/superpowers/specs/2026-09-01-space-energy-pi-closure-design.md`](superpowers/specs/2026-09-01-space-energy-pi-closure-design.md)  
-**Plan:** [`docs/superpowers/plans/2026-09-01-space-energy-pi-closure.md`](superpowers/plans/2026-09-01-space-energy-pi-closure.md)
+**Plan:** [`docs/superpowers/plans/2026-09-01-space-energy-pi-closure.md`](superpowers/plans/2026-09-01-space-energy-pi-closure.md)  
+**Developer runbook:** [`docs/brain/SPACE-ENERGY-JOURNAL.md`](brain/SPACE-ENERGY-JOURNAL.md) (tip `3d1ead4`)
 
 | Item | Status | Notes |
 |------|--------|-------|
@@ -3846,6 +3847,23 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Stress pytest + Pi HTTP + force-tick both tents | **done** | Restored lights-on 4x8=`06:00:00`, 2x4=`20:00:00`; intentional dark-floor steps |
 | Capacity offline pot3/4 honesty | **done (live)** | `planned_oos` includes POT3,POT4; offline not POT4-led; KIT HONEST |
 | Parent space-energy spec | **implemented** | Walk filled; screenshots under `docs/qa-screenshots-2026-09-01-space-energy/` |
+
+---
+
+## 2026-09-01 — Live UX honesty program (Light → Climate → Overview)
+
+**Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-honesty-program-design.md`](superpowers/specs/2026-09-01-live-ux-honesty-program-design.md)  
+**Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-honesty-program.md`](superpowers/plans/2026-09-01-live-ux-honesty-program.md)  
+**Developer runbook:** [`docs/brain/LIVE-UX-HONESTY.md`](brain/LIVE-UX-HONESTY.md) (tip `3d1ead4`)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Program design + plan + walk scaffolds | **done** | Light / Climate / Overview walks; screenshot dir |
+| Pass 1 brain/API guard tests | **done (code)** | `test_live_ux_light_honesty.py` — estimate label, `apply: false`, confirm gate, space journal provenance both tents |
+| Pass 1 SPA honesty CTAs (Task 2) | **done (repo)** | `038bdb5` → `index-DYFvyI2i.js`: 2×4 DLI CTA parity, energy honesty join, journal Save hints, `Climate Want →`; Pi not hotpatched yet |
+| Pass 1 Pi HTTP + browser walk fill | **next-plan** | Walk G0–G8 still blank; Task 3 hotpatch + prove script |
+| Pass 2 / 3 | **next-plan** | After Light gate |
+| Pass 4 / 5 | **deferred** | Brainstorm stubs only |
 
 ---
 

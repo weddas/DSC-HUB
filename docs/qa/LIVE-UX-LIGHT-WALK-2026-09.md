@@ -2,7 +2,9 @@
 
 **Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-honesty-program-design.md`](../superpowers/specs/2026-09-01-live-ux-honesty-program-design.md) §2  
 **Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-honesty-program.md`](../superpowers/plans/2026-09-01-live-ux-honesty-program.md)  
-**Prove script:** `.audit/live-ux-light-prove.ps1` (Task 3)  
+**Developer runbook:** [`docs/brain/LIVE-UX-HONESTY.md`](../brain/LIVE-UX-HONESTY.md) (tip `3d1ead4` · spa `index-DYFvyI2i.js`)  
+**Task 2 report:** [`.superpowers/sdd/task-2-report.md`](../../.superpowers/sdd/task-2-report.md) (SPA CTAs in repo; walk fill = Task 3)  
+**Prove script:** `.audit/live-ux-light-prove.ps1` (Task 3 — may still be absent)  
 **Screenshots:** `docs/qa-screenshots-2026-09-01-live-ux/`
 
 ---
