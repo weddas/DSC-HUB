@@ -88,12 +88,13 @@ export function LightEnergyPanel({
 
   const label = spaceId === "4x8" ? "4×8" : "2×4";
   const planning = suggestions.find((s) => s.learning?.planning_signal);
+  const honestyRaw = (estimate?.honesty || "Estimate from local watts × hours × tariff — not a utility bill").trim();
+  const honestyLead = /[.!?]$/.test(honestyRaw) ? honestyRaw : `${honestyRaw}.`;
 
   return (
     <Card className="dsc-glass" title={`${label} energy (estimate)`}>
       <p className="dsc-muted" style={{ margin: "0 0 8px", fontSize: 12 }}>
-        {estimate?.honesty || "Estimate from local watts × hours × tariff — not a utility bill."} Learning never
-        auto-applies a schedule.
+        {honestyLead} Learning never auto-applies a schedule.
       </p>
       {estimate?.ok ? (
         <div className="dsc-chip-row" style={{ marginBottom: 8 }}>

@@ -1,93 +1,73 @@
-# Task 2 Report: Settings — shared task params + safety role helper
+# Task 2 Report: Pass 1 — Light SPA honesty + light UX
 
-## Status: Complete
+**Status:** complete  
+**Branch:** master  
+**Date:** 2026-09-01
 
-SPA-only changes per brief. No commits made.
+## Summary
+
+Inventoried live `#/live/light` against fleet SoT and design §2. Fixed three honesty/UX mismatches (2×4 DLI calibrate CTA parity, Energy honesty sentence join, journal disabled-Save clarity) plus a light Climate Want nav cue. SPA rebuild references `index-DYFvyI2i.js`. Walk doc left for Task 3.
+
+## Inventory (live Pi `192.168.86.48:8787`)
+
+Fleet `hass_extras` vs SPA (browser):
+
+| Check | Fleet / API | Live SPA | Verdict |
+|-------|-------------|----------|---------|
+| 4×8 Want hours | `sensor.dsc_expected_light_hours` = 12.0 | Want hours 12h | match |
+| 4×8 Got hours | `sensor.dsc_lights_on_today_4x8` ≈ 11.99 | Got/Want gauge progress | match |
+| 4×8 WINDOW vs DARK | `binary_sensor.dsc_hub_4x8_window_open` = off | DARK chip | match |
+| Twin OFF | `light.dsc_hub_twin_sf1000` = off + available | TWIN SF1000 OFF; honesty copy cites GPIO when available | match |
+| 2×4 Want | `sensor.dsc_clone_expected_light_hours` = 12.0 | Want hours 12h | match |
+| 2×4 Got | `sensor.dsc_lights_on_today_2x4` ≈ 12.0 | Got/Want gauge | match |
+| Schedule Follow | `select.dsc_hub_clone_photoperiod` = Follow 4x8 | Schedule · Follow 4×8 | match |
+| Climate Mode distinct | `select.dsc_hub_clone_mode` = Follow 4x8 | separate Climate · Follow 4x8 chip + Climate deep-link | match |
+| SF1000 OFF | dimmer = off | SF1000 OFF | match |
+| DLI uncalibrated | `input_number.dsc_cal_ppfd_*` absent | 4×8 CTA present; **2×4 CTA missing** | **fixed** |
+| Energy Estimate | `/energy/estimate` `estimate_label=Estimate`, suggestions `apply:false` | both tents titled `energy (estimate)`; Start gradual… + confirm gate | match (copy punct fixed) |
+| Journals | `/journal/space/*` provenance `space` | provenance chips; Save disabled when empty **without hint** | **fixed** |
+| Dark / hold / auto banners | dark=off, hold=off, auto=on | Dark period OK; no false manual banner | match |
+| Climate Want deep-link | navigates `/live/climate` | honest nav (not inline climate editor) | match (+ arrow cue) |
+
+### Gaps fixed
+
+1. **2×4 DLI calibrate CTA** — when PPFD uncalibrated, 4×8 showed Fleet → Calibrate; 2×4 rendered nothing. Both tents now show the same honest CTA.
+2. **Energy honesty punctuation** — API `honesty` lacks a trailing stop; SPA appended ` Learning never…` → “bill Learning”. Now normalizes a sentence end before the Learning clause.
+3. **Disabled Save clarity** — empty tent note left Save disabled with no reason. Shows “Add text to enable Save” (and “Saving…” while busy).
+4. **Climate Want cue** — label `Climate Want →` to read as desk navigation, not an in-place editor.
+
+### None-found (evidence)
+
+- Twin/SF1000 OFF copy with GPIO present: honest (Twin chip + window Got SoT).
+- Card hierarchy Got/Want → schedule → energy → journals already correct.
+- Energy never auto-apply: panel copy + confirm UI; API `apply: false` (Task 1).
+- Stage rails read as Expected (outside / in-band · stage rail), not live plant.
 
 ## Files changed
 
-| File | Change |
+| Path | Change |
 |------|--------|
-| `homeassistant/custom_components/dsc_hub/frontend/src/lib/fleetApi.ts` | Extended `isZigbeeSafetyLeakRole`; added `zigbeeFloodBannerTemplate` |
-| `homeassistant/custom_components/dsc_hub/frontend/src/pages/SettingsPage.tsx` | Generalized task-params UI for tank + flood recipes |
-
-## Implementation summary
-
-### fleetApi.ts
-
-- **`isZigbeeSafetyLeakRole(roleId)`** — now returns true for `leak_tank`, `leak_floor`, and any id starting with `leak_floor_` (covers `leak_floor_room`, `leak_floor_4x8`, `leak_floor_2x4`).
-- **`zigbeeFloodBannerTemplate(problemWhen)`** — mirrors brain `flood_banner_template`: `"Floor water detected"` (active) / `"Floor dry alarm — check sensor"` (inactive).
-
-### SettingsPage.tsx
-
-- Constants: `TANK_TASK_ID`, `FLOOD_TASK_ID`, `TASK_PARAM_IDS` Set.
-- **`taskParamDefaults(recipeId, recipe)`** — flood path returns `problem_when`, `banner`, `banner_tone`; tank path preserves existing seat/appliance defaults.
-- **`showTaskParams`** — `role !== "unbound" && TASK_PARAM_IDS.has(recipeId)`.
-- Recipe change handler seeds params via `taskParamDefaults` for both tank and flood.
-- **`updateTaskParam`** — flood updates only polarity + banner (auto-regenerates via `zigbeeFloodBannerTemplate`); tank keeps appliance + polarity + banner (via `zigbeeBannerTemplate`).
-- **Appliance `<select>`** — rendered only when `recipeId === TANK_TASK_ID`.
-- **Fallback arrays** — roles include three space-specific floor leak roles; recipes include `floor_flood_alert`.
+| `.../src/pages/LightPage.tsx` | 2×4 DLI CTA; Climate Want → |
+| `.../src/components/energy/LightEnergyPanel.tsx` | honesty sentence join |
+| `.../src/components/journal/TentOccupancyJournal.tsx` | disabled Save hint |
+| `.../spa-dist/*` | `build:spa` → `index-DYFvyI2i.js` |
 
 ## Build
 
-```text
-cd homeassistant/custom_components/dsc_hub/frontend
+```powershell
+cd homeassistant\custom_components\dsc_hub\frontend
 npm.cmd run build:spa
 ```
 
-- **Exit code:** 0
-- **Output:** `spa-dist/assets/index-CqcbMep5.js` (new hash), plus CSS/chunk assets
+`spa-dist/index.html` → `/assets/index-DYFvyI2i.js` (exit 0).
 
-## Self-review
+## Commit
 
-| Brief requirement | Done? | Notes |
-|-------------------|-------|-------|
-| Extend `isZigbeeSafetyLeakRole` | ✓ | Matches brief verbatim |
-| Add `zigbeeFloodBannerTemplate` | ✓ | Text matches brain `flood_banner_template` |
-| `TASK_PARAM_IDS` Set | ✓ | |
-| `taskParamDefaults` helper | ✓ | Flood + tank branches |
-| Shared task-params panel | ✓ | Both recipes show Problem when + Banner |
-| Appliance select tank-only | ✓ | Conditional on `TANK_TASK_ID` |
-| Fallback roles (3 space floor) | ✓ | room / 4×8 / 2×4 |
-| Fallback flood recipe | ✓ | |
-| `npm run build:spa` exit 0 | ✓ | |
-| No commit | ✓ | |
+See git log after this report lands (src + spa-dist + this report only).
 
-### Concerns / follow-ups
+## Concerns
 
-1. **No unit tests in SPA** — helpers are thin mirrors of brain; brain tests cover banner templates. SPA build is the gate for this task.
-2. **`liquidRecipe` variable name** in `ZigbeeBindRow` is now misnamed (holds current recipe, not tank-only) — cosmetic only; rename optional in a polish pass.
-3. **Role auto-override to `liquid` class** — existing behavior for `isZigbeeSafetyLeakRole` now also triggers for `leak_floor_*` ids, which is intended.
-
-## Brain files
-
-Untouched per task scope (Task 1 uncommitted brain work remains separate).
-
----
-
-## Task 2 review fix — recipe-change param seeding
-
-### Status: Fixed
-
-Review finding: when the Task/recipe `<select>` changed in `ZigbeeBindRow`, `taskParamDefaults(nextRecipe, liquidRecipe)` passed the **current** recipe catalog row (`recipeId`), so tank↔flood switches seeded the wrong banner/defaults.
-
-### Change
-
-| File | Change |
-|------|--------|
-| `homeassistant/custom_components/dsc_hub/frontend/src/pages/SettingsPage.tsx` | Recipe `onChange` now resolves `allRecipes.find((r) => r.id === nextRecipe)` for `taskParamDefaults`; removed unused misnamed `liquidRecipe` variable |
-
-### Build (post-fix)
-
-```text
-cd homeassistant/custom_components/dsc_hub/frontend
-npm.cmd run build:spa
-```
-
-- **Exit code:** 0
-- **Output:** `spa-dist/assets/index-Cl2q9nOC.js` (new hash), plus CSS/chunk assets
-- **Duration:** ~3.7s
-
-### No commit
-
-Per instructions — fix remains uncommitted.
+- **DutyStrip vs Got (2×4):** SF1000 24h strip showed `0.0H ON` while Got sensor ≈ 12h — history strip vs photoperiod Got SoT. Not fixed here (not lamp-copy theater); Task 3 should note it on the walk.
+- **Live SPA not hotpatched:** fixes are in repo `spa-dist` only; Pi still serves prior bundle until Task 3 hotpatch.
+- **Walk doc:** intentionally not filled (Task 3).
+- **Climate Want:** only a nav arrow cue; Climate desk honesty is Pass 2.

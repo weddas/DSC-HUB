@@ -115,7 +115,7 @@ export function LiveLightPage() {
         subtitle="Separate 4×8 and 2×4 desks — each tent has its own schedule and clocks."
         primaryAction={
           <Button teal onClick={() => navigate("/live/climate")}>
-            Climate Want
+            Climate Want →
           </Button>
         }
       />
@@ -399,7 +399,11 @@ export function LiveLightPage() {
                 sub={`@ ${Math.round(ppfd)} PPFD · SF1000`}
                 icon="analytics"
               />
-            ) : null}
+            ) : (
+              <p className="dsc-muted" style={{ fontSize: 12, marginBottom: 0 }}>
+                DLI estimate needs SF1000 PPFD calibration — Fleet → Calibrate.
+              </p>
+            )}
             {independent ? (
               <p className="dsc-muted" style={{ fontSize: 12, marginBottom: 0 }}>
                 Independent — 2×4 schedule does not track 4×8.

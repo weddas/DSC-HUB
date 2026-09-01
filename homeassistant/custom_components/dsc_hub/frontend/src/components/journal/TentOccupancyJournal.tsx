@@ -58,6 +58,16 @@ export function TentOccupancyJournal({ spaceId }: { spaceId: "4x8" | "2x4" }) {
         <Button teal disabled={busy || !note.trim()} onClick={() => void save()}>
           Save tent note
         </Button>
+        {!note.trim() && !busy ? (
+          <span className="dsc-muted" style={{ fontSize: 12 }}>
+            Add text to enable Save
+          </span>
+        ) : null}
+        {busy ? (
+          <span className="dsc-muted" style={{ fontSize: 12 }}>
+            Saving…
+          </span>
+        ) : null}
         {err ? <StatusChip label={err} tone="bad" /> : null}
       </div>
       <ul className="dsc-journal-list">
