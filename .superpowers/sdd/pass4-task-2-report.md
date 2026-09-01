@@ -6,7 +6,8 @@
 
 ## Commits
 
-- (this commit) `feat(brain): hybrid 4x8 Got prefers Twin when history healthy`
+- `b4ca126` — feat(brain): hybrid 4x8 Got prefers Twin when history healthy  
+  (plus follow-up docs commit for this report on `master`)
 
 ## What landed
 
