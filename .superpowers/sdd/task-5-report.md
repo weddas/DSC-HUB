@@ -62,9 +62,12 @@ Exit 0 → `spa-dist/assets/index-CzcL7cKc.js`.
 
 ```
 70e9231 fix(spa): Climate desk honesty cascade canopy and Capacity SoT
+41a5986 docs(sdd): record Task 5 commit hash in report
+3a7bf18 docs(sdd): extend Task 5 progress range through report commit
 ```
 
 Files: ClimatePage.tsx, FlowSankey.tsx, spa-dist (`index-CzcL7cKc.js`), FOLLOWUPS, task-5 brief/report, progress.
+
 
 ## Concerns / parks
 

@@ -36,5 +36,5 @@ Task 3: complete (commits 3d1ead4..985a2c4, Light gate GREEN; park SV-P1-6 DutyS
 
 Task 4: complete (commits 985a2c4..2feb837, review clean)
 
-Task 5: complete (commits 2feb837..41a5986, Climate SPA honesty + light UX)
+Task 5: complete (commits 2feb837..3a7bf18, Climate SPA honesty + light UX)
 
