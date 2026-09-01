@@ -26,4 +26,4 @@
 
 Twin canvas portals into `#dsc-twin-slot` on `/live/twin` so the scene sits under the page header (not below Crop scheduler).
 
-See [`NEON-API-SOAK-7.3.md`](NEON-API-SOAK-7.3.md).
+See [`NEON-API-SOAK-7.3.md`](NEON-API-SOAK-7.3.md) · developer runbook [`docs/brain/TWIN-R3F.md`](../brain/TWIN-R3F.md).

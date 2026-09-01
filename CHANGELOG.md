@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Docs** — developer/ops runbooks for 7.3 FlowSankey, leaf VPD, Twin R3F (+ TwinViewport portal), Lovelace retirement (source tree removed); lab wet honesty gap; deploy stderr / spa-dist gitignore notes.
+
 ## Pi appliance — **v7.3.0** (2026-08-27)
 
 Full software closure: version truth, graph QoL, flow Sankey (air/heat/humidity), lab wet cal, R3F Twin on Pi SPA, Lovelace YAML retired. See [`docs/qa/AUDIT-CLOSURE-7.3.md`](docs/qa/AUDIT-CLOSURE-7.3.md).
