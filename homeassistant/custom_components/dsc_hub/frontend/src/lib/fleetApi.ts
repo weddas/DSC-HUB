@@ -64,7 +64,7 @@ export async function get_fleet_state(): Promise<Record<string, unknown>> {
 }
 
 export async function get_fleet_computed(): Promise<Record<string, unknown>> {
-  const resp = await fetch("/fleet/computed");
+  const resp = await fetch(`/fleet/computed?_=${Date.now()}`);
   if (!resp.ok) throw new Error("fleet computed fetch failed");
   return resp.json();
 }

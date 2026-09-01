@@ -3620,35 +3620,32 @@ Source: browser-only stress pass on live Pi SPA (`192.168.86.48:8787`). Goal: 10
 | ST-P1-4 | Roster vs unassigned strip drift | Unassigned strip showed Probe 1 empty while roster #3 claimed Probe 1 active. |
 | ST-P1-5 | Full page audit | Roster/Compose partially exercised; Calibrate probe moves, Climate, Live/Twin, Fleet, Settings, Dash home still need review pass. |
 
-### Stress-test progress (browser) — 2026-08-31 COMPLETE
+### Stress-test progress (browser) — 2026-08-31 COMPLETE (resume pass)
 
 | Target | Status |
 |--------|--------|
 | 2×4 early-flower photo + auto | **Done** — #1 Grandmommy Purple (photo EF, Probe 2); #4 Afternoon Brunch auto (Probe 1) |
-| 8× 4×8 diverse as stock | **Done** — #2 LCG, #3 Three Ghost, #5 Five Ghost, #6 VPD, #7 Skunk, #8 SD, #9 JRat, #10 FRITZ (created via Compose stock; #6/#10 show detached after probe-cal cycle) |
-| 10 total roster | **Done — 10/10** after `ROSTER_SLOT_COUNT=10` brain hotpatch |
-| Pi hotpatch | **Done** — SPA `index-Bx0-MSV-.js`; brain 10-slot + assign conflict release |
-| Probe moves + soil cal | **Done** — VPD↔Probe 1 and FRITZ↔Probe 2 cycles; SoftCal chips update (`PROBE 1 · 4X8-VPD-DRY`); Soil What/Process/Expected present; probes restored to Brunch/Grandmommy |
-| Full page review | **Done** — Grow/Live/Calibrate/Settings all load |
-| Browser-only creation | **Done** — all plants via Compose UI |
+| 8× 4×8 diverse as stock | **Done** — LCG, Three Ghost, Five Ghost, VPD, Skunk, SD, JRat, FRITZ (browser Compose) |
+| 10 total roster | **Done — 10/10** |
+| Probe moves + soil cal | **Done** (prior pass) |
+| Full page review | **Done** |
+| Browser-only creation | **Done** |
 
-### Fixes landed this pass
+### Fixes this resume pass
 
-| Fix | Notes |
-|-----|-------|
-| `ROSTER_SLOT_COUNT=10` | `compose_store.py` + API; hotpatched Pi |
-| Stock compose path | `PlantWizard` + datetime flush (prior) |
-| EntityDatetime → `entityTextDrafts` | `ui.tsx` — sprout draft now flushes like nickname |
-| Assign conflict release | `plant_probe.py` (prior) |
-| Deploy scripts | `.audit/stress-roster-hotpatch.ps1`, `stress-spa-only-hotpatch.ps1` |
+| Fix | File |
+|-----|------|
+| Serialize `/fleet/computed` refresh + bump tick (stale roster after retire) | `useBrain.tsx` |
+| Cache-bust computed fetch | `fleetApi.ts` |
+| Nickname sync reads live DOM | `PlantWizard.tsx` |
+| Light step footer = **Skip light** when no fixture | `PlantWizard.tsx` |
+| EntityDatetime drafts flush like EntityText | `ui.tsx` (prior) |
 
-### Residual (not blocking objective)
+### Residual
 
 | ID | Item |
 |----|------|
-| ST-P0-7 | Roster UI can lag API retire until hard reload / brain refresh |
-| ST-P1-compose-light | Must **Skip light** before Next or wizard stalls on light catalog |
-| ST-nick-race | Some stock commits still land strain-as-nickname when bus lags (improved when `/control/service` or flush wins) |
+| ST-P0-7 soft | Delete UI may take one computed poll (~5s) to drop the row; hard reload always correct. Modal is `.dsc-decision-panel` / confirm **Delete plant**. |
 
 ### red-flag (P0) — additional findings (2026-08-31 PM pass)
 

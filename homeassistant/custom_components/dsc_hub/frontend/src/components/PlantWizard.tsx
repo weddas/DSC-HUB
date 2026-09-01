@@ -166,7 +166,11 @@ export function PlantWizard() {
 
   const syncComposeTextToBus = async () => {
     await syncStrainToBus();
-    const n = nick.trim();
+    // Prefer live DOM over draft map — native setters / mid-blur races can leave the map empty.
+    const domNick = document
+      .querySelector<HTMLInputElement>('input[data-entity-id="input_text.dsc_build_nickname"]')
+      ?.value?.trim();
+    const n = (domNick || nick).trim();
     if (n && n !== nickBus.trim()) {
       await callService("input_text", "set_value", {
         entity_id: "input_text.dsc_build_nickname",
@@ -210,7 +214,10 @@ export function PlantWizard() {
     if (step.id === "plant") await syncComposeTextToBus();
     await flushEntityDrafts();
     if (step.id === "feed") setSkippedFeed(nutrients.length === 0);
-    if (step.id === "light") setSkippedLight(!light || light === "unknown");
+    if (step.id === "light") {
+      // Footer Next is skip-equivalent when no fixture is chosen — don't strand on the light catalog.
+      setSkippedLight(!light || light === "unknown");
+    }
     setStepIdx((i) => Math.min(i + 1, STEPS.length - 1));
   };
 
@@ -631,8 +638,12 @@ export function PlantWizard() {
           Back
         </Button>
         {step.id !== "review" ? (
-          <Button variant="primary" icon="ok" disabled={!canNext} onClick={goNext}>
-            {step.optional ? "Next (or skip above)" : "Next"}
+          <Button variant="primary" icon="ok" disabled={!canNext} onClick={() => void goNext()}>
+            {step.id === "light" && (!light || light === "unknown")
+              ? "Skip light"
+              : step.optional
+                ? "Next (or skip above)"
+                : "Next"}
           </Button>
         ) : null}
       </footer>

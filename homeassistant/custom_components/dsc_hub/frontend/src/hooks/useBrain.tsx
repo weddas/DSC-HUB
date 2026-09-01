@@ -82,19 +82,21 @@ export function BrainProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-  const computedInFlight = useRef(false);
+  /** Serialize computed fetches so refresh() never no-ops on an in-flight poll (stale roster after retire). */
+  const computedChain = useRef(Promise.resolve());
 
-  const refreshComputed = useCallback(async () => {
-    if (computedInFlight.current) return;
-    computedInFlight.current = true;
-    try {
-      const data = await get_fleet_computed();
-      setComputed(data);
-    } catch {
-      /* computed helpers are non-fatal */
-    } finally {
-      computedInFlight.current = false;
-    }
+  const refreshComputed = useCallback(() => {
+    const run = async () => {
+      try {
+        const data = await get_fleet_computed();
+        setComputed(data);
+        setTick((t) => t + 1);
+      } catch {
+        /* computed helpers are non-fatal */
+      }
+    };
+    computedChain.current = computedChain.current.then(run, run);
+    return computedChain.current;
   }, []);
 
   const refresh = useCallback(async () => {
