@@ -55,3 +55,11 @@ Task 9: complete (Overview Pi prove + program close; Passes 1?3 GREEN; Pass 4/5 
 Task 9: complete (Overview gate GREEN, Passes 1-3 closed; commits 2d44c52..183f2f0)
 Program Passes 1-3: DONE
 
+
+# Pass 4 Twin-first SDD
+Plan: docs/superpowers/plans/2026-09-01-live-ux-pass4-twin-integrated.md
+
+Pass4 Task1: c8e0d95
+Pass4 Task2: b4ca126..dada591
+Pass4 Task3: 5144978 (Light Twin honesty + DutyStrip; report in pass4-task-3-report.md)
+
