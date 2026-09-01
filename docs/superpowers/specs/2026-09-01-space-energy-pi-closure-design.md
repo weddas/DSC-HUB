@@ -98,7 +98,7 @@ DSC-Core journal     →  facility/system-native + rollup of all rooms
 - `GET /rooms` (ensure seed on read if missing)
 - Existing `/journal/plant/*`, `/journal/space/*` unchanged in contract
 
-**SPA:** Tent journals remain on Light; add room + Core read/compose on Ops/Dash or Settings Brain (one primary surface required; walk covers it). Plant card still has **no** lighting controls.
+**SPA:** Tent journals remain on Light. Primary room + Core UI lives on **Ops/Dash** (Settings Brain may deep-link). Plant card still has **no** lighting controls.
 
 ---
 
