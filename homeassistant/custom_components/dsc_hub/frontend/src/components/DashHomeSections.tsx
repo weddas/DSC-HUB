@@ -11,10 +11,11 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ALERT_ENTITY_IDS } from "../lib/alertPlaybook";
 import { potMoistureNum } from "../lib/potReading";
 import type { RosterSlot } from "../lib/seatModel";
-import { KIT_PROBE_NUMBERS, probeLabel } from "../lib/seatModel";
+import { KIT_PROBE_NUMBERS, isPotInServiceWithFleet, probeLabel } from "../lib/seatModel";
 import type { CfmReading } from "../lib/cfmProvenance";
 import { TentLightClockStrip } from "./TentLightClock";
 import { buildCloneLightDesk, headerSfLabel } from "../lib/lightViewModel";
+import { useFleet } from "../hooks/useFleet";
 
 type Bus = {
   state: (id: string, fb?: string) => string;
@@ -510,7 +511,7 @@ export function DashBandsGrid({
   return (
     <Card className="dsc-glass" title="Bands" icon="gauge">
       <p className="dsc-muted" style={{ fontSize: 12, margin: "0 0 10px" }}>
-        Green = in band · amber = drifting · red = alert · grey = no data
+        Green = in band · amber = drifting · red = alert · grey = no data or out of service
       </p>
       <div className="dsc-tent-segment" style={{ marginBottom: 10 }}>
         {BAND_FOCUS.map((o) => (
@@ -676,15 +677,25 @@ export function DashRootTankSection({
   onPotChart: (kind: BandChartKind) => void;
 }) {
   const { state, num } = bus;
+  const fleet = useFleet();
   const moistBand = { min: 30, max: 70 };
   return (
     <Card className="dsc-glass" title="Root & tank" icon="root">
+      <p className="dsc-muted" style={{ fontSize: 12, margin: "0 0 8px" }}>
+        Grey gauges mean no moisture Got or probe out of service — never a fake reading.
+      </p>
       <div className="dsc-chip-row">
         {[...KIT_PROBE_NUMBERS].map((n) => {
+          const oos = !isPotInServiceWithFleet(n, state, fleet);
           const name = state(`text.dsc_probe${n}_plant_name`, "—");
           const clean = !name || name === "unknown" || name === "unavailable" ? "—" : name;
           return (
-            <StatusChip key={n} label={`${probeLabel(n)} ${clean}`} tone={clean === "—" ? "muted" : "ok"} onClick={() => onPot(n)} />
+            <StatusChip
+              key={n}
+              label={oos ? `${probeLabel(n)} OOS` : `${probeLabel(n)} ${clean}`}
+              tone={oos || clean === "—" ? "muted" : "ok"}
+              onClick={() => onPot(n)}
+            />
           );
         })}
       </div>
@@ -703,19 +714,23 @@ export function DashRootTankSection({
         </div>
       ) : null}
       <div className="dsc-gauge-matrix dsc-gauge-matrix--pots">
-        {[...KIT_PROBE_NUMBERS].map((n) => (
-          <ArcGauge
-            key={n}
-            label={probeLabel(n)}
-            value={potMoistureNum(num, state, n)}
-            min={0}
-            max={100}
-            unit="%"
-            band={moistBand}
-            segments={moistureSegments(30, 70)}
-            onClick={() => onPotChart(`pot${n}` as BandChartKind)}
-          />
-        ))}
+        {[...KIT_PROBE_NUMBERS].map((n) => {
+          const oos = !isPotInServiceWithFleet(n, state, fleet);
+          const moist = oos ? NaN : potMoistureNum(num, state, n);
+          return (
+            <ArcGauge
+              key={n}
+              label={oos ? `${probeLabel(n)} OOS` : probeLabel(n)}
+              value={moist}
+              min={0}
+              max={100}
+              unit="%"
+              band={oos ? undefined : moistBand}
+              segments={oos ? undefined : moistureSegments(30, 70)}
+              onClick={() => onPotChart(`pot${n}` as BandChartKind)}
+            />
+          );
+        })}
       </div>
       <div className="dsc-chip-row" style={{ marginTop: 10 }}>
         {bus.available("sensor.water_tester_ph_current") ? (
@@ -768,6 +783,9 @@ export function DashGrowLog({ bus }: { bus: Bus }) {
 
   return (
     <Card className="dsc-glass" title="Grow log" icon="roster">
+      <p className="dsc-muted" style={{ fontSize: 12, margin: "0 0 8px" }}>
+        History of stage and duty events. Amber rows are past notables — not live critical banners.
+      </p>
       <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
         {(["all", "alerts", "stage"] as const).map((mode) => (
           <button

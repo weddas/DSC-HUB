@@ -192,6 +192,9 @@ export function OverviewPage() {
       <DashConditionalBanners bus={bus} onNavigate={navigate} />
 
       <Card className="dsc-glass" title="Photoperiod" icon="lighting">
+        <p className="dsc-muted" style={{ fontSize: 12, margin: "0 0 8px" }}>
+          Glance only — same schedule SoT as Light (including Follow 4×8). Edit on the Light desk.
+        </p>
         <TentLightClockStrip />
         <div className="dsc-row-actions" style={{ marginTop: 10 }}>
           <Button teal icon="lighting" onClick={() => navigate("/live/light")}>

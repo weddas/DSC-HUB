@@ -3884,3 +3884,11 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 | Climate SPA honesty (Task 5) | **done (repo)** | Cascade entity, Capacity offline SoT, canopy fleet T/RH, Wet unknown muted, mass chip gated label - see `.superpowers/sdd/task-5-report.md` |
 | Climate walk / Pi hotpatch (Task 6) | **done (live)** | Hotpatched `index-CzcL7cKc.js`; HTTP reduced_kit/canopy/CFM green; walk filled - gate **GREEN**. Evidence `.audit/live-ux-climate-prove-evidence.json` |
 | AirPathMap cascade <- intake 2x4 | **parked** | Live confirm Task 6: SVG still aliases cascade ribbon to `intakeClone` (not `dsc_cfm_cascade_2x4_allocated`). FlowSankey honesty green (AIR CFM + MASS CHIP GATED + allocated cascade) - does **not** block Pass 2 / Overview |
+
+## 2026-09-01 - Live UX honesty Pass 3 (Overview SPA)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Overview SPA honesty (Task 8) | **done (repo)** | Journal provenance/Save UX; root OOS grey; grow-log history caption; photoperiod glance SoT copy ? see `.superpowers/sdd/task-8-report.md`. Bundle `index-C8GkS5XE.js` |
+| Overview walk / Pi hotpatch (Task 9) | **next-plan** | Do not fill walk until prove; hotpatch + browser matrix + cross-desk photoperiod parity |
+| Moisture band 30?70 vs Root Want | **parked** | GAUGE-P0-1; not OOS/no-data greying |
