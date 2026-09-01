@@ -79,8 +79,11 @@ Tick via computed path with `set_lights_on` → hub time helpers (`time.dsc_hub_
 | Conflict/dark | `photoperiod_conflict.py`; dark hook in `dash_computed.py` |
 | HTTP | `/journal/*`, `/spaces`, `/rooms`, `/energy/*` in `api.py` |
 | Pi closure | `.audit/space-energy-pi-closure.ps1`; walk `docs/qa/SPACE-ENERGY-PI-WALK-2026-09.md` |
-| SPA | `components/journal/*`, `components/energy/LightEnergyPanel.tsx`, Settings Brain `SpaceEnergySettingsCard` |
+| SPA | `components/journal/*`, `components/energy/LightEnergyPanel.tsx`, Settings Brain `SpaceEnergySettingsCard`; Pass 1 desk CTAs in `LightPage.tsx`; Climate Wet/Dry vs Problem in `ClimatePage.tsx` |
 | Client | `fleetApi.ts` journal/energy helpers |
+| Pass 1 honesty | `brain/tests/test_live_ux_light_honesty.py` (desk-green) |
+| Pass 2 honesty | `brain/tests/test_live_ux_climate_honesty.py` — `_reduced_kit` planned_oos; wet ≠ problem without recipe / polarity |
+| Runbook | [`docs/brain/LIVE-UX-HONESTY.md`](../../docs/brain/LIVE-UX-HONESTY.md) |
 
 ## Agent checklist
 
@@ -91,6 +94,7 @@ When changing this area:
 - [ ] Plant surfaces have no lights-on / hours controls
 - [ ] Journal copy stays observation-language
 - [ ] New system events write plant and/or space journal with `source=system`
-- [ ] Tests cover confirm-gate + no-auto-apply (see `brain/tests/test_*energy*`, `test_schedule_shift`, `test_journal_api`)
+- [ ] Tests cover confirm-gate + no-auto-apply (see `brain/tests/test_*energy*`, `test_schedule_shift`, `test_journal_api`, `test_live_ux_light_honesty`)
+- [ ] Climate safety: Wet/Dry raw; Problem only from `policy_state` (`test_live_ux_climate_honesty`)
 
 Commit / Pi hotpatch only when the operator asks.
