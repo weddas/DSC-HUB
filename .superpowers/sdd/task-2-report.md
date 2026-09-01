@@ -63,7 +63,11 @@ npm.cmd run build:spa
 
 ## Commit
 
-See git log after this report lands (src + spa-dist + this report only).
+```
+038bdb5 fix(spa): Light desk honesty CTAs and Save clarity
+```
+
+Files: LightPage.tsx, LightEnergyPanel.tsx, TentOccupancyJournal.tsx, spa-dist (`index-DYFvyI2i.js`), task-2-report.md.
 
 ## Concerns
 
