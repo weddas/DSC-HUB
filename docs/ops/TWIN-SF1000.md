@@ -2,7 +2,7 @@
 
 **In one line:** Main-tent PWM light on hub GPIO5 is distinct from the clone SF1000 on GPIO23; when Twin is available, Light treats it as the live 4×8 actuator and Got prefers Twin on-hours when history is healthy — GPIO5 stays reserved until physically wired.
 
-**Tip:** `f2ac21f` · spa-dist `index-BoyhWWR_.js` · Firmware `dsc-hub-v4_0.yaml` · SPA Light / Live / `lightSchedule.ts` · Design [twin-sf1000](../superpowers/specs/2026-08-29-twin-sf1000-design.md) · Pass 4 [pass4 design](../superpowers/specs/2026-09-01-live-ux-pass4-twin-integrated-design.md) · Pass 5 [pass5 design](../superpowers/specs/2026-09-01-live-ux-pass5-followup-design.md) · [pass5 gate](../../.superpowers/sdd/pass5-gate-report.md)
+**Tip:** `6ce9ea5` · spa-dist `index-BoyhWWR_.js` · Firmware `dsc-hub-v4_0.yaml` · SPA Light / Live / `lightSchedule.ts` · Design [twin-sf1000](../superpowers/specs/2026-08-29-twin-sf1000-design.md) · Pass 4 [pass4 design](../superpowers/specs/2026-09-01-live-ux-pass4-twin-integrated-design.md) · Pass 5 [pass5 design](../superpowers/specs/2026-09-01-live-ux-pass5-followup-design.md) · [pass5 gate](../../.superpowers/sdd/pass5-gate-report.md)
 
 ## Entities
 
@@ -51,7 +51,7 @@ flowchart TB
 
 Do not double-scale. Optical lamp output remains **N/A** until GPIO5 PWM module is physically wired.
 
-## SPA / brain consumers (verified tip `f2ac21f`)
+## SPA / brain consumers (verified tip `6ce9ea5`)
 
 | Surface | Behavior |
 |---------|----------|
@@ -66,7 +66,7 @@ Twin / 3D remain a **presence / projection plane** — not a controller. Do not 
 
 ## Pass 4 Twin-first + Pass 5 closeout
 
-| Item | Status on tip `f2ac21f` |
+| Item | Status on tip `6ce9ea5` |
 |------|-------------------------|
 | Design + implementation plan | **Landed** |
 | Hybrid Got + Twin on ingest | **Landed** (`b4ca126`) |

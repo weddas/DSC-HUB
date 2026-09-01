@@ -2,8 +2,8 @@
 
 **Intent:** Keep operator Live desks behaviorally honest — gauges/chips/labels match real Want→Got fleet state; Expected/stage rails never read as live plant or live lamp; both tents stay at the same development point.
 
-**Tip:** `f2ac21f` · spa-dist `index-BoyhWWR_.js` (+ `calibrate-CYRum8WF.js` · `tune-fleet-BPdxWQzJ.js`)  
-**Status:** Passes 1–5 **proven** — five-pass Live UX honesty program **closed**. Pass 4 Twin-first **gate GREEN** (`4a40589`). Pass 5 follow-up **gate GREEN** (`d07cbd9` / tip `f2ac21f`): Manual Light Hold control map + operator clear; energy `confirm=false` → **HTTP 400**; Zigbee Wet→Problem via `policy_state`; FlowSankey graduated; CannaLib prod verify-close; soak + three-desk re-walk. GPIO5 still **reserved** (not wired; optical N/A). `leak_floor_2x4` parked (no HW).
+**Tip:** `6ce9ea5` · spa-dist `index-BoyhWWR_.js` (+ `calibrate-CYRum8WF.js` · `tune-fleet-BPdxWQzJ.js`)  
+**Status:** Passes 1–5 **proven** — five-pass Live UX honesty program **closed**. Pass 4 Twin-first **gate GREEN** (`4a40589`). Pass 5 follow-up **gate GREEN** (`d07cbd9`; tip advanced `f2ac21f`→`6ce9ea5` with Pass 4 SDD brief archive only — **no SPA/brain behavior change**): Manual Light Hold control map + operator clear; energy `confirm=false` → **HTTP 400**; Zigbee Wet→Problem via `policy_state`; FlowSankey graduated; CannaLib prod verify-close; soak + three-desk re-walk. GPIO5 still **reserved** (not wired; optical N/A). `leak_floor_2x4` parked (no HW).
 
 **Spec / plan:**  
 [`../superpowers/specs/2026-09-01-live-ux-honesty-program-design.md`](../superpowers/specs/2026-09-01-live-ux-honesty-program-design.md) ·  
@@ -13,7 +13,7 @@ Pass 4: [`../superpowers/specs/2026-09-01-live-ux-pass4-twin-integrated-design.m
 Pass 5: [`../superpowers/specs/2026-09-01-live-ux-pass5-followup-design.md`](../superpowers/specs/2026-09-01-live-ux-pass5-followup-design.md) ·  
 [`../superpowers/plans/2026-09-01-live-ux-pass5-followup.md`](../superpowers/plans/2026-09-01-live-ux-pass5-followup.md) ·  
 Pass 5 reports: [`.superpowers/sdd/pass5-tasks-2-4-report.md`](../../.superpowers/sdd/pass5-tasks-2-4-report.md) · [`.superpowers/sdd/pass5-task-5-report.md`](../../.superpowers/sdd/pass5-task-5-report.md) · [`.superpowers/sdd/pass5-gate-report.md`](../../.superpowers/sdd/pass5-gate-report.md) ·  
-Pass 4 reports: [`.superpowers/sdd/pass4-task-7-report.md`](../../.superpowers/sdd/pass4-task-7-report.md) ·  
+Pass 4 SDD archive (`6ce9ea5`): briefs `pass4-task-{1..5,7}-brief.md` + reports `pass4-task-{1..7}-report.md` under [`.superpowers/sdd/`](../../.superpowers/sdd/) ·  
 Task 8/9: [`.superpowers/sdd/task-8-report.md`](../../.superpowers/sdd/task-8-report.md) · [`.superpowers/sdd/task-9-report.md`](../../.superpowers/sdd/task-9-report.md)
 
 ## Architecture
@@ -67,7 +67,7 @@ flowchart LR
 | 2 | Climate | [`LIVE-UX-CLIMATE-WALK-2026-09.md`](../qa/LIVE-UX-CLIMATE-WALK-2026-09.md) | `test_live_ux_climate_honesty.py` | **GREEN** (live spa was `index-CzcL7cKc.js`) |
 | 3 | Overview | [`LIVE-UX-OVERVIEW-WALK-2026-09.md`](../qa/LIVE-UX-OVERVIEW-WALK-2026-09.md) | `test_live_ux_overview_honesty.py` | **GREEN** (`index-C8GkS5XE.js` · Task 9 prove) |
 | 4 | Twin-first integrated | [`LIVE-UX-PASS4-WALK-2026-09.md`](../qa/LIVE-UX-PASS4-WALK-2026-09.md) | `test_live_ux_pass4_twin.py` | **gate GREEN** (`4a40589`) — spa `index-BoyhWWR_.js` |
-| 5 | Follow-up closeout | [`LIVE-UX-PASS5-WALK-2026-09.md`](../qa/LIVE-UX-PASS5-WALK-2026-09.md) | Pass 4 twin + climate + zigbee_policies + `test_brain_pi` Hold map | **gate GREEN** on `f2ac21f` (`d07cbd9`) — program **closed** |
+| 5 | Follow-up closeout | [`LIVE-UX-PASS5-WALK-2026-09.md`](../qa/LIVE-UX-PASS5-WALK-2026-09.md) | Pass 4 twin + climate + zigbee_policies + `test_brain_pi` Hold map | **gate GREEN** (`d07cbd9`; tip `6ce9ea5`) — program **closed** |
 
 Screenshots: `docs/qa-screenshots-2026-09-01-live-ux/` (incl. `pass4-*` · `pass5-*`). Evidence: `.audit/live-ux-*-prove-evidence.json` · `.audit/live-ux-pass5-prove-evidence.json` · `.audit/live-ux-pass5-task5-evidence.json`.
 
@@ -182,7 +182,7 @@ flowchart TD
   P5 -->|GREEN d07cbd9| Closed[Program closed]
 ```
 
-| Phase | Intent | Verified tip `f2ac21f` (Pass 4 landings on `6a359f2`) | Residual |
+| Phase | Intent | Verified tip `6ce9ea5` (Pass 4 landings on `6a359f2`; Pass 5 on `d07cbd9`) | Residual |
 |-------|--------|------------------------|----------|
 | A | Twin software as if present | Hybrid Got + DutyStrip Twin; brightness 0–255↔0–1; walk A1–A8 **pass**; evidence `.audit/live-ux-pass4-prove-evidence.json`; pytest hybrid guards | Optical N/A |
 | B | Inventory re-walk | Task 5 **DONE_WITH_CONCERNS**; B1–B5 + B7–B12 **pass**; **B6 fail** at inventory (Wet/Dry UI absent then); inventory `.audit/live-ux-pass4-phaseb-inventory.json` + `pass4-b-*` | Findings consumed by Phase C |
@@ -242,7 +242,7 @@ flowchart TB
 
 ## Pass 5 — Follow-up closeout (**gate GREEN** · program closed)
 
-Tip `f2ac21f` closed Pass 4 parks + CannaLib prod verify + FlowSankey graduate + Zigbee one-recipe Wet→Problem + soak/re-walk. Gate evidence: `.audit/live-ux-pass5-prove-evidence.json` (`ok=true`) · walk [`../qa/LIVE-UX-PASS5-WALK-2026-09.md`](../qa/LIVE-UX-PASS5-WALK-2026-09.md) · report [`.superpowers/sdd/pass5-gate-report.md`](../../.superpowers/sdd/pass5-gate-report.md).
+Tip `6ce9ea5` (Pass 5 closeout landed at `d07cbd9` / `f2ac21f`; this tip only archives Pass 4 SDD briefs) closed Pass 4 parks + CannaLib prod verify + FlowSankey graduate + Zigbee one-recipe Wet→Problem + soak/re-walk. Gate evidence: `.audit/live-ux-pass5-prove-evidence.json` (`ok=true`) · walk [`../qa/LIVE-UX-PASS5-WALK-2026-09.md`](../qa/LIVE-UX-PASS5-WALK-2026-09.md) · report [`.superpowers/sdd/pass5-gate-report.md`](../../.superpowers/sdd/pass5-gate-report.md).
 
 ```mermaid
 flowchart TD

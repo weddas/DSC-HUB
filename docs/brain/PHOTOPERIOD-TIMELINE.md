@@ -2,7 +2,7 @@
 
 **Intent:** Show a **calendar-day 24h on/off strip** per tent on the Light page so operators see scheduled light hours vs stage Want — separate from duty/history strips and from local energy estimates.
 
-**Tip:** `f2ac21f` (spa-dist `index-BoyhWWR_.js`) · prior v7.4.0 light audit [`docs/qa/LIGHT-AUDIT-7.4-live.md`](../qa/LIGHT-AUDIT-7.4-live.md) · Live UX Light desk gate [`../qa/LIVE-UX-LIGHT-WALK-2026-09.md`](../qa/LIVE-UX-LIGHT-WALK-2026-09.md) · Overview glance SoT in [`LIVE-UX-HONESTY.md`](LIVE-UX-HONESTY.md) (Passes **1–5 proven / closed** — timeline SVG still schedule presentation, not DutyStrip)
+**Tip:** `6ce9ea5` (spa-dist `index-BoyhWWR_.js`) · prior v7.4.0 light audit [`docs/qa/LIGHT-AUDIT-7.4-live.md`](../qa/LIGHT-AUDIT-7.4-live.md) · Live UX Light desk gate [`../qa/LIVE-UX-LIGHT-WALK-2026-09.md`](../qa/LIVE-UX-LIGHT-WALK-2026-09.md) · Overview glance SoT in [`LIVE-UX-HONESTY.md`](LIVE-UX-HONESTY.md) (Passes **1–5 proven / closed** — timeline SVG still schedule presentation, not DutyStrip)
 
 ## Where it lives
 

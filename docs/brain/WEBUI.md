@@ -4,7 +4,7 @@
 
 Notion: [Local webserver UI](https://app.notion.com/p/3b52b4cda37081c19048e794d4bdf819)
 
-**Tip:** `f2ac21f` · spa-dist `index-BoyhWWR_.js` (+ `calibrate-CYRum8WF.js` · `tune-fleet-BPdxWQzJ.js` · `twin-three-BjdbWAdH.js`)  
+**Tip:** `6ce9ea5` · spa-dist `index-BoyhWWR_.js` (+ `calibrate-CYRum8WF.js` · `tune-fleet-BPdxWQzJ.js` · `twin-three-BjdbWAdH.js`)  
 **Walks:** space-energy [`../qa/SPACE-ENERGY-PI-WALK-2026-09.md`](../qa/SPACE-ENERGY-PI-WALK-2026-09.md) · Live UX [`LIVE-UX-HONESTY.md`](LIVE-UX-HONESTY.md) · Pass 5 [`../qa/LIVE-UX-PASS5-WALK-2026-09.md`](../qa/LIVE-UX-PASS5-WALK-2026-09.md)
 
 ## Product SPA (Pi `:8787`)

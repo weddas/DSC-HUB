@@ -2,7 +2,7 @@
 
 **Intent:** Local estimates and plant→tent→room→Core journals without silent lighting changes. Space owns photoperiod equipment/window; plants carry identity + journal; schedule slides/flips need explicit operator confirm.
 
-**Tip:** `f2ac21f` (spa-dist `index-BoyhWWR_.js` + `calibrate-CYRum8WF.js` · `tune-fleet-BPdxWQzJ.js`)  
+**Tip:** `6ce9ea5` (spa-dist `index-BoyhWWR_.js` + `calibrate-CYRum8WF.js` · `tune-fleet-BPdxWQzJ.js`)  
 **Status:** **SHIPPED + Pi-proven** — plant/tent/room/DSC-Core journals, energy + shift APIs, Overview room/Core UI, both-tent force-tick walk. Specs marked **implemented**. Live UX honesty Passes **1–5 proven / closed** (Pass 5: energy `confirm=false` → **HTTP 400** canonical) — see [`LIVE-UX-HONESTY.md`](LIVE-UX-HONESTY.md) · [`../ops/TWIN-SF1000.md`](../ops/TWIN-SF1000.md).
 
 **Spec / plan / skill / walk:**  

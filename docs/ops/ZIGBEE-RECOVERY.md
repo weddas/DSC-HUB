@@ -102,7 +102,7 @@ Kit leak/liquid sensors often publish wet as MQTT `occupancy` (liquid present) �
 | Wet / Dry | Raw MQTT / by_role reading | Presentation only |
 | Problem / Clear | `fleet.system.zigbee_policy_state[ieee].problem` | Only after `evaluate_device_policies` for a bound recipe (`floor_flood_alert` banner-only; `tank_full_appliance` may OOS) |
 
-Pass 5 seeds `zigbee_device_policies` on binding reapply / cache apply so SPA can resolve `recipe_id` without waiting for MQTT — it still must **not** invent Problem from wet. After brain restart, `policy_state` is empty until the next evaluate; GATE prove re-seeds dry MQTT.
+Pass 5 seeds `zigbee_device_policies` on binding reapply / cache apply (`load_zigbee_policies`) and mirrors on `save_zigbee_policies` so SPA can resolve `recipe_id` without waiting for MQTT — it still must **not** invent Problem from wet. After brain restart, `policy_state` is empty until the next evaluate; GATE prove re-seeds dry MQTT. Pytest: `test_zigbee_reapply_seeds_device_policies_for_spa_recipe`.
 
 Roles: `leak_floor_room` / `leak_floor_4x8` / `leak_floor_2x4` (2×4 parked without HW). Walk: [`../qa/LIVE-UX-PASS5-WALK-2026-09.md`](../qa/LIVE-UX-PASS5-WALK-2026-09.md) · program SoT: [`../brain/LIVE-UX-HONESTY.md`](../brain/LIVE-UX-HONESTY.md).
 
