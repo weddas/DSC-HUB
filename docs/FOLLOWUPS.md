@@ -3887,8 +3887,14 @@ Do not file follow-ups or version gates that assume POT3 restore or AC/mister ha
 
 ## 2026-09-01 - Live UX honesty Pass 3 (Overview SPA)
 
+**Spec:** [`docs/superpowers/specs/2026-09-01-live-ux-honesty-program-design.md`](superpowers/specs/2026-09-01-live-ux-honesty-program-design.md)
+**Plan:** [`docs/superpowers/plans/2026-09-01-live-ux-honesty-program.md`](superpowers/plans/2026-09-01-live-ux-honesty-program.md)
+**Walk:** [`docs/qa/LIVE-UX-OVERVIEW-WALK-2026-09.md`](qa/LIVE-UX-OVERVIEW-WALK-2026-09.md) -- gates blank until Task 9
+**Developer runbook:** [`docs/brain/LIVE-UX-HONESTY.md`](brain/LIVE-UX-HONESTY.md) (tip `3df3924` / spa `index-C8GkS5XE.js`)
+
 | Item | Status | Notes |
 |------|--------|-------|
-| Overview SPA honesty (Task 8) | **done (repo)** | Journal provenance/Save UX; root OOS grey; grow-log history caption; photoperiod glance SoT copy ? see `.superpowers/sdd/task-8-report.md`. Bundle `index-C8GkS5XE.js` |
+| Overview pytest (`test_live_ux_overview_honesty`) | **done (repo)** | `/rooms` + `grow_room` + `/journal/room/grow_room` + `/journal/core` + `/health` |
+| Overview SPA honesty (Task 8) | **done (repo)** | Journal provenance/Save UX; root OOS grey; grow-log history caption; photoperiod glance SoT copy -- see `.superpowers/sdd/task-8-report.md`. Bundle `index-C8GkS5XE.js` |
 | Overview walk / Pi hotpatch (Task 9) | **next-plan** | Do not fill walk until prove; hotpatch + browser matrix + cross-desk photoperiod parity |
-| Moisture band 30?70 vs Root Want | **parked** | GAUGE-P0-1; not OOS/no-data greying |
+| Moisture band 30-70 vs Root Want | **parked** | GAUGE-P0-1; not OOS/no-data greying |
