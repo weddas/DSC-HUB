@@ -17,14 +17,14 @@
 
 | Check | Owner | Result | Evidence |
 |-------|-------|--------|----------|
-| A1 Hybrid Got: Twin-derived hours when available + healthy history | brain | **pending** | Task 2 — `got_hours_4x8` / `_light_runtime_snapshot` |
-| A2 Hybrid Got: window fallback when Twin unavailable or history unhealthy | brain | **pending** | Task 2 — pytest `test_live_ux_pass4_twin.py` |
-| A3 Twin on/brightness history feeds DutyStrip / Got hybrid | brain | **pending** | Task 2 — `history_ops` / hub ingest |
-| A4 Light SPA: Twin toggle/brightness when entity available | SPA | **pending** | Task 3 — `LightPage.tsx` |
-| A5 DutyStrip Actual uses Twin (or hybrid), not window-only forever | SPA | **pending** | Task 3 — `DutyStrip.tsx` / 4×8 Actual |
-| A6 Honesty copy: live actuator path; GPIO5 reserved (not “wired”) | SPA | **pending** | Task 3 |
+| A1 Hybrid Got: Twin-derived hours when available + healthy history | brain | **code** (`b4ca126`) | Task 2 — `_got_hours_4x8_hybrid` / `got_source=twin` — Pi prove still Task 4/7 |
+| A2 Hybrid Got: window fallback when Twin unavailable or history unhealthy | brain | **code** (`b4ca126`) | Task 2 — pytest `test_live_ux_pass4_twin.py` |
+| A3 Twin on/brightness history feeds DutyStrip / Got hybrid | brain | **code** (`b4ca126`) | Task 2 — `twin_sf1000_on` + brightness ingest / `history_ops` map |
+| A4 Light SPA: Twin toggle/brightness when entity available | SPA | **code** (`5144978`) | Task 3 — `LightPage.tsx` / spa `index-BEjnawnp.js` |
+| A5 DutyStrip Actual uses Twin (or hybrid), not window-only forever | SPA | **code** (`5144978`) | Task 3 — 4×8 Actual entity = Twin when available |
+| A6 Honesty copy: live actuator path; GPIO5 reserved (not “wired”) | SPA | **code** (`5144978`) | Task 3 |
 | A7 Pi smoke: Twin entity HTTP + on/brightness command round-trip | operator | **pending** | Task 4 — `.audit/live-ux-pass4-prove.ps1` Phase A |
-| A8 Pytest Twin hybrid guards | brain | **pending** | Task 2 — `test_live_ux_pass4_twin.py` |
+| A8 Pytest Twin hybrid guards | brain | **code** (`b4ca126`) | Task 2 — `test_live_ux_pass4_twin.py` (unit); live gate still Task 7 |
 
 ---
 
