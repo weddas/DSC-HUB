@@ -2,8 +2,8 @@
 
 **Status:** DONE_WITH_CONCERNS  
 **Date:** 2026-09-01  
-**Bundle:** `spa-dist/assets/index-BoyhWWR_.js` (build:spa)  
-**Git:** local only — not pushed; tip message `fix(pass4): Phase C close DutyStrip, cascade, moisture band, zigbee stubs`
+**Commits:** `083c178` (fix) · `f7da4e7` (progress) — local only, not pushed  
+**Bundle:** `spa-dist/assets/index-BoyhWWR_.js` (build:spa)
 
 ## Summary
 
