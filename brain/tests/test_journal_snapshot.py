@@ -162,3 +162,73 @@ def test_add_core_entry_persists_snapshot(tmp_path: Path) -> None:
     row = add_core_entry(1000.0, "core note", db_path=db, fleet=fleet)
     assert row["snapshot"]["brain_version"] == "7.1.0.0"
     assert row["snapshot"]["active_alert_count"] == 0
+
+
+def test_backfill_space_snapshot_from_history(tmp_path: Path) -> None:
+    from dsc_brain.journal_snapshot import backfill_journal_snapshots
+    from dsc_brain.settings import record_history
+
+    db = tmp_path / "ops.sqlite3"
+    add_space_entry(
+        "4x8",
+        1000.0,
+        "old note",
+        db_path=db,
+        fleet={"hub": {"values": {}}, "hass_extras": {}},
+    )
+    record_history("hub", "temp_c", 23.5, ts=1000.0, db_path=db)
+    record_history("hub", "rh_pct", 55.0, ts=1000.0, db_path=db)
+
+    result = backfill_journal_snapshots("space", "4x8", limit=10, db_path=db)
+    assert result["updated"] == 1
+    assert result["examined"] == 1
+
+    from dsc_brain.space_journal import list_space_journal
+
+    rows = list_space_journal("4x8", db_path=db)
+    assert rows[0]["snapshot"]["temp_c"] == 23.5
+    assert rows[0]["snapshot"]["rh_pct"] == 55.0
+
+
+def test_backfill_plant_snapshot_honest_without_history(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dsc_brain.journal_snapshot import backfill_journal_snapshots
+
+    db = tmp_path / "ops.sqlite3"
+    monkeypatch.setattr(
+        "dsc_brain.journal_snapshot._resolve_pot_for_plant",
+        lambda _pid: "pot1",
+    )
+    add_plant_entry(
+        "plant-x",
+        2000.0,
+        "no history",
+        db_path=db,
+        fleet={"pots": {}, "hass_extras": {}},
+    )
+
+    result = backfill_journal_snapshots("plant", "plant-x", limit=10, db_path=db)
+    assert result["updated"] == 0
+    assert result["skipped"] == 1
+
+    from dsc_brain.plant_journal import list_plant_journal
+
+    rows = list_plant_journal("plant-x", db_path=db)
+    assert "moisture_pct" not in rows[0]["snapshot"]
+
+
+def test_backfill_skips_when_snapshot_complete(tmp_path: Path) -> None:
+    from dsc_brain.journal_snapshot import backfill_journal_snapshots
+
+    db = tmp_path / "ops.sqlite3"
+    fleet = {
+        "hub": {"values": {"temp_c": 24.0, "rh_pct": 50.0, "vpd_kpa": 1.0, "window_4x8_open": True}},
+        "hass_extras": {"sensor.dsc_lights_on_today_4x8": {"state": "9"}},
+    }
+    add_space_entry("4x8", 1000.0, "complete", db_path=db, fleet=fleet)
+
+    result = backfill_journal_snapshots("space", "4x8", limit=10, db_path=db)
+    assert result["updated"] == 0
+    assert result["skipped"] == 1

@@ -4,14 +4,16 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from pathlib import Path
 from typing import Any
 
 from .climate_mode import migrate_legacy_clone_mode
 from .compose_store import get_helper, get_roster_slots
 from .computed_ops import build_computed_hass_states
 from .fleet_state import get_fleet_state
+from .paths import DEFAULT_DB
 from .plant_probe import parse_slot_plant_id
-from .settings import list_inventory, list_roster
+from .settings import list_history, list_inventory, list_roster
 from .stage_model import tent_id
 
 
@@ -227,3 +229,208 @@ def capture_journal_snapshot(
     if kind == "core":
         return _capture_core_snapshot(fleet)
     return {}
+
+
+HISTORY_BACKFILL_WINDOW_SEC = 30 * 60
+
+_SCOPE_TABLE: dict[str, tuple[str, str | None]] = {
+    "plant": ("plant_journal", "plant_id"),
+    "space": ("space_journal", "space_id"),
+    "room": ("room_journal", "room_id"),
+    "core": ("dsc_core_journal", None),
+}
+
+
+def _expected_history_keys(scope_kind: str, scope_id: str) -> list[str]:
+    kind = str(scope_kind or "").strip().lower()
+    if kind == "plant":
+        return ["moisture_pct", "ec_us", "ph"]
+    if kind == "space":
+        keys = ["temp_c", "rh_pct", "vpd_kpa", "window_open"]
+        if str(scope_id).strip() == "2x4":
+            return keys
+        return keys
+    if kind == "room":
+        return ["room_temp_c", "room_rh_pct", "room_vpd_kpa"]
+    return []
+
+
+def _history_metric_for_key(
+    scope_kind: str,
+    scope_id: str,
+    key: str,
+    *,
+    plant_id: str | None = None,
+) -> tuple[str, str] | None:
+    kind = str(scope_kind or "").strip().lower()
+    if kind == "plant":
+        pot_id = _resolve_pot_for_plant(str(plant_id or scope_id))
+        if not pot_id:
+            return None
+        mapping = {
+            "moisture_pct": (pot_id, "moisture_pct"),
+            "ec_us": (pot_id, "ec_us"),
+            "ph": (pot_id, "ph"),
+        }
+        return mapping.get(key)
+    if kind == "space":
+        sid = str(scope_id).strip()
+        if sid == "2x4":
+            mapping = {
+                "temp_c": ("hub", "clone_temp_c"),
+                "rh_pct": ("hub", "clone_rh_pct"),
+                "vpd_kpa": ("hub", "clone_vpd_kpa"),
+                "window_open": ("hub", "window_2x4_open"),
+            }
+        else:
+            mapping = {
+                "temp_c": ("hub", "temp_c"),
+                "rh_pct": ("hub", "rh_pct"),
+                "vpd_kpa": ("hub", "vpd_kpa"),
+                "window_open": ("hub", "window_4x8_open"),
+            }
+        return mapping.get(key)
+    if kind == "room":
+        mapping = {
+            "room_temp_c": ("hub", "room_temp_c"),
+            "room_rh_pct": ("hub", "room_rh_pct"),
+            "room_vpd_kpa": ("hub", "room_vpd_kpa"),
+        }
+        return mapping.get(key)
+    return None
+
+
+def _nearest_history_value(
+    seat_id: str,
+    metric: str,
+    target_ts: float,
+    *,
+    window_sec: float = HISTORY_BACKFILL_WINDOW_SEC,
+    db_path: Path | None = None,
+) -> float | bool | None:
+    since = target_ts - window_sec
+    rows = list_history(seat_id, metric, since, db_path=db_path)
+    best: tuple[float, float] | None = None
+    for row in rows:
+        ts = float(row.get("ts") or 0)
+        if abs(ts - target_ts) > window_sec:
+            continue
+        dist = abs(ts - target_ts)
+        if best is None or dist < best[0]:
+            val = row.get("value")
+            if val is None:
+                continue
+            best = (dist, float(val))
+    if best is None:
+        return None
+    val = best[1]
+    if metric.startswith("window_") or metric.endswith("_open"):
+        return bool(val)
+    return val
+
+
+def _snapshot_missing_keys(snap: dict[str, Any], expected: list[str]) -> list[str]:
+    if not snap:
+        return list(expected)
+    return [key for key in expected if key not in snap]
+
+
+def _backfill_snapshot_from_history(
+    scope_kind: str,
+    scope_id: str,
+    occurred_at: float,
+    snap: dict[str, Any],
+    *,
+    plant_id: str | None = None,
+    db_path: Path | None = None,
+) -> dict[str, Any]:
+    expected = _expected_history_keys(scope_kind, scope_id)
+    missing = _snapshot_missing_keys(snap, expected)
+    if not missing:
+        return snap
+    merged = dict(snap)
+    for key in missing:
+        src = _history_metric_for_key(scope_kind, scope_id, key, plant_id=plant_id)
+        if not src:
+            continue
+        val = _nearest_history_value(src[0], src[1], occurred_at, db_path=db_path)
+        if val is not None:
+            merged[key] = val
+    return merged
+
+
+def backfill_journal_snapshots(
+    scope_kind: str,
+    scope_id: str | None = None,
+    limit: int = 100,
+    *,
+    db_path: Path | None = None,
+) -> dict[str, Any]:
+    """Backfill empty snapshot_json on operator journal rows from fleet_history.
+
+    Samples fleet_history nearest to occurred_at within ±30 minutes using the same
+    seat/metric keys as history_ops entity charts. Leaves keys empty when no history
+    exists (honest — no fabricated readings).
+    """
+    kind = str(scope_kind or "").strip().lower()
+    table_info = _SCOPE_TABLE.get(kind)
+    if table_info is None:
+        raise ValueError(f"unsupported scope kind: {scope_kind}")
+    table, id_col = table_info
+    path = db_path or DEFAULT_DB
+    path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(path))
+    conn.row_factory = sqlite3.Row
+    ensure_journal_snapshot_column(conn, table)
+
+    params: list[Any] = ["operator"]
+    where = "source=?"
+    if id_col and scope_id is not None:
+        where += f" AND {id_col}=?"
+        params.append(str(scope_id).strip())
+    params.append(int(limit))
+
+    rows = conn.execute(
+        f"""
+        SELECT id, occurred_at, snapshot_json{', ' + id_col if id_col else ''}
+        FROM {table}
+        WHERE {where}
+        ORDER BY occurred_at DESC
+        LIMIT ?
+        """,
+        params,
+    ).fetchall()
+
+    updated = 0
+    examined = 0
+    skipped = 0
+    for row in rows:
+        examined += 1
+        snap = snapshot_from_json(row["snapshot_json"])
+        sid = str(scope_id or (row[id_col] if id_col else "") or "")
+        plant_id = sid if kind == "plant" else None
+        merged = _backfill_snapshot_from_history(
+            kind,
+            sid,
+            float(row["occurred_at"]),
+            snap,
+            plant_id=plant_id,
+            db_path=path,
+        )
+        if merged == snap:
+            skipped += 1
+            continue
+        conn.execute(
+            f"UPDATE {table} SET snapshot_json=? WHERE id=?",
+            (json.dumps(merged, separators=(",", ":")), int(row["id"])),
+        )
+        updated += 1
+    conn.commit()
+    conn.close()
+    return {
+        "scope_kind": kind,
+        "scope_id": scope_id,
+        "examined": examined,
+        "updated": updated,
+        "skipped": skipped,
+    }

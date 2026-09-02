@@ -6,7 +6,8 @@ import type { BandChartKind } from "./BandChartHost";
 import { useHistory } from "../hooks/useHistory";
 import { useZoneFocus, type ZoneFocus } from "../hooks/useZoneFocus";
 import { get_grow_log, type GrowLogEvent } from "../lib/fleetApi";
-import { growLogSeverity, prepareGrowLog, filterGrowLog, type GrowLogFilter } from "../lib/growLogFilter";
+import { prepareGrowLog, filterGrowLog, type GrowLogFilter } from "../lib/growLogFilter";
+import { GrowLogList } from "./journal/GrowLogList";
 import { useEffect, useState, type ReactNode } from "react";
 import { ALERT_ENTITY_IDS } from "../lib/alertPlaybook";
 import { potMoistureNum } from "../lib/potReading";
@@ -804,19 +805,7 @@ export function DashGrowLog({ bus }: { bus: Bus }) {
       </div>
       {loading && events.length === 0 ? <p className="dsc-muted">Loading…</p> : null}
       {filterGrowLog(events, filter).length ? (
-        <ul className="dsc-grow-log">
-          {filterGrowLog(events, filter).map((ev) => (
-            <li
-              key={ev.id}
-              className={growLogSeverity(ev.message) === "alert" ? "dsc-grow-log--alert" : undefined}
-            >
-              <time className="dsc-muted" dateTime={new Date(ev.ts * 1000).toISOString()}>
-                {new Date(ev.ts * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-              </time>{" "}
-              {ev.message}
-            </li>
-          ))}
-        </ul>
+        <GrowLogList events={filterGrowLog(events, filter)} timeFormat="short" />
       ) : fallback.length ? (
         <ul className="dsc-grow-log">
           {fallback.map((line) => (

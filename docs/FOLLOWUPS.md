@@ -4114,7 +4114,7 @@ Passes 1?3 desk gates remain **GREEN**. Pass 4 integrated gate **GREEN**. **Pass
 
 **Spec:** [`docs/superpowers/specs/2026-09-02-grow-logs-review-design.md`](superpowers/specs/2026-09-02-grow-logs-review-design.md)  
 **Plan:** [`docs/superpowers/plans/2026-09-02-grow-logs-review.md`](superpowers/plans/2026-09-02-grow-logs-review.md)  
-**Walk:** [`docs/qa/GROW-LOGS-WALK-2026-09.md`](qa/GROW-LOGS-WALK-2026-09.md) — gate **YELLOW** (repo green; live browser pending)
+**Walk:** [`docs/qa/GROW-LOGS-WALK-2026-09.md`](qa/GROW-LOGS-WALK-2026-09.md) — gate **YELLOW** (HTTP green; browser soak pending)
 
 | Item | Status | Notes |
 |------|--------|-------|
@@ -4127,7 +4127,7 @@ Passes 1?3 desk gates remain **GREEN**. Pass 4 integrated gate **GREEN**. **Pass
 | Analytics redirect | **done (code)** | `#/tune/analytics` → `#/grow/logs?view=trends&scope=space&id=4x8` |
 | Brain pytest (journal) | **done** | 16 passed 2026-09-02 |
 | SPA build | **done (repo)** | `index-C0JbXFQo.js` local `build:spa` |
-| Pi hotpatch + live browser | **pending** | Operator soak; static walk filled |
+| Pi hotpatch + live browser | **partial** | Parks landed in repo (`index-Rxe08ZUG.js`); Pi hung on `docker stop` during redeploy — spa-only hotpatch when host recovers |
 
 ### Closed (this pass)
 
@@ -4139,17 +4139,17 @@ Passes 1?3 desk gates remain **GREEN**. Pass 4 integrated gate **GREEN**. **Pass
 | No env snapshot at save | Notes without sensor context | `snapshot_json` on POST; chips in row/detail |
 | No compare / chart-at-moment | No review workflow | Compare-two + trends anchor ±6h |
 
-### Parks (non-blocking)
+### Parks (closure pass 2026-09-02)
 
-| Severity | Item | Notes |
-|----------|------|-------|
-| P1 | Live browser matrix | Walk checklist operator items unchecked until Pi `:8787` |
-| P1 | Pi hotpatch | Bundle built locally; deploy when operator ready |
-| P2 | **UX-P1-5** Grow log firehose | Unchanged — filter/collapse repeats still wanted |
-| P2 | **WF-P1-4** Grow log → playbook CTA | Operational stream not clickable to Climate/Light/Root |
-| P3 | Scope compare (two scopes, same window) | Spec v1.1 optional |
-| P3 | Snapshot backfill for historical rows | Spec non-goal |
-| P3 | `.audit/grow-logs-prove.ps1` | Optional HTTP prove script — not created |
+| Severity | Item | Status |
+|----------|------|--------|
+| P1 | Live browser matrix | **open** — spa-only hotpatch after Pi recovery |
+| P1 | Pi hotpatch | **open** — use `grow-logs-spa-only-hotpatch.ps1` first |
+| P2 | **UX-P1-5** Grow log firehose | **done** — collapse + ×N badge |
+| P2 | **WF-P1-4** Grow log → playbook CTA | **done** — `growLogPlaybook.ts` |
+| P3 | Scope compare (two scopes) | **done** — `compareScopeA`/`compareScopeB` |
+| P3 | Snapshot backfill | **done** — admin POST + history sampling |
+| P3 | Prove scripts | **done** — `.audit/grow-logs-pi-hotpatch-prove.ps1`, spa-only variant |
 
 ---
 

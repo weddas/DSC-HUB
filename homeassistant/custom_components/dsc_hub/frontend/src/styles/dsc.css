@@ -2906,6 +2906,58 @@ button.dsc-chip.is-clickable:hover {
   border-radius: 6px;
 }
 
+.dsc-grow-log-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.dsc-grow-log-link:hover {
+  text-decoration: underline;
+}
+
+.dsc-grow-log-repeat {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--dsc-muted-fg, #94a3b8);
+  background: rgba(148, 163, 184, 0.15);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.dsc-grow-log-msg {
+  margin-right: 4px;
+}
+
+.dsc-logs-scope-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.dsc-logs-scope-compare-col {
+  min-width: 0;
+}
+
+.dsc-logs-scope-link--compare-pick {
+  border-left: 2px solid var(--dsc-teal, #2dd4bf);
+}
+
+.dsc-logs-scope-badge {
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--dsc-teal, #2dd4bf);
+}
+
+@media (max-width: 960px) {
+  .dsc-logs-scope-compare {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ————————————————————————————————————————————————————————————————
    7.1.2 affordance pass — button hierarchy, native control skinning,
    focus states, kit-pulse containment. Token-driven, works in both

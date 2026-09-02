@@ -1,0 +1,82 @@
+﻿{
+    "ts":  1788319190,
+    "base":  "http://192.168.86.48:8787",
+    "expected_js":  "assets/index-C0JbXFQo.js",
+    "gates":  {
+                  "G0_index_bundle":  {
+                                          "detail":  {
+                                                         "local":  "assets/index-C0JbXFQo.js",
+                                                         "live":  "assets/index-C0JbXFQo.js"
+                                                     },
+                                          "ok":  true
+                                      },
+                  "G0_health":  {
+                                    "detail":  {
+                                                   "status":  "ok",
+                                                   "version":  "7.4.0",
+                                                   "surface":  "7.4.0",
+                                                   "expected_firmware":  "7.0.0.0",
+                                                   "mode":  "live",
+                                                   "zigbee":  {
+                                                                  "mqtt_connected":  true,
+                                                                  "bridge_state":  "online",
+                                                                  "bridge_state_updated_at":  1788315304.5415115,
+                                                                  "radio_up":  true,
+                                                                  "radio_note":  "Coordinator online",
+                                                                  "device_count":  5,
+                                                                  "end_device_count":  4,
+                                                                  "devices_updated_at":  1788315304.504141,
+                                                                  "canopy_updated_at":  1788317693.5351224,
+                                                                  "permit_join":  false,
+                                                                  "permit_join_end":  null
+                                                              }
+                                               },
+                                    "ok":  true
+                                },
+                  "G1_journal_list_paginated":  {
+                                                    "detail":  {
+                                                                   "count":  10,
+                                                                   "status":  200,
+                                                                   "total":  33
+                                                               },
+                                                    "ok":  true
+                                                },
+                  "G2_post_snapshot":  {
+                                           "detail":  {
+                                                          "status":  200,
+                                                          "entry_id":  73,
+                                                          "snapshot_keys":  [
+                                                                                "temp_c",
+                                                                                "rh_pct",
+                                                                                "vpd_kpa",
+                                                                                "lights_on_today_h"
+                                                                            ]
+                                                      },
+                                           "ok":  true
+                                       },
+                  "G3_patch_operator":  {
+                                            "detail":  {
+                                                           "id":  73,
+                                                           "status":  200
+                                                       },
+                                            "ok":  true
+                                        },
+                  "G4_patch_system_403":  {
+                                              "detail":  {
+                                                             "id":  70,
+                                                             "status":  403
+                                                         },
+                                              "ok":  true
+                                          },
+                  "G5_delete_operator":  {
+                                             "detail":  {
+                                                            "id":  73,
+                                                            "status":  200
+                                                        },
+                                             "ok":  true
+                                         }
+              },
+    "errors":  [
+
+               ]
+}

@@ -4,7 +4,7 @@
 **Plan:** [`docs/superpowers/plans/2026-09-02-grow-logs-review.md`](../superpowers/plans/2026-09-02-grow-logs-review.md)  
 **Date:** 2026-09-02  
 **Bundle (local build):** `spa-dist/assets/index-C0JbXFQo.js`  
-**Pi hotpatch:** not run this session — repo + pytest + static verification only
+**Pi hotpatch:** completed 2026-09-02 — tarballs uploaded; plink dropped during `docker stop` (~65 min); Pi recovered; **HTTP GATE GREEN** (evidence: `.audit/grow-logs-pi-prove-evidence.json`)
 
 ---
 
@@ -14,11 +14,11 @@
 |------|--------|----------|
 | G0 Brain pytest (journal) | **pass** | `16 passed` — `test_journal_api`, `test_journal_snapshot`, `test_journal_crud` (2026-09-02) |
 | G1 SPA build | **pass** | `npm run build:spa` → `index-C0JbXFQo.js`; chunk-size warnings only |
-| G2 Pi HTTP / hotpatch | **skip** | No Pi access in agent shell; brain modules unchanged since last Pi closure |
-| G3 Browser matrix | **static pass** | Code + route audit below; live browser deferred to operator Pi soak |
+| G2 Pi HTTP / hotpatch | **pass** | `index-C0JbXFQo.js` live; journal list/paginate, POST snapshot, PATCH/DELETE, system 403 — all green |
+| G3 Browser matrix | **blocked (Pi)** | Live walk 2026-09-02: Pi served pre–Grow-Logs bundle (`/grow/logs` → Not found). Redeploy `index-Rxe08ZUG.js` via spa-only hotpatch after Pi recovery |
 | G4 Analytics redirect | **static pass** | `TuneAnalyticsPage` → `Navigate` to `/grow/logs?view=trends&scope=space&id=4x8`; `LEGACY_REDIRECTS` mirrors |
 
-**Overall gate:** **YELLOW** — repo green (pytest + build + static); live browser + Pi hotpatch not proven this session.
+**Overall gate:** **YELLOW** — repo + parks complete; Pi needs spa-only hotpatch (`index-Rxe08ZUG.js`); avoid `docker stop` until host stable (use `.audit/grow-logs-spa-only-hotpatch.ps1`).
 
 ---
 
@@ -145,14 +145,14 @@ Optional script: `.audit/grow-logs-prove.ps1` (not created this session — park
 
 ## Residuals / parks
 
-| Item | Severity | Notes |
-|------|----------|-------|
-| Live browser matrix | P1 | Requires Pi `:8787` soak — static audit only here |
-| Pi hotpatch | P1 | Bundle built locally; not deployed |
-| Grow log firehose filter | P2 | Pre-existing **UX-P1-5** — not in Grow Logs v1 scope |
-| Grow log click → playbook | P2 | **WF-P1-4** — operational stream deep-link |
-| Scope compare (two scopes) | P3 | Spec v1.1 optional follow-up |
-| Snapshot backfill | P3 | Spec non-goal — old rows stay without snapshot |
+| Item | Status | Notes |
+|------|--------|-------|
+| Live browser matrix | **open** | Pi redeploy pending — spa-only hotpatch after recovery |
+| Pi hotpatch | **open** | Prefer `.audit/grow-logs-spa-only-hotpatch.ps1`; full stop+start only when host stable |
+| Grow log firehose filter | **done** | UX-P1-5 — collapse + ×N in `growLogFilter.ts` |
+| Grow log click → playbook | **done** | WF-P1-4 — `growLogPlaybook.ts` |
+| Scope compare (two scopes) | **done** | v1.1 — URL `compareScopeA`/`compareScopeB` |
+| Snapshot backfill | **done** | Admin POST + fleet_history ±30m |
 
 ---
 

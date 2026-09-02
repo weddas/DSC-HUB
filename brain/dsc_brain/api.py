@@ -1501,6 +1501,27 @@ def journal_core_delete(entry_id: int) -> dict[str, Any]:
     return {"ok": True, "deleted_id": entry_id}
 
 
+@app.post("/journal/admin/backfill-snapshots")
+def journal_admin_backfill_snapshots(
+    scope: str = Query(..., min_length=3),
+    scope_id: str | None = Query(None, alias="id"),
+    limit: int = Query(100, ge=1, le=1000),
+) -> dict[str, Any]:
+    """Operator-only maintenance: backfill historical operator journal snapshots.
+
+    For rows where snapshot_json is empty or missing sensor keys, sample
+    fleet_history nearest to occurred_at (±30 min). Not exposed in operator SPA.
+
+    Example: POST /journal/admin/backfill-snapshots?scope=space&id=4x8&limit=100
+    """
+    from .journal_snapshot import backfill_journal_snapshots
+
+    try:
+        return backfill_journal_snapshots(scope, scope_id, limit)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
 @app.get("/")
 def spa_index() -> FileResponse:
     index = STATIC_DIR / "index.html"

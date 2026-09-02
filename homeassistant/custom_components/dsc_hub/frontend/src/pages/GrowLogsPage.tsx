@@ -1,646 +1,465 @@
 import { useEffect, useMemo, useState } from "react";
-
 import { Navigate, useSearchParams } from "react-router-dom";
 
 import { GrowLogStream } from "../components/journal/GrowLogStream";
-
 import { JournalComparePane } from "../components/journal/JournalComparePane";
-
 import { JournalScopePanel } from "../components/journal/JournalScopePanel";
-
 import { LogsTrendsPanel } from "../components/journal/LogsTrendsPanel";
-
 import { HelpTip } from "../components/HelpTip";
-
 import { Button, Card, PageHeader } from "../components/ui";
-
 import { useEntityBus } from "../hooks/useEntityBus";
-
 import { useFleet } from "../hooks/useFleet";
-
-import { buildLogsSearchParams, parseLogsScopeFromSearchParams } from "../lib/journalApi";
-
+import {
+  buildLogsSearchParams,
+  formatCompareScopeParam,
+  parseCompareScopeParam,
+  parseLogsScopeFromSearchParams,
+} from "../lib/journalApi";
 import { probeAssignedPlantId, shortPlantId } from "../lib/probeAssignment";
-
 import { rosterSlots } from "../lib/seatModel";
-
 import type { JournalEntry, JournalScope, JournalScopeKind } from "../types/journal";
 
-
-
 type ScopeNavItem = {
-
   key: string;
-
   label: string;
-
   scope: JournalScope;
-
   indent?: boolean;
-
 };
 
-
-
 function parseHighlightEntryId(params: URLSearchParams): number | null {
-
   const raw = params.get("highlight") ?? params.get("entry");
-
   if (!raw) return null;
-
   const id = Number.parseInt(raw, 10);
-
   return Number.isFinite(id) && id > 0 ? id : null;
-
 }
-
-
 
 function parseAnchorSec(params: URLSearchParams): number | null {
-
   const raw = params.get("anchor");
-
   if (!raw) return null;
-
   const n = Number.parseFloat(raw);
-
   return Number.isFinite(n) && n > 0 ? n : null;
-
 }
-
-
 
 function plantIdForSlot(
-
   slot: Record<string, unknown>,
-
   fleet: ReturnType<typeof useFleet>,
-
   state: (id: string, fallback?: string) => string,
-
 ): string {
-
   const fromUuid = String(slot.plant_uuid ?? "").trim();
-
   if (fromUuid) return fromUuid;
-
   const potRaw = String(slot.pot ?? "");
-
   const pot = Number(potRaw.replace(/^pot/, ""));
-
   if (Number.isFinite(pot) && pot >= 1) {
-
     const fromProbe = probeAssignedPlantId(pot, fleet, state);
-
     if (fromProbe) return fromProbe;
-
   }
-
   const slotNum = Number(slot.slot ?? 0);
-
   return slotNum >= 1 ? `slot:${slotNum}` : "";
-
 }
-
-
 
 function scopeActive(current: JournalScope, item: JournalScope): boolean {
-
   if (current.kind !== item.kind) return false;
-
   if (current.kind === "core" || current.kind === "grow_log") return true;
-
   return String(current.id ?? "") === String(item.id ?? "");
-
 }
 
+function isCompareableScope(scope: JournalScope): boolean {
+  return scope.kind === "plant" || scope.kind === "space" || scope.kind === "room";
+}
 
+function scopeCompareLabel(scope: JournalScope): string {
+  if (scope.kind === "space") return scope.id === "2x4" ? "2×4" : "4×8";
+  if (scope.kind === "room") return "Room";
+  if (scope.kind === "plant") return shortPlantId(scope.id ?? "plant");
+  return scope.kind;
+}
 
 function LogsScopeNav({
-
   items,
-
   activeScope,
-
+  compareScopeMode,
+  compareScopeA,
+  compareScopeB,
   view,
-
   onSelect,
-
 }: {
-
   items: ScopeNavItem[];
-
   activeScope: JournalScope;
-
+  compareScopeMode: boolean;
+  compareScopeA: JournalScope | null;
+  compareScopeB: JournalScope | null;
   view: "list" | "trends";
-
   onSelect: (scope: JournalScope) => void;
-
 }) {
-
   return (
-
     <nav className="dsc-logs-scope-nav" aria-label="Journal scope">
-
       {items.map((item) => {
-
         const active = scopeActive(activeScope, item.scope);
-
+        const compareable = isCompareableScope(item.scope);
+        const isA =
+          compareScopeA != null &&
+          item.scope.kind === compareScopeA.kind &&
+          String(item.scope.id ?? "") === String(compareScopeA.id ?? "");
+        const isB =
+          compareScopeB != null &&
+          item.scope.kind === compareScopeB.kind &&
+          String(item.scope.id ?? "") === String(compareScopeB.id ?? "");
         const href = `/grow/logs?${buildLogsSearchParams(item.scope, view).toString()}`;
 
         return (
-
           <a
-
             key={item.key}
-
             href={href}
-
             className={`dsc-logs-scope-link${active ? " dsc-logs-scope-link--active" : ""}${
-
               item.indent ? " dsc-logs-scope-link--indent" : ""
-
-            }`}
-
+            }${compareScopeMode && compareable && (isA || isB) ? " dsc-logs-scope-link--compare-pick" : ""}`}
             onClick={(e) => {
-
               e.preventDefault();
-
               onSelect(item.scope);
-
             }}
-
           >
-
             {item.label}
-
+            {compareScopeMode && isA ? (
+              <span className="dsc-logs-scope-badge" aria-label="Compare scope A">
+                A
+              </span>
+            ) : null}
+            {compareScopeMode && isB ? (
+              <span className="dsc-logs-scope-badge" aria-label="Compare scope B">
+                B
+              </span>
+            ) : null}
           </a>
-
         );
-
       })}
-
     </nav>
-
   );
-
 }
-
-
 
 export function GrowLogsPage() {
-
   const [params, setParams] = useSearchParams();
-
   const { entity, state } = useEntityBus();
-
   const fleet = useFleet();
 
-
-
   const { scope, view } = parseLogsScopeFromSearchParams(params);
-
   const highlightEntryId = parseHighlightEntryId(params);
-
   const chartAnchorSec = parseAnchorSec(params);
-
-
+  const compareScopeA = parseCompareScopeParam(params.get("compareScopeA"));
+  const compareScopeB = parseCompareScopeParam(params.get("compareScopeB"));
+  const compareScopeMode = Boolean(compareScopeA || compareScopeB || params.get("compareScopes") === "1");
 
   const [compareMode, setCompareMode] = useState(false);
-
   const [compareIds, setCompareIds] = useState<number[]>([]);
-
   const [detailEntry, setDetailEntry] = useState<JournalEntry | null>(null);
-
   const [entryCache, setEntryCache] = useState<JournalEntry[]>([]);
-
-
+  const [scopeComparePick, setScopeComparePick] = useState<"A" | "B">("A");
 
   useEffect(() => {
-
     setCompareMode(false);
-
     setCompareIds([]);
-
     setDetailEntry(null);
-
     setEntryCache([]);
-
   }, [scope.kind, scope.id]);
 
-
-
   const plantItems = useMemo((): ScopeNavItem[] => {
-
     const slots = rosterSlots(entity).filter((s) => {
-
       const st = String(s.status || "");
-
       return !["empty", "", "unknown", "unavailable"].includes(st);
-
     });
-
     return slots
-
       .map((s) => {
-
         const plantId = plantIdForSlot(s as unknown as Record<string, unknown>, fleet, state);
-
         const label =
-
           String(s.nickname || s.strain || "").trim() ||
-
           (plantId ? shortPlantId(plantId) : `Slot ${s.slot}`);
-
         return {
-
           key: `plant-${s.slot}-${plantId}`,
-
           label,
-
           scope: { kind: "plant" as JournalScopeKind, id: plantId },
-
           indent: true,
-
         };
-
       })
-
       .filter((item) => Boolean(item.scope.id?.trim()));
-
   }, [entity, fleet, state]);
 
-
-
   const navItems: ScopeNavItem[] = useMemo(
-
     () => [
-
       { key: "space-4x8", label: "4×8", scope: { kind: "space", id: "4x8" } },
-
       { key: "space-2x4", label: "2×4", scope: { kind: "space", id: "2x4" } },
-
       { key: "room", label: "Room", scope: { kind: "room", id: "grow_room" } },
-
       { key: "core", label: "Core", scope: { kind: "core" } },
-
       { key: "grow_log", label: "Grow log", scope: { kind: "grow_log" } },
-
     ],
-
     [],
-
   );
 
-
+  const updateParams = (
+    nextScope: JournalScope,
+    nextView: "list" | "trends",
+    opts?: {
+      anchorSec?: number;
+      compareScopeA?: string | null;
+      compareScopeB?: string | null;
+      compareScopes?: boolean;
+    },
+  ) => {
+    const built = buildLogsSearchParams(nextScope, nextView, {
+      anchorSec: opts?.anchorSec,
+      compareScopeA: opts?.compareScopeA ?? undefined,
+      compareScopeB: opts?.compareScopeB ?? undefined,
+    });
+    if (opts?.compareScopes) {
+      built.set("compareScopes", "1");
+    }
+    setParams(built, { replace: true });
+  };
 
   const selectScope = (next: JournalScope) => {
-
-    setParams(buildLogsSearchParams(next, view), { replace: true });
-
+    if (compareScopeMode && isCompareableScope(next)) {
+      const encoded = formatCompareScopeParam(next);
+      if (!encoded) return;
+      const nextA = scopeComparePick === "A" ? encoded : formatCompareScopeParam(compareScopeA ?? next);
+      const nextB = scopeComparePick === "B" ? encoded : formatCompareScopeParam(compareScopeB ?? next);
+      updateParams(next, view === "trends" || Boolean(nextA && nextB) ? "trends" : view, {
+        anchorSec: chartAnchorSec ?? undefined,
+        compareScopeA: nextA,
+        compareScopeB: nextB,
+        compareScopes: true,
+      });
+      setScopeComparePick((pick) => (pick === "A" ? "B" : "A"));
+      return;
+    }
+    updateParams(next, view, {
+      anchorSec: chartAnchorSec ?? undefined,
+    });
   };
-
-
 
   const setView = (nextView: "list" | "trends", anchorSec?: number) => {
-
-    setParams(buildLogsSearchParams(scope, nextView, { anchorSec }), { replace: true });
-
+    updateParams(scope, nextView, {
+      anchorSec,
+      compareScopeA: formatCompareScopeParam(compareScopeA ?? scope),
+      compareScopeB: formatCompareScopeParam(compareScopeB ?? scope),
+      compareScopes: compareScopeMode,
+    });
   };
 
-
+  const toggleCompareScopes = () => {
+    if (compareScopeMode) {
+      updateParams(scope, view, { anchorSec: chartAnchorSec ?? undefined });
+      setScopeComparePick("A");
+      return;
+    }
+    updateParams(scope, "trends", {
+      anchorSec: chartAnchorSec ?? undefined,
+      compareScopeA: formatCompareScopeParam(scope),
+      compareScopes: true,
+    });
+    setScopeComparePick("B");
+  };
 
   const openChartMoment = (entry: JournalEntry) => {
-
     setView("trends", entry.occurred_at);
-
     setDetailEntry(null);
-
   };
-
-
-
-  const visibleNavItems = navItems;
-
-
 
   const compareEntries = useMemo((): [JournalEntry, JournalEntry] | null => {
-
     if (compareIds.length < 2) return null;
-
     const left = entryCache.find((e) => e.id === compareIds[0]);
-
     const right = entryCache.find((e) => e.id === compareIds[1]);
-
     if (!left || !right) return null;
-
     return [left, right];
-
   }, [compareIds, entryCache]);
 
-
-
   const mergeEntryCache = (entries: JournalEntry[]) => {
-
     setEntryCache((prev) => {
-
       const seen = new Set(prev.map((e) => e.id));
-
       const added = entries.filter((e) => !seen.has(e.id));
-
       return added.length ? [...prev, ...added] : prev;
-
     });
-
   };
-
-
 
   const trackEntryForCompare = (entry: JournalEntry) => {
-
     mergeEntryCache([entry]);
-
   };
 
-
+  const scopeCompareReady = compareScopeA != null && compareScopeB != null;
+  const showScopeCompareTrends = compareScopeMode && scopeCompareReady && view === "trends";
 
   if (!params.get("scope")) {
-
     return <Navigate to="/grow/logs?scope=room&id=grow_room" replace />;
-
   }
 
-
-
   return (
-
     <div className="dsc-page">
-
       <PageHeader
-
         icon="catalog"
-
         title="Logs"
-
         subtitle="Review observations, compare scopes, and trend sensor history — unified journal browser."
-
         actions={
-
           <HelpTip title="Grow → Logs">
-
             <p>
-
               Hierarchy sidebar: plant journals follow roster slots; tent, room, and Core layers roll up child scopes.
-
               Grow log is operational GET-only.
-
             </p>
-
             <p>Embedded surfaces deep-link here with the same scope query params.</p>
-
           </HelpTip>
-
         }
-
       />
 
-
-
       <div className="dsc-logs-layout">
-
         <aside className="dsc-logs-sidebar">
-
           <Card className="dsc-glass" title="Scope">
-
-            <p className="dsc-muted" style={{ margin: "0 0 10px", fontSize: 12 }}>
-
-              Plants
-
-            </p>
-
-            {plantItems.length ? (
-
-              <LogsScopeNav
-
-                items={plantItems}
-
-                activeScope={scope}
-
-                view={view}
-
-                onSelect={selectScope}
-
-              />
-
-            ) : (
-
-              <p className="dsc-muted" style={{ margin: "0 0 12px", fontSize: 13 }}>
-
-                No roster plants yet.
-
+            {compareScopeMode ? (
+              <p className="dsc-muted" style={{ margin: "0 0 10px", fontSize: 12 }}>
+                Pick scope {scopeComparePick} from plants, tents, or room — then switch to Trends.
               </p>
-
+            ) : null}
+            <p className="dsc-muted" style={{ margin: "0 0 10px", fontSize: 12 }}>
+              Plants
+            </p>
+            {plantItems.length ? (
+              <LogsScopeNav
+                items={plantItems}
+                activeScope={scope}
+                compareScopeMode={compareScopeMode}
+                compareScopeA={compareScopeA}
+                compareScopeB={compareScopeB}
+                view={view}
+                onSelect={selectScope}
+              />
+            ) : (
+              <p className="dsc-muted" style={{ margin: "0 0 12px", fontSize: 13 }}>
+                No roster plants yet.
+              </p>
             )}
-
             <p className="dsc-muted" style={{ margin: "12px 0 10px", fontSize: 12 }}>
-
               Spaces &amp; facility
-
             </p>
-
             <LogsScopeNav
-
-              items={visibleNavItems.filter((i) => i.key !== "grow_log" && !i.indent)}
-
+              items={navItems.filter((i) => i.key !== "grow_log" && !i.indent)}
               activeScope={scope}
-
+              compareScopeMode={compareScopeMode}
+              compareScopeA={compareScopeA}
+              compareScopeB={compareScopeB}
               view={view}
-
               onSelect={selectScope}
-
             />
-
             <p className="dsc-muted" style={{ margin: "12px 0 10px", fontSize: 12 }}>
-
               Operational
-
             </p>
-
             <LogsScopeNav
-
-              items={visibleNavItems.filter((i) => i.key === "grow_log")}
-
+              items={navItems.filter((i) => i.key === "grow_log")}
               activeScope={scope}
-
+              compareScopeMode={compareScopeMode}
+              compareScopeA={compareScopeA}
+              compareScopeB={compareScopeB}
               view={view}
-
               onSelect={selectScope}
-
             />
-
           </Card>
-
         </aside>
 
-
-
         <main className="dsc-logs-main">
-
           <div className="dsc-chip-row" style={{ marginBottom: 10 }}>
-
-            <Button
-
-              variant={view === "list" ? "primary" : "secondary"}
-
-              onClick={() => setView("list")}
-
-            >
-
+            <Button variant={view === "list" ? "primary" : "secondary"} onClick={() => setView("list")}>
               Journal list
-
             </Button>
-
             <Button
-
               variant={view === "trends" ? "primary" : "secondary"}
-
               onClick={() => setView("trends", chartAnchorSec ?? undefined)}
-
               disabled={scope.kind === "grow_log"}
-
             >
-
               Trends
-
             </Button>
-
             {view === "trends" && chartAnchorSec ? (
-
               <Button variant="secondary" onClick={() => setView("trends")}>
-
                 Clear anchor
-
               </Button>
-
             ) : null}
-
+            {scope.kind !== "grow_log" ? (
+              <Button variant={compareScopeMode ? "primary" : "secondary"} onClick={toggleCompareScopes}>
+                {compareScopeMode ? "Exit scope compare" : "Compare scopes"}
+              </Button>
+            ) : null}
+            {compareScopeMode ? (
+              <span className="dsc-muted" style={{ fontSize: 12 }}>
+                {scopeCompareReady
+                  ? `${scopeCompareLabel(compareScopeA!)} vs ${scopeCompareLabel(compareScopeB!)}`
+                  : `Pick scope ${scopeComparePick} (${compareScopeA ? "A set" : "A —"}, ${compareScopeB ? "B set" : "B —"})`}
+              </span>
+            ) : null}
           </div>
 
-
-
-          {view === "trends" ? (
-
-            <LogsTrendsPanel scope={scope} anchorSec={chartAnchorSec} />
-
-          ) : scope.kind === "grow_log" ? (
-
-            <GrowLogStream />
-
-          ) : (
-
-            <>
-
-              <div className="dsc-chip-row" style={{ marginBottom: 10 }}>
-
-                <Button
-
-                  variant={compareMode ? "primary" : "secondary"}
-
-                  onClick={() => {
-
-                    setCompareMode((on) => !on);
-
-                    setCompareIds([]);
-
-                    setDetailEntry(null);
-
-                  }}
-
-                >
-
-                  {compareMode ? "Exit compare" : "Compare entries"}
-
-                </Button>
-
-                {compareMode ? (
-
-                  <span className="dsc-muted" style={{ fontSize: 12 }}>
-
-                    Select two rows ({compareIds.length}/2)
-
-                  </span>
-
-                ) : null}
-
+          {showScopeCompareTrends ? (
+            <div className="dsc-logs-scope-compare">
+              <div className="dsc-logs-scope-compare-col">
+                <p className="dsc-muted" style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 600 }}>
+                  {scopeCompareLabel(compareScopeA!)}
+                </p>
+                <LogsTrendsPanel scope={compareScopeA!} compact />
               </div>
-
+              <div className="dsc-logs-scope-compare-col">
+                <p className="dsc-muted" style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 600 }}>
+                  {scopeCompareLabel(compareScopeB!)}
+                </p>
+                <LogsTrendsPanel scope={compareScopeB!} compact />
+              </div>
+            </div>
+          ) : view === "trends" ? (
+            <LogsTrendsPanel scope={scope} anchorSec={chartAnchorSec} />
+          ) : scope.kind === "grow_log" ? (
+            <GrowLogStream />
+          ) : (
+            <>
+              <div className="dsc-chip-row" style={{ marginBottom: 10 }}>
+                <Button
+                  variant={compareMode ? "primary" : "secondary"}
+                  onClick={() => {
+                    setCompareMode((on) => !on);
+                    setCompareIds([]);
+                    setDetailEntry(null);
+                  }}
+                >
+                  {compareMode ? "Exit compare" : "Compare entries"}
+                </Button>
+                {compareMode ? (
+                  <span className="dsc-muted" style={{ fontSize: 12 }}>
+                    Select two rows ({compareIds.length}/2)
+                  </span>
+                ) : null}
+              </div>
               <JournalScopePanel
-
                 scope={scope}
-
                 variant="full"
-
                 fetchLimit={50}
-
                 showCompose
-
                 fullBrowser={{
-
                   highlightEntryId,
-
                   compareMode,
-
                   compareIds,
-
                   onCompareIdsChange: setCompareIds,
-
                   onCompareEntry: trackEntryForCompare,
-
                   onEntriesChange: mergeEntryCache,
-
                   detailEntry,
-
                   onDetailEntryChange: (entry) => {
-
                     if (entry) trackEntryForCompare(entry);
-
                     setDetailEntry(entry);
-
                   },
-
                   onChartMoment: openChartMoment,
-
                 }}
-
               />
-
               {compareEntries ? (
-
                 <JournalComparePane
-
                   left={compareEntries[0]}
-
                   right={compareEntries[1]}
-
                   scope={scope}
-
                   onClear={() => setCompareIds([])}
-
                 />
-
               ) : null}
-
             </>
-
           )}
-
         </main>
-
       </div>
-
     </div>
-
   );
-
 }
-

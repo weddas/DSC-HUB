@@ -38,7 +38,7 @@ export type LogsView = "list" | "trends";
 export function buildLogsSearchParams(
   scope: JournalScope,
   view: LogsView = "list",
-  opts?: { anchorSec?: number },
+  opts?: { anchorSec?: number; compareScopeA?: string; compareScopeB?: string },
 ): URLSearchParams {
   const params = new URLSearchParams();
   params.set("scope", scope.kind);
@@ -47,7 +47,36 @@ export function buildLogsSearchParams(
   if (opts?.anchorSec != null && Number.isFinite(opts.anchorSec) && opts.anchorSec > 0) {
     params.set("anchor", String(opts.anchorSec));
   }
+  if (opts?.compareScopeA) params.set("compareScopeA", opts.compareScopeA);
+  if (opts?.compareScopeB) params.set("compareScopeB", opts.compareScopeB);
   return params;
+}
+
+export type CompareableScopeKind = "plant" | "space" | "room";
+
+/** Serialize scope for compareScopeA / compareScopeB URL params (`plant:id`, `space:4x8`, `room:grow_room`). */
+export function formatCompareScopeParam(scope: JournalScope): string | null {
+  if (scope.kind === "plant" || scope.kind === "space" || scope.kind === "room") {
+    return scope.id ? `${scope.kind}:${scope.id}` : null;
+  }
+  return null;
+}
+
+export function parseCompareScopeParam(raw: string | null): JournalScope | null {
+  if (!raw?.trim()) return null;
+  const idx = raw.indexOf(":");
+  const kind = idx >= 0 ? raw.slice(0, idx) : raw;
+  const id = idx >= 0 ? raw.slice(idx + 1) : undefined;
+  switch (kind) {
+    case "plant":
+      return id ? { kind: "plant", id } : null;
+    case "space":
+      return id ? { kind: "space", id: id === "2x4" ? "2x4" : "4x8" } : null;
+    case "room":
+      return { kind: "room", id: id || "grow_room" };
+    default:
+      return null;
+  }
 }
 
 /** Parse Grow → Logs URL query into scope + view (defaults room list). */

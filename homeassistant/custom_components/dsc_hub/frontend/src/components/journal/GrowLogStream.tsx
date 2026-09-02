@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Card, StatusChip } from "../ui";
-import { get_grow_log, type GrowLogEvent } from "../../lib/fleetApi";
-import { filterGrowLog, growLogSeverity, prepareGrowLog, type GrowLogFilter } from "../../lib/growLogFilter";
+import { get_grow_log } from "../../lib/fleetApi";
+import { filterGrowLog, prepareGrowLog, type GrowLogFilter } from "../../lib/growLogFilter";
 import { useEntityBus } from "../../hooks/useEntityBus";
+import { GrowLogList } from "./GrowLogList";
 
 /** Operational grow log stream — GET-only v1; separate from observation journals. */
 export function GrowLogStream() {
   const { state } = useEntityBus();
-  const [events, setEvents] = useState<GrowLogEvent[]>([]);
+  const [events, setEvents] = useState<ReturnType<typeof prepareGrowLog>>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<GrowLogFilter>("all");
 
@@ -52,26 +53,8 @@ export function GrowLogStream() {
         ))}
       </div>
       {loading && !events.length ? <p className="dsc-muted">Loading grow log…</p> : null}
-      {filtered.length ? (
-        <ul className="dsc-grow-log">
-          {filtered.map((ev) => (
-            <li
-              key={ev.id}
-              className={growLogSeverity(ev.message) === "alert" ? "dsc-grow-log--alert" : undefined}
-            >
-              <time className="dsc-muted" dateTime={new Date(ev.ts * 1000).toISOString()}>
-                {new Date(ev.ts * 1000).toLocaleString([], {
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </time>{" "}
-              {ev.message}
-            </li>
-          ))}
-        </ul>
-      ) : !loading ? (
+      {filtered.length ? <GrowLogList events={filtered} timeFormat="full" /> : null}
+      {!loading && !filtered.length ? (
         <p className="dsc-muted">No operational events in the last 24 hours.</p>
       ) : null}
       <p className="dsc-muted" style={{ margin: "10px 0 0", fontSize: 12 }}>
