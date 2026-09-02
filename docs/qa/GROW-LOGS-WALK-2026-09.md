@@ -14,7 +14,7 @@
 |------|--------|----------|
 | G0 Brain pytest (journal) | **pass** | `16 passed` — `test_journal_api`, `test_journal_snapshot`, `test_journal_crud` (2026-09-02) |
 | G1 SPA build | **pass** | `npm run build:spa` → `index-C0JbXFQo.js`; chunk-size warnings only |
-| G2 Pi HTTP / hotpatch | **pass** | `index-C0JbXFQo.js` live; journal list/paginate, POST snapshot, PATCH/DELETE, system 403 — all green |
+| G2 Pi HTTP / hotpatch | **pass** | `index-mqa24gAf.js` live (spa-only); journal list/paginate, POST snapshot, PATCH/DELETE, system 403 — all green post-reboot |
 | G3 Browser matrix | **partial** | Live walk ([browser walk](18bdfc25-b812-4fb0-8e54-faebfdd290e4)): Logs nav, trends, analytics redirect **pass**; journal rows blocked mid-walk by `/journal/*` API hang; teaser height bug fixed in CSS (was 10-row max-height) |
 | G4 Analytics redirect | **static pass** | `TuneAnalyticsPage` → `Navigate` to `/grow/logs?view=trends&scope=space&id=4x8`; `LEGACY_REDIRECTS` mirrors |
 

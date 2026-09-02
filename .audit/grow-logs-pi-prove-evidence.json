@@ -1,14 +1,14 @@
 ﻿{
-    "ts":  1788323687,
+    "ts":  1788326029,
     "base":  "http://192.168.86.48:8787",
-    "expected_js":  "assets/index-mqa24gAf.js",
+    "expected_js":  "assets/index-C0JbXFQo.js",
     "gates":  {
                   "G0_index_bundle":  {
                                           "detail":  {
                                                          "local":  "assets/index-mqa24gAf.js",
                                                          "live":  "assets/index-mqa24gAf.js"
                                                      },
-                                          "ok":  true
+                                          "ok":  false
                                       },
                   "G0_health":  {
                                     "detail":  {
@@ -26,7 +26,7 @@
                                                                   "device_count":  5,
                                                                   "end_device_count":  4,
                                                                   "devices_updated_at":  1788323289.1752903,
-                                                                  "canopy_updated_at":  1788323579.8768475,
+                                                                  "canopy_updated_at":  1788324719.816341,
                                                                   "permit_join":  false,
                                                                   "permit_join_end":  null
                                                               }
@@ -44,7 +44,7 @@
                   "G2_post_snapshot":  {
                                            "detail":  {
                                                           "status":  200,
-                                                          "entry_id":  74,
+                                                          "entry_id":  75,
                                                           "snapshot_keys":  [
                                                                                 "temp_c",
                                                                                 "rh_pct",
@@ -56,7 +56,7 @@
                                        },
                   "G3_patch_operator":  {
                                             "detail":  {
-                                                           "id":  74,
+                                                           "id":  75,
                                                            "status":  200
                                                        },
                                             "ok":  true
@@ -70,13 +70,13 @@
                                           },
                   "G5_delete_operator":  {
                                              "detail":  {
-                                                            "id":  74,
+                                                            "id":  75,
                                                             "status":  200
                                                         },
                                              "ok":  true
                                          }
               },
     "errors":  [
-
+                   "G0_index_bundle"
                ]
 }
