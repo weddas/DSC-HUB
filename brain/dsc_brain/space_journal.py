@@ -9,6 +9,12 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from .journal_snapshot import (
+    build_journal_fleet_context,
+    capture_journal_snapshot,
+    ensure_journal_snapshot_column,
+    snapshot_from_json,
+)
 from .paths import DEFAULT_DB
 from .plant_journal import list_plant_journal
 
@@ -39,6 +45,7 @@ def init_space_journal_tables(db_path: Path | None = None) -> None:
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_space_journal_space ON space_journal(space_id, occurred_at DESC)"
         )
+        ensure_journal_snapshot_column(conn, "space_journal")
         conn.commit()
 
 
@@ -50,6 +57,7 @@ def add_space_entry(
     source: str = "operator",
     tags: list[str] | None = None,
     db_path: Path | None = None,
+    fleet: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     init_space_journal_tables(db_path)
     sid = str(space_id or "").strip()
@@ -61,13 +69,26 @@ def add_space_entry(
         src = "operator"
     tag_list = [str(t).strip() for t in (tags or []) if str(t).strip()]
     created = time.time()
+    fleet_ctx = fleet if fleet is not None else build_journal_fleet_context()
+    snapshot = capture_journal_snapshot("space", sid, fleet_ctx)
+    snapshot_raw = json.dumps(snapshot, separators=(",", ":"))
     with _connect(db_path) as conn:
         cur = conn.execute(
             """
-            INSERT INTO space_journal(space_id, occurred_at, note, source, tags_json, created_at)
-            VALUES(?, ?, ?, ?, ?, ?)
+            INSERT INTO space_journal(
+              space_id, occurred_at, note, source, tags_json, created_at, snapshot_json
+            )
+            VALUES(?, ?, ?, ?, ?, ?, ?)
             """,
-            (sid, ts, str(note or "").strip(), src, json.dumps(tag_list, separators=(",", ":")), created),
+            (
+                sid,
+                ts,
+                str(note or "").strip(),
+                src,
+                json.dumps(tag_list, separators=(",", ":")),
+                created,
+                snapshot_raw,
+            ),
         )
         conn.commit()
         row_id = int(cur.lastrowid or 0)
@@ -80,6 +101,7 @@ def add_space_entry(
         "tags": tag_list,
         "created_at": created,
         "provenance": "space",
+        "snapshot": snapshot,
     }
 
 
@@ -94,7 +116,7 @@ def list_space_native(
     with _connect(db_path) as conn:
         rows = conn.execute(
             """
-            SELECT id, space_id, occurred_at, note, source, tags_json, created_at
+            SELECT id, space_id, occurred_at, note, source, tags_json, created_at, snapshot_json
             FROM space_journal WHERE space_id=?
             ORDER BY occurred_at DESC, id DESC
             LIMIT ?
@@ -119,6 +141,7 @@ def list_space_native(
                 "tags": tags,
                 "created_at": r["created_at"],
                 "provenance": "space",
+                "snapshot": snapshot_from_json(r["snapshot_json"]),
             }
         )
     return out

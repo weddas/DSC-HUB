@@ -8,6 +8,12 @@ import time
 from pathlib import Path
 from typing import Any
 
+from .journal_snapshot import (
+    build_journal_fleet_context,
+    capture_journal_snapshot,
+    ensure_journal_snapshot_column,
+    snapshot_from_json,
+)
 from .paths import DEFAULT_DB
 from .room_model import ensure_kit_rooms, spaces_for_room
 from .space_journal import list_space_journal
@@ -40,6 +46,7 @@ def init_room_journal_tables(db_path: Path | None = None) -> None:
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_room_journal_room ON room_journal(room_id, occurred_at DESC)"
         )
+        ensure_journal_snapshot_column(conn, "room_journal")
         conn.commit()
 
 
@@ -51,6 +58,7 @@ def add_room_entry(
     source: str = "operator",
     tags: list[str] | None = None,
     db_path: Path | None = None,
+    fleet: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     init_room_journal_tables(db_path)
     rid = str(room_id or "").strip()
@@ -62,13 +70,26 @@ def add_room_entry(
         src = "operator"
     tag_list = [str(t).strip() for t in (tags or []) if str(t).strip()]
     created = time.time()
+    fleet_ctx = fleet if fleet is not None else build_journal_fleet_context()
+    snapshot = capture_journal_snapshot("room", rid, fleet_ctx)
+    snapshot_raw = json.dumps(snapshot, separators=(",", ":"))
     with _connect(db_path) as conn:
         cur = conn.execute(
             """
-            INSERT INTO room_journal(room_id, occurred_at, note, source, tags_json, created_at)
-            VALUES(?, ?, ?, ?, ?, ?)
+            INSERT INTO room_journal(
+              room_id, occurred_at, note, source, tags_json, created_at, snapshot_json
+            )
+            VALUES(?, ?, ?, ?, ?, ?, ?)
             """,
-            (rid, ts, str(note or "").strip(), src, json.dumps(tag_list, separators=(",", ":")), created),
+            (
+                rid,
+                ts,
+                str(note or "").strip(),
+                src,
+                json.dumps(tag_list, separators=(",", ":")),
+                created,
+                snapshot_raw,
+            ),
         )
         conn.commit()
         row_id = int(cur.lastrowid or 0)
@@ -81,6 +102,7 @@ def add_room_entry(
         "tags": tag_list,
         "created_at": created,
         "provenance": "room",
+        "snapshot": snapshot,
     }
 
 
@@ -90,7 +112,7 @@ def list_room_native(room_id: str, *, limit: int = 100, db_path: Path | None = N
     with _connect(db_path) as conn:
         rows = conn.execute(
             """
-            SELECT id, room_id, occurred_at, note, source, tags_json, created_at
+            SELECT id, room_id, occurred_at, note, source, tags_json, created_at, snapshot_json
             FROM room_journal WHERE room_id=?
             ORDER BY occurred_at DESC, id DESC LIMIT ?
             """,
@@ -114,6 +136,7 @@ def list_room_native(room_id: str, *, limit: int = 100, db_path: Path | None = N
                 "tags": tags,
                 "created_at": r["created_at"],
                 "provenance": "room",
+                "snapshot": snapshot_from_json(r["snapshot_json"]),
             }
         )
     return out

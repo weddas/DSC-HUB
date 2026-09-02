@@ -8,6 +8,12 @@ import time
 from pathlib import Path
 from typing import Any
 
+from .journal_snapshot import (
+    build_journal_fleet_context,
+    capture_journal_snapshot,
+    ensure_journal_snapshot_column,
+    snapshot_from_json,
+)
 from .paths import DEFAULT_DB
 
 
@@ -37,6 +43,7 @@ def init_plant_journal_tables(db_path: Path | None = None) -> None:
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_plant_journal_plant ON plant_journal(plant_id, occurred_at DESC)"
         )
+        ensure_journal_snapshot_column(conn, "plant_journal")
         conn.commit()
 
 
@@ -48,6 +55,7 @@ def add_plant_entry(
     source: str = "operator",
     tags: list[str] | None = None,
     db_path: Path | None = None,
+    fleet: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     init_plant_journal_tables(db_path)
     pid = str(plant_id or "").strip()
@@ -59,13 +67,26 @@ def add_plant_entry(
         src = "operator"
     tag_list = [str(t).strip() for t in (tags or []) if str(t).strip()]
     created = time.time()
+    fleet_ctx = fleet if fleet is not None else build_journal_fleet_context()
+    snapshot = capture_journal_snapshot("plant", pid, fleet_ctx)
+    snapshot_raw = json.dumps(snapshot, separators=(",", ":"))
     with _connect(db_path) as conn:
         cur = conn.execute(
             """
-            INSERT INTO plant_journal(plant_id, occurred_at, note, source, tags_json, created_at)
-            VALUES(?, ?, ?, ?, ?, ?)
+            INSERT INTO plant_journal(
+              plant_id, occurred_at, note, source, tags_json, created_at, snapshot_json
+            )
+            VALUES(?, ?, ?, ?, ?, ?, ?)
             """,
-            (pid, ts, str(note or "").strip(), src, json.dumps(tag_list, separators=(",", ":")), created),
+            (
+                pid,
+                ts,
+                str(note or "").strip(),
+                src,
+                json.dumps(tag_list, separators=(",", ":")),
+                created,
+                snapshot_raw,
+            ),
         )
         conn.commit()
         row_id = int(cur.lastrowid or 0)
@@ -78,6 +99,7 @@ def add_plant_entry(
         "tags": tag_list,
         "created_at": created,
         "provenance": "plant",
+        "snapshot": snapshot,
     }
 
 
@@ -92,7 +114,7 @@ def list_plant_journal(
     with _connect(db_path) as conn:
         rows = conn.execute(
             """
-            SELECT id, plant_id, occurred_at, note, source, tags_json, created_at
+            SELECT id, plant_id, occurred_at, note, source, tags_json, created_at, snapshot_json
             FROM plant_journal WHERE plant_id=?
             ORDER BY occurred_at DESC, id DESC
             LIMIT ?
@@ -117,6 +139,7 @@ def list_plant_journal(
                 "tags": tags,
                 "created_at": r["created_at"],
                 "provenance": "plant",
+                "snapshot": snapshot_from_json(r["snapshot_json"]),
             }
         )
     return out

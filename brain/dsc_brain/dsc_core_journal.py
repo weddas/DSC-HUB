@@ -8,6 +8,12 @@ import time
 from pathlib import Path
 from typing import Any
 
+from .journal_snapshot import (
+    build_journal_fleet_context,
+    capture_journal_snapshot,
+    ensure_journal_snapshot_column,
+    snapshot_from_json,
+)
 from .paths import DEFAULT_DB
 from .room_journal import list_room_journal
 from .room_model import ensure_kit_rooms, list_rooms
@@ -38,6 +44,7 @@ def init_core_journal_tables(db_path: Path | None = None) -> None:
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_dsc_core_journal_ts ON dsc_core_journal(occurred_at DESC)"
         )
+        ensure_journal_snapshot_column(conn, "dsc_core_journal")
         conn.commit()
 
 
@@ -48,6 +55,7 @@ def add_core_entry(
     source: str = "operator",
     tags: list[str] | None = None,
     db_path: Path | None = None,
+    fleet: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     init_core_journal_tables(db_path)
     ts = float(occurred_at) if occurred_at is not None else time.time()
@@ -56,13 +64,25 @@ def add_core_entry(
         src = "operator"
     tag_list = [str(t).strip() for t in (tags or []) if str(t).strip()]
     created = time.time()
+    fleet_ctx = fleet if fleet is not None else build_journal_fleet_context()
+    snapshot = capture_journal_snapshot("core", "dsc_core", fleet_ctx)
+    snapshot_raw = json.dumps(snapshot, separators=(",", ":"))
     with _connect(db_path) as conn:
         cur = conn.execute(
             """
-            INSERT INTO dsc_core_journal(occurred_at, note, source, tags_json, created_at)
-            VALUES(?, ?, ?, ?, ?)
+            INSERT INTO dsc_core_journal(
+              occurred_at, note, source, tags_json, created_at, snapshot_json
+            )
+            VALUES(?, ?, ?, ?, ?, ?)
             """,
-            (ts, str(note or "").strip(), src, json.dumps(tag_list, separators=(",", ":")), created),
+            (
+                ts,
+                str(note or "").strip(),
+                src,
+                json.dumps(tag_list, separators=(",", ":")),
+                created,
+                snapshot_raw,
+            ),
         )
         conn.commit()
         row_id = int(cur.lastrowid or 0)
@@ -74,6 +94,7 @@ def add_core_entry(
         "tags": tag_list,
         "created_at": created,
         "provenance": "core",
+        "snapshot": snapshot,
     }
 
 
@@ -82,7 +103,7 @@ def list_core_native(*, limit: int = 100, db_path: Path | None = None) -> list[d
     with _connect(db_path) as conn:
         rows = conn.execute(
             """
-            SELECT id, occurred_at, note, source, tags_json, created_at
+            SELECT id, occurred_at, note, source, tags_json, created_at, snapshot_json
             FROM dsc_core_journal
             ORDER BY occurred_at DESC, id DESC LIMIT ?
             """,
@@ -105,6 +126,7 @@ def list_core_native(*, limit: int = 100, db_path: Path | None = None) -> list[d
                 "tags": tags,
                 "created_at": r["created_at"],
                 "provenance": "core",
+                "snapshot": snapshot_from_json(r["snapshot_json"]),
             }
         )
     return out
