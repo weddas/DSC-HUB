@@ -15,7 +15,7 @@
 | G0 Brain pytest (journal) | **pass** | `16 passed` — `test_journal_api`, `test_journal_snapshot`, `test_journal_crud` (2026-09-02) |
 | G1 SPA build | **pass** | `npm run build:spa` → `index-C0JbXFQo.js`; chunk-size warnings only |
 | G2 Pi HTTP / hotpatch | **pass** | `index-C0JbXFQo.js` live; journal list/paginate, POST snapshot, PATCH/DELETE, system 403 — all green |
-| G3 Browser matrix | **blocked (Pi)** | Live walk 2026-09-02: Pi served pre–Grow-Logs bundle (`/grow/logs` → Not found). Redeploy `index-Rxe08ZUG.js` via spa-only hotpatch after Pi recovery |
+| G3 Browser matrix | **partial** | Live walk ([browser walk](18bdfc25-b812-4fb0-8e54-faebfdd290e4)): Logs nav, trends, analytics redirect **pass**; journal rows blocked mid-walk by `/journal/*` API hang; teaser height bug fixed in CSS (was 10-row max-height) |
 | G4 Analytics redirect | **static pass** | `TuneAnalyticsPage` → `Navigate` to `/grow/logs?view=trends&scope=space&id=4x8`; `LEGACY_REDIRECTS` mirrors |
 
 **Overall gate:** **YELLOW** — repo + parks complete; Pi needs spa-only hotpatch (`index-Rxe08ZUG.js`); avoid `docker stop` until host stable (use `.audit/grow-logs-spa-only-hotpatch.ps1`).
@@ -51,9 +51,12 @@
 
 **Live browser (operator):**
 
-- [ ] Overview: room + core teasers above climate bands; ~3 rows visible; scroll reveals up to 10; footer opens Logs with correct scope
-- [ ] Light: both tent journals match embedded contract; parity 4×8 / 2×4
-- [ ] Plant seat: datetime compose preserved; footer deep link
+- [x] Grow nav **Logs** tab → `#/grow/logs` (2026-09-02 live walk)
+- [x] `#/grow/logs?view=trends&scope=space&id=4x8` — T/RH, VPD, root moisture charts render
+- [x] `#/tune/analytics` → Logs trends for 4×8
+- [ ] Overview: room + core teasers — chrome + footer links OK; rows stuck on API timeout mid-walk; **3-visible scroll fixed in CSS** (re-hotpatch SPA)
+- [ ] Light: 4×8 / 2×4 embedded — same API hang; re-verify after brain stable
+- [ ] Plant seat: datetime compose + footer deep link — not walked this session
 
 ---
 
@@ -72,12 +75,9 @@
 
 **Live browser (operator):**
 
-- [ ] Scope sidebar switches center panel without stale compare state
-- [ ] Compose note → row appears with snapshot chips
-- [ ] Edit operator row (note, time, highlight); delete with confirm
-- [ ] System row: no save/delete; provenance chip
-- [ ] Compare two entries → side-by-side + trends markers
-- [ ] Load more when >50 rows
+- [x] Scope sidebar + compose + Compare entries UI present
+- [ ] Compose note → snapshot chips (blocked: journal API timeout)
+- [ ] Edit/delete/compare row interactions — re-verify when `GET /journal/room/grow_room?limit=10` returns in &lt;2s
 
 ---
 
@@ -93,9 +93,9 @@
 
 **Live browser (operator):**
 
-- [ ] `#/grow/logs?view=trends&scope=space&id=4x8` shows tent T/RH charts
-- [ ] From entry detail, chart window centers on `occurred_at`
-- [ ] Compare mode shows two vertical markers
+- [x] Trends panel + 4×8 charts (live walk)
+- [ ] Entry “Chart this moment” anchor — not verified (API hang)
+- [ ] Compare dual markers — not verified without loaded rows
 
 ---
 
@@ -109,7 +109,7 @@
 
 **Live browser (operator):**
 
-- [ ] Navigate Tune → Analytics (or direct `#/tune/analytics`) lands on Logs trends for 4×8
+- [x] `#/tune/analytics` lands on Logs trends for 4×8 (live walk)
 
 ---
 

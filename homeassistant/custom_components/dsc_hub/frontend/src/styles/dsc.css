@@ -911,10 +911,10 @@ body {
   flex-wrap: wrap;
 }
 
-/* Embedded teaser: ~10-row scroll cap; first ~3 rows visible without scrolling */
+/* Embedded teaser: ~3 rows visible; scroll reveals up to fetch limit (10) */
 .dsc-journal-teaser-scroll {
   --dsc-journal-row-height: 52px;
-  max-height: calc(var(--dsc-journal-row-height) * var(--dsc-journal-scroll-max-rows, 10));
+  max-height: calc(var(--dsc-journal-row-height) * var(--dsc-journal-visible-rows, 3));
   overflow-y: auto;
   scroll-padding-top: 0;
 }

@@ -4143,8 +4143,8 @@ Passes 1?3 desk gates remain **GREEN**. Pass 4 integrated gate **GREEN**. **Pass
 
 | Severity | Item | Status |
 |----------|------|--------|
-| P1 | Live browser matrix | **open** — spa-only hotpatch after Pi recovery |
-| P1 | Pi hotpatch | **open** — use `grow-logs-spa-only-hotpatch.ps1` first |
+| P1 | Live browser matrix | **partial** — nav/trends/redirect green; journal rows need stable `/journal/*` + spa-only hotpatch for 3-row CSS |
+| P1 | Pi journal API | **open** — hung mid-walk; verify `GET /journal/room/grow_room?limit=10` &lt;2s after brain recovery |
 | P2 | **UX-P1-5** Grow log firehose | **done** — collapse + ×N badge |
 | P2 | **WF-P1-4** Grow log → playbook CTA | **done** — `growLogPlaybook.ts` |
 | P3 | Scope compare (two scopes) | **done** — `compareScopeA`/`compareScopeB` |
