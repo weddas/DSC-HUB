@@ -3,8 +3,8 @@
 **Spec:** [`docs/superpowers/specs/2026-09-02-grow-logs-review-design.md`](../superpowers/specs/2026-09-02-grow-logs-review-design.md)  
 **Plan:** [`docs/superpowers/plans/2026-09-02-grow-logs-review.md`](../superpowers/plans/2026-09-02-grow-logs-review.md)  
 **Date:** 2026-09-02  
-**Bundle (local build):** `spa-dist/assets/index-C0JbXFQo.js`  
-**Pi hotpatch:** completed 2026-09-02 — tarballs uploaded; plink dropped during `docker stop` (~65 min); Pi recovered; **HTTP GATE GREEN** (evidence: `.audit/grow-logs-pi-prove-evidence.json`)
+**Bundle (live Pi):** `spa-dist/assets/index-mqa24gAf.js`  
+**Pi hotpatch:** spa-only post-reboot 2026-09-02 — **HTTP GATE GREEN** (evidence: `.audit/grow-logs-pi-prove-evidence.json`)
 
 ---
 
