@@ -1,15 +1,17 @@
 import { Card, StatusChip, Button } from "../ui";
-import type { JournalEntry } from "../../types/journal";
+import type { JournalEntry, JournalScope } from "../../types/journal";
 import {
   fmtJournalWhen,
   formatSnapshotValue,
   snapshotChipLabel,
   snapshotEntries,
 } from "./journalFormat";
+import { LogsTrendsPanel } from "./LogsTrendsPanel";
 
 export type JournalComparePaneProps = {
   left: JournalEntry;
   right: JournalEntry;
+  scope: JournalScope;
   onClear?: () => void;
 };
 
@@ -65,7 +67,7 @@ function EntryColumn({ entry, side }: { entry: JournalEntry; side: "A" | "B" }) 
   );
 }
 
-export function JournalComparePane({ left, right, onClear }: JournalComparePaneProps) {
+export function JournalComparePane({ left, right, scope, onClear }: JournalComparePaneProps) {
   const diffRows = compareSnapshotKeys(
     left.snapshot as Record<string, unknown> | undefined,
     right.snapshot as Record<string, unknown> | undefined,
@@ -100,15 +102,12 @@ export function JournalComparePane({ left, right, onClear }: JournalComparePaneP
         </div>
       ) : null}
 
-      <div
-        className="dsc-journal-compare-chart-placeholder"
-        style={{ marginTop: 14 }}
-        aria-label="Chart markers placeholder"
-      >
-        <p className="dsc-muted" style={{ margin: 0, fontSize: 12 }}>
-          Dual chart markers at {fmtJournalWhen(left.occurred_at)} and{" "}
-          {fmtJournalWhen(right.occurred_at)} — wired in Task 7 trends panel.
-        </p>
+      <div style={{ marginTop: 14 }}>
+        <LogsTrendsPanel
+          scope={scope}
+          compareAnchorsSec={[left.occurred_at, right.occurred_at]}
+          compact
+        />
       </div>
 
       {onClear ? (

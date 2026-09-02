@@ -20,6 +20,7 @@ export type JournalEntryDetailProps = {
   onClose: () => void;
   onSaved?: (entry: JournalEntry) => void;
   onDeleted?: (entryId: number) => void;
+  onChartMoment?: (entry: JournalEntry) => void;
   update: (entryId: number, body: JournalPatchBody) => Promise<JournalEntry>;
   remove: (entryId: number) => Promise<void>;
   growthStageOptions?: readonly string[];
@@ -32,6 +33,7 @@ export function JournalEntryDetail({
   onClose,
   onSaved,
   onDeleted,
+  onChartMoment,
   update,
   remove,
   growthStageOptions = GROWTH_STAGE_FALLBACK,
@@ -179,6 +181,20 @@ export function JournalEntryDetail({
                 />
               ))}
             </div>
+          </div>
+        ) : null}
+
+        {onChartMoment && scope.kind !== "grow_log" && scope.kind !== "core" ? (
+          <div className="dsc-chip-row" style={{ marginTop: 14 }}>
+            <Button
+              variant="secondary"
+              onClick={() => onChartMoment(entry)}
+            >
+              Chart this moment
+            </Button>
+            <span className="dsc-muted" style={{ fontSize: 12 }}>
+              Opens trends ±6h around this entry
+            </span>
           </div>
         ) : null}
 

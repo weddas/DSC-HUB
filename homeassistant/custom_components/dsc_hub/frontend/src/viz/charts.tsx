@@ -64,6 +64,12 @@ export interface ChartTarget {
   label?: string;
 }
 
+export interface ChartTimeMarker {
+  t: number;
+  label?: string;
+  color?: string;
+}
+
 const HEX = {
   neon: "#66bb6a",
   teal: "#26c6da",
@@ -199,6 +205,8 @@ export function MultiLineChart({
   emptyLabel = "thin recorder",
   lastSyncAt,
   targets = [],
+  timeMarkers = [],
+  xDomain,
   yDomain,
   chartHours,
 }: {
@@ -209,6 +217,8 @@ export function MultiLineChart({
   emptyLabel?: string;
   lastSyncAt?: number;
   targets?: ChartTarget[];
+  timeMarkers?: ChartTimeMarker[];
+  xDomain?: { min: number; max: number };
   yDomain?: { left?: { min: number; max: number }; right?: { min: number; max: number } };
   chartHours?: number;
 }) {
@@ -270,6 +280,17 @@ export function MultiLineChart({
       }
     }
 
+    for (const mk of timeMarkers) {
+      if (!Number.isFinite(mk.t)) continue;
+      const color = hexColor(mk.color, HEX.amber);
+      leftMarks.markLine!.data.push({
+        xAxis: mk.t,
+        name: mk.label,
+        label: { formatter: mk.label || "", color, fontSize: 9 },
+        lineStyle: { color, type: "solid", width: 1.5 },
+      });
+    }
+
     const firstLeft = named.findIndex((s) => (s.axis || "left") === "left");
     const firstRight = named.findIndex((s) => s.axis === "right");
 
@@ -300,6 +321,8 @@ export function MultiLineChart({
       },
       xAxis: {
         type: "time",
+        min: xDomain?.min,
+        max: xDomain?.max,
         axisLine: { lineStyle: { color: HEX.gray5 } },
         axisLabel: {
           color: HEX.gray5,
@@ -354,7 +377,7 @@ export function MultiLineChart({
         };
       }),
     };
-  }, [named, height, unit, live, emptyLabel, lastSyncAt, targets, yDomain, chartHours, hasRight, chartStale]);
+  }, [named, height, unit, live, emptyLabel, lastSyncAt, targets, timeMarkers, xDomain, yDomain, chartHours, hasRight, chartStale]);
 
   const lastPrimary = named[0]?.series.length
     ? named[0].series[named[0].series.length - 1]?.v

@@ -38,6 +38,8 @@ export type JournalFullBrowserProps = {
 
   onDetailEntryChange?: (entry: JournalEntry | null) => void;
 
+  onChartMoment?: (entry: JournalEntry) => void;
+
 };
 
 
@@ -345,6 +347,7 @@ export function JournalScopePanel({
   const onCompareIdsChange = fullBrowser?.onCompareIdsChange;
   const onCompareEntry = fullBrowser?.onCompareEntry;
   const onEntriesChange = fullBrowser?.onEntriesChange;
+  const onChartMoment = fullBrowser?.onChartMoment;
 
   useEffect(() => {
     if (!embedded && onEntriesChange) {
@@ -655,6 +658,8 @@ export function JournalScopePanel({
           onClose={() => onDetailEntryChange?.(null)}
 
           onDeleted={() => onDetailEntryChange?.(null)}
+
+          onChartMoment={onChartMoment}
 
           update={wrappedUpdate}
 

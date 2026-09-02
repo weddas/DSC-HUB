@@ -8,6 +8,8 @@ import { JournalComparePane } from "../components/journal/JournalComparePane";
 
 import { JournalScopePanel } from "../components/journal/JournalScopePanel";
 
+import { LogsTrendsPanel } from "../components/journal/LogsTrendsPanel";
+
 import { HelpTip } from "../components/HelpTip";
 
 import { Button, Card, PageHeader } from "../components/ui";
@@ -49,6 +51,20 @@ function parseHighlightEntryId(params: URLSearchParams): number | null {
   const id = Number.parseInt(raw, 10);
 
   return Number.isFinite(id) && id > 0 ? id : null;
+
+}
+
+
+
+function parseAnchorSec(params: URLSearchParams): number | null {
+
+  const raw = params.get("anchor");
+
+  if (!raw) return null;
+
+  const n = Number.parseFloat(raw);
+
+  return Number.isFinite(n) && n > 0 ? n : null;
 
 }
 
@@ -186,6 +202,8 @@ export function GrowLogsPage() {
 
   const highlightEntryId = parseHighlightEntryId(params);
 
+  const chartAnchorSec = parseAnchorSec(params);
+
 
 
   const [compareMode, setCompareMode] = useState(false);
@@ -279,6 +297,24 @@ export function GrowLogsPage() {
   const selectScope = (next: JournalScope) => {
 
     setParams(buildLogsSearchParams(next, view), { replace: true });
+
+  };
+
+
+
+  const setView = (nextView: "list" | "trends", anchorSec?: number) => {
+
+    setParams(buildLogsSearchParams(scope, nextView, { anchorSec }), { replace: true });
+
+  };
+
+
+
+  const openChartMoment = (entry: JournalEntry) => {
+
+    setView("trends", entry.occurred_at);
+
+    setDetailEntry(null);
 
   };
 
@@ -450,29 +486,51 @@ export function GrowLogsPage() {
 
         <main className="dsc-logs-main">
 
+          <div className="dsc-chip-row" style={{ marginBottom: 10 }}>
+
+            <Button
+
+              variant={view === "list" ? "primary" : "secondary"}
+
+              onClick={() => setView("list")}
+
+            >
+
+              Journal list
+
+            </Button>
+
+            <Button
+
+              variant={view === "trends" ? "primary" : "secondary"}
+
+              onClick={() => setView("trends", chartAnchorSec ?? undefined)}
+
+              disabled={scope.kind === "grow_log"}
+
+            >
+
+              Trends
+
+            </Button>
+
+            {view === "trends" && chartAnchorSec ? (
+
+              <Button variant="secondary" onClick={() => setView("trends")}>
+
+                Clear anchor
+
+              </Button>
+
+            ) : null}
+
+          </div>
+
+
+
           {view === "trends" ? (
 
-            <Card className="dsc-glass" title="Trends">
-
-              <p className="dsc-muted" style={{ margin: 0, fontSize: 13 }}>
-
-                Trends panel for{" "}
-
-                <strong>
-
-                  {scope.kind}
-
-                  {scope.id ? ` · ${scope.id}` : ""}
-
-                </strong>{" "}
-
-                — charts land in Task 7. Tune Analytics will redirect here with{" "}
-
-                <code>?view=trends</code>.
-
-              </p>
-
-            </Card>
+            <LogsTrendsPanel scope={scope} anchorSec={chartAnchorSec} />
 
           ) : scope.kind === "grow_log" ? (
 
@@ -550,6 +608,8 @@ export function GrowLogsPage() {
 
                   },
 
+                  onChartMoment: openChartMoment,
+
                 }}
 
               />
@@ -561,6 +621,8 @@ export function GrowLogsPage() {
                   left={compareEntries[0]}
 
                   right={compareEntries[1]}
+
+                  scope={scope}
 
                   onClear={() => setCompareIds([])}
 

@@ -35,11 +35,18 @@ export function journalScopeToLogsHref(scope: JournalScope, view?: "list" | "tre
 
 export type LogsView = "list" | "trends";
 
-export function buildLogsSearchParams(scope: JournalScope, view: LogsView = "list"): URLSearchParams {
+export function buildLogsSearchParams(
+  scope: JournalScope,
+  view: LogsView = "list",
+  opts?: { anchorSec?: number },
+): URLSearchParams {
   const params = new URLSearchParams();
   params.set("scope", scope.kind);
   if (scope.id) params.set("id", scope.id);
   if (view === "trends") params.set("view", "trends");
+  if (opts?.anchorSec != null && Number.isFinite(opts.anchorSec) && opts.anchorSec > 0) {
+    params.set("anchor", String(opts.anchorSec));
+  }
   return params;
 }
 
