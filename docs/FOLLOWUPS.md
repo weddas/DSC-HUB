@@ -4110,3 +4110,46 @@ Passes 1?3 desk gates remain **GREEN**. Pass 4 integrated gate **GREEN**. **Pass
 
 ---
 
+## 2026-09-02 — Grow → Logs (review & journals)
+
+**Spec:** [`docs/superpowers/specs/2026-09-02-grow-logs-review-design.md`](superpowers/specs/2026-09-02-grow-logs-review-design.md)  
+**Plan:** [`docs/superpowers/plans/2026-09-02-grow-logs-review.md`](superpowers/plans/2026-09-02-grow-logs-review.md)  
+**Walk:** [`docs/qa/GROW-LOGS-WALK-2026-09.md`](qa/GROW-LOGS-WALK-2026-09.md) — gate **YELLOW** (repo green; live browser pending)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Brain `snapshot_json` + capture helper | **done (code)** | `journal_snapshot.py`; POST fills scope keys |
+| Brain PATCH/DELETE + pagination | **done (code)** | Operator only; system → 403; limit/offset |
+| Unified journal stack | **done (code)** | `useJournalScope` + `JournalScopePanel` embedded/full |
+| Embedded teasers (Overview/Light/seat) | **done (code)** | 3 visible / 10 fetch / scroll cap + Open full journal |
+| Grow → Logs page + nav tab | **done (code)** | Hierarchy sidebar; grow log stream separate |
+| Full browser edit/compare/trends | **done (code)** | Detail drawer; compare pane; `LogsTrendsPanel` |
+| Analytics redirect | **done (code)** | `#/tune/analytics` → `#/grow/logs?view=trends&scope=space&id=4x8` |
+| Brain pytest (journal) | **done** | 16 passed 2026-09-02 |
+| SPA build | **done (repo)** | `index-C0JbXFQo.js` local `build:spa` |
+| Pi hotpatch + live browser | **pending** | Operator soak; static walk filled |
+
+### Closed (this pass)
+
+| ID / topic | Was | Resolution |
+|------------|-----|------------|
+| Siloed Tune Analytics charts | Duplicate tent T/RH in Tune tab | Redirect + trends live under Grow → Logs |
+| Duplicate journal list markup | Room/Core/Tent/Plant mini components | Single `JournalScopePanel` stack |
+| No operator edit/delete | Read-only journals | PATCH/DELETE + detail drawer (operator only) |
+| No env snapshot at save | Notes without sensor context | `snapshot_json` on POST; chips in row/detail |
+| No compare / chart-at-moment | No review workflow | Compare-two + trends anchor ±6h |
+
+### Parks (non-blocking)
+
+| Severity | Item | Notes |
+|----------|------|-------|
+| P1 | Live browser matrix | Walk checklist operator items unchecked until Pi `:8787` |
+| P1 | Pi hotpatch | Bundle built locally; deploy when operator ready |
+| P2 | **UX-P1-5** Grow log firehose | Unchanged — filter/collapse repeats still wanted |
+| P2 | **WF-P1-4** Grow log → playbook CTA | Operational stream not clickable to Climate/Light/Root |
+| P3 | Scope compare (two scopes, same window) | Spec v1.1 optional |
+| P3 | Snapshot backfill for historical rows | Spec non-goal |
+| P3 | `.audit/grow-logs-prove.ps1` | Optional HTTP prove script — not created |
+
+---
+
