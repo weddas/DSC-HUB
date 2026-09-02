@@ -15,6 +15,10 @@ from .settings import list_inventory, list_roster
 from .stage_model import tent_id
 
 
+class JournalForbiddenError(Exception):
+    """Raised when mutating a system-sourced journal row."""
+
+
 def ensure_journal_snapshot_column(conn: sqlite3.Connection, table: str) -> None:
     """Idempotent migration: add snapshot_json to a journal table."""
     cols = {r[1] for r in conn.execute(f"PRAGMA table_info({table})").fetchall()}

@@ -9,13 +9,14 @@ from pathlib import Path
 from typing import Any
 
 from .journal_snapshot import (
+    JournalForbiddenError,
     build_journal_fleet_context,
     capture_journal_snapshot,
     ensure_journal_snapshot_column,
     snapshot_from_json,
 )
 from .paths import DEFAULT_DB
-from .room_journal import list_room_journal
+from .room_journal import count_room_journal, list_room_journal
 from .room_model import ensure_kit_rooms, list_rooms
 
 
@@ -98,47 +99,127 @@ def add_core_entry(
     }
 
 
-def list_core_native(*, limit: int = 100, db_path: Path | None = None) -> list[dict[str, Any]]:
+def _core_row_to_dict(r: sqlite3.Row) -> dict[str, Any]:
+    try:
+        tags = json.loads(r["tags_json"] or "[]")
+    except json.JSONDecodeError:
+        tags = []
+    if not isinstance(tags, list):
+        tags = []
+    return {
+        "id": r["id"],
+        "occurred_at": r["occurred_at"],
+        "note": r["note"],
+        "source": r["source"],
+        "tags": tags,
+        "created_at": r["created_at"],
+        "provenance": "core",
+        "snapshot": snapshot_from_json(r["snapshot_json"]),
+    }
+
+
+def count_core_native(*, db_path: Path | None = None) -> int:
+    init_core_journal_tables(db_path)
+    with _connect(db_path) as conn:
+        row = conn.execute("SELECT COUNT(*) AS n FROM dsc_core_journal").fetchone()
+    return int(row["n"] if row else 0)
+
+
+def list_core_native(
+    *,
+    limit: int = 50,
+    offset: int = 0,
+    db_path: Path | None = None,
+) -> list[dict[str, Any]]:
     init_core_journal_tables(db_path)
     with _connect(db_path) as conn:
         rows = conn.execute(
             """
             SELECT id, occurred_at, note, source, tags_json, created_at, snapshot_json
             FROM dsc_core_journal
-            ORDER BY occurred_at DESC, id DESC LIMIT ?
+            ORDER BY occurred_at DESC, id DESC LIMIT ? OFFSET ?
             """,
-            (int(limit),),
+            (int(limit), int(offset)),
         ).fetchall()
-    out: list[dict[str, Any]] = []
-    for r in rows:
-        try:
-            tags = json.loads(r["tags_json"] or "[]")
-        except json.JSONDecodeError:
-            tags = []
-        if not isinstance(tags, list):
-            tags = []
-        out.append(
-            {
-                "id": r["id"],
-                "occurred_at": r["occurred_at"],
-                "note": r["note"],
-                "source": r["source"],
-                "tags": tags,
-                "created_at": r["created_at"],
-                "provenance": "core",
-                "snapshot": snapshot_from_json(r["snapshot_json"]),
-            }
+    return [_core_row_to_dict(r) for r in rows]
+
+
+def update_core_entry(
+    entry_id: int,
+    *,
+    note: str | None = None,
+    tags: list[str] | None = None,
+    db_path: Path | None = None,
+) -> dict[str, Any]:
+    init_core_journal_tables(db_path)
+    eid = int(entry_id)
+    with _connect(db_path) as conn:
+        row = conn.execute(
+            """
+            SELECT id, occurred_at, note, source, tags_json, created_at, snapshot_json
+            FROM dsc_core_journal WHERE id=?
+            """,
+            (eid,),
+        ).fetchone()
+        if row is None:
+            raise ValueError("journal entry not found")
+        if str(row["source"] or "") != "operator":
+            raise JournalForbiddenError("system journal rows are read-only")
+        sets: list[str] = []
+        params: list[Any] = []
+        if note is not None:
+            sets.append("note=?")
+            params.append(str(note).strip())
+        if tags is not None:
+            tag_list = [str(t).strip() for t in tags if str(t).strip()]
+            sets.append("tags_json=?")
+            params.append(json.dumps(tag_list, separators=(",", ":")))
+        if not sets:
+            return _core_row_to_dict(row)
+        params.append(eid)
+        conn.execute(
+            f"UPDATE dsc_core_journal SET {', '.join(sets)} WHERE id=?",
+            params,
         )
-    return out
+        conn.commit()
+        updated = conn.execute(
+            """
+            SELECT id, occurred_at, note, source, tags_json, created_at, snapshot_json
+            FROM dsc_core_journal WHERE id=?
+            """,
+            (eid,),
+        ).fetchone()
+    if updated is None:
+        raise ValueError("journal entry not found")
+    return _core_row_to_dict(updated)
 
 
-def list_core_journal(*, limit: int = 100, db_path: Path | None = None) -> list[dict[str, Any]]:
+def delete_core_entry(entry_id: int, *, db_path: Path | None = None) -> None:
+    init_core_journal_tables(db_path)
+    eid = int(entry_id)
+    with _connect(db_path) as conn:
+        row = conn.execute("SELECT source FROM dsc_core_journal WHERE id=?", (eid,)).fetchone()
+        if row is None:
+            raise ValueError("journal entry not found")
+        if str(row["source"] or "") != "operator":
+            raise JournalForbiddenError("system journal rows are read-only")
+        conn.execute("DELETE FROM dsc_core_journal WHERE id=?", (eid,))
+        conn.commit()
+
+
+def list_core_journal(
+    *,
+    limit: int = 50,
+    offset: int = 0,
+    db_path: Path | None = None,
+) -> list[dict[str, Any]]:
     """Core-native + rolled room journals (tents + plants included via room rollup)."""
     ensure_kit_rooms(db_path)
-    native = list_core_native(limit=limit, db_path=db_path)
+    fetch_cap = int(offset) + int(limit)
+    native = list_core_native(limit=fetch_cap, db_path=db_path)
     rooms = list_rooms(db_path)
     rolled: list[dict[str, Any]] = []
-    per = max(10, int(limit) // max(1, len(rooms) or 1))
+    per = max(10, fetch_cap // max(1, len(rooms) or 1))
     for room in rooms:
         rid = str(room.get("room_id") or "")
         if not rid:
@@ -147,4 +228,14 @@ def list_core_journal(*, limit: int = 100, db_path: Path | None = None) -> list[
             rolled.append({**row, "facility": "dsc_core"})
     merged = native + rolled
     merged.sort(key=lambda r: (float(r.get("occurred_at") or 0), int(r.get("id") or 0)), reverse=True)
-    return merged[: int(limit)]
+    return merged[int(offset) : int(offset) + int(limit)]
+
+
+def count_core_journal(*, db_path: Path | None = None) -> int:
+    ensure_kit_rooms(db_path)
+    total = count_core_native(db_path=db_path)
+    for room in list_rooms(db_path):
+        rid = str(room.get("room_id") or "")
+        if rid:
+            total += count_room_journal(rid, db_path=db_path)
+    return total

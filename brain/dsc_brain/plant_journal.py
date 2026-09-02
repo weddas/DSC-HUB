@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .journal_snapshot import (
+    JournalForbiddenError,
     build_journal_fleet_context,
     capture_journal_snapshot,
     ensure_journal_snapshot_column,
@@ -103,10 +104,42 @@ def add_plant_entry(
     }
 
 
+def _plant_row_to_dict(r: sqlite3.Row) -> dict[str, Any]:
+    try:
+        tags = json.loads(r["tags_json"] or "[]")
+    except json.JSONDecodeError:
+        tags = []
+    if not isinstance(tags, list):
+        tags = []
+    return {
+        "id": r["id"],
+        "plant_id": r["plant_id"],
+        "occurred_at": r["occurred_at"],
+        "note": r["note"],
+        "source": r["source"],
+        "tags": tags,
+        "created_at": r["created_at"],
+        "provenance": "plant",
+        "snapshot": snapshot_from_json(r["snapshot_json"]),
+    }
+
+
+def count_plant_journal(plant_id: str, *, db_path: Path | None = None) -> int:
+    init_plant_journal_tables(db_path)
+    pid = str(plant_id or "").strip()
+    with _connect(db_path) as conn:
+        row = conn.execute(
+            "SELECT COUNT(*) AS n FROM plant_journal WHERE plant_id=?",
+            (pid,),
+        ).fetchone()
+    return int(row["n"] if row else 0)
+
+
 def list_plant_journal(
     plant_id: str,
     *,
-    limit: int = 100,
+    limit: int = 50,
+    offset: int = 0,
     db_path: Path | None = None,
 ) -> list[dict[str, Any]]:
     init_plant_journal_tables(db_path)
@@ -117,29 +150,88 @@ def list_plant_journal(
             SELECT id, plant_id, occurred_at, note, source, tags_json, created_at, snapshot_json
             FROM plant_journal WHERE plant_id=?
             ORDER BY occurred_at DESC, id DESC
-            LIMIT ?
+            LIMIT ? OFFSET ?
             """,
-            (pid, int(limit)),
+            (pid, int(limit), int(offset)),
         ).fetchall()
-    out: list[dict[str, Any]] = []
-    for r in rows:
-        try:
-            tags = json.loads(r["tags_json"] or "[]")
-        except json.JSONDecodeError:
-            tags = []
-        if not isinstance(tags, list):
-            tags = []
-        out.append(
-            {
-                "id": r["id"],
-                "plant_id": r["plant_id"],
-                "occurred_at": r["occurred_at"],
-                "note": r["note"],
-                "source": r["source"],
-                "tags": tags,
-                "created_at": r["created_at"],
-                "provenance": "plant",
-                "snapshot": snapshot_from_json(r["snapshot_json"]),
-            }
+    return [_plant_row_to_dict(r) for r in rows]
+
+
+def update_plant_entry(
+    plant_id: str,
+    entry_id: int,
+    *,
+    note: str | None = None,
+    tags: list[str] | None = None,
+    growth_stage: str | None = None,
+    db_path: Path | None = None,
+) -> dict[str, Any]:
+    init_plant_journal_tables(db_path)
+    pid = str(plant_id or "").strip()
+    eid = int(entry_id)
+    with _connect(db_path) as conn:
+        row = conn.execute(
+            """
+            SELECT id, plant_id, occurred_at, note, source, tags_json, created_at, snapshot_json
+            FROM plant_journal WHERE id=? AND plant_id=?
+            """,
+            (eid, pid),
+        ).fetchone()
+        if row is None:
+            raise ValueError("journal entry not found")
+        if str(row["source"] or "") != "operator":
+            raise JournalForbiddenError("system journal rows are read-only")
+        sets: list[str] = []
+        params: list[Any] = []
+        if note is not None:
+            sets.append("note=?")
+            params.append(str(note).strip())
+        if tags is not None:
+            tag_list = [str(t).strip() for t in tags if str(t).strip()]
+            sets.append("tags_json=?")
+            params.append(json.dumps(tag_list, separators=(",", ":")))
+        if growth_stage is not None:
+            snap = snapshot_from_json(row["snapshot_json"])
+            snap["growth_stage"] = str(growth_stage).strip()
+            sets.append("snapshot_json=?")
+            params.append(json.dumps(snap, separators=(",", ":")))
+        if not sets:
+            return _plant_row_to_dict(row)
+        params.extend([eid, pid])
+        conn.execute(
+            f"UPDATE plant_journal SET {', '.join(sets)} WHERE id=? AND plant_id=?",
+            params,
         )
-    return out
+        conn.commit()
+        updated = conn.execute(
+            """
+            SELECT id, plant_id, occurred_at, note, source, tags_json, created_at, snapshot_json
+            FROM plant_journal WHERE id=? AND plant_id=?
+            """,
+            (eid, pid),
+        ).fetchone()
+    if updated is None:
+        raise ValueError("journal entry not found")
+    return _plant_row_to_dict(updated)
+
+
+def delete_plant_entry(
+    plant_id: str,
+    entry_id: int,
+    *,
+    db_path: Path | None = None,
+) -> None:
+    init_plant_journal_tables(db_path)
+    pid = str(plant_id or "").strip()
+    eid = int(entry_id)
+    with _connect(db_path) as conn:
+        row = conn.execute(
+            "SELECT source FROM plant_journal WHERE id=? AND plant_id=?",
+            (eid, pid),
+        ).fetchone()
+        if row is None:
+            raise ValueError("journal entry not found")
+        if str(row["source"] or "") != "operator":
+            raise JournalForbiddenError("system journal rows are read-only")
+        conn.execute("DELETE FROM plant_journal WHERE id=? AND plant_id=?", (eid, pid))
+        conn.commit()

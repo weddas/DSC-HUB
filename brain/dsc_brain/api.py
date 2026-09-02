@@ -213,6 +213,22 @@ class JournalEntryBody(BaseModel):
     tags: list[str] | None = None
 
 
+class JournalPatchBody(BaseModel):
+    note: str | None = None
+    tags: list[str] | None = None
+    growth_stage: str | None = None
+
+
+def _journal_mutation_http(exc: Exception) -> None:
+    from .journal_snapshot import JournalForbiddenError
+
+    if isinstance(exc, JournalForbiddenError):
+        raise HTTPException(403, str(exc) or "system journal rows are read-only") from exc
+    if isinstance(exc, ValueError):
+        raise HTTPException(404, str(exc) or "journal entry not found") from exc
+    raise exc
+
+
 class SpaceDeviceBody(BaseModel):
     label: str | None = None
     watts: float | None = None
@@ -1082,10 +1098,20 @@ def tick(body: TickBody) -> dict[str, Any]:
 
 
 @app.get("/journal/plant/{plant_id}")
-def journal_plant_get(plant_id: str, limit: int = Query(100, ge=1, le=500)) -> dict[str, Any]:
-    from .plant_journal import list_plant_journal
+def journal_plant_get(
+    plant_id: str,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+) -> dict[str, Any]:
+    from .plant_journal import count_plant_journal, list_plant_journal
 
-    return {"plant_id": plant_id, "entries": list_plant_journal(plant_id, limit=limit)}
+    return {
+        "plant_id": plant_id,
+        "entries": list_plant_journal(plant_id, limit=limit, offset=offset),
+        "total": count_plant_journal(plant_id),
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 @app.post("/journal/plant/{plant_id}")
@@ -1104,9 +1130,41 @@ def journal_plant_post(plant_id: str, body: JournalEntryBody) -> dict[str, Any]:
         raise HTTPException(400, str(exc)) from exc
 
 
+@app.patch("/journal/plant/{plant_id}/{entry_id}")
+def journal_plant_patch(plant_id: str, entry_id: int, body: JournalPatchBody) -> dict[str, Any]:
+    from .plant_journal import update_plant_entry
+
+    try:
+        return update_plant_entry(
+            plant_id,
+            entry_id,
+            note=body.note,
+            tags=body.tags,
+            growth_stage=body.growth_stage,
+        )
+    except (ValueError, Exception) as exc:
+        _journal_mutation_http(exc)
+        raise  # pragma: no cover
+
+
+@app.delete("/journal/plant/{plant_id}/{entry_id}")
+def journal_plant_delete(plant_id: str, entry_id: int) -> dict[str, Any]:
+    from .plant_journal import delete_plant_entry
+
+    try:
+        delete_plant_entry(plant_id, entry_id)
+    except (ValueError, Exception) as exc:
+        _journal_mutation_http(exc)
+    return {"ok": True, "deleted_id": entry_id}
+
+
 @app.get("/journal/space/{space_id}")
-def journal_space_get(space_id: str, limit: int = Query(100, ge=1, le=500)) -> dict[str, Any]:
-    from .space_journal import list_space_journal
+def journal_space_get(
+    space_id: str,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+) -> dict[str, Any]:
+    from .space_journal import count_space_journal, list_space_journal
     from .space_occupants import occupant_plant_ids_for_space
 
     return {
@@ -1114,8 +1172,12 @@ def journal_space_get(space_id: str, limit: int = Query(100, ge=1, le=500)) -> d
         "entries": list_space_journal(
             space_id,
             limit=limit,
+            offset=offset,
             resolve_occupants=occupant_plant_ids_for_space,
         ),
+        "total": count_space_journal(space_id, resolve_occupants=occupant_plant_ids_for_space),
+        "limit": limit,
+        "offset": offset,
     }
 
 
@@ -1133,6 +1195,28 @@ def journal_space_post(space_id: str, body: JournalEntryBody) -> dict[str, Any]:
         )
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
+
+
+@app.patch("/journal/space/{space_id}/{entry_id}")
+def journal_space_patch(space_id: str, entry_id: int, body: JournalPatchBody) -> dict[str, Any]:
+    from .space_journal import update_space_entry
+
+    try:
+        return update_space_entry(space_id, entry_id, note=body.note, tags=body.tags)
+    except (ValueError, Exception) as exc:
+        _journal_mutation_http(exc)
+        raise  # pragma: no cover
+
+
+@app.delete("/journal/space/{space_id}/{entry_id}")
+def journal_space_delete(space_id: str, entry_id: int) -> dict[str, Any]:
+    from .space_journal import delete_space_entry
+
+    try:
+        delete_space_entry(space_id, entry_id)
+    except (ValueError, Exception) as exc:
+        _journal_mutation_http(exc)
+    return {"ok": True, "deleted_id": entry_id}
 
 
 @app.get("/spaces")
@@ -1317,12 +1401,22 @@ def rooms_get() -> dict[str, Any]:
 
 
 @app.get("/journal/room/{room_id}")
-def journal_room_get(room_id: str, limit: int = Query(100, ge=1, le=500)) -> dict[str, Any]:
-    from .room_journal import list_room_journal
+def journal_room_get(
+    room_id: str,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+) -> dict[str, Any]:
+    from .room_journal import count_room_journal, list_room_journal
     from .room_model import ensure_kit_rooms
 
     ensure_kit_rooms()
-    return {"room_id": room_id, "entries": list_room_journal(room_id, limit=limit)}
+    return {
+        "room_id": room_id,
+        "entries": list_room_journal(room_id, limit=limit, offset=offset),
+        "total": count_room_journal(room_id),
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 @app.post("/journal/room/{room_id}")
@@ -1335,14 +1429,44 @@ def journal_room_post(room_id: str, body: JournalEntryBody) -> dict[str, Any]:
         raise HTTPException(400, str(exc)) from exc
 
 
+@app.patch("/journal/room/{room_id}/{entry_id}")
+def journal_room_patch(room_id: str, entry_id: int, body: JournalPatchBody) -> dict[str, Any]:
+    from .room_journal import update_room_entry
+
+    try:
+        return update_room_entry(room_id, entry_id, note=body.note, tags=body.tags)
+    except (ValueError, Exception) as exc:
+        _journal_mutation_http(exc)
+        raise  # pragma: no cover
+
+
+@app.delete("/journal/room/{room_id}/{entry_id}")
+def journal_room_delete(room_id: str, entry_id: int) -> dict[str, Any]:
+    from .room_journal import delete_room_entry
+
+    try:
+        delete_room_entry(room_id, entry_id)
+    except (ValueError, Exception) as exc:
+        _journal_mutation_http(exc)
+    return {"ok": True, "deleted_id": entry_id}
+
+
 @app.get("/journal/core")
 @app.get("/journal/dsc-core")
-def journal_core_get(limit: int = Query(100, ge=1, le=500)) -> dict[str, Any]:
-    from .dsc_core_journal import list_core_journal
+def journal_core_get(
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+) -> dict[str, Any]:
+    from .dsc_core_journal import count_core_journal, list_core_journal
     from .room_model import ensure_kit_rooms
 
     ensure_kit_rooms()
-    return {"entries": list_core_journal(limit=limit)}
+    return {
+        "entries": list_core_journal(limit=limit, offset=offset),
+        "total": count_core_journal(),
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 @app.post("/journal/core")
@@ -1351,6 +1475,30 @@ def journal_core_post(body: JournalEntryBody) -> dict[str, Any]:
     from .dsc_core_journal import add_core_entry
 
     return add_core_entry(body.occurred_at, body.note, source="operator", tags=body.tags)
+
+
+@app.patch("/journal/core/{entry_id}")
+@app.patch("/journal/dsc-core/{entry_id}")
+def journal_core_patch(entry_id: int, body: JournalPatchBody) -> dict[str, Any]:
+    from .dsc_core_journal import update_core_entry
+
+    try:
+        return update_core_entry(entry_id, note=body.note, tags=body.tags)
+    except (ValueError, Exception) as exc:
+        _journal_mutation_http(exc)
+        raise  # pragma: no cover
+
+
+@app.delete("/journal/core/{entry_id}")
+@app.delete("/journal/dsc-core/{entry_id}")
+def journal_core_delete(entry_id: int) -> dict[str, Any]:
+    from .dsc_core_journal import delete_core_entry
+
+    try:
+        delete_core_entry(entry_id)
+    except (ValueError, Exception) as exc:
+        _journal_mutation_http(exc)
+    return {"ok": True, "deleted_id": entry_id}
 
 
 @app.get("/")
