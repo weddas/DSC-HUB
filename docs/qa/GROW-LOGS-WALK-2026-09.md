@@ -18,7 +18,7 @@
 | G3 Browser matrix | **partial** | Live walk ([browser walk](18bdfc25-b812-4fb0-8e54-faebfdd290e4)): Logs nav, trends, analytics redirect **pass**; journal rows blocked mid-walk by `/journal/*` API hang; teaser height bug fixed in CSS (was 10-row max-height) |
 | G4 Analytics redirect | **static pass** | `TuneAnalyticsPage` → `Navigate` to `/grow/logs?view=trends&scope=space&id=4x8`; `LEGACY_REDIRECTS` mirrors |
 
-**Overall gate:** **YELLOW** — repo + parks complete; Pi needs spa-only hotpatch (`index-Rxe08ZUG.js`); avoid `docker stop` until host stable (use `.audit/grow-logs-spa-only-hotpatch.ps1`).
+**Overall gate:** **YELLOW → trending GREEN** — spa hotpatched; HTTP prove green; live browser journal rows re-verify after cold-start settles (&lt;2s target).
 
 ---
 
