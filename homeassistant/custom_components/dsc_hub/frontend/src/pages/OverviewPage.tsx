@@ -10,8 +10,7 @@ import {
   DashRunningChips,
 } from "../components/DashHomeSections";
 import { TentLightClockStrip } from "../components/TentLightClock";
-import { RoomJournal } from "../components/journal/RoomJournal";
-import { CoreJournal } from "../components/journal/CoreJournal";
+import { JournalScopePanel } from "../components/journal/JournalScopePanel";
 import { BAND_CHART_TITLES, useBandChart, type BandChartKind } from "../components/BandChartHost";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleet } from "../hooks/useFleet";
@@ -205,10 +204,15 @@ export function OverviewPage() {
 
       <div className="dsc-grid" style={{ marginTop: 12 }}>
         <div className="dsc-col-6">
-          <RoomJournal />
+          <JournalScopePanel
+            scope={{ kind: "room", id: "grow_room" }}
+            variant="embedded"
+            fetchLimit={10}
+            visibleRows={3}
+          />
         </div>
         <div className="dsc-col-6">
-          <CoreJournal />
+          <JournalScopePanel scope={{ kind: "core" }} variant="embedded" fetchLimit={10} visibleRows={3} />
         </div>
       </div>
 

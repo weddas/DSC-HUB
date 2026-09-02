@@ -24,7 +24,7 @@ import { readTentPhotoperiodInput } from "../lib/lightSchedule";
 import { dliFromPpfdHours, fmtDli, readCalibratedPpfd } from "../lib/dliEstimate";
 import { buildCloneLightDesk } from "../lib/lightViewModel";
 import { LightEnergyPanel } from "../components/energy/LightEnergyPanel";
-import { TentOccupancyJournal } from "../components/journal/TentOccupancyJournal";
+import { JournalScopePanel } from "../components/journal/JournalScopePanel";
 
 function fmt(n: number, digits = 1): string {
   return Number.isFinite(n) ? n.toFixed(digits) : "—";
@@ -477,10 +477,20 @@ export function LiveLightPage() {
           />
         </div>
         <div className="dsc-col-6">
-          <TentOccupancyJournal spaceId="4x8" />
+          <JournalScopePanel
+            scope={{ kind: "space", id: "4x8" }}
+            variant="embedded"
+            fetchLimit={10}
+            visibleRows={3}
+          />
         </div>
         <div className="dsc-col-6">
-          <TentOccupancyJournal spaceId="2x4" />
+          <JournalScopePanel
+            scope={{ kind: "space", id: "2x4" }}
+            variant="embedded"
+            fetchLimit={10}
+            visibleRows={3}
+          />
         </div>
       </div>
     </div>

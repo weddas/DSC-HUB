@@ -28,7 +28,7 @@ import { useBrainContext } from "../hooks/useBrain";
 import { useFleet } from "../hooks/useFleet";
 import { phaseLabel, potSteering, type RootSteeringSnapshot } from "../lib/rootSteering";
 import { probeAssignedPlantId } from "../lib/probeAssignment";
-import { PlantMiniJournal } from "./journal/PlantMiniJournal";
+import { JournalScopePanel } from "./journal/JournalScopePanel";
 
 type FieldBaseline = {
   name: string;
@@ -620,7 +620,12 @@ export function PlantSeatPanel({
               </div>
             </Card>
             <div style={{ marginTop: 12 }}>
-              <PlantMiniJournal plantId={plantId} />
+              <JournalScopePanel
+                scope={{ kind: "plant", id: plantId }}
+                variant="embedded"
+                fetchLimit={10}
+                visibleRows={3}
+              />
             </div>
           </div>
 
