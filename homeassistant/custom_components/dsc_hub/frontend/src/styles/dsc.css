@@ -820,6 +820,29 @@ body {
   font-size: 13px;
 }
 
+.dsc-journal-row--highlight {
+  background: color-mix(in srgb, var(--dsc-teal, #2dd4bf) 8%, transparent);
+  border-radius: 4px;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.dsc-journal-snapshot-chips {
+  flex-wrap: wrap;
+}
+
+/* Embedded teaser: ~10-row scroll cap; first ~3 rows visible without scrolling */
+.dsc-journal-teaser-scroll {
+  --dsc-journal-row-height: 52px;
+  max-height: calc(var(--dsc-journal-row-height) * var(--dsc-journal-scroll-max-rows, 10));
+  overflow-y: auto;
+  scroll-padding-top: 0;
+}
+
+.dsc-journal-teaser-scroll .dsc-journal-row:first-child {
+  border-top: none;
+}
+
 .dsc-help-tip {
   position: relative;
   display: inline-block;

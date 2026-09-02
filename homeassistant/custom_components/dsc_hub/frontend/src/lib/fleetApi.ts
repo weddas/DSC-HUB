@@ -606,18 +606,23 @@ export async function listSoilTests(
 
 /* --- Space energy / journals --- */
 
-export type JournalEntry = {
-  id: number;
-  plant_id?: string;
-  space_id?: string;
-  room_id?: string;
-  occurred_at: number;
-  note: string;
-  source: string;
-  tags: string[];
-  provenance?: "plant" | "space" | "room" | "core" | string;
-  created_at?: number;
-};
+export type {
+  JournalEntry,
+  JournalPaginatedResponse,
+  JournalPatchBody,
+  JournalPostBody,
+  JournalScope,
+} from "../types/journal";
+
+export {
+  deleteJournalEntry,
+  fetchJournalScope,
+  journalScopeToLogsHref,
+  patchJournalEntry,
+  postJournalEntry,
+} from "./journalApi";
+
+import type { JournalEntry } from "../types/journal";
 
 export async function getPlantJournal(plantId: string, limit = 100): Promise<JournalEntry[]> {
   const resp = await fetch(`/journal/plant/${encodeURIComponent(plantId)}?limit=${limit}`);
