@@ -38,6 +38,7 @@ import {
 } from "./routes";
 import { SettingsPage } from "./pages/SettingsPage";
 import { OverviewPage } from "./pages/OverviewPage";
+import { GrowLogsPage } from "./pages/GrowLogsPage";
 import { DashHomePage } from "./pages/DashHomePage";
 import { preloadPiTwinAssets, piTwinRouteNeedsAssets } from "./lib/ensureLocalCards";
 import type { HomeAssistant } from "./vite-env";
@@ -178,6 +179,7 @@ function Shell({ surfaceVersion = "7.4.0" }: { surfaceVersion?: string }) {
           <Route path="/grow/compose" element={<GrowComposePage />} />
           <Route path="/grow/research" element={<GrowResearchPage />} />
           <Route path="/grow/roster" element={<GrowRosterPage />} />
+          <Route path="/grow/logs" element={<GrowLogsPage />} />
           <Route path="/tune" element={<Navigate to="/tune/learning" replace />} />
           <Route path="/tune/learning" element={<TuneLearningPage />} />
           <Route path="/tune/analytics" element={<TuneAnalyticsPage />} />

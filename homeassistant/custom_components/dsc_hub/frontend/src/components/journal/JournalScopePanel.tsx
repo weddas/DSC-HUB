@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button, Card, StatusChip } from "../ui";
 import { useJournalScope } from "../../hooks/useJournalScope";
+import type { JournalEntry } from "../../types/journal";
 import { journalScopeToLogsHref } from "../../lib/journalApi";
 import type { JournalScope } from "../../types/journal";
 import { JournalEntryList } from "./JournalEntryList";
@@ -80,12 +81,40 @@ export function JournalScopePanel({
   help,
 }: JournalScopePanelProps) {
   const embedded = variant === "embedded";
-  const limit = fetchLimit ?? (embedded ? 10 : 50);
+  const pageSize = fetchLimit ?? (embedded ? 10 : 50);
   const copy = scopeCopy(scope);
   const plantReady = scope.kind !== "plant" || Boolean(scope.id?.trim());
   const enabled = scope.kind !== "grow_log" && plantReady;
 
-  const { entries, loading, error, save } = useJournalScope(scope, { limit, offset: 0, enabled });
+  const [pageOffset, setPageOffset] = useState(0);
+  const [mergedEntries, setMergedEntries] = useState<JournalEntry[]>([]);
+
+  useEffect(() => {
+    setPageOffset(0);
+    setMergedEntries([]);
+  }, [scope.kind, scope.id]);
+
+  const { entries, total, loading, error, save } = useJournalScope(scope, {
+    limit: pageSize,
+    offset: pageOffset,
+    enabled,
+  });
+
+  useEffect(() => {
+    if (embedded) return;
+    if (pageOffset === 0) {
+      setMergedEntries(entries);
+      return;
+    }
+    if (!entries.length) return;
+    setMergedEntries((prev) => {
+      const seen = new Set(prev.map((row) => row.id));
+      return [...prev, ...entries.filter((row) => !seen.has(row.id))];
+    });
+  }, [embedded, entries, pageOffset]);
+
+  const listEntries = embedded ? entries : mergedEntries;
+  const hasMore = !embedded && enabled && listEntries.length < total;
 
   const [note, setNote] = useState("");
   const [when, setWhen] = useState(() => toLocalInputValue(Date.now() / 1000));
@@ -178,7 +207,7 @@ export function JournalScopePanel({
         </>
       ) : null}
 
-      {loading && !entries.length ? (
+      {loading && !listEntries.length ? (
         <p className="dsc-muted" style={{ margin: "12px 0 0", fontSize: 13 }}>
           Loading journal…
         </p>
@@ -186,12 +215,23 @@ export function JournalScopePanel({
       {error ? <StatusChip label={error} tone="bad" /> : null}
 
       <JournalEntryList
-        entries={entries}
+        entries={listEntries}
         variant={variant}
         visibleRows={visibleRows}
         scrollMaxRows={scrollMaxRows}
         emptyMessage={loading ? " " : "No journal rows yet."}
       />
+
+      {hasMore ? (
+        <div className="dsc-chip-row" style={{ marginTop: 10 }}>
+          <Button disabled={loading} onClick={() => setPageOffset((o) => o + pageSize)}>
+            {loading ? "Loading…" : "Load more"}
+          </Button>
+          <span className="dsc-muted" style={{ fontSize: 12 }}>
+            {listEntries.length} of {total}
+          </span>
+        </div>
+      ) : null}
 
       {embedded ? (
         <p style={{ margin: "10px 0 0", fontSize: 13 }}>

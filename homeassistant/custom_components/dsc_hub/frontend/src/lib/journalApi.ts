@@ -29,11 +29,43 @@ function journalBasePath(scope: JournalScope): string {
 }
 
 /** Deep-link href for Grow → Logs (Task 5 page; footer uses this in Task 3). */
-export function journalScopeToLogsHref(scope: JournalScope): string {
+export function journalScopeToLogsHref(scope: JournalScope, view?: "list" | "trends"): string {
+  return `/grow/logs?${buildLogsSearchParams(scope, view).toString()}`;
+}
+
+export type LogsView = "list" | "trends";
+
+export function buildLogsSearchParams(scope: JournalScope, view: LogsView = "list"): URLSearchParams {
   const params = new URLSearchParams();
   params.set("scope", scope.kind);
   if (scope.id) params.set("id", scope.id);
-  return `/grow/logs?${params.toString()}`;
+  if (view === "trends") params.set("view", "trends");
+  return params;
+}
+
+/** Parse Grow → Logs URL query into scope + view (defaults room list). */
+export function parseLogsScopeFromSearchParams(params: URLSearchParams): {
+  scope: JournalScope;
+  view: LogsView;
+} {
+  const view: LogsView = params.get("view") === "trends" ? "trends" : "list";
+  const kind = params.get("scope");
+  const id = params.get("id") ?? undefined;
+
+  switch (kind) {
+    case "plant":
+      return { scope: { kind: "plant", id: id ?? "" }, view };
+    case "space":
+      return { scope: { kind: "space", id: id === "2x4" ? "2x4" : "4x8" }, view };
+    case "room":
+      return { scope: { kind: "room", id: id || "grow_room" }, view };
+    case "core":
+      return { scope: { kind: "core" }, view };
+    case "grow_log":
+      return { scope: { kind: "grow_log" }, view };
+    default:
+      return { scope: { kind: "room", id: "grow_room" }, view };
+  }
 }
 
 export async function fetchJournalScope(
