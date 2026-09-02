@@ -4086,7 +4086,7 @@ Passes 1?3 desk gates remain **GREEN**. Pass 4 integrated gate **GREEN**. **Pass
 |----------|------|-------|
 | P3 | Historical SF1000 ? `sf1000_on` | Not backfilled; DutyStrip honesty improves going forward |
 | P3 | Twin Actual ~0.05H while OFF | Brief gate cycles; sub-0.1h rounding |
-| P3 | Prefer stop+start over kill | Task 5 kill hung Pi; Pass 5 gate used stop+start successfully — encoded in `.cursor/rules/dsc-pi-hotpatch.mdc` |
+| P3 | Prefer stop+start over kill | Task 5 kill hung Pi; Pass 5 gate used stop+start successfully — encoded in `.cursor/rules/dsc-pi-hotpatch.mdc` + `docs/ops/PI-HOTPATCH.md` |
 
 ### Parks remaining (hardware / out of Pass 5)
 
