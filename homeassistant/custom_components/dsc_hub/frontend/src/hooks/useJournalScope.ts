@@ -82,18 +82,24 @@ export function useJournalScope(
   const update = useCallback(
     async (entryId: number, body: JournalPatchBody) => {
       const entry = await patchJournalEntry(scope, entryId, body);
-      await reload();
+      const data = await fetchJournalScope(scope, limit, 0);
+      setEntries(data.entries);
+      setTotal(data.total);
+      setError(null);
       return entry;
     },
-    [scope, reload],
+    [scope, limit],
   );
 
   const remove = useCallback(
     async (entryId: number) => {
       await deleteJournalEntry(scope, entryId);
-      await reload();
+      const data = await fetchJournalScope(scope, limit, 0);
+      setEntries(data.entries);
+      setTotal(data.total);
+      setError(null);
     },
-    [scope, reload],
+    [scope, limit],
   );
 
   return { entries, total, limit, offset, loading, error, reload, save, update, remove };

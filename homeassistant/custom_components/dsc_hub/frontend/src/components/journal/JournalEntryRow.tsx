@@ -1,21 +1,91 @@
 import { StatusChip } from "../ui";
-import type { JournalEntry } from "../../types/journal";
+import type { JournalEntry, JournalScope } from "../../types/journal";
 import {
+  entryHasHighlightTag,
   fmtJournalWhen,
   formatSnapshotValue,
+  isJournalEntryEditable,
   provenanceTone,
   snapshotChipLabel,
   snapshotEntries,
 } from "./journalFormat";
+import type { Ref } from "react";
 
-export function JournalEntryRow({ row }: { row: JournalEntry }) {
+export type JournalEntryRowProps = {
+  row: JournalEntry;
+  scope?: JournalScope;
+  urlHighlighted?: boolean;
+  compareMode?: boolean;
+  compareSelected?: boolean;
+  onCompareToggle?: (row: JournalEntry) => void;
+  onOpen?: (row: JournalEntry) => void;
+  rowRef?: Ref<HTMLLIElement>;
+};
+
+export function JournalEntryRow({
+  row,
+  scope,
+  urlHighlighted = false,
+  compareMode = false,
+  compareSelected = false,
+  onCompareToggle,
+  onOpen,
+  rowRef,
+}: JournalEntryRowProps) {
   const provenance = String(row.provenance || "operator");
-  const highlighted = row.tags.some((t) => t.toLowerCase() === "highlight");
+  const highlighted = entryHasHighlightTag(row);
   const snapRows = snapshotEntries(row.snapshot as Record<string, unknown> | undefined);
+  const interactive = Boolean(onOpen || (compareMode && onCompareToggle));
+  const editable = scope ? isJournalEntryEditable(scope, row) : row.source !== "system";
+
+  const classNames = [
+    "dsc-journal-row",
+    highlighted ? "dsc-journal-row--highlight" : "",
+    urlHighlighted ? "dsc-journal-row--url-highlight" : "",
+    compareSelected ? "dsc-journal-row--compare-selected" : "",
+    interactive ? "dsc-journal-row--interactive" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const onRowClick = () => {
+    if (compareMode && onCompareToggle) {
+      onCompareToggle(row);
+      return;
+    }
+    onOpen?.(row);
+  };
 
   return (
-    <li className={`dsc-journal-row${highlighted ? " dsc-journal-row--highlight" : ""}`}>
+    <li
+      ref={rowRef}
+      className={classNames}
+      data-entry-id={row.id}
+      onClick={interactive ? onRowClick : undefined}
+      onKeyDown={
+        interactive
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onRowClick();
+              }
+            }
+          : undefined
+      }
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+    >
       <div className="dsc-chip-row" style={{ marginBottom: 4 }}>
+        {compareMode ? (
+          <input
+            type="checkbox"
+            checked={compareSelected}
+            readOnly
+            aria-label={`Compare entry ${row.id}`}
+            onClick={(e) => e.stopPropagation()}
+            onChange={() => onCompareToggle?.(row)}
+          />
+        ) : null}
         <StatusChip label={fmtJournalWhen(row.occurred_at)} tone="muted" />
         <StatusChip
           label={row.source === "system" ? "system" : "operator"}
@@ -31,6 +101,7 @@ export function JournalEntryRow({ row }: { row: JournalEntry }) {
           .map((tag) => (
             <StatusChip key={`${row.id}-${tag}`} label={tag} tone="muted" />
           ))}
+        {highlighted ? <StatusChip label="highlight" tone="ok" /> : null}
       </div>
       <div>{row.note || "—"}</div>
       {snapRows.length ? (
@@ -46,6 +117,11 @@ export function JournalEntryRow({ row }: { row: JournalEntry }) {
             Env captured when saved
           </span>
         </div>
+      ) : null}
+      {interactive && !compareMode && editable ? (
+        <span className="dsc-muted dsc-journal-row-action-hint" style={{ fontSize: 11 }}>
+          Click to edit
+        </span>
       ) : null}
     </li>
   );

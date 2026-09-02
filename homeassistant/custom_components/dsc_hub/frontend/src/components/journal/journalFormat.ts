@@ -1,4 +1,4 @@
-import type { JournalEntry } from "../../types/journal";
+import type { JournalEntry, JournalScope } from "../../types/journal";
 
 export function fmtJournalWhen(ts: number): string {
   try {
@@ -73,4 +73,20 @@ export function toLocalInputValue(tsSec: number): string {
 export function fromLocalInputValue(v: string): number {
   const t = Date.parse(v);
   return Number.isFinite(t) ? t / 1000 : Date.now() / 1000;
+}
+
+export function entryHasHighlightTag(row: JournalEntry): boolean {
+  return row.tags.some((t) => t.toLowerCase() === "highlight");
+}
+
+export function toggleHighlightTag(tags: string[], on: boolean): string[] {
+  const rest = tags.filter((t) => t && t.toLowerCase() !== "highlight");
+  return on ? [...rest, "highlight"] : rest;
+}
+
+/** Operator rows native to the current scope can be PATCH/DELETE'd. */
+export function isJournalEntryEditable(scope: JournalScope, row: JournalEntry): boolean {
+  if (row.source === "system") return false;
+  const prov = String(row.provenance || scope.kind).toLowerCase();
+  return prov === scope.kind;
 }

@@ -1,24 +1,38 @@
-import type { CSSProperties } from "react";
-import type { JournalEntry, JournalListVariant } from "../../types/journal";
+import type { CSSProperties, Ref } from "react";
+import type { JournalEntry, JournalListVariant, JournalScope } from "../../types/journal";
 import { journalRowKey } from "./journalFormat";
 import { JournalEntryRow } from "./JournalEntryRow";
 
 export type JournalEntryListProps = {
   entries: JournalEntry[];
   variant?: JournalListVariant;
+  scope?: JournalScope;
   /** Embedded: approximate visible rows before scroll (default 3). */
   visibleRows?: number;
   /** Embedded: max rows in scroll container — all fetched entries render (default 10). */
   scrollMaxRows?: number;
   emptyMessage?: string;
+  highlightEntryId?: number | null;
+  compareMode?: boolean;
+  compareIds?: number[];
+  onCompareToggle?: (row: JournalEntry) => void;
+  onEntryOpen?: (row: JournalEntry) => void;
+  highlightRowRef?: Ref<HTMLLIElement>;
 };
 
 export function JournalEntryList({
   entries,
   variant = "full",
+  scope,
   visibleRows = 3,
   scrollMaxRows = 10,
   emptyMessage = "No journal rows yet.",
+  highlightEntryId = null,
+  compareMode = false,
+  compareIds = [],
+  onCompareToggle,
+  onEntryOpen,
+  highlightRowRef,
 }: JournalEntryListProps) {
   const embedded = variant === "embedded";
   const listClass = embedded
@@ -35,9 +49,22 @@ export function JournalEntryList({
 
   return (
     <ul className={listClass} style={scrollStyle}>
-      {entries.map((row) => (
-        <JournalEntryRow key={journalRowKey(row)} row={row} />
-      ))}
+      {entries.map((row) => {
+        const isUrlHighlight = highlightEntryId != null && row.id === highlightEntryId;
+        return (
+          <JournalEntryRow
+            key={journalRowKey(row)}
+            row={row}
+            scope={scope}
+            urlHighlighted={isUrlHighlight}
+            compareMode={compareMode}
+            compareSelected={compareIds.includes(row.id)}
+            onCompareToggle={onCompareToggle}
+            onOpen={onEntryOpen}
+            rowRef={isUrlHighlight ? highlightRowRef : undefined}
+          />
+        );
+      })}
       {!entries.length ? (
         <li className="dsc-muted" style={{ fontSize: 13 }}>
           {emptyMessage}
