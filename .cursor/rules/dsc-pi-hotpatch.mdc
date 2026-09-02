@@ -1,5 +1,5 @@
 ---
-description: Pi brain/SPA hotpatch on Windows — plink/pscp, not OpenSSH scp
+description: Pi brain/SPA hotpatch on Windows — plink/pscp, container lifecycle, prove flakes
 globs: .audit/**
 alwaysApply: false
 ---
@@ -11,13 +11,31 @@ alwaysApply: false
 - Target: `dsc@192.168.86.48`, container `dsc-hub-brain`, static at `/app/static/`.
 - Use **PuTTY `plink` + `pscp`** with `-batch -hostkey` and `-pw` — OpenSSH `scp` hangs on password prompt in agent shells.
 
+## Container lifecycle
+
+- Prefer **`docker stop -t 20` + `start`** for brain reload after `docker cp`.
+- Avoid **`docker restart`** (has hung this Pi) and **`docker kill`** (Pass 5 Task 5 hung the host; required operator power-cycle).
+- If brain must reload mid-prove and Pi is healthy: stop+start only. For Zigbee MQTT inject / policy prove, use **resume scripts without kill** (see `.audit/live-ux-pass5-task5-zigbee-resume.ps1`).
+
+## Prove flakes (not gate failures)
+
+| Residual | Treat as |
+|----------|----------|
+| **Hold / Twin fleet lag** | After `POST /control/service`, `hass_extras` may stay stale **~1 poll (~5–10s)**. Wait/re-fetch `/fleet/computed` before asserting Hold off or Twin state — do not fail on first read. |
+| **Twin fleet mirror vs command** | HTTP turn_on/brightness may succeed while fleet shows `off` without GPIO5 PWM — software accept path green; optical N/A. |
+| **SF1000 / Twin Actual sub-0.1H** | Brief gate on/off cycles can show ~0.05H Actual while lamp OFF — rounding/stress artifact, not a live-ON lie. |
+| **Historical `sf1000_on` gap** | No backfill — DutyStrip honesty improves **going forward** after hotpatch; do not chase retroactive history as a gate fix. |
+| **`policy_state` after brain restart** | Clears until MQTT occupancy event — dry-pub re-seed in prove scripts before asserting Problem/Clear. |
+
 ## Scripts
 
 | Script | Scope |
 |--------|--------|
 | `.audit/stress-spa-only-hotpatch.ps1` | SPA tarball → `/app/static/` |
 | `.audit/stress-roster-hotpatch.ps1` | SPA + brain tarball + restart |
-| `.audit/space-energy-pi-closure.ps1` | SPA + brain + HTTP stress + force-tick both tents (upload `se-force-tick.py` / `se-veg-tick.py`) |
+| `.audit/space-energy-pi-closure.ps1` | SPA + brain + HTTP stress + force-tick both tents |
+| `.audit/live-ux-pass5-prove.ps1` | Pass 5 GATE — energy 400, Hold, Twin, Zigbee dry seed |
+| `.audit/live-ux-pass5-task5-zigbee-resume.ps1` | Zigbee Wet→Problem — **no docker kill** |
 
 ## Force-tick prove
 
@@ -33,3 +51,4 @@ When mutating live schedules: record pre lights-on for **both** tents, force-tic
 
 - Rely on `powershell -File` if execution policy blocks — invoke `pscp`/`plink` directly.
 - Commit Pi passwords to git; scripts may contain lab creds — rotate if repo is shared.
+- Treat prove flakes above as regressions or open gate work without new dishonesty evidence.
