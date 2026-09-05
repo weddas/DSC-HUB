@@ -228,12 +228,15 @@ export function InlineEditCell({
   placeholder,
   ariaLabel,
   disabled,
+  secondary,
 }: {
   value: string;
   onCommit: (next: string) => void;
   placeholder?: string;
   ariaLabel: string;
   disabled?: boolean;
+  /** Dim line under the name — ieee / class / etc. */
+  secondary?: ReactNode;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -258,6 +261,9 @@ export function InlineEditCell({
     return (
       <td className="dsc-cell-inline-edit">
         <span className="dsc-inline-edit-static">{value || placeholder || "—"}</span>
+        {secondary != null && secondary !== "" ? (
+          <div className="dsc-cell-text-secondary">{secondary}</div>
+        ) : null}
       </td>
     );
   }
@@ -296,6 +302,9 @@ export function InlineEditCell({
           <Icon name="settings" size={11} color="var(--dsc-gray-5)" />
         </button>
       )}
+      {secondary != null && secondary !== "" ? (
+        <div className="dsc-cell-text-secondary">{secondary}</div>
+      ) : null}
     </td>
   );
 }

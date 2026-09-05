@@ -20,6 +20,7 @@ import {
 } from "../components/settings/settingsConstants";
 import { inventoryGroup, pickSettings, resolveSeat, taskParamDefaults } from "../components/settings/settingsHelpers";
 import { ZigbeeBindRow } from "../components/settings/ZigbeeBindRow";
+import { SettingsTable } from "../components/settings/SettingsTable";
 import { SpaceEnergySettingsCard } from "../components/settings/SpaceEnergySettingsCard";
 import {
   apply_network,
@@ -86,7 +87,14 @@ export function SettingsPage() {
   const [zigbeeBindDraft, setZigbeeBindDraft] = useState<
     Record<
       string,
-      { role: string; zone: string; friendly_name: string; enabled: boolean; capability_override?: string }
+      {
+        role: string;
+        zone: string;
+        friendly_name: string;
+        alias?: string;
+        enabled: boolean;
+        capability_override?: string;
+      }
     >
   >({});
   const [zigbeeShowAll, setZigbeeShowAll] = useState<Record<string, boolean>>({});
@@ -170,7 +178,14 @@ export function SettingsPage() {
     if (!zigbeeBindDirty) {
       const draft: Record<
         string,
-        { role: string; zone: string; friendly_name: string; enabled: boolean; capability_override?: string }
+        {
+          role: string;
+          zone: string;
+          friendly_name: string;
+          alias?: string;
+          enabled: boolean;
+          capability_override?: string;
+        }
       > = {};
       const policyDraft: Record<
         string,
@@ -186,6 +201,7 @@ export function SettingsPage() {
           role: String(binding?.role ?? "unbound"),
           zone: String(binding?.zone ?? "shared"),
           friendly_name: String(d.friendly_name ?? ""),
+          alias: binding?.alias ? String(binding.alias) : undefined,
           enabled: binding?.enabled === false ? false : true,
           capability_override: binding?.capability_override
             ? String(binding.capability_override)
@@ -246,7 +262,14 @@ export function SettingsPage() {
           if (!zigbeeBindDirty) {
             const draft: Record<
               string,
-              { role: string; zone: string; friendly_name: string; enabled: boolean; capability_override?: string }
+              {
+                role: string;
+                zone: string;
+                friendly_name: string;
+                alias?: string;
+                enabled: boolean;
+                capability_override?: string;
+              }
             > = {};
             const policyDraft: Record<
               string,
@@ -262,6 +285,7 @@ export function SettingsPage() {
                 role: String(binding?.role ?? "unbound"),
                 zone: String(binding?.zone ?? "shared"),
                 friendly_name: String(d.friendly_name ?? ""),
+                alias: binding?.alias ? String(binding.alias) : undefined,
                 enabled: binding?.enabled === false ? false : true,
                 capability_override: binding?.capability_override
                   ? String(binding.capability_override)
@@ -1175,23 +1199,37 @@ export function SettingsPage() {
                 tone="warn"
               />
             ) : null}
-            <div className="dsc-table-scroll">
-              <table className="dsc-table" style={{ marginTop: 12 }}>
-                <thead>
-                  <tr>
-                    <th>Device</th>
-                    <th>Model</th>
-                    <th>Status</th>
-                    <th>Role</th>
-                    <th>Zone</th>
-                    <th>Task</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody>
-                  {zigbeeDevices
-                    .filter((d) => d.type !== "Coordinator")
-                    .map((d) => {
+            <SettingsTable
+              columns={[
+                { key: "device", label: "Device" },
+                { key: "model", label: "Model" },
+                { key: "health", label: "Health", tight: true },
+                { key: "status", label: "Status" },
+                { key: "role", label: "Role" },
+                { key: "zone", label: "Zone" },
+                { key: "task", label: "Task" },
+                { key: "act", label: "", tight: true },
+              ]}
+              help={{
+                title: "Rename & bind",
+                body: (
+                  <>
+                    <p>
+                      Click a device name to rename it — the alias is what Climate, Overview and
+                      the Twin show. Clearing it falls back to the raw Zigbee name.
+                    </p>
+                    <p>
+                      <b>Health</b> is battery, link quality (LQI) and last-seen straight from the
+                      device&apos;s own reports; amber means low battery, weak link, or silent for
+                      over an hour.
+                    </p>
+                  </>
+                ),
+              }}
+            >
+              {zigbeeDevices
+                .filter((d) => d.type !== "Coordinator")
+                .map((d) => {
                       const ieee = String(d.ieee_address ?? "");
                       const draft = zigbeeBindDraft[ieee] ?? {
                         role: "unbound",
@@ -1258,6 +1296,7 @@ export function SettingsPage() {
                           key={ieee || String(d.friendly_name)}
                           ieee={ieee}
                           name={String(d.friendly_name ?? "—")}
+                          alias={draft.alias}
                           model={model}
                           status={String(d.status ?? (draft.role === "unbound" ? "unbound" : "bound"))}
                           role={draft.role}
@@ -1277,6 +1316,18 @@ export function SettingsPage() {
                           }
                           allRoles={zigbeeRoles.length ? zigbeeRoles : fallbackRoles}
                           allRecipes={zigbeeRecipes.length ? zigbeeRecipes : fallbackRecipes}
+                          onRename={(id, nextAlias) => {
+                            setZigbeeBindDirty(true);
+                            setZigbeeBindDraft((prev) => {
+                              const cur = prev[id] ?? {
+                                role: "unbound",
+                                zone: "shared",
+                                friendly_name: String(d.friendly_name ?? ""),
+                                enabled: true,
+                              };
+                              return { ...prev, [id]: { ...cur, alias: nextAlias || undefined } };
+                            });
+                          }}
                           onBindingChange={(id, patch) => {
                             setZigbeeBindDirty(true);
                             setZigbeeBindDraft((prev) => {
@@ -1284,6 +1335,7 @@ export function SettingsPage() {
                                 role: patch.role,
                                 zone: patch.zone,
                                 friendly_name: String(d.friendly_name ?? prev[id]?.friendly_name ?? ""),
+                                alias: prev[id]?.alias,
                                 enabled: true,
                               };
                               if (patch.capability_override) {
@@ -1313,10 +1365,8 @@ export function SettingsPage() {
                           }}
                         />
                       );
-                    })}
-                </tbody>
-              </table>
-            </div>
+                })}
+            </SettingsTable>
             <Button
               onClick={async () => {
                 await put_zigbee_bindings(zigbeeBindDraft);

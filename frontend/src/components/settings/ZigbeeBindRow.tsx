@@ -1,4 +1,4 @@
-import { Button, Icon, StatusChip } from "../ui";
+import { Button, StatusChip } from "../ui";
 import {
   filterZigbeeRecipesForClass,
   filterZigbeeRolesForClass,
@@ -9,11 +9,24 @@ import {
   type ZigbeeRole,
 } from "../../lib/fleetApi";
 import { FLOOD_TASK_ID, TANK_TASK_ID, TASK_PARAM_IDS } from "./settingsConstants";
-import { effectiveZigbeeClass, taskParamDefaults, zigbeeIcon } from "./settingsHelpers";
+import { effectiveZigbeeClass, taskParamDefaults } from "./settingsHelpers";
+import {
+  ActionsCell,
+  HealthCell,
+  InlineEditCell,
+  SelectCell,
+  SettingsRow,
+  SettingsSubRow,
+} from "./SettingsTable";
+
+/** Column count for the Zigbee bindings table — keep in sync with the header in
+ *  SettingsPage and the SettingsSubRow colSpan below. */
+export const ZIGBEE_BIND_COLS = 8;
 
 export function ZigbeeBindRow({
   ieee,
   name,
+  alias,
   model,
   status,
   role,
@@ -28,6 +41,7 @@ export function ZigbeeBindRow({
   allRecipes,
   onBindingChange,
   onPolicyChange,
+  onRename,
   liveWet,
   liveProblem,
   battery,
@@ -36,6 +50,8 @@ export function ZigbeeBindRow({
 }: {
   ieee: string;
   name: string;
+  /** Operator rename — takes precedence over the raw Z2M friendly_name for display. */
+  alias?: string;
   model: string;
   status: string;
   role: string;
@@ -53,6 +69,7 @@ export function ZigbeeBindRow({
     patch: { role: string; zone: string; recipe_id: string; capability_override?: string },
   ) => void;
   onPolicyChange: (ieee: string, patch: { recipe_id: string; params: Record<string, unknown> }) => void;
+  onRename: (ieee: string, alias: string) => void;
   liveWet?: boolean | null;
   liveProblem?: boolean | null;
   /** Percent (0-100), from the device's raw Z2M state payload — absent when the device doesn't report it. */
@@ -61,14 +78,6 @@ export function ZigbeeBindRow({
   /** Epoch seconds of the last MQTT state message for this device. */
   lastSeen?: number | null;
 }) {
-  const healthBits: string[] = [];
-  if (typeof battery === "number" && Number.isFinite(battery)) healthBits.push(`Batt ${Math.round(battery)}%`);
-  if (typeof linkquality === "number" && Number.isFinite(linkquality)) healthBits.push(`LQI ${Math.round(linkquality)}`);
-  if (typeof lastSeen === "number" && Number.isFinite(lastSeen)) {
-    const ageMin = Math.max(0, Math.round((Date.now() - lastSeen * 1000) / 60000));
-    healthBits.push(ageMin < 1 ? "seen <1m ago" : `seen ${ageMin}m ago`);
-  }
-  const lowBattery = typeof battery === "number" && Number.isFinite(battery) && battery <= 20;
   const effectiveClass = effectiveZigbeeClass(capabilityClass, capabilityOverride);
   let roleOptions = showAll ? allRoles : filterZigbeeRolesForClass(effectiveClass, allRoles);
   let recipeOptions = showAll ? allRecipes : filterZigbeeRecipesForClass(effectiveClass, allRecipes);
@@ -85,6 +94,14 @@ export function ZigbeeBindRow({
   const seatId = String(policyParams.seat_id ?? "dehumidifier");
   const problemWhen = String(policyParams.problem_when ?? "active");
   const banner = String(policyParams.banner ?? "");
+
+  const displayName = (alias && alias.trim()) || name;
+  const classNote = capabilityOverride
+    ? `class ${capabilityOverride}`
+    : capabilityClass
+      ? capabilityClass
+      : "";
+  const secondary = [ieee || "—", classNote].filter(Boolean).join(" · ");
 
   const updateTaskParam = (patch: Partial<{ seat_id: string; problem_when: string; banner: string }>) => {
     const nextPolarity = patch.problem_when ?? problemWhen;
@@ -131,23 +148,16 @@ export function ZigbeeBindRow({
 
   return (
     <>
-      <tr>
-        <td>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <Icon name={zigbeeIcon("EndDevice")} size={14} color="var(--dsc-gray-5)" />
-            {name}
-          </div>
-          <div className="dsc-muted" style={{ fontSize: 11 }}>
-            {ieee || "—"}
-            {capabilityOverride ? ` · class ${capabilityOverride}` : capabilityClass ? ` · ${capabilityClass}` : null}
-          </div>
-          {healthBits.length ? (
-            <div className={lowBattery ? "dsc-honesty" : "dsc-muted"} style={{ fontSize: 11 }}>
-              {healthBits.join(" · ")}
-            </div>
-          ) : null}
-        </td>
+      <SettingsRow>
+        <InlineEditCell
+          value={displayName}
+          ariaLabel={`Rename ${name}`}
+          placeholder={name}
+          onCommit={(next) => onRename(ieee, next === name ? "" : next)}
+          secondary={secondary}
+        />
         <td>{model || "—"}</td>
+        <HealthCell battery={battery} linkquality={linkquality} lastSeen={lastSeen} />
         <td>
           <div className="dsc-chip-row" style={{ flexWrap: "wrap" }}>
             <StatusChip
@@ -162,122 +172,112 @@ export function ZigbeeBindRow({
             ) : null}
           </div>
         </td>
-        <td>
-          <select
-            value={role}
-            onChange={(e) => {
-              const nextRole = e.target.value;
-              let nextOverride = capabilityOverride;
-              if (showAll && isZigbeeSafetyLeakRole(nextRole) && (capabilityClass === "motion" || capabilityClass === "other")) {
-                nextOverride = "liquid";
-              } else if (!isZigbeeSafetyLeakRole(nextRole)) {
-                nextOverride = undefined;
-              }
-              onBindingChange(ieee, {
-                role: nextRole,
-                zone,
-                recipe_id: nextRole === "unbound" ? "none" : recipeId,
-                capability_override: nextOverride,
-              });
-            }}
-          >
-            {roleOptions.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.label}
-              </option>
-            ))}
-          </select>
-        </td>
-        <td>
-          <select
-            value={zone}
-            onChange={(e) =>
-              onBindingChange(ieee, { role, zone: e.target.value, recipe_id: recipeId, capability_override: capabilityOverride })
+        <SelectCell
+          value={role}
+          onChange={(nextRole) => {
+            let nextOverride = capabilityOverride;
+            if (showAll && isZigbeeSafetyLeakRole(nextRole) && (capabilityClass === "motion" || capabilityClass === "other")) {
+              nextOverride = "liquid";
+            } else if (!isZigbeeSafetyLeakRole(nextRole)) {
+              nextOverride = undefined;
             }
-          >
-            <option value="4x8">4×8</option>
-            <option value="2x4">2×4</option>
-            <option value="room">Room</option>
-            <option value="shared">Shared</option>
-          </select>
-        </td>
-        <td>
-          <select
-            value={recipeId}
-            onChange={(e) => {
-              const nextRecipe = e.target.value;
-              onBindingChange(ieee, { role, zone, recipe_id: nextRecipe, capability_override: capabilityOverride });
-              if (TASK_PARAM_IDS.has(nextRecipe)) {
-                onPolicyChange(ieee, {
-                  recipe_id: nextRecipe,
-                  params: taskParamDefaults(
-                    nextRecipe,
-                    allRecipes.find((r) => r.id === nextRecipe),
-                  ),
-                });
-              } else if (nextRecipe === "none") {
-                onPolicyChange(ieee, { recipe_id: "none", params: {} });
-              }
-            }}
-            disabled={role === "unbound"}
-            title={role === "unbound" ? "Bind a Role first" : "Task / recipe when sensor is active"}
-          >
-            {(recipeOptions.length
-              ? recipeOptions
-              : [
-                  { id: "none", label: "No task" },
-                  { id: TANK_TASK_ID, label: "Liquid level → appliance OOS" },
-                  { id: FLOOD_TASK_ID, label: "Floor flood → alert" },
-                ]
-            ).map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.label}
-              </option>
-            ))}
-          </select>
-        </td>
-        <td>
+            onBindingChange(ieee, {
+              role: nextRole,
+              zone,
+              recipe_id: nextRole === "unbound" ? "none" : recipeId,
+              capability_override: nextOverride,
+            });
+          }}
+        >
+          {roleOptions.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.label}
+            </option>
+          ))}
+        </SelectCell>
+        <SelectCell
+          value={zone}
+          onChange={(nextZone) =>
+            onBindingChange(ieee, { role, zone: nextZone, recipe_id: recipeId, capability_override: capabilityOverride })
+          }
+        >
+          <option value="4x8">4×8</option>
+          <option value="2x4">2×4</option>
+          <option value="room">Room</option>
+          <option value="shared">Shared</option>
+        </SelectCell>
+        <SelectCell
+          value={recipeId}
+          disabled={role === "unbound"}
+          title={role === "unbound" ? "Bind a Role first" : "Task / recipe when sensor is active"}
+          onChange={(nextRecipe) => {
+            onBindingChange(ieee, { role, zone, recipe_id: nextRecipe, capability_override: capabilityOverride });
+            if (TASK_PARAM_IDS.has(nextRecipe)) {
+              onPolicyChange(ieee, {
+                recipe_id: nextRecipe,
+                params: taskParamDefaults(
+                  nextRecipe,
+                  allRecipes.find((r) => r.id === nextRecipe),
+                ),
+              });
+            } else if (nextRecipe === "none") {
+              onPolicyChange(ieee, { recipe_id: "none", params: {} });
+            }
+          }}
+        >
+          {(recipeOptions.length
+            ? recipeOptions
+            : [
+                { id: "none", label: "No task" },
+                { id: TANK_TASK_ID, label: "Liquid level → appliance OOS" },
+                { id: FLOOD_TASK_ID, label: "Floor flood → alert" },
+              ]
+          ).map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.label}
+            </option>
+          ))}
+        </SelectCell>
+        <ActionsCell>
           <Button variant="secondary" onClick={onToggleShowAll}>
             {showAll ? "Filtered" : "Show all"}
           </Button>
-        </td>
-      </tr>
+        </ActionsCell>
+      </SettingsRow>
       {showTaskParams ? (
-        <tr>
-          <td colSpan={7} style={{ background: "var(--dsc-gray-1, rgba(255,255,255,0.03))" }}>
-            <div className="dsc-row-actions" style={{ flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
-              {recipeId === TANK_TASK_ID ? (
-                <label>
-                  Appliance
-                  <select value={seatId} onChange={(e) => updateTaskParam({ seat_id: e.target.value })}>
-                    <option value="dehumidifier">Dehumidifier</option>
-                    <option value="humidifier">Humidifier</option>
-                  </select>
-                </label>
-              ) : null}
+        <SettingsSubRow colSpan={ZIGBEE_BIND_COLS}>
+          <div className="dsc-row-actions" style={{ flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
+            {recipeId === TANK_TASK_ID ? (
               <label>
-                Problem when
-                <select value={problemWhen} onChange={(e) => updateTaskParam({ problem_when: e.target.value })}>
-                  <option value="active">Wet / active = problem</option>
-                  <option value="inactive">Dry / inactive = problem</option>
+                Appliance
+                <select value={seatId} onChange={(e) => updateTaskParam({ seat_id: e.target.value })}>
+                  <option value="dehumidifier">Dehumidifier</option>
+                  <option value="humidifier">Humidifier</option>
                 </select>
               </label>
-              <label style={{ flex: "1 1 240px" }}>
-                Banner text
-                <input
-                  type="text"
-                  value={banner}
-                  onChange={(e) => updateTaskParam({ banner: e.target.value })}
-                  placeholder={
-                    isFlood
-                      ? zigbeeFloodBannerTemplate(problemWhen)
-                      : zigbeeBannerTemplate(seatId, problemWhen)
-                  }
-                />
-              </label>
-            </div>
-          </td>
-        </tr>
+            ) : null}
+            <label>
+              Problem when
+              <select value={problemWhen} onChange={(e) => updateTaskParam({ problem_when: e.target.value })}>
+                <option value="active">Wet / active = problem</option>
+                <option value="inactive">Dry / inactive = problem</option>
+              </select>
+            </label>
+            <label style={{ flex: "1 1 240px" }}>
+              Banner text
+              <input
+                type="text"
+                value={banner}
+                onChange={(e) => updateTaskParam({ banner: e.target.value })}
+                placeholder={
+                  isFlood
+                    ? zigbeeFloodBannerTemplate(problemWhen)
+                    : zigbeeBannerTemplate(seatId, problemWhen)
+                }
+              />
+            </label>
+          </div>
+        </SettingsSubRow>
       ) : null}
     </>
   );
