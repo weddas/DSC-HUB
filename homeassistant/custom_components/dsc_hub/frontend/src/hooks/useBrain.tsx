@@ -3,15 +3,18 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import type { HassEntity, HomeAssistant } from "../vite-env";
 import { get_fleet_state, get_fleet_computed, call_service } from "../lib/fleetApi";
 import { parseFleetSnapshot } from "../lib/fleetModel";
 import { fleetToHassCompat } from "../lib/fleetFromHass";
+import { createStore, useStoreSelector, type Store } from "../lib/selectorStore";
 
 function mergeHassExtras(
   states: Record<string, HassEntity>,
@@ -58,14 +61,32 @@ interface BrainContextValue {
   lastUpdatedAt: number | null;
 }
 
-const BrainContext = createContext<BrainContextValue | null>(null);
+const BrainStoreContext = createContext<Store<BrainContextValue> | null>(null);
 
-export function useBrainContext(): BrainContextValue {
-  const ctx = useContext(BrainContext);
-  if (!ctx) {
+function useBrainStore(): Store<BrainContextValue> {
+  const store = useContext(BrainStoreContext);
+  if (!store) {
     throw new Error("BrainProvider missing");
   }
-  return ctx;
+  return store;
+}
+
+/** Subscribe to a derived slice of brain state; re-renders only when `isEqual` reports a change. */
+export function useBrainSelector<S>(
+  selector: (value: BrainContextValue) => S,
+  isEqual?: (a: S, b: S) => boolean,
+): S {
+  return useStoreSelector(useBrainStore(), selector, isEqual);
+}
+
+export function useBrainContext(): BrainContextValue {
+  const store = useBrainStore();
+  return useSyncExternalStore(store.subscribe, store.getState, store.getState);
+}
+
+/** The stable `refresh` callback alone — for callers that don't need to re-render on every fleet tick. */
+export function useBrainRefresh(): () => Promise<void> {
+  return useBrainSelector((v) => v.refresh);
 }
 
 export function BrainProvider({ children }: { children: ReactNode }) {
@@ -174,5 +195,13 @@ export function BrainProvider({ children }: { children: ReactNode }) {
     [hass, tick, fleet, computed, loading, error, refresh, lastUpdatedAt],
   );
 
-  return <BrainContext.Provider value={value}>{children}</BrainContext.Provider>;
+  const storeRef = useRef<Store<BrainContextValue> | null>(null);
+  if (!storeRef.current) storeRef.current = createStore(value);
+  const store = storeRef.current;
+
+  useLayoutEffect(() => {
+    store.setState(value);
+  }, [store, value]);
+
+  return <BrainStoreContext.Provider value={store}>{children}</BrainStoreContext.Provider>;
 }

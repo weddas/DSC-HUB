@@ -1,13 +1,17 @@
 import {
   createContext,
   useContext,
+  useLayoutEffect,
   useMemo,
+  useRef,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import type { FleetSnapshot, InventoryRow, SeatSnapshot } from "../lib/fleetModel";
 import { EMPTY_FLEET, hubVitals, inventoryInService, parseFleetSnapshot, tentVitals } from "../lib/fleetModel";
 import { fleetFromHass, enrichFleetFromHassStates } from "../lib/fleetFromHass";
 import type { HomeAssistant } from "../vite-env";
+import { createStore, deepEqual, useStoreSelector, type Store } from "../lib/selectorStore";
 
 export type FleetSource = "pi" | "ha";
 
@@ -22,7 +26,7 @@ interface FleetContextValue {
   lastUpdatedAt?: number | null;
 }
 
-const FleetContext = createContext<FleetContextValue | null>(null);
+const FleetStoreContext = createContext<Store<FleetContextValue> | null>(null);
 
 export function FleetProvider({
   children,
@@ -68,33 +72,60 @@ export function FleetProvider({
     [fleet, tick, source, loading, error, refresh, lastUpdatedAt],
   );
 
-  return <FleetContext.Provider value={value}>{children}</FleetContext.Provider>;
+  // Store is created once and never replaced, so the context value (the store
+  // reference itself) stays stable — only its subscribers decide, per selector,
+  // whether a given publish is worth a re-render.
+  const storeRef = useRef<Store<FleetContextValue> | null>(null);
+  if (!storeRef.current) storeRef.current = createStore(value);
+  const store = storeRef.current;
+
+  useLayoutEffect(() => {
+    store.setState(value);
+  }, [store, value]);
+
+  return <FleetStoreContext.Provider value={store}>{children}</FleetStoreContext.Provider>;
+}
+
+function useFleetStore(): Store<FleetContextValue> {
+  const store = useContext(FleetStoreContext);
+  if (!store) throw new Error("useFleet outside FleetProvider");
+  return store;
+}
+
+/**
+ * Subscribe to a derived slice of the fleet context. The component only re-renders
+ * when `isEqual` (default: reference equality) says the selected slice changed —
+ * unrelated WS ticks that don't touch this slice are a no-op for this subscriber.
+ */
+export function useFleetSelector<S>(
+  selector: (value: FleetContextValue) => S,
+  isEqual?: (a: S, b: S) => boolean,
+): S {
+  return useStoreSelector(useFleetStore(), selector, isEqual);
 }
 
 export function useFleetContext(): FleetContextValue {
-  const ctx = useContext(FleetContext);
-  if (!ctx) throw new Error("useFleet outside FleetProvider");
-  return ctx;
+  const store = useFleetStore();
+  return useSyncExternalStore(store.subscribe, store.getState, store.getState);
 }
 
 export function useFleet(): FleetSnapshot {
-  return useFleetContext().fleet;
+  return useFleetSelector((v) => v.fleet, deepEqual);
 }
 
 export function useFleetTick(): number {
-  return useFleetContext().tick;
+  return useFleetSelector((v) => v.tick);
 }
 
 export function useFleetLastUpdated(): number | null {
-  return useFleetContext().lastUpdatedAt ?? null;
+  return useFleetSelector((v) => v.lastUpdatedAt ?? null);
 }
 
 export function useFleetSource(): FleetSource {
-  return useFleetContext().source;
+  return useFleetSelector((v) => v.source);
 }
 
-export function useSeat(seatId: string): SeatSnapshot {
-  const fleet = useFleet();
+function selectSeat(fleet: FleetSnapshot, seatId: string): SeatSnapshot {
   if (seatId === "hub") return fleet.hub;
   if (seatId === "panel") return fleet.panel;
   if (seatId.startsWith("pot")) return fleet.pots[seatId] ?? EMPTY_FLEET.pots[seatId] ?? {
@@ -113,19 +144,23 @@ export function useSeat(seatId: string): SeatSnapshot {
   };
 }
 
+export function useSeat(seatId: string): SeatSnapshot {
+  return useFleetSelector((v) => selectSeat(v.fleet, seatId), deepEqual);
+}
+
 export function useHubVitals() {
-  const fleet = useFleet();
-  return { ...hubVitals(fleet), online: fleet.hub.online };
+  return useFleetSelector((v) => ({ ...hubVitals(v.fleet), online: v.fleet.hub.online }), deepEqual);
 }
 
 export function useTentVitals(tent: "main" | "clone") {
-  const fleet = useFleet();
-  return { ...tentVitals(fleet, tent), online: fleet.hub.online };
+  return useFleetSelector(
+    (v) => ({ ...tentVitals(v.fleet, tent), online: v.fleet.hub.online }),
+    deepEqual,
+  );
 }
 
 export function useInventoryInService(seatId: string): boolean {
-  const fleet = useFleet();
-  return inventoryInService(fleet, seatId);
+  return useFleetSelector((v) => inventoryInService(v.fleet, seatId));
 }
 
 export { EMPTY_FLEET, parseFleetSnapshot };

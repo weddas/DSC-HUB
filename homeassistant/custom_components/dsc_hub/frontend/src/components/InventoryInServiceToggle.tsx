@@ -2,7 +2,7 @@ import { useState } from "react";
 import { DecisionLayer } from "./DecisionLayer";
 import { Icon, type IconName } from "./ui";
 import { useFleet } from "../hooks/useFleet";
-import { useBrainContext } from "../hooks/useBrain";
+import { useBrainRefresh } from "../hooks/useBrain";
 import { patch_inventory } from "../lib/fleetApi";
 import { inventoryInService } from "../lib/fleetModel";
 
@@ -19,7 +19,7 @@ export function InventoryInServiceToggle({
   onPatched?: () => void;
 }) {
   const fleet = useFleet();
-  const brain = useBrainContext();
+  const refreshBrain = useBrainRefresh();
   const row = fleet.inventory?.find((r) => r.seat_id === seatId);
   const [confirm, setConfirm] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
@@ -33,7 +33,7 @@ export function InventoryInServiceToggle({
     setBusy(true);
     try {
       await patch_inventory(seatId, { in_service: next });
-      await brain.refresh();
+      await refreshBrain();
       onPatched?.();
     } finally {
       setBusy(false);

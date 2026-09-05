@@ -24,7 +24,7 @@ import {
 import { readPotVessel } from "../lib/vesselSpec";
 import { PlantExtra } from "./PlantExtra";
 import { VesselGlyph } from "./VesselGlyph";
-import { useBrainContext } from "../hooks/useBrain";
+import { useBrainRefresh } from "../hooks/useBrain";
 import { useFleet } from "../hooks/useFleet";
 import { phaseLabel, potSteering, type RootSteeringSnapshot } from "../lib/rootSteering";
 import { probeAssignedPlantId } from "../lib/probeAssignment";
@@ -78,7 +78,7 @@ export function PlantSeatPanel({
 }) {
   const { hass, state, entity, available, tick, num } = useEntityBus();
   const { callService } = useFleetActions();
-  const { refresh: refreshBrain } = useBrainContext();
+  const refreshBrain = useBrainRefresh();
   const fleet = useFleet();
   const steering = potSteering(
     fleet.root_steering as RootSteeringSnapshot | undefined,

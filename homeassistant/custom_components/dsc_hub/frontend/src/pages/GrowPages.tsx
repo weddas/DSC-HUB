@@ -8,7 +8,7 @@ import { Button, Card, PageHeader, StatusChip } from "../components/ui";
 import { HelpTip } from "../components/HelpTip";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
-import { useBrainContext } from "../hooks/useBrain";
+import { useBrainRefresh } from "../hooks/useBrain";
 import { PlantSeatPanel } from "../components/PlantSeatPanel";
 import {
   isPotInService,
@@ -104,7 +104,7 @@ export function GrowResearchPage() {
 export function GrowRosterPage() {
   const { entity, state, tick } = useEntityBus();
   const { callService } = useFleetActions();
-  const { refresh: refreshBrain } = useBrainContext();
+  const refreshBrain = useBrainRefresh();
   const [params, setParams] = useSearchParams();
   const [retirePot, setRetirePot] = useState<number | null>(null);
   const [retireSlot, setRetireSlot] = useState<number | null>(null);
