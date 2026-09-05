@@ -18,6 +18,8 @@ interface FleetContextValue {
   loading: boolean;
   error: string | null;
   refresh?: () => Promise<void>;
+  /** Wall-clock ms of the last fleet snapshot actually applied — null until the first lands (Pi source only). */
+  lastUpdatedAt?: number | null;
 }
 
 const FleetContext = createContext<FleetContextValue | null>(null);
@@ -32,6 +34,7 @@ export function FleetProvider({
   error = null,
   refresh,
   inventory,
+  lastUpdatedAt = null,
 }: {
   children: ReactNode;
   fleetRaw?: Record<string, unknown> | null;
@@ -42,6 +45,7 @@ export function FleetProvider({
   error?: string | null;
   refresh?: () => Promise<void>;
   inventory?: InventoryRow[];
+  lastUpdatedAt?: number | null;
 }) {
   const fleet = useMemo(() => {
     if (source === "pi" && fleetRaw) {
@@ -60,8 +64,8 @@ export function FleetProvider({
   }, [source, fleetRaw, hass, inventory, tick]);
 
   const value = useMemo<FleetContextValue>(
-    () => ({ fleet, tick, source, loading, error, refresh }),
-    [fleet, tick, source, loading, error, refresh],
+    () => ({ fleet, tick, source, loading, error, refresh, lastUpdatedAt }),
+    [fleet, tick, source, loading, error, refresh, lastUpdatedAt],
   );
 
   return <FleetContext.Provider value={value}>{children}</FleetContext.Provider>;
@@ -79,6 +83,10 @@ export function useFleet(): FleetSnapshot {
 
 export function useFleetTick(): number {
   return useFleetContext().tick;
+}
+
+export function useFleetLastUpdated(): number | null {
+  return useFleetContext().lastUpdatedAt ?? null;
 }
 
 export function useFleetSource(): FleetSource {

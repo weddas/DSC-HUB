@@ -54,9 +54,18 @@ export function buildLogsSearchParams(
 
 export type CompareableScopeKind = "plant" | "space" | "room";
 
-/** Serialize scope for compareScopeA / compareScopeB URL params (`plant:id`, `space:4x8`, `room:grow_room`). */
+/**
+ * Serialize scope for compareScopeA / compareScopeB URL params (`plant:<uuid>`,
+ * `space:4x8`, `room:grow_room`). Plant scope.id is already stored pre-namespaced
+ * as `plant:<uuid>` (see plantIdForSlot/shortPlantId) — do not re-prefix it, or the
+ * URL doubles up ("plant:plant:<uuid>").
+ */
 export function formatCompareScopeParam(scope: JournalScope): string | null {
-  if (scope.kind === "plant" || scope.kind === "space" || scope.kind === "room") {
+  if (scope.kind === "plant") {
+    const id = String(scope.id || "").trim();
+    return id || null;
+  }
+  if (scope.kind === "space" || scope.kind === "room") {
     return scope.id ? `${scope.kind}:${scope.id}` : null;
   }
   return null;
@@ -64,12 +73,14 @@ export function formatCompareScopeParam(scope: JournalScope): string | null {
 
 export function parseCompareScopeParam(raw: string | null): JournalScope | null {
   if (!raw?.trim()) return null;
-  const idx = raw.indexOf(":");
-  const kind = idx >= 0 ? raw.slice(0, idx) : raw;
-  const id = idx >= 0 ? raw.slice(idx + 1) : undefined;
+  const trimmed = raw.trim();
+  if (trimmed.startsWith("plant:")) {
+    return { kind: "plant", id: trimmed };
+  }
+  const idx = trimmed.indexOf(":");
+  const kind = idx >= 0 ? trimmed.slice(0, idx) : trimmed;
+  const id = idx >= 0 ? trimmed.slice(idx + 1) : undefined;
   switch (kind) {
-    case "plant":
-      return id ? { kind: "plant", id } : null;
     case "space":
       return id ? { kind: "space", id: id === "2x4" ? "2x4" : "4x8" } : null;
     case "room":

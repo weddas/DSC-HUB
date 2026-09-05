@@ -45,8 +45,10 @@ export const EMPTY_SEAT = (seat_id: string): SeatSnapshot => ({
 });
 
 export const EMPTY_FLEET: FleetSnapshot = {
-  version: "7.0.0.0",
-  surface: "7.0.0",
+  // Honest placeholders — never a plausible-looking fake version. expected_firmware
+  // is a real config target, not a "what's running now" claim, so it keeps a value.
+  version: "—",
+  surface: "—",
   expected_firmware: "7.0.0.0",
   hub: EMPTY_SEAT("hub"),
   panel: EMPTY_SEAT("panel"),

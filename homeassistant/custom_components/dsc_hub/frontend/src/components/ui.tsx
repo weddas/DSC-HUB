@@ -271,6 +271,8 @@ export function EntityToggle({
   icon,
   showBrightness,
   confirm,
+  oos,
+  oosLabel = "On hold",
 }: {
   entityId: string;
   label: string;
@@ -279,26 +281,55 @@ export function EntityToggle({
   showBrightness?: boolean;
   /** When set, opens DecisionLayer before calling the hub. */
   confirm?: EntityToggleConfirm;
+  /** Device is on hold indefinitely (e.g. F-001/F-002) — render as honestly out of
+   *  service, not a live control, regardless of the underlying entity state. */
+  oos?: boolean;
+  oosLabel?: string;
 }) {
   const { state, available, attributes } = useFleetEntity(entityId);
   const { callService } = useFleetActions();
   const [layerOpen, setLayerOpen] = useState(false);
-  const on = state === "on";
+  const busOn = state === "on";
   const ok = available;
   const domain = entityId.split(".")[0];
 
+  // Optimistic local draft — show the flip instantly instead of waiting on the
+  // callService round trip + entity-bus push (matches the EntityText/EntityTime
+  // local-draft pattern). Cleared once the bus confirms, or after a timeout so a
+  // failed/lost write never leaves the button stuck showing the wrong state.
+  const [pendingOn, setPendingOn] = useState<boolean | null>(null);
+  const on = pendingOn ?? busOn;
+
+  useEffect(() => {
+    if (pendingOn != null && busOn === pendingOn) setPendingOn(null);
+  }, [busOn, pendingOn]);
+
+  useEffect(() => {
+    if (pendingOn == null) return;
+    const t = window.setTimeout(() => setPendingOn(null), 8000);
+    return () => window.clearTimeout(t);
+  }, [pendingOn]);
+
+  useEffect(() => {
+    setPendingOn(null);
+  }, [entityId]);
+
   const toggle = () => {
+    if (oos) return;
     if (!ok) return;
+    const nextOn = !on;
+    setPendingOn(nextOn);
     if (domain === "switch" || domain === "input_boolean") {
-      void callService(domain, on ? "turn_off" : "turn_on", { entity_id: entityId });
+      void callService(domain, nextOn ? "turn_on" : "turn_off", { entity_id: entityId });
       return;
     }
     if (domain === "light") {
-      void callService("light", on ? "turn_off" : "turn_on", { entity_id: entityId });
+      void callService("light", nextOn ? "turn_on" : "turn_off", { entity_id: entityId });
     }
   };
 
   const onPress = () => {
+    if (oos) return;
     if (!ok && !warnWhenMissing) return;
     if (confirm) {
       setLayerOpen(true);
@@ -331,10 +362,10 @@ export function EntityToggle({
     <>
       <button
         type="button"
-        className={`dsc-demand${on ? " is-on" : ""}${!ok ? " is-missing" : ""}`}
+        className={`dsc-demand${on && !oos ? " is-on" : ""}${!ok && !oos ? " is-missing" : ""}${oos ? " is-oos" : ""}`}
         onClick={onPress}
-        disabled={!ok && !warnWhenMissing}
-        title={ok ? entityId : warnWhenMissing || `${entityId} unavailable`}
+        disabled={oos || (!ok && !warnWhenMissing)}
+        title={oos ? `${label} is on hold — honest OOS, not live` : ok ? entityId : warnWhenMissing || `${entityId} unavailable`}
       >
         {icon ? (
           <Icon
@@ -342,12 +373,12 @@ export function EntityToggle({
             size={22}
             color="var(--dsc-teal)"
             className="dsc-demand-icon"
-            motion={on ? (domain === "light" ? "glow" : "duty") : undefined}
+            motion={on && !oos ? (domain === "light" ? "glow" : "duty") : undefined}
           />
         ) : null}
         <span className="dsc-demand-label">{label}</span>
         <span className="dsc-demand-state">
-          {!ok ? warnWhenMissing || "—" : brightness != null ? `${brightness}%` : on ? "ON" : "OFF"}
+          {oos ? oosLabel : !ok ? warnWhenMissing || "—" : brightness != null ? `${brightness}%` : on ? "ON" : "OFF"}
         </span>
       </button>
       {confirmCopy ? (

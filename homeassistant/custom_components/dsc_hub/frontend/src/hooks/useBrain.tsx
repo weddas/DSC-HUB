@@ -54,6 +54,8 @@ interface BrainContextValue {
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
+  /** Wall-clock ms of the last fleet snapshot actually applied (WS push or poll) — null until the first lands. */
+  lastUpdatedAt: number | null;
 }
 
 const BrainContext = createContext<BrainContextValue | null>(null);
@@ -72,6 +74,7 @@ export function BrainProvider({ children }: { children: ReactNode }) {
   const [tick, setTick] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const pollRef = useRef<number | null>(null);
 
@@ -80,6 +83,7 @@ export function BrainProvider({ children }: { children: ReactNode }) {
     setTick((t) => t + 1);
     setError(null);
     setLoading(false);
+    setLastUpdatedAt(Date.now());
   }, []);
 
   const computedChain = useRef(Promise.resolve());
@@ -165,8 +169,9 @@ export function BrainProvider({ children }: { children: ReactNode }) {
       loading,
       error,
       refresh,
+      lastUpdatedAt,
     }),
-    [hass, tick, fleet, computed, loading, error, refresh],
+    [hass, tick, fleet, computed, loading, error, refresh, lastUpdatedAt],
   );
 
   return <BrainContext.Provider value={value}>{children}</BrainContext.Provider>;

@@ -8,11 +8,12 @@ import {
   provenanceTone,
   snapshotChipLabel,
   snapshotEntries,
+  type DisplayJournalEntry,
 } from "./journalFormat";
 import type { Ref } from "react";
 
 export type JournalEntryRowProps = {
-  row: JournalEntry;
+  row: DisplayJournalEntry;
   scope?: JournalScope;
   urlHighlighted?: boolean;
   compareMode?: boolean;
@@ -91,6 +92,11 @@ export function JournalEntryRow({
           label={row.source === "system" ? "system" : "operator"}
           tone={row.source === "system" ? "warn" : "ok"}
         />
+        {row.repeatCount != null && row.repeatCount > 1 ? (
+          <span className="dsc-journal-repeat" aria-label={`${row.repeatCount} repeats collapsed`}>
+            ×{row.repeatCount}
+          </span>
+        ) : null}
         {provenance && provenance !== row.source ? (
           <StatusChip label={provenance} tone={provenanceTone(provenance)} />
         ) : null}

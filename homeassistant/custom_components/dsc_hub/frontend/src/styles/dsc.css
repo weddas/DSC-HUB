@@ -911,9 +911,11 @@ body {
   flex-wrap: wrap;
 }
 
-/* Embedded teaser: ~3 rows visible; scroll reveals up to fetch limit (10) */
+/* Embedded teaser: ~3 rows visible; scroll reveals up to fetch limit (10).
+   Row height covers chip row (~26px) + single-line note (~18px) + action hint
+   (~15px) + 8px/8px padding + 1px border — measured against JournalEntryRow. */
 .dsc-journal-teaser-scroll {
-  --dsc-journal-row-height: 52px;
+  --dsc-journal-row-height: 78px;
   max-height: calc(var(--dsc-journal-row-height) * var(--dsc-journal-visible-rows, 3));
   overflow-y: auto;
   scroll-padding-top: 0;
@@ -1185,6 +1187,15 @@ body {
 .dsc-demand.is-missing {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+/* On-hold-indefinitely device (F-001/F-002): honestly out of service, not a live
+   control — dashed border reads as "not installed", distinct from "unavailable". */
+.dsc-demand.is-oos {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-style: dashed;
+  background: transparent;
 }
 
 .dsc-demand-label {
@@ -2918,6 +2929,15 @@ button.dsc-chip.is-clickable:hover {
 
 .dsc-grow-log-repeat {
   margin-left: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--dsc-muted-fg, #94a3b8);
+  background: rgba(148, 163, 184, 0.15);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.dsc-journal-repeat {
   font-size: 11px;
   font-weight: 700;
   color: var(--dsc-muted-fg, #94a3b8);

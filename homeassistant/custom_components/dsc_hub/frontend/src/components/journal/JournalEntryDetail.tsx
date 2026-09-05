@@ -2,15 +2,16 @@ import { useEffect, useState } from "react";
 import { SlideDrawer } from "../chrome";
 import { DecisionLayer } from "../DecisionLayer";
 import { Button, StatusChip } from "../ui";
-import { GROWTH_STAGE_FALLBACK } from "../../lib/growthStages";
 import type { JournalEntry, JournalPatchBody, JournalScope } from "../../types/journal";
 import {
   fmtJournalWhen,
   formatSnapshotValue,
+  fromLocalInputValue,
   isJournalEntryEditable,
   snapshotChipLabel,
   snapshotEntries,
   toggleHighlightTag,
+  toLocalInputValue,
 } from "./journalFormat";
 
 export type JournalEntryDetailProps = {
@@ -23,7 +24,6 @@ export type JournalEntryDetailProps = {
   onChartMoment?: (entry: JournalEntry) => void;
   update: (entryId: number, body: JournalPatchBody) => Promise<JournalEntry>;
   remove: (entryId: number) => Promise<void>;
-  growthStageOptions?: readonly string[];
 };
 
 export function JournalEntryDetail({
@@ -36,12 +36,11 @@ export function JournalEntryDetail({
   onChartMoment,
   update,
   remove,
-  growthStageOptions = GROWTH_STAGE_FALLBACK,
 }: JournalEntryDetailProps) {
   const editable = entry ? isJournalEntryEditable(scope, entry) : false;
   const [note, setNote] = useState("");
   const [highlighted, setHighlighted] = useState(false);
-  const [growthStage, setGrowthStage] = useState("");
+  const [when, setWhen] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -50,8 +49,7 @@ export function JournalEntryDetail({
     if (!entry) return;
     setNote(entry.note || "");
     setHighlighted(entry.tags.some((t) => t.toLowerCase() === "highlight"));
-    const stage = entry.snapshot?.growth_stage;
-    setGrowthStage(typeof stage === "string" ? stage : stage != null ? String(stage) : "");
+    setWhen(toLocalInputValue(entry.occurred_at));
     setErr(null);
     setDeleteOpen(false);
   }, [entry]);
@@ -71,8 +69,9 @@ export function JournalEntryDetail({
         note: note.trim(),
         tags,
       };
-      if (scope.kind === "plant" && growthStage.trim()) {
-        body.growth_stage = growthStage.trim();
+      const nextOccurredAt = fromLocalInputValue(when);
+      if (Number.isFinite(nextOccurredAt) && Math.abs(nextOccurredAt - entry.occurred_at) >= 1) {
+        body.occurred_at = nextOccurredAt;
       }
       const saved = await update(entry.id, body);
       onSaved?.(saved);
@@ -130,19 +129,10 @@ export function JournalEntryDetail({
                 Highlight row
               </span>
             </label>
-            {scope.kind === "plant" ? (
-              <label className="dsc-seat-editors" style={{ marginTop: 10 }}>
-                Growth stage (snapshot)
-                <select value={growthStage} onChange={(e) => setGrowthStage(e.target.value)}>
-                  <option value="">—</option>
-                  {growthStageOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : null}
+            <label className="dsc-seat-editors" style={{ marginTop: 10 }}>
+              When
+              <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
+            </label>
             {otherTags.length ? (
               <p className="dsc-muted" style={{ margin: "10px 0 0", fontSize: 12 }}>
                 Tags: {otherTags.join(", ")}

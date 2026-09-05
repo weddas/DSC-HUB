@@ -163,7 +163,7 @@ def update_plant_entry(
     *,
     note: str | None = None,
     tags: list[str] | None = None,
-    growth_stage: str | None = None,
+    occurred_at: float | None = None,
     db_path: Path | None = None,
 ) -> dict[str, Any]:
     init_plant_journal_tables(db_path)
@@ -190,11 +190,9 @@ def update_plant_entry(
             tag_list = [str(t).strip() for t in tags if str(t).strip()]
             sets.append("tags_json=?")
             params.append(json.dumps(tag_list, separators=(",", ":")))
-        if growth_stage is not None:
-            snap = snapshot_from_json(row["snapshot_json"])
-            snap["growth_stage"] = str(growth_stage).strip()
-            sets.append("snapshot_json=?")
-            params.append(json.dumps(snap, separators=(",", ":")))
+        if occurred_at is not None:
+            sets.append("occurred_at=?")
+            params.append(float(occurred_at))
         if not sets:
             return _plant_row_to_dict(row)
         params.extend([eid, pid])

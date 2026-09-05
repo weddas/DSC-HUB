@@ -237,8 +237,10 @@ export function GrowLogsPage() {
   const setView = (nextView: "list" | "trends", anchorSec?: number) => {
     updateParams(scope, nextView, {
       anchorSec,
-      compareScopeA: formatCompareScopeParam(compareScopeA ?? scope),
-      compareScopeB: formatCompareScopeParam(compareScopeB ?? scope),
+      // Only carry compare params through when compare mode is already on —
+      // otherwise this seeds a silent self-vs-self compare on every tab switch.
+      compareScopeA: compareScopeMode ? formatCompareScopeParam(compareScopeA ?? scope) : undefined,
+      compareScopeB: compareScopeMode ? formatCompareScopeParam(compareScopeB ?? scope) : undefined,
       compareScopes: compareScopeMode,
     });
   };

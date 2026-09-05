@@ -216,7 +216,7 @@ class JournalEntryBody(BaseModel):
 class JournalPatchBody(BaseModel):
     note: str | None = None
     tags: list[str] | None = None
-    growth_stage: str | None = None
+    occurred_at: float | None = None
 
 
 def _journal_mutation_http(exc: Exception) -> None:
@@ -1140,7 +1140,7 @@ def journal_plant_patch(plant_id: str, entry_id: int, body: JournalPatchBody) ->
             entry_id,
             note=body.note,
             tags=body.tags,
-            growth_stage=body.growth_stage,
+            occurred_at=body.occurred_at,
         )
     except (ValueError, Exception) as exc:
         _journal_mutation_http(exc)
@@ -1202,7 +1202,9 @@ def journal_space_patch(space_id: str, entry_id: int, body: JournalPatchBody) ->
     from .space_journal import update_space_entry
 
     try:
-        return update_space_entry(space_id, entry_id, note=body.note, tags=body.tags)
+        return update_space_entry(
+            space_id, entry_id, note=body.note, tags=body.tags, occurred_at=body.occurred_at
+        )
     except (ValueError, Exception) as exc:
         _journal_mutation_http(exc)
         raise  # pragma: no cover
@@ -1434,7 +1436,9 @@ def journal_room_patch(room_id: str, entry_id: int, body: JournalPatchBody) -> d
     from .room_journal import update_room_entry
 
     try:
-        return update_room_entry(room_id, entry_id, note=body.note, tags=body.tags)
+        return update_room_entry(
+            room_id, entry_id, note=body.note, tags=body.tags, occurred_at=body.occurred_at
+        )
     except (ValueError, Exception) as exc:
         _journal_mutation_http(exc)
         raise  # pragma: no cover
@@ -1483,7 +1487,7 @@ def journal_core_patch(entry_id: int, body: JournalPatchBody) -> dict[str, Any]:
     from .dsc_core_journal import update_core_entry
 
     try:
-        return update_core_entry(entry_id, note=body.note, tags=body.tags)
+        return update_core_entry(entry_id, note=body.note, tags=body.tags, occurred_at=body.occurred_at)
     except (ValueError, Exception) as exc:
         _journal_mutation_http(exc)
         raise  # pragma: no cover

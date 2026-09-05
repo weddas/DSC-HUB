@@ -64,7 +64,12 @@ export function useJournalScope(
     } finally {
       setLoading(false);
     }
-  }, [scope, limit, offset, enabled]);
+    // scope is a freshly-constructed object literal at nearly every call site
+    // (parseLogsScopeFromSearchParams, inline `{ kind, id }` props, etc.) — key
+    // on its primitive fields, not identity, or every unrelated re-render of a
+    // parent (e.g. an entity-bus tick) refetches the journal.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scope.kind, scope.id, limit, offset, enabled]);
 
   useEffect(() => {
     void reload();

@@ -24,20 +24,40 @@ def client(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
 
 
 def test_patch_operator_entry(client: TestClient) -> None:
-    created = client.post("/journal/plant/plant:crud", json={"note": "before edit", "tags": ["a"]})
+    created = client.post(
+        "/journal/plant/plant:crud", json={"note": "before edit", "tags": ["a"], "occurred_at": 1000.0}
+    )
     assert created.status_code == 200
     entry_id = created.json()["id"]
 
     resp = client.patch(
         f"/journal/plant/plant:crud/{entry_id}",
-        json={"note": "after edit", "tags": ["highlight"], "growth_stage": "Vegetative"},
+        json={"note": "after edit", "tags": ["highlight"], "occurred_at": 2000.0},
     )
     assert resp.status_code == 200
     body = resp.json()
     assert body["note"] == "after edit"
     assert body["tags"] == ["highlight"]
-    assert body["snapshot"]["growth_stage"] == "Vegetative"
+    assert body["occurred_at"] == 2000.0
     assert body["source"] == "operator"
+
+
+def test_patch_does_not_accept_growth_stage(client: TestClient) -> None:
+    """v1: snapshot is frozen at create only — PATCH must not let growth_stage rewrite it."""
+    created = client.post("/journal/plant/plant:crud-2", json={"note": "before edit"})
+    assert created.status_code == 200
+    entry_id = created.json()["id"]
+    before_snapshot = created.json()["snapshot"]
+
+    resp = client.patch(
+        f"/journal/plant/plant:crud-2/{entry_id}",
+        json={"note": "after edit", "growth_stage": "Vegetative"},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["note"] == "after edit"
+    assert body["snapshot"] == before_snapshot
+    assert "growth_stage" not in body["snapshot"]
 
 
 def test_patch_system_entry_forbidden(client: TestClient) -> None:

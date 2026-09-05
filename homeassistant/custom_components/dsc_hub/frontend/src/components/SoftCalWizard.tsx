@@ -69,6 +69,9 @@ export function SoftCalWizard() {
   const [knownPh, setKnownPh] = useState("7.0");
   const [knownEc, setKnownEc] = useState("");
   const [busy, setBusy] = useState(false);
+  // Ask Brain hits a separate advice endpoint and doesn't touch capture/offset
+  // state — it shouldn't block or be blocked by a 15s capture in flight.
+  const [aiBusy, setAiBusy] = useState(false);
   const [progress, setProgress] = useState("");
   const [status, setStatus] = useState("");
   const [waterRows, setWaterRows] = useState<SoftCalCaptureResult[] | null>(null);
@@ -78,7 +81,7 @@ export function SoftCalWizard() {
 
   const askAi = async () => {
     setAiNote("");
-    setBusy(true);
+    setAiBusy(true);
     try {
       const pot = selected[0] ?? 1;
       const ch = readSoftCalChannels(pot, num);
@@ -99,7 +102,7 @@ export function SoftCalWizard() {
     } catch (e) {
       setAiNote(e instanceof Error ? e.message : "AI advice failed");
     } finally {
-      setBusy(false);
+      setAiBusy(false);
     }
   };
 
@@ -325,7 +328,6 @@ export function SoftCalWizard() {
         ) : null}
         <Button
           variant="secondary"
-          disabled={busy}
           onClick={() => {
             setPhase(phase === "water" ? "after_water" : "water");
             setPendingApply(null);
@@ -334,7 +336,7 @@ export function SoftCalWizard() {
         >
           Switch to {phase === "water" ? "after-water" : "tap-water"} phase
         </Button>
-        <Button variant="secondary" disabled={busy} onClick={() => void askAi()}>
+        <Button variant="secondary" disabled={aiBusy} onClick={() => void askAi()}>
           Ask Brain (guardrailed)
         </Button>
       </div>

@@ -41,8 +41,8 @@ export type JournalPostBody = {
 
 export type JournalPatchBody = {
   note?: string;
+  occurred_at?: number;
   tags?: string[];
-  growth_stage?: string;
 };
 
 export type JournalListVariant = "embedded" | "full";

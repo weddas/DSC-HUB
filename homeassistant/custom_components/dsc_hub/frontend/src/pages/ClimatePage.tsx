@@ -17,6 +17,7 @@ import { FlowSankey } from "../components/FlowSankey";
 import { CropScheduler } from "../components/CropScheduler";
 import { TentTargetPanel } from "../components/TentTargets";
 import { resolveCfm } from "../lib/cfmProvenance";
+import { inventoryInService } from "../lib/fleetModel";
 import { absoluteHumidity } from "../lib/potTrust";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleet, useHubVitals } from "../hooks/useFleet";
@@ -348,6 +349,7 @@ export function LiveClimatePage() {
                 entityId="switch.dsc_hub_ac_demand"
                 label="Cool"
                 icon="climate"
+                oos={!inventoryInService(fleet, "ac")}
                 warnWhenMissing={
                   state("binary_sensor.dsc_ac_capacity_offline") === "on" ? "AC ○" : undefined
                 }
@@ -355,7 +357,13 @@ export function LiveClimatePage() {
               <EntityToggle confirm entityId="switch.dsc_hub_humidifier_demand" label="Hum" icon="climate" />
               <EntityToggle confirm entityId="switch.dsc_hub_dehumidifier_demand" label="Dehum" icon="climate" />
               <EntityToggle confirm entityId="switch.dsc_hub_grow_mat_demand" label="Mat" icon="root" />
-              <EntityToggle confirm entityId="switch.dsc_hub_clone_humidifier_demand" label="Mister" icon="clone" />
+              <EntityToggle
+                confirm
+                entityId="switch.dsc_hub_clone_humidifier_demand"
+                label="Mister"
+                icon="clone"
+                oos={!inventoryInService(fleet, "mister")}
+              />
             </div>
             {fullAuto ? (
               <p className="dsc-honesty">

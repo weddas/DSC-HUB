@@ -31,7 +31,7 @@ export function SeatOverlayHost() {
     <DecisionLayer
       open={pot != null}
       onDismiss={close}
-      title={pot != null ? `Plant seat · POT${pot}` : "Plant seat"}
+      title={pot != null ? `Plant · Probe ${pot}` : "Plant"}
       help={help}
     >
       {pot != null ? (

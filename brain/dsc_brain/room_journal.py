@@ -165,6 +165,7 @@ def update_room_entry(
     *,
     note: str | None = None,
     tags: list[str] | None = None,
+    occurred_at: float | None = None,
     db_path: Path | None = None,
 ) -> dict[str, Any]:
     init_room_journal_tables(db_path)
@@ -191,6 +192,9 @@ def update_room_entry(
             tag_list = [str(t).strip() for t in tags if str(t).strip()]
             sets.append("tags_json=?")
             params.append(json.dumps(tag_list, separators=(",", ":")))
+        if occurred_at is not None:
+            sets.append("occurred_at=?")
+            params.append(float(occurred_at))
         if not sets:
             return _room_row_to_dict(row)
         params.extend([eid, rid])

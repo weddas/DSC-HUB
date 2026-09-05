@@ -10,11 +10,9 @@ import { FleetProvider } from "./hooks/useFleet";
 import type { HassEntity } from "./vite-env";
 import "./styles/dsc.css";
 
-const DEFAULT_SURFACE = "7.4.0";
-
 function PiApp() {
-  const { hass, fleet, computed, tick, loading, error, refresh } = useBrainContext();
-  const surface = (fleet?.surface as string | undefined) ?? DEFAULT_SURFACE;
+  const { hass, fleet, computed, tick, loading, error, refresh, lastUpdatedAt } = useBrainContext();
+  const surface = (fleet?.surface as string | undefined) || "—";
 
   /** Merge /fleet/computed hass_extras into fleetRaw so enrichFleetFromHassStates fills dryback/rate/NPK. */
   const fleetRaw = useMemo(() => {
@@ -57,7 +55,14 @@ function PiApp() {
     );
   }
   return (
-    <FleetProvider fleetRaw={fleetRaw} tick={tick} source="pi" loading={loading} error={error}>
+    <FleetProvider
+      fleetRaw={fleetRaw}
+      tick={tick}
+      source="pi"
+      loading={loading}
+      error={error}
+      lastUpdatedAt={lastUpdatedAt}
+    >
       <HashRouter>
         <App hass={hass} surfaceVersion={surface} hassRevision={tick} fleetSource="pi" />
       </HashRouter>

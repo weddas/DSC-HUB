@@ -1,10 +1,39 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Card, StatusChip } from "./ui";
 import { DecisionLayer } from "./DecisionLayer";
 import { useEntityBus } from "../hooks/useEntityBus";
-import { useFleet } from "../hooks/useFleet";
+import { useFleet, useFleetLastUpdated } from "../hooks/useFleet";
 import { collectHonestyGapsFromFleet, nextRecommended, type HonestyGap } from "../lib/sensorHonesty";
+
+/** "Updated Xs ago" — real wall-clock elapsed since the last fleet snapshot was
+ * actually applied (WS push or poll), never a fabricated/optimistic value. */
+function relativeAgeLabel(sinceMs: number | null, nowMs: number): string {
+  if (sinceMs == null) return "—";
+  const secs = Math.max(0, Math.round((nowMs - sinceMs) / 1000));
+  if (secs < 60) return `${secs}s ago`;
+  const mins = Math.round(secs / 60);
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.round(mins / 60);
+  return `${hours}h ago`;
+}
+
+export function FleetFreshnessChip() {
+  const lastUpdatedAt = useFleetLastUpdated();
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return (
+    <StatusChip
+      label={`Updated ${relativeAgeLabel(lastUpdatedAt, now)}`}
+      tone="muted"
+    />
+  );
+}
 
 export function useHonestyGaps(): HonestyGap[] {
   const hass = useEntityBus();
@@ -32,12 +61,14 @@ export function HonestyRail({ gaps }: { gaps?: HonestyGap[] }) {
     return (
       <div className="dsc-honesty-rail" aria-label="Honesty">
         <StatusChip icon="ok" label="Kit honest" tone="ok" />
+        <FleetFreshnessChip />
       </div>
     );
   }
   return (
     <>
       <div className="dsc-honesty-rail" aria-label="Honesty gaps">
+        <FleetFreshnessChip />
         {list.slice(0, 6).map((g) => (
           <button
             key={g.id}

@@ -1,6 +1,6 @@
-import type { CSSProperties, Ref } from "react";
+import { useMemo, type CSSProperties, type Ref } from "react";
 import type { JournalEntry, JournalListVariant, JournalScope } from "../../types/journal";
-import { journalRowKey } from "./journalFormat";
+import { collapseConsecutiveSystemDuplicates, journalRowKey } from "./journalFormat";
 import { JournalEntryRow } from "./JournalEntryRow";
 
 export type JournalEntryListProps = {
@@ -38,6 +38,7 @@ export function JournalEntryList({
   const listClass = embedded
     ? "dsc-journal-list dsc-journal-teaser-scroll"
     : "dsc-journal-list";
+  const displayEntries = useMemo(() => collapseConsecutiveSystemDuplicates(entries), [entries]);
 
   const scrollStyle =
     embedded && scrollMaxRows > 0
@@ -49,7 +50,7 @@ export function JournalEntryList({
 
   return (
     <ul className={listClass} style={scrollStyle}>
-      {entries.map((row) => {
+      {displayEntries.map((row) => {
         const isUrlHighlight = highlightEntryId != null && row.id === highlightEntryId;
         return (
           <JournalEntryRow

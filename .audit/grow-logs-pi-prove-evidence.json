@@ -1,14 +1,14 @@
 ﻿{
-    "ts":  1788326029,
+    "ts":  1788542431,
     "base":  "http://192.168.86.48:8787",
-    "expected_js":  "assets/index-C0JbXFQo.js",
+    "expected_js":  "assets/index-BaRgMeRp.js",
     "gates":  {
                   "G0_index_bundle":  {
                                           "detail":  {
-                                                         "local":  "assets/index-mqa24gAf.js",
-                                                         "live":  "assets/index-mqa24gAf.js"
+                                                         "local":  "assets/index-BaRgMeRp.js",
+                                                         "live":  "assets/index-BaRgMeRp.js"
                                                      },
-                                          "ok":  false
+                                          "ok":  true
                                       },
                   "G0_health":  {
                                     "detail":  {
@@ -20,13 +20,13 @@
                                                    "zigbee":  {
                                                                   "mqtt_connected":  true,
                                                                   "bridge_state":  "online",
-                                                                  "bridge_state_updated_at":  1788323288.553087,
+                                                                  "bridge_state_updated_at":  1788542427.7373908,
                                                                   "radio_up":  true,
                                                                   "radio_note":  "Coordinator online",
-                                                                  "device_count":  5,
-                                                                  "end_device_count":  4,
-                                                                  "devices_updated_at":  1788323289.1752903,
-                                                                  "canopy_updated_at":  1788324719.816341,
+                                                                  "device_count":  6,
+                                                                  "end_device_count":  5,
+                                                                  "devices_updated_at":  1788542427.6906583,
+                                                                  "canopy_updated_at":  null,
                                                                   "permit_join":  false,
                                                                   "permit_join_end":  null
                                                               }
@@ -37,26 +37,21 @@
                                                     "detail":  {
                                                                    "count":  10,
                                                                    "status":  200,
-                                                                   "total":  33
+                                                                   "total":  32
                                                                },
                                                     "ok":  true
                                                 },
                   "G2_post_snapshot":  {
                                            "detail":  {
                                                           "status":  200,
-                                                          "entry_id":  75,
-                                                          "snapshot_keys":  [
-                                                                                "temp_c",
-                                                                                "rh_pct",
-                                                                                "vpd_kpa",
-                                                                                "lights_on_today_h"
-                                                                            ]
+                                                          "entry_id":  76,
+                                                          "snapshot_keys":  "lights_on_today_h"
                                                       },
                                            "ok":  true
                                        },
                   "G3_patch_operator":  {
                                             "detail":  {
-                                                           "id":  75,
+                                                           "id":  76,
                                                            "status":  200
                                                        },
                                             "ok":  true
@@ -70,13 +65,13 @@
                                           },
                   "G5_delete_operator":  {
                                              "detail":  {
-                                                            "id":  75,
+                                                            "id":  76,
                                                             "status":  200
                                                         },
                                              "ok":  true
                                          }
               },
     "errors":  [
-                   "G0_index_bundle"
+
                ]
 }

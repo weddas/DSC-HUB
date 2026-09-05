@@ -90,3 +90,40 @@ export function isJournalEntryEditable(scope: JournalScope, row: JournalEntry): 
   const prov = String(row.provenance || scope.kind).toLowerCase();
   return prov === scope.kind;
 }
+
+export type DisplayJournalEntry = JournalEntry & { repeatCount?: number };
+
+const SYSTEM_DUPLICATE_WINDOW_SEC = 5 * 60;
+
+/**
+ * Collapse consecutive, literally-identical system rows (e.g. a schedule-slide
+ * step retried/rebubbled to Core+Room within the same window) into one row with
+ * a repeat count. Only ever collapses source==="system" rows with the exact same
+ * note+tags — distinct steps (different target time/plan id in the note text)
+ * are never merged, so this never hides or misrepresents a real distinct event.
+ * Operator rows are never touched. Mirrors lib/growLogFilter's collapse pattern.
+ */
+export function collapseConsecutiveSystemDuplicates(entries: JournalEntry[]): DisplayJournalEntry[] {
+  const out: DisplayJournalEntry[] = [];
+
+  for (const row of entries) {
+    const prev = out[out.length - 1];
+    const key = `${row.note.trim().toLowerCase()}|${[...row.tags].sort().join(",")}`;
+    const prevKey = prev
+      ? `${prev.note.trim().toLowerCase()}|${[...prev.tags].sort().join(",")}`
+      : null;
+    if (
+      prev &&
+      row.source === "system" &&
+      prev.source === "system" &&
+      key === prevKey &&
+      Math.abs(prev.occurred_at - row.occurred_at) <= SYSTEM_DUPLICATE_WINDOW_SEC
+    ) {
+      prev.repeatCount = (prev.repeatCount ?? 1) + 1;
+      continue;
+    }
+    out.push({ ...row });
+  }
+
+  return out;
+}
