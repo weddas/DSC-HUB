@@ -21,6 +21,7 @@ import {
 import { inventoryGroup, pickSettings, resolveSeat, taskParamDefaults } from "../components/settings/settingsHelpers";
 import { ZigbeeBindRow } from "../components/settings/ZigbeeBindRow";
 import { SettingsTable, SettingsRow } from "../components/settings/SettingsTable";
+import { ZigbeeCatalogCard } from "../components/settings/ZigbeeCatalogCard";
 import { SpaceEnergySettingsCard } from "../components/settings/SpaceEnergySettingsCard";
 import {
   apply_network,
@@ -1304,6 +1305,8 @@ export function SettingsPage() {
           )
         ) : null}
       </section>
+
+      {section === "device" ? <ZigbeeCatalogCard onSaved={() => void refresh()} /> : null}
 
       <section className="dsc-card" hidden={section !== "device"}>
         <h3>Zigbee (SkyConnect)</h3>

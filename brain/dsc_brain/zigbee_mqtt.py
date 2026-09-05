@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import threading
 import time
 from typing import Any, Callable
@@ -47,13 +48,94 @@ ZIGBEE_ROLE_CATALOG: list[dict[str, Any]] = [
     {"id": "door_tent", "label": "Tent door", "consume": False, "kind": "safety"},
 ]
 
-_VALID_ROLES = frozenset(str(r["id"]) for r in ZIGBEE_ROLE_CATALOG)
+_BASE_ROLE_IDS = frozenset(str(r["id"]) for r in ZIGBEE_ROLE_CATALOG)
 _CANOPY_ROLES = ("canopy_4x8", "canopy_2x4")
 _VALID_ZONES = frozenset({"4x8", "2x4", "room", "shared"})
 
+# Operator-defined roles (Phase 4). Roles are pure routing labels — a custom
+# role only needs a `kind` to slot into climate / safety fleet handling; it wires
+# no new Python behaviour. Stored as a JSON list of {id,label,kind,consume}.
+_CUSTOM_ROLES_SETTING = "zigbee_custom_roles"
+_CUSTOM_ROLE_KINDS = frozenset(
+    {"climate", "safety", "plug", "meter", "gas", "light", "button", "other"}
+)
+_ROLE_ID_RE = re.compile(r"^[a-z][a-z0-9_]{1,47}$")
+
+
+def load_custom_roles() -> list[dict[str, Any]]:
+    """Operator-added roles from settings — validated shape, base ids filtered out."""
+    raw = get_setting(_CUSTOM_ROLES_SETTING, "")
+    if not raw:
+        return []
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        return []
+    out: list[dict[str, Any]] = []
+    if isinstance(parsed, list):
+        for row in parsed:
+            if not isinstance(row, dict):
+                continue
+            rid = str(row.get("id") or "").strip().lower()
+            if not rid or rid in _BASE_ROLE_IDS:
+                continue
+            kind = str(row.get("kind") or "other").strip().lower()
+            if kind not in _CUSTOM_ROLE_KINDS:
+                kind = "other"
+            out.append(
+                {
+                    "id": rid,
+                    "label": str(row.get("label") or rid),
+                    "kind": kind,
+                    "consume": bool(row.get("consume", kind == "climate")),
+                    "custom": True,
+                }
+            )
+    return out
+
+
+def save_custom_roles(roles: Any) -> list[dict[str, Any]]:
+    """Validate + persist the operator role overlay. Returns the normalized list."""
+    if not isinstance(roles, list):
+        raise ValueError("roles must be a list")
+    cleaned: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for row in roles:
+        if not isinstance(row, dict):
+            raise ValueError("each role must be an object")
+        rid = str(row.get("id") or "").strip().lower()
+        if not _ROLE_ID_RE.match(rid):
+            raise ValueError(f"invalid role id {rid!r} — slug, lowercase, 2–48 chars")
+        if rid in _BASE_ROLE_IDS:
+            raise ValueError(f"'{rid}' is a built-in role")
+        if rid in seen:
+            raise ValueError(f"duplicate role id: {rid}")
+        seen.add(rid)
+        kind = str(row.get("kind") or "other").strip().lower()
+        if kind not in _CUSTOM_ROLE_KINDS:
+            raise ValueError(f"invalid kind {kind!r}")
+        cleaned.append(
+            {
+                "id": rid,
+                "label": (str(row.get("label") or rid).strip() or rid)[:60],
+                "kind": kind,
+                "consume": bool(row.get("consume", kind == "climate")),
+            }
+        )
+    set_setting(_CUSTOM_ROLES_SETTING, json.dumps(cleaned))
+    return cleaned
+
+
+def _effective_role_catalog() -> list[dict[str, Any]]:
+    return [*ZIGBEE_ROLE_CATALOG, *load_custom_roles()]
+
+
+def _valid_roles() -> frozenset[str]:
+    return frozenset(str(r["id"]) for r in _effective_role_catalog())
+
 
 def get_zigbee_role_catalog() -> list[dict[str, Any]]:
-    return list(ZIGBEE_ROLE_CATALOG)
+    return list(_effective_role_catalog())
 
 
 _CLASS_ROLE_KINDS: dict[str, frozenset[str]] = {
@@ -190,7 +272,7 @@ def _placement_map() -> dict[str, str]:
 
 def _legacy_label_to_role(label: str) -> str:
     key = label.strip().lower().replace(" ", "_").replace("/", "_")
-    if key in _VALID_ROLES and key != "unbound":
+    if key in _valid_roles() and key != "unbound":
         return key
     if "canopy" in key and ("2x4" in key or "clone" in key):
         return "canopy_2x4"
@@ -223,6 +305,7 @@ def load_zigbee_bindings() -> dict[str, dict[str, Any]]:
     out: dict[str, dict[str, Any]] = {}
     raw = get_setting("zigbee_device_bindings", "")
     if raw:
+        valid_roles = _valid_roles()
         try:
             parsed = json.loads(raw)
             if isinstance(parsed, dict):
@@ -230,7 +313,7 @@ def load_zigbee_bindings() -> dict[str, dict[str, Any]]:
                     if not ieee or not isinstance(row, dict):
                         continue
                     role = str(row.get("role") or "unbound")
-                    if role not in _VALID_ROLES:
+                    if role not in valid_roles:
                         role = "unbound"
                     zone = str(row.get("zone") or "shared")
                     if zone not in _VALID_ZONES:
@@ -262,11 +345,12 @@ def save_zigbee_bindings(bindings: dict[str, Any]) -> dict[str, dict[str, Any]]:
     cleaned: dict[str, dict[str, Any]] = {}
     if not isinstance(bindings, dict):
         raise ValueError("bindings must be an object keyed by ieee")
+    valid_roles = _valid_roles()
     for ieee, row in bindings.items():
         if not ieee or not isinstance(row, dict):
             continue
         role = str(row.get("role") or "unbound")
-        if role not in _VALID_ROLES:
+        if role not in valid_roles:
             raise ValueError(f"invalid role: {role}")
         zone = str(row.get("zone") or "shared")
         if zone not in _VALID_ZONES:
@@ -293,7 +377,7 @@ def save_zigbee_bindings(bindings: dict[str, Any]) -> dict[str, dict[str, Any]]:
 def _fleet_role_kinds() -> frozenset[str]:
     """Roles that populate zigbee_by_role for Climate (climate + safety Wet/Dry)."""
     return frozenset(
-        str(r["id"]) for r in ZIGBEE_ROLE_CATALOG if r.get("kind") in ("climate", "safety")
+        str(r["id"]) for r in _effective_role_catalog() if r.get("kind") in ("climate", "safety")
     )
 
 
@@ -319,7 +403,7 @@ def _reapply_bindings_to_fleet() -> None:
         updated["friendly_name"] = friendly_name
         _ingest._device_states[friendly_name] = updated
         if enabled and role != "unbound" and role in fleet_roles:
-            if role in {str(r["id"]) for r in ZIGBEE_ROLE_CATALOG if r.get("kind") == "safety"}:
+            if role in {str(r["id"]) for r in _effective_role_catalog() if r.get("kind") == "safety"}:
                 from .zigbee_policies import normalize_binary_active
 
                 wet = normalize_binary_active(updated)
@@ -613,13 +697,13 @@ class ZigbeeMqttIngest:
         self._device_states[friendly_name] = state_row
 
         if enabled and role != "unbound" and role in {
-            str(r["id"]) for r in ZIGBEE_ROLE_CATALOG if r.get("kind") == "climate"
+            str(r["id"]) for r in _effective_role_catalog() if r.get("kind") == "climate"
         }:
             self._by_role[role] = dict(state_row)
             # Keep placement alias for older SPA/tests
             self._by_placement[role] = dict(state_row)
         elif enabled and role != "unbound" and role in {
-            str(r["id"]) for r in ZIGBEE_ROLE_CATALOG if r.get("kind") == "safety"
+            str(r["id"]) for r in _effective_role_catalog() if r.get("kind") == "safety"
         }:
             from .zigbee_policies import normalize_binary_active
 
