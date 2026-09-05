@@ -35,7 +35,8 @@ PINNED_MIN_VERSION = "2026.6.5"
 
 _PYPI_URL = "https://pypi.org/pypi/esphome/json"
 _PYPI_CACHE_TTL = 6 * 3600.0
-_PYPI_TIMEOUT = 6.0
+_PYPI_FAIL_TTL = 15 * 60.0  # after a failed lookup, don't re-hit PyPI for 15 min
+_PYPI_TIMEOUT = 4.0
 
 _VERSION_RE = re.compile(r"(\d+\.\d+\.\d+)")
 
@@ -194,16 +195,27 @@ def latest(*, force: bool = False) -> dict[str, Any]:
     """Latest esphome on PyPI. Cached ~6h, Ethernet-gated, never raises."""
     now = time.time()
     with _latest_lock:
-        fresh = (now - _latest_cache["checked_at"]) < _PYPI_CACHE_TTL
-        if _latest_cache["ok"] and fresh and not force:
-            return dict(_latest_cache)
+        age = now - _latest_cache["checked_at"]
+        if not force:
+            if _latest_cache["ok"] and age < _PYPI_CACHE_TTL:
+                return dict(_latest_cache)
+            # Recently failed (offline box): serve the miss, don't hammer PyPI on
+            # every /toolchain GET.
+            if not _latest_cache["ok"] and 0 < age < _PYPI_FAIL_TTL:
+                return {
+                    "version": _latest_cache.get("version"),
+                    "checked_at": _latest_cache["checked_at"],
+                    "ok": False,
+                    "eth_up": eth_carrier_up(),
+                    "error": _latest_cache.get("error", "recent pypi lookup failed"),
+                }
 
     eth = eth_carrier_up()
     result = {"version": _latest_cache.get("version"), "checked_at": now, "ok": False, "eth_up": eth}
     if not eth:
         result["error"] = "offline (no ethernet carrier)"
         with _latest_lock:
-            _latest_cache.update(checked_at=now)
+            _latest_cache.update(checked_at=now, ok=False, error=result["error"])
         return result
     try:
         req = urllib.request.Request(_PYPI_URL, headers={"User-Agent": "dsc-brain"})
@@ -212,11 +224,11 @@ def latest(*, force: bool = False) -> dict[str, Any]:
         ver = str(data["info"]["version"])
         result.update(version=ver, ok=True)
         with _latest_lock:
-            _latest_cache.update(version=ver, checked_at=now, ok=True)
+            _latest_cache.update(version=ver, checked_at=now, ok=True, error=None)
     except Exception as exc:  # noqa: BLE001 — network/JSON, must not break the endpoint
         result["error"] = f"pypi lookup failed: {exc}"
         with _latest_lock:
-            _latest_cache.update(checked_at=now)
+            _latest_cache.update(checked_at=now, ok=False, error=result["error"])
     return result
 
 
