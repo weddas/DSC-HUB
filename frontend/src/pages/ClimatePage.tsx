@@ -23,7 +23,12 @@ import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleet, useHubVitals } from "../hooks/useFleet";
 import { useFleetEntity } from "../hooks/useFleetEntity";
 import { useEntitySeries } from "../hooks/useEntitySeries";
-import { useHeldReading } from "../hooks/useHeldReading";
+import {
+  useHeldReading,
+  timestampedReading,
+  TIMESTAMPED_READING_STALE_MS,
+} from "../hooks/useHeldReading";
+import { SettingsTable, SettingsRow, StaleValueCell } from "../components/settings/SettingsTable";
 import { useChartHours } from "../hooks/useChartHours";
 import { useZoneFocus, type ZoneFocus } from "../hooks/useZoneFocus";
 import { useInspector } from "../components/InspectorHost";
@@ -45,8 +50,9 @@ function fmt(n: number, digits = 1): string {
   return Number.isFinite(n) ? n.toFixed(digits) : "—";
 }
 
-/** A dropped Zigbee climate sensor must not read as an ordinary confident number forever. */
-const ZIGBEE_ROLE_STALE_MS = 10 * 60 * 1000;
+/** A dropped Zigbee climate sensor must not read as an ordinary confident number
+ *  forever. Shared with the settings-table primitives — one horizon, one rule. */
+const ZIGBEE_ROLE_STALE_MS = TIMESTAMPED_READING_STALE_MS;
 
 const FOCUS_OPTIONS: { id: ZoneFocus; label: string }[] = [
   { id: "compare", label: "All" },
@@ -239,20 +245,30 @@ export function LiveClimatePage() {
 
   const zigbeeClimateRows = useMemo(() => {
     if (!zigbeeByRole) return [];
-    const now = Date.now();
     return Object.entries(zigbeeByRole)
       .filter(([role]) => !isZigbeeSafetyLeakRole(role))
       .map(([role, row]) => {
-        const updatedAt = Number(row.updated_at);
-        // No timestamp evidence -> treat as stale rather than assume it's live (fail closed).
-        const stale = Number.isFinite(updatedAt) ? now - updatedAt * 1000 > ZIGBEE_ROLE_STALE_MS : true;
+        // Each value routed through the shared fail-closed gate: present value +
+        // stale updated_at (or none) -> held/greyed, not a confident number.
+        const t = timestampedReading(
+          row.temperature as number | string | null | undefined,
+          row.updated_at as number | string | null | undefined,
+          ZIGBEE_ROLE_STALE_MS,
+        );
+        const rh = timestampedReading(
+          row.humidity as number | string | null | undefined,
+          row.updated_at as number | string | null | undefined,
+          ZIGBEE_ROLE_STALE_MS,
+        );
         return {
           role,
           zone: String(row.zone ?? "—"),
-          temp: row.temperature,
-          rh: row.humidity,
+          temp: t.value,
+          tempStale: t.stale,
+          rh: rh.value,
+          rhStale: rh.stale,
           name: String(row.friendly_name ?? role),
-          stale,
+          stale: t.stale || rh.stale,
         };
       });
   }, [zigbeeByRole]);
@@ -614,40 +630,35 @@ export function LiveClimatePage() {
                 ) : null}
               </div>
               {zigbeeClimateRows.length ? (
-                <div className="dsc-table-scroll">
-                  <table className="dsc-table">
-                    <thead>
-                      <tr>
-                        <th>Role</th>
-                        <th>Zone</th>
-                        <th>Device</th>
-                        <th>°C</th>
-                        <th>RH %</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {zigbeeClimateRows.map((row) => (
-                        <tr key={row.role} className={row.stale ? "dsc-muted" : undefined}>
-                          <td>{row.role}</td>
-                          <td>{row.zone}</td>
-                          <td>{row.name}</td>
-                          <td>
-                            {row.temp != null && Number.isFinite(Number(row.temp))
-                              ? Number(row.temp).toFixed(1)
-                              : "—"}
-                            {row.stale ? " ⏸" : ""}
-                          </td>
-                          <td>
-                            {row.rh != null && Number.isFinite(Number(row.rh))
-                              ? Number(row.rh).toFixed(0)
-                              : "—"}
-                            {row.stale ? " ⏸" : ""}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <SettingsTable
+                  columns={[
+                    { key: "role", label: "Role" },
+                    { key: "zone", label: "Zone" },
+                    { key: "device", label: "Device" },
+                    { key: "t", label: "°C", numeric: true },
+                    { key: "rh", label: "RH %", numeric: true },
+                  ]}
+                  help={{
+                    title: "Zigbee by role",
+                    body: (
+                      <p>
+                        Values are held from the last MQTT report. A sensor silent for more than
+                        10 minutes shows its last reading greyed with <b>⏸</b> — never a confident
+                        live number.
+                      </p>
+                    ),
+                  }}
+                >
+                  {zigbeeClimateRows.map((row) => (
+                    <SettingsRow key={row.role} tone={row.stale ? "muted" : undefined}>
+                      <td>{row.role}</td>
+                      <td>{row.zone}</td>
+                      <td>{row.name}</td>
+                      <StaleValueCell value={row.temp} unit="°C" stale={row.tempStale} digits={1} />
+                      <StaleValueCell value={row.rh} unit="%" stale={row.rhStale} digits={0} />
+                    </SettingsRow>
+                  ))}
+                </SettingsTable>
               ) : zigbeeSafetyRows.length ? null : (
                 <p className="dsc-muted" style={{ fontSize: 12 }}>
                   No climate roles bound yet — permit join, then set Role + Zone and Save.

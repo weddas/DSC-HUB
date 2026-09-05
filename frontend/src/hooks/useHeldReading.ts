@@ -19,13 +19,13 @@ export type TimestampedReading = { value: number; stale: boolean };
 /**
  * Pure last-known-good for a value that arrives with its own epoch-seconds
  * timestamp in the fleet snapshot rather than as an entity on the bus. No
- * subscription — call it with values you already have.
+ * subscription, no hooks — safe to call inside a `.map()` / `useMemo`.
  *
  * Fails closed: a non-finite value, or no usable timestamp, is `stale` (we do
- * not assume a bare number is live). Mirrors the inline gate ClimatePage uses
- * for `zigbee_by_role` so surfaces can share one rule (see DESIGN-TOKENS §3.1).
+ * not assume a bare number is live). This is the shared rule for `zigbee_by_role`
+ * and anything else with its own `updated_at` (see DESIGN-TOKENS §3.1).
  */
-export function useTimestampedReading(
+export function timestampedReading(
   value: number | string | null | undefined,
   updatedAtSec: number | string | null | undefined,
   staleMs: number = TIMESTAMPED_READING_STALE_MS,
@@ -36,6 +36,10 @@ export function useTimestampedReading(
   const stale = Number.isFinite(ts) ? Date.now() - ts * 1000 > staleMs : true;
   return { value: num, stale };
 }
+
+/** Hook-named alias of {@link timestampedReading} for call sites that read
+ *  better as a hook. Identical behaviour — it holds no state. */
+export const useTimestampedReading = timestampedReading;
 
 const HUB_UPTIME = "sensor.dsc_hub_uptime";
 const HUB_BEAT = "sensor.dsc_hub_heartbeat";
