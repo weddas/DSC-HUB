@@ -457,11 +457,6 @@ export function PlantSeatPanel({
                       onSelect: () => navigate("/live/root"),
                     },
                     {
-                      id: "twin",
-                      label: "Open Twin",
-                      onSelect: () => navigate("/live/twin"),
-                    },
-                    {
                       id: "delete",
                       label: "Delete plant…",
                       onSelect: () => setRetireConfirm(true),
@@ -658,7 +653,7 @@ export function PlantSeatPanel({
           <div className="dsc-col-12">
             <Card className="dsc-glass" title="Apply to tent">
               <p className="dsc-muted" style={{ marginTop: 0 }}>
-                Digital-twin placement. Moves the plant on Twin; does not rewrite climate Want.
+                Tent placement. Moves the plant seat; does not rewrite climate Want.
               </p>
               <div className="dsc-seat-actions">
                 <Button primary={seat.tent === "clone"} onClick={() => setPendingTent("clone")}>
@@ -668,8 +663,8 @@ export function PlantSeatPanel({
                   4×8
                 </Button>
                 <Button onClick={() => setPendingTent("unassigned")}>Unassigned</Button>
-                <Link to="/live/twin">
-                  <Button>Open Twin</Button>
+                <Link to="/live/root">
+                  <Button>Open Root</Button>
                 </Link>
               </div>
               <DecisionLayer

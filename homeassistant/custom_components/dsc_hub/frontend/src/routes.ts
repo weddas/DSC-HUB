@@ -1,13 +1,10 @@
 import { lazy } from "react";
 
-export type PrimarySection = "live" | "grow" | "tune" | "fleet" | "settings";
+export type PrimarySection = "live" | "grow" | "fleet" | "settings";
 
-/** Route-level code splits — Tune, Fleet, Calibrate, Learning. */
+/** Route-level code splits — Fleet, Calibrate, Learning. */
 export const TuneLearningPage = lazy(() =>
   import("./pages/TuneFleetPages").then((m) => ({ default: m.TuneLearningPage })),
-);
-export const TuneAnalyticsPage = lazy(() =>
-  import("./pages/TuneFleetPages").then((m) => ({ default: m.TuneAnalyticsPage })),
 );
 export const FleetOverviewPage = lazy(() =>
   import("./pages/TuneFleetPages").then((m) => ({ default: m.FleetOverviewPage })),
@@ -31,7 +28,6 @@ export interface TabRoute {
 export const PRIMARY_TABS: { id: PrimarySection; label: string; path: string; icon: string }[] = [
   { id: "live", label: "Live", path: "/live/overview", icon: "live" },
   { id: "grow", label: "Grow", path: "/grow/roster", icon: "grow" },
-  { id: "tune", label: "Tune", path: "/tune/learning", icon: "tune" },
   { id: "fleet", label: "Fleet", path: "/fleet", icon: "fleet" },
   { id: "settings", label: "Settings", path: "/settings/device", icon: "settings" },
 ];
@@ -56,9 +52,7 @@ export const SECONDARY_TABS: Record<PrimarySection, TabRoute[]> = {
     { id: "clone", label: "2×4", subtitle: "Clone & veg", path: "/live/2x4", icon: "clone" },
     { id: "root", label: "Root", path: "/live/root", icon: "root" },
     { id: "light", label: "Light", path: "/live/light", icon: "lighting" },
-    { id: "twin", label: "Twin", subtitle: "3D view", path: "/live/twin", icon: "twin", demoted: true },
-    { id: "mission", label: "Mission", subtitle: "Triage", path: "/live/mission", icon: "mission", demoted: true },
-    { id: "dash", label: "Dash", subtitle: "Legacy", path: "/ops/home", icon: "dash", demoted: true },
+    { id: "mission", label: "Mission", subtitle: "Alerts / Triage", path: "/live/mission", icon: "mission" },
   ],
   grow: [
     { id: "roster", label: "Roster", path: "/grow/roster", icon: "roster" },
@@ -66,12 +60,9 @@ export const SECONDARY_TABS: Record<PrimarySection, TabRoute[]> = {
     { id: "research", label: "Research", path: "/grow/research", icon: "research" },
     { id: "logs", label: "Logs", path: "/grow/logs", icon: "catalog" },
   ],
-  tune: [
-    { id: "learning", label: "Learning", path: "/tune/learning", icon: "learning" },
-    { id: "analytics", label: "Analytics", path: "/tune/analytics", icon: "analytics" },
-  ],
   fleet: [
     { id: "overview", label: "Overview", path: "/fleet", icon: "fleet" },
+    { id: "learning", label: "Learning", path: "/fleet/learning", icon: "learning" },
     { id: "calibrate", label: "Calibrate", path: "/fleet/calibrate", icon: "learning" },
   ],
   settings: [
@@ -90,7 +81,8 @@ export const LEGACY_REDIRECTS: Record<string, string> = {
   "/": "/live/overview",
   "/ops": "/ops/home",
   "/ops/home": "/ops/home",
-  "/ops/dash": "/ops/dash",
+  "/ops/dash": "/live/overview",
+  "/live/twin": "/live/overview",
   "/ops/climate": "/live/climate",
   "/ops/main-4x8": "/live/4x8",
   "/ops/clone-2x4": "/live/2x4",
@@ -104,10 +96,12 @@ export const LEGACY_REDIRECTS: Record<string, string> = {
   "/plant/seat": "/grow/roster",
   "/plant/strains": "/grow/roster",
   "/plant/nutrient": "/grow/compose",
-  "/advanced": "/tune/learning",
-  "/advanced/learning": "/tune/learning",
+  "/advanced": "/fleet/learning",
+  "/advanced/learning": "/fleet/learning",
   "/advanced/trends": "/grow/logs?view=trends&scope=space&id=4x8",
   "/advanced/history": "/grow/logs?view=trends&scope=space&id=4x8",
+  "/tune": "/fleet/learning",
+  "/tune/learning": "/fleet/learning",
   "/tune/analytics": "/grow/logs?view=trends&scope=space&id=4x8",
   "/system": "/fleet",
   "/settings": "/settings/device",
@@ -116,9 +110,14 @@ export const LEGACY_REDIRECTS: Record<string, string> = {
 
 export function sectionFromPath(pathname: string): PrimarySection {
   if (pathname.startsWith("/grow") || pathname.startsWith("/plant")) return "grow";
-  if (pathname.startsWith("/tune") || pathname.startsWith("/advanced")) return "tune";
   if (pathname.startsWith("/settings")) return "settings";
-  if (pathname.startsWith("/fleet") || pathname.startsWith("/system")) return "fleet";
+  if (
+    pathname.startsWith("/fleet") ||
+    pathname.startsWith("/system") ||
+    pathname.startsWith("/tune") ||
+    pathname.startsWith("/advanced")
+  )
+    return "fleet";
   if (pathname.startsWith("/ops")) return "live";
   return "live";
 }

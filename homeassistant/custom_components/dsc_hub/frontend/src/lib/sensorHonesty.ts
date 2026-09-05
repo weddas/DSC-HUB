@@ -218,7 +218,7 @@ export function collectHonestyGaps(
         label: "CFM nameplate",
         detail: "One or more ducts still guess CFM from fan % × nameplate — Learning measures real flow.",
         tone: "warn",
-        href: "/tune/learning",
+        href: "/fleet/learning",
         cta: "Open Learning",
         priority: 40,
       });

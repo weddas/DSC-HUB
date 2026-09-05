@@ -82,7 +82,7 @@ export function EntityInspector({
       <div className="dsc-chip-row" style={{ marginBottom: 12 }}>
         <StatusChip label={`Last ${lastLabel}`} tone="muted" />
         {Number.isFinite(runtimeVal) ? (
-          <StatusChip label={`Today ${runtimeVal.toFixed(2)}h`} tone="ok" />
+          <StatusChip label={`Today ${runtimeVal.toFixed(2)}h`} tone="muted" />
         ) : null}
         {Number.isFinite(cyclesVal) ? (
           <StatusChip label={`${Math.round(cyclesVal)} cycles`} tone="muted" />
