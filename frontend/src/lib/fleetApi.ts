@@ -103,6 +103,35 @@ export async function patch_inventory(
   return resp.json();
 }
 
+export type CreateExtraSeatBody = {
+  seat_id: string;
+  role?: string;
+  host?: string | null;
+  mac?: string | null;
+  in_service?: boolean;
+  extra?: Record<string, unknown>;
+};
+
+/** Add a user-defined inventory seat (Zigbee sensor, extra appliance, …). */
+export async function create_extra_seat(body: CreateExtraSeatBody): Promise<Record<string, unknown>> {
+  const resp = await fetch("/settings/inventory/create-extra-seat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    let msg = "add seat failed";
+    try {
+      const j = (await resp.json()) as { detail?: unknown };
+      if (j?.detail) msg = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail);
+    } catch {
+      /* keep default */
+    }
+    throw new Error(msg);
+  }
+  return resp.json();
+}
+
 export async function get_network_status(): Promise<Record<string, unknown>> {
   const resp = await fetch("/settings/network");
   if (!resp.ok) throw new Error("network status failed");

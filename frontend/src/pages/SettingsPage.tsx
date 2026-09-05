@@ -20,12 +20,13 @@ import {
 } from "../components/settings/settingsConstants";
 import { inventoryGroup, pickSettings, resolveSeat, taskParamDefaults } from "../components/settings/settingsHelpers";
 import { ZigbeeBindRow } from "../components/settings/ZigbeeBindRow";
-import { SettingsTable } from "../components/settings/SettingsTable";
+import { SettingsTable, SettingsRow } from "../components/settings/SettingsTable";
 import { SpaceEnergySettingsCard } from "../components/settings/SpaceEnergySettingsCard";
 import {
   apply_network,
   backup_export_url,
   backup_import,
+  create_extra_seat,
   get_catalog_status,
   get_esphome_devices,
   get_esphome_jobs,
@@ -118,6 +119,14 @@ export function SettingsPage() {
   const [probeDrafts, setProbeDrafts] = useState<Record<string, { idle_home_pot_id: string; tent: string }>>({});
   const [probeErr, setProbeErr] = useState<string | null>(null);
   const [pendingClearProbe, setPendingClearProbe] = useState<string | null>(null);
+  const [addSeatDraft, setAddSeatDraft] = useState<{
+    seat_id: string;
+    name: string;
+    placement: string;
+    kind: "sensor" | "appliance";
+  }>({ seat_id: "", name: "", placement: "shared", kind: "sensor" });
+  const [pendingAddSeat, setPendingAddSeat] = useState(false);
+  const [addSeatMsg, setAddSeatMsg] = useState<string>("");
 
   const refresh = async () => {
     const [
@@ -386,6 +395,101 @@ export function SettingsPage() {
           rows for bring-back — not Live cards.
         </p>
         <p className="dsc-muted">Every device with its address, firmware, online state, and service status.</p>
+
+        <details className="dsc-inventory-group">
+          <summary>Add device / seat</summary>
+          <p className="dsc-muted" style={{ fontSize: 13, marginTop: 4 }}>
+            Register a Zigbee sensor or extra appliance the firmware doesn&apos;t define. It lands{" "}
+            <b>out of service</b> — bind its Role/Zone/Task below, then enable it once it&apos;s wired.
+          </p>
+          <div className="dsc-row-actions" style={{ flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
+            <label>
+              Seat ID
+              <input
+                type="text"
+                value={addSeatDraft.seat_id}
+                placeholder="e.g. fan_wall_2x4"
+                onChange={(e) =>
+                  setAddSeatDraft((d) => ({
+                    ...d,
+                    seat_id: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"),
+                  }))
+                }
+              />
+            </label>
+            <label>
+              Name
+              <input
+                type="text"
+                value={addSeatDraft.name}
+                placeholder="Wall fan (2×4)"
+                onChange={(e) => setAddSeatDraft((d) => ({ ...d, name: e.target.value }))}
+              />
+            </label>
+            <label>
+              Placement
+              <select
+                value={addSeatDraft.placement}
+                onChange={(e) => setAddSeatDraft((d) => ({ ...d, placement: e.target.value }))}
+              >
+                <option value="4x8">4×8</option>
+                <option value="2x4">2×4</option>
+                <option value="room">Room</option>
+                <option value="shared">Shared</option>
+              </select>
+            </label>
+            <label>
+              Kind
+              <select
+                value={addSeatDraft.kind}
+                onChange={(e) =>
+                  setAddSeatDraft((d) => ({ ...d, kind: e.target.value as "sensor" | "appliance" }))
+                }
+              >
+                <option value="sensor">Sensor</option>
+                <option value="appliance">Appliance</option>
+              </select>
+            </label>
+            <Button
+              primary
+              disabled={!/^[a-z][a-z0-9_]{1,63}$/.test(addSeatDraft.seat_id) || !addSeatDraft.name.trim()}
+              onClick={() => setPendingAddSeat(true)}
+            >
+              Add seat
+            </Button>
+          </div>
+          {addSeatMsg ? <p className="dsc-honesty">{addSeatMsg}</p> : null}
+        </details>
+        <DecisionLayer
+          open={pendingAddSeat}
+          onDismiss={() => setPendingAddSeat(false)}
+          onConfirm={async () => {
+            setPendingAddSeat(false);
+            try {
+              await create_extra_seat({
+                seat_id: addSeatDraft.seat_id,
+                role: addSeatDraft.kind === "appliance" ? "appliance" : "sensor",
+                in_service: false,
+                extra: { function: addSeatDraft.name.trim(), placement: addSeatDraft.placement },
+              });
+              setAddSeatMsg(`Added ${addSeatDraft.seat_id} — out of service. Bind it below, then enable.`);
+              setAddSeatDraft({ seat_id: "", name: "", placement: "shared", kind: "sensor" });
+              await refresh();
+            } catch (e) {
+              setAddSeatMsg(String((e as Error).message || e));
+            }
+          }}
+          title={`Add seat "${addSeatDraft.seat_id}"`}
+          confirmLabel="Add seat"
+          help={null}
+        >
+          <p>
+            Creates an inventory row for <strong>{addSeatDraft.name || addSeatDraft.seat_id}</strong> (
+            {addSeatDraft.kind}, {addSeatDraft.placement}). It starts <b>out of service</b> and fakes no
+            readings until you enable it.
+          </p>
+        </DecisionLayer>
+
         {inventoryGroups.map(([group, rows]) => (
           <details
             key={group}
@@ -1032,37 +1136,39 @@ export function SettingsPage() {
           {toolchainMsg ? <p className="dsc-muted">{toolchainMsg}</p> : null}
         </div>
 
-        <div className="dsc-table-scroll">
-          <table className="dsc-table">
-          <thead>
-            <tr>
-              <th>Device</th>
-              <th>YAML</th>
-              <th>Expected</th>
-              <th>Last seen</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {esphome.map((row) => (
-              <tr key={String(row.seat_id)}>
-                <td>{String(row.seat_id)}</td>
-                <td>{String(row.yaml ?? "—")}</td>
-                <td>{String(row.expected_firmware ?? "—")}</td>
-                <td>{row.online ? String(row.last_firmware ?? "online") : "offline"}</td>
-                <td>
-                  <Button onClick={() => setPendingOta({ seatId: String(row.seat_id), action: "ota" })}>
-                    Queue OTA
-                  </Button>
-                  <Button onClick={() => setPendingOta({ seatId: String(row.seat_id), action: "compile" })}>
-                    Queue compile
-                  </Button>
-                </td>
+        {section === "device" ? (
+          <div className="dsc-table-scroll">
+            <table className="dsc-table">
+            <thead>
+              <tr>
+                <th>Device</th>
+                <th>YAML</th>
+                <th>Expected</th>
+                <th>Last seen</th>
+                <th />
               </tr>
-            ))}
-          </tbody>
-        </table>
-        </div>
+            </thead>
+            <tbody>
+              {esphome.map((row) => (
+                <tr key={String(row.seat_id)}>
+                  <td>{String(row.seat_id)}</td>
+                  <td>{String(row.yaml ?? "—")}</td>
+                  <td>{String(row.expected_firmware ?? "—")}</td>
+                  <td>{row.online ? String(row.last_firmware ?? "online") : "offline"}</td>
+                  <td>
+                    <Button onClick={() => setPendingOta({ seatId: String(row.seat_id), action: "ota" })}>
+                      Queue OTA
+                    </Button>
+                    <Button onClick={() => setPendingOta({ seatId: String(row.seat_id), action: "compile" })}>
+                      Queue compile
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          </div>
+        ) : null}
         <DecisionLayer
           open={pendingOta != null}
           onDismiss={() => setPendingOta(null)}
@@ -1130,8 +1236,72 @@ export function SettingsPage() {
             doesn&apos;t drop everything at once.
           </p>
         </DecisionLayer>
-        {jobs.length ? (
+        {section === "device" && jobs.length ? (
           <pre className="dsc-honesty">{JSON.stringify(jobs.slice(0, 3), null, 2)}</pre>
+        ) : null}
+        {section === "server" ? (
+          jobs.length ? (
+            <SettingsTable
+              columns={[
+                { key: "seat", label: "Device" },
+                { key: "action", label: "Action" },
+                { key: "status", label: "Status" },
+                { key: "when", label: "Updated", numeric: true },
+                { key: "detail", label: "Detail" },
+              ]}
+              caption={`${jobs.length} job${jobs.length === 1 ? "" : "s"} — newest first`}
+              help={{
+                title: "Job history",
+                body: (
+                  <p>
+                    Every ESPHome compile / OTA the build worker has run. Queue new jobs from the
+                    Device tab; this tab is the record of what happened.
+                  </p>
+                ),
+              }}
+            >
+              {[...jobs]
+                .sort((a, b) => Number(b.updated_at ?? 0) - Number(a.updated_at ?? 0))
+                .map((j, i) => {
+                  const status = String(j.status ?? "—");
+                  const tone: "ok" | "warn" | "bad" | "muted" | undefined =
+                    status === "done"
+                      ? "ok"
+                      : status === "failed"
+                        ? "bad"
+                        : status === "running" || status === "queued"
+                          ? "warn"
+                          : "muted";
+                  const when = Number(j.updated_at);
+                  return (
+                    <SettingsRow key={String(j.job_id ?? i)}>
+                      <td>{String(j.seat_id ?? "—")}</td>
+                      <td>{String(j.action ?? "—")}</td>
+                      <td className={tone ? `is-${tone}` : undefined}>{status}</td>
+                      <td className="is-numeric">
+                        {Number.isFinite(when)
+                          ? new Date(when * 1000).toLocaleString([], {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "—"}
+                      </td>
+                      <td>
+                        <span className="dsc-muted" style={{ fontSize: 12, whiteSpace: "pre-wrap" }}>
+                          {String(j.detail ?? "").slice(0, 160)}
+                        </span>
+                      </td>
+                    </SettingsRow>
+                  );
+                })}
+            </SettingsTable>
+          ) : (
+            <p className="dsc-muted" style={{ marginTop: 10 }}>
+              No ESPHome jobs yet. Queue a compile or OTA from the Device tab.
+            </p>
+          )
         ) : null}
       </section>
 
@@ -1472,9 +1642,8 @@ export function SettingsPage() {
       {section === "server" ? (
         <div style={{ marginTop: 8 }}>
           <p className="dsc-muted">
-            ESPHome queue and device table are shared with Device. Prefer Device for day-to-day OTA; use this tab when
-            watching job history. Kit USB flash + commission live under{" "}
-            <a href="#/setup">Setup</a> (8.0.0).
+            Server is the ESPHome build record — toolchain status and full job history above. Queue compiles and OTA
+            from <a href="#/settings/device">Device</a>; kit USB flash + commission live under <a href="#/setup">Setup</a>.
           </p>
           <p className="dsc-honesty">
             Full Update pull requires Ethernet (`GET/POST /settings/update`). Offline kits stay on the baked card

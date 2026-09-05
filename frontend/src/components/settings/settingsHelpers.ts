@@ -44,21 +44,6 @@ export function zigbeeIcon(type: string): IconName {
   return type === "Router" ? "system" : "gauge";
 }
 
-export function parseZigbeePlacements(raw: string | undefined): Record<string, string> {
-  if (!raw) return {};
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
-    const out: Record<string, string> = {};
-    for (const [key, value] of Object.entries(parsed)) {
-      if (key && value) out[String(key)] = String(value);
-    }
-    return out;
-  } catch {
-    return {};
-  }
-}
-
 export function effectiveZigbeeClass(inferred: string, override?: string): string {
   return String(override || inferred || "other").toLowerCase();
 }
