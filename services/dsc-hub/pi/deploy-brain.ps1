@@ -4,19 +4,36 @@ param(
     [string]$PiUser = "dsc",
     [string]$PiPassword = "Digital",
     [string]$HostKey = "SHA256:4XD2kIJ5qNCnULKNmo/L9mvzLbmZdURLwLW7Utt9NJs",
+    [string]$RepoRoot = "",
     [switch]$SkipSpaBuild
 )
 
 $ErrorActionPreference = "Stop"
-$Share = "\\192.168.86.2\Digital-Documents"
-if (-not (Test-Path "Y:\")) {
-    Write-Host "Mapping Y: -> $Share (npm/vite require a drive letter, not UNC)"
-    net use Y: $Share /persistent:no | Out-Null
+
+# Repo to build+ship from. Priority: -RepoRoot flag > the clone this script lives
+# in > the legacy Y: share. (The Y: clone has gone stale before — deploy from the
+# checkout you actually work in.)
+if (-not $RepoRoot) {
+    $selfRepo = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
+    if (Test-Path (Join-Path $selfRepo "brain\dsc_brain")) {
+        $RepoRoot = $selfRepo
+    } else {
+        $Share = "\\192.168.86.2\Digital-Documents"
+        if (-not (Test-Path "Y:\")) {
+            Write-Host "Mapping Y: -> $Share (npm/vite require a drive letter, not UNC)"
+            net use Y: $Share /persistent:no | Out-Null
+        }
+        $RepoRoot = "Y:\Digital Stealth Care\Projects\DSC-HUB"
+    }
 }
-$RepoRoot = "Y:\Digital Stealth Care\Projects\DSC-HUB"
 if (-not (Test-Path (Join-Path $RepoRoot "brain\dsc_brain"))) {
-    $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
+    throw "RepoRoot '$RepoRoot' is not a DSC-HUB checkout (no brain\dsc_brain)"
 }
+Write-Host "Deploying from: $RepoRoot"
+Push-Location $RepoRoot
+try { $head = (& git -c safe.directory='*' log --oneline -1 2>$null) } catch { $head = "" }
+Pop-Location
+if ($head) { Write-Host "  HEAD: $head" }
 $EnvFile = Join-Path $RepoRoot "services\dsc-hub\.env"
 $BrainDir = Join-Path $RepoRoot "brain"
 $FirmwareHub = Join-Path $RepoRoot "firmware\v4\dsc-hub.yaml"
