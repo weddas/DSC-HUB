@@ -1271,6 +1271,10 @@ export function SettingsPage() {
             Settings are split by blast radius: Hub (backup), Brain (tuning), Device (kit), API, Network, Server
             (ESPHome jobs), General.
           </p>
+          <p className="dsc-muted">
+            HA-native automations (<code>homeassistant/packages/dsc_v4_automations.yaml</code>) are not managed from
+            this app — edit them via Home Assistant&apos;s own Settings → Automations editor, or the file directly.
+          </p>
         </section>
       ) : null}
 

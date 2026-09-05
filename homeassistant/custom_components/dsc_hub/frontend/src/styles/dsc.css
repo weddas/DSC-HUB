@@ -271,7 +271,9 @@ body {
 .dsc-tab--live.active { color: var(--dsc-blue); border-color: var(--dsc-blue-dim); }
 .dsc-tab--grow.active { color: var(--dsc-teal); border-color: var(--dsc-teal-dim); }
 .dsc-tab--tune.active { color: var(--dsc-purple); border-color: var(--dsc-purple-dim); }
-.dsc-tab--fleet.active { color: var(--dsc-blue); border-color: var(--dsc-blue-dim); }
+/* --dsc-teal and --dsc-blue are the same hex value, so Fleet needs its own accent
+   rather than reusing either — otherwise it's indistinguishable from Live/Grow. */
+.dsc-tab--fleet.active { color: var(--dsc-amber); border-color: rgba(255, 183, 77, 0.4); }
 
 .dsc-secondary-tabs .dsc-tab.active {
   color: var(--dsc-teal);

@@ -82,7 +82,10 @@ export function FleetOverviewPage() {
               Fleet is the kit desk — online/offline and In service, not climate Want. Grey quiet means out of service or
               no data, not a silent alarm.
             </p>
-            <p>Hub link chips (Up/Down/Beat) tell link honesty; open Settings to change In service for a seat.</p>
+            <p>
+              Hub link chips (Up/Down/Beat) tell link honesty. Kit probes 1–2 have their In service toggle right below
+              on this page; open Settings → Device for Probe 3–4 and other inventory seats.
+            </p>
           </HelpTip>
         }
       />

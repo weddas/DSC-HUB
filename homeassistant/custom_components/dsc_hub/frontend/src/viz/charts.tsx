@@ -416,6 +416,18 @@ export function MultiLineChart({
   );
 }
 
+/** GaugeSegment breakpoints (value-space) -> ECharts axisLine color stops (cumulative percent-space). */
+function segmentsToAxisColor(segments: GaugeSegment[], min: number, max: number): [number, string][] {
+  const span = Math.max(max - min, 1e-6);
+  const out: [number, string][] = segments.map((seg, i) => {
+    const nextFrom = i + 1 < segments.length ? segments[i + 1].from : max;
+    const pct = Math.min(1, Math.max(0, (nextFrom - min) / span));
+    return [pct, seg.color];
+  });
+  if (out.length && out[out.length - 1][0] < 1) out[out.length - 1] = [1, out[out.length - 1][1]];
+  return out;
+}
+
 export function ArcGauge({
   value,
   min = 0,
@@ -424,6 +436,7 @@ export function ArcGauge({
   unit = "",
   target,
   band,
+  segments,
   extrema,
   stale,
   onClick,
@@ -478,8 +491,11 @@ export function ArcGauge({
 
   const option = useMemo<EChartsCoreOption>(() => {
     const span = Math.max(max - min, 1e-6);
-    const axisColor: [number, string][] = [];
-    if (hasData && validBand) {
+    let axisColor: [number, string][] = [];
+    if (hasData && segments && segments.length) {
+      // 5-zone red/amber/green/amber/red — the richer "drifting toward the edge" treatment.
+      axisColor = segmentsToAxisColor(segments, min, max);
+    } else if (hasData && validBand) {
       const a = Math.min(1, Math.max(0, (validBand.min - min) / span));
       const b = Math.min(1, Math.max(a, (validBand.max - min) / span));
       if (a > 0) axisColor.push([a, HEX.gray3]);
@@ -489,9 +505,11 @@ export function ArcGauge({
       axisColor.push([1, HEX.gray3]);
     }
 
-    const pointers: { value: number; name: string; itemStyle: { color: string } }[] = [];
+    const pointers: { value: number; name: string; itemStyle: { color: string }; needle?: boolean }[] = [];
     if (hasData && target != null && Number.isFinite(target)) {
-      pointers.push({ value: target, name: "Want", itemStyle: { color: HEX.teal } });
+      // Needle so the exact Want value has a visible marker on the dial, not just an
+      // inert data point the series' pointer:{show:false} silently swallows.
+      pointers.push({ value: target, name: "Want", itemStyle: { color: HEX.white }, needle: true });
     }
     if (hasData && extrema?.min != null) {
       pointers.push({ value: extrema.min, name: "min", itemStyle: { color: HEX.gray5 } });
@@ -549,12 +567,24 @@ export function ArcGauge({
           },
           data: [
             { value: hasData ? display : min, name: holding ? "HELD" : hasData ? unit : "no data" },
-            ...pointers.map((p) => ({ value: p.value, name: "", itemStyle: p.itemStyle })),
+            ...pointers.map((p) =>
+              p.needle
+                ? {
+                    value: p.value,
+                    name: "",
+                    pointer: { show: true, showAbove: true, length: "72%", width: 3, itemStyle: p.itemStyle },
+                    progress: { show: false },
+                    detail: { show: false },
+                    title: { show: false },
+                    anchor: { show: false },
+                  }
+                : { value: p.value, name: "", itemStyle: p.itemStyle },
+            ),
           ],
         },
       ],
     };
-  }, [display, hasData, holding, max, min, stroke, unit, validBand, extrema, target]);
+  }, [display, hasData, holding, max, min, stroke, unit, validBand, segments, extrema, target]);
 
   const gauge = (
     <div
