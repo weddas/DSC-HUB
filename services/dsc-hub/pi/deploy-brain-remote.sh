@@ -19,6 +19,9 @@ mkdir -p "${REPO}/services/dsc-hub/brain"
 cp /tmp/docker-compose.yml "${REPO}/services/dsc-hub/docker-compose.yml"
 cp /tmp/Dockerfile.prebuilt "${REPO}/services/dsc-hub/brain/Dockerfile.prebuilt"
 if [ -f /tmp/dsc-spa-static.tgz ]; then
+  # A prior root-run deploy can leave brain/static root-owned; then this
+  # non-sudo tar dies before the chown below can repair it. Reset it first.
+  run_sudo rm -rf "${REPO}/brain/static"
   mkdir -p "${REPO}/brain/static"
   tar -xzf /tmp/dsc-spa-static.tgz -C "${REPO}/brain/static"
   if [ -f "${REPO}/brain/static/index.html" ]; then
