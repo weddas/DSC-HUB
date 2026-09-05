@@ -826,6 +826,23 @@ def test_create_extra_seat_api(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -
     row = resp.json()
     assert row["seat_id"] == "zigbee_intake_qa"
     assert row["extra"]["placement"] == "4x8 intake duct"
+    # operator-added seats are stamped so the SPA can manage them separately
+    assert row["extra"]["added_by"] == "operator"
+    assert isinstance(row["extra"]["added_at"], int)
+
+    # duplicate seat is refused, not silently updated
+    dup = client.post(
+        "/settings/inventory/create-extra-seat",
+        json={"seat_id": "zigbee_intake_qa", "role": "extra"},
+    )
+    assert dup.status_code == 409
+
+    # non-slug seat_id is rejected
+    bad = client.post(
+        "/settings/inventory/create-extra-seat",
+        json={"seat_id": "Zigbee Intake!", "role": "extra"},
+    )
+    assert bad.status_code == 422
 
 
 def test_permit_join_payload_time_format(monkeypatch: pytest.MonkeyPatch) -> None:

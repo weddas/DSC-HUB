@@ -3689,3 +3689,177 @@ input[type="checkbox"]:disabled {
     animation: none !important;
   }
 }
+
+/* —— settings tables (new-UX) —— see docs/frontend/DESIGN-TOKENS.md §5.
+   Thin layer over .dsc-table used by the Zigbee rollout (Phases 1–4). The
+   primitives land inert; migrating a surface onto them is where visible change
+   happens. Tone classes below are the §3 vocabulary, nothing more. */
+.dsc-settings-table-block {
+  margin-top: 12px;
+}
+
+.dsc-settings-table-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+  color: var(--dsc-gray-5);
+}
+
+.dsc-table--settings {
+  table-layout: auto;
+}
+
+.dsc-table--settings th.is-numeric,
+.dsc-table--settings td.is-numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.dsc-table--settings th.is-tight,
+.dsc-table--settings td.is-tight {
+  width: 1%;
+  white-space: nowrap;
+}
+
+/* Row tone — tints text only, never a fill (a fill would read as an alarm). */
+.dsc-settings-row.is-ok { color: var(--dsc-neon); }
+.dsc-settings-row.is-warn { color: var(--dsc-amber); }
+.dsc-settings-row.is-bad { color: var(--dsc-bad); }
+.dsc-settings-row.is-muted { color: var(--dsc-gray-5); }
+
+.dsc-settings-subrow > td {
+  background: var(--dsc-gray-1);
+  padding: 10px 12px;
+}
+
+.dsc-cell-text-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dsc-cell-text-secondary {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--dsc-gray-5);
+  font-variant-numeric: tabular-nums;
+}
+
+.dsc-cell-text.is-ok .dsc-cell-text-primary { color: var(--dsc-neon); }
+.dsc-cell-text.is-warn .dsc-cell-text-primary { color: var(--dsc-amber); }
+.dsc-cell-text.is-bad .dsc-cell-text-primary { color: var(--dsc-bad); }
+.dsc-cell-text.is-muted .dsc-cell-text-primary { color: var(--dsc-gray-5); }
+
+/* Health cell — stacked compact bits, each toned per §3. */
+.dsc-cell-health {
+  line-height: 1.4;
+}
+
+.dsc-health-bit {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dsc-health-bit.is-muted { color: var(--dsc-gray-5); }
+.dsc-health-bit.is-warn { color: var(--dsc-amber); }
+.dsc-health-bit.is-bad { color: var(--dsc-bad); }
+.dsc-health-bit.is-ok { color: var(--dsc-neon); }
+
+/* Stale value cell — last number in muted + a held marker, never confident. */
+.dsc-cell-value-num {
+  font-variant-numeric: tabular-nums;
+}
+
+.dsc-cell-value-unit {
+  margin-left: 3px;
+  font-size: 0.8em;
+  color: var(--dsc-gray-5);
+}
+
+.dsc-cell-value.is-stale .dsc-cell-value-num {
+  color: var(--dsc-gray-5);
+}
+
+.dsc-cell-value-held {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--dsc-gray-5);
+}
+
+/* Inline-edit cell (rename). */
+.dsc-inline-edit-trigger {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: text;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  max-width: 100%;
+}
+
+.dsc-inline-edit-trigger:hover {
+  border-color: var(--dsc-gray-3);
+  background: var(--dsc-gray-1);
+}
+
+.dsc-inline-edit-trigger > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dsc-inline-edit-trigger .dsc-icon {
+  opacity: 0;
+  transition: opacity 120ms ease;
+  flex-shrink: 0;
+}
+
+.dsc-inline-edit-trigger:hover .dsc-icon {
+  opacity: 1;
+}
+
+.dsc-inline-edit-input {
+  width: 100%;
+  min-width: 120px;
+  min-height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--dsc-teal-dim);
+  background: var(--dsc-gray-2);
+  color: var(--dsc-white);
+  padding: 4px 8px;
+  font: inherit;
+}
+
+.dsc-inline-edit-static {
+  color: var(--dsc-gray-5);
+}
+
+/* Dense select inside a row. */
+.dsc-cell-select select {
+  min-height: 32px;
+  max-width: 180px;
+}
+
+.dsc-cell-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dsc-inline-edit-trigger .dsc-icon {
+    transition: none;
+  }
+}

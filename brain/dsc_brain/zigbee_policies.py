@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import time
 from typing import Any
 
@@ -72,11 +73,78 @@ RECIPE_CATALOG: list[dict[str, Any]] = [
     },
 ]
 
-_VALID_RECIPES = frozenset(str(r["id"]) for r in RECIPE_CATALOG)
+_BASE_RECIPE_IDS = frozenset(str(r["id"]) for r in RECIPE_CATALOG)
+
+# Operator-defined tasks (Phase 4). A curated recipe carries actuator/banner
+# behaviour wired in Python — operators can't add that. So custom recipes are
+# strictly *datapoint-only*: bindable, reported on Climate/Overview, but
+# `when` is always None so evaluate_device_policies() no-ops for them. Stored as
+# a JSON list of {id,label}.
+_CUSTOM_RECIPES_SETTING = "zigbee_custom_recipes"
+_RECIPE_ID_RE = re.compile(r"^[a-z][a-z0-9_]{1,47}$")
+
+
+def load_custom_recipes() -> list[dict[str, Any]]:
+    raw = get_setting(_CUSTOM_RECIPES_SETTING, "")
+    if not raw:
+        return []
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        return []
+    out: list[dict[str, Any]] = []
+    if isinstance(parsed, list):
+        for row in parsed:
+            if not isinstance(row, dict):
+                continue
+            rid = str(row.get("id") or "").strip().lower()
+            if not rid or rid in _BASE_RECIPE_IDS:
+                continue
+            out.append(
+                {
+                    "id": rid,
+                    "label": str(row.get("label") or rid),
+                    "when": None,
+                    "clear_when": None,
+                    "default_params": {},
+                    "custom": True,
+                    "description": "Operator task — datapoint only, no actuator or banner.",
+                }
+            )
+    return out
+
+
+def save_custom_recipes(recipes: Any) -> list[dict[str, Any]]:
+    if not isinstance(recipes, list):
+        raise ValueError("recipes must be a list")
+    cleaned: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for row in recipes:
+        if not isinstance(row, dict):
+            raise ValueError("each recipe must be an object")
+        rid = str(row.get("id") or "").strip().lower()
+        if not _RECIPE_ID_RE.match(rid):
+            raise ValueError(f"invalid recipe id {rid!r} — slug, lowercase, 2–48 chars")
+        if rid in _BASE_RECIPE_IDS:
+            raise ValueError(f"'{rid}' is a built-in task")
+        if rid in seen:
+            raise ValueError(f"duplicate recipe id: {rid}")
+        seen.add(rid)
+        cleaned.append({"id": rid, "label": (str(row.get("label") or rid).strip() or rid)[:60]})
+    set_setting(_CUSTOM_RECIPES_SETTING, json.dumps(cleaned))
+    return cleaned
+
+
+def _effective_recipe_catalog() -> list[dict[str, Any]]:
+    return [*RECIPE_CATALOG, *load_custom_recipes()]
+
+
+def _valid_recipes() -> frozenset[str]:
+    return frozenset(str(r["id"]) for r in _effective_recipe_catalog())
 
 
 def get_recipe_catalog() -> list[dict[str, Any]]:
-    return list(RECIPE_CATALOG)
+    return list(_effective_recipe_catalog())
 
 
 def banner_template(seat_id: str, problem_when: str) -> str:
@@ -100,7 +168,7 @@ def flood_banner_template(problem_when: str) -> str:
 
 
 def _recipe_by_id(recipe_id: str) -> dict[str, Any] | None:
-    for row in RECIPE_CATALOG:
+    for row in _effective_recipe_catalog():
         if row["id"] == recipe_id:
             return row
     return None
@@ -117,11 +185,12 @@ def load_zigbee_policies() -> dict[str, dict[str, Any]]:
     if not isinstance(parsed, dict):
         return {}
     out: dict[str, dict[str, Any]] = {}
+    valid_recipes = _valid_recipes()
     for ieee, row in parsed.items():
         if not ieee or not isinstance(row, dict):
             continue
         recipe_id = str(row.get("recipe_id") or "none")
-        if recipe_id not in _VALID_RECIPES:
+        if recipe_id not in valid_recipes:
             recipe_id = "none"
         params = row.get("params") if isinstance(row.get("params"), dict) else {}
         out[str(ieee)] = {
@@ -136,11 +205,12 @@ def save_zigbee_policies(policies: dict[str, Any]) -> dict[str, dict[str, Any]]:
     cleaned: dict[str, dict[str, Any]] = {}
     if not isinstance(policies, dict):
         raise ValueError("policies must be an object")
+    valid_recipes = _valid_recipes()
     for ieee, row in policies.items():
         if not ieee or not isinstance(row, dict):
             continue
         recipe_id = str(row.get("recipe_id") or "none")
-        if recipe_id not in _VALID_RECIPES:
+        if recipe_id not in valid_recipes:
             raise ValueError(f"unknown recipe_id {recipe_id}")
         recipe = _recipe_by_id(recipe_id) or {}
         defaults = dict(recipe.get("default_params") or {})

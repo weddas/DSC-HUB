@@ -10,6 +10,37 @@ export type HeldReading = {
   live: boolean;
 };
 
+/** Default staleness horizon for readings that carry their own `updated_at`
+ *  (Zigbee-by-role, and other fleet-snapshot values that aren't HA entities). */
+export const TIMESTAMPED_READING_STALE_MS = 10 * 60 * 1000;
+
+export type TimestampedReading = { value: number; stale: boolean };
+
+/**
+ * Pure last-known-good for a value that arrives with its own epoch-seconds
+ * timestamp in the fleet snapshot rather than as an entity on the bus. No
+ * subscription, no hooks — safe to call inside a `.map()` / `useMemo`.
+ *
+ * Fails closed: a non-finite value, or no usable timestamp, is `stale` (we do
+ * not assume a bare number is live). This is the shared rule for `zigbee_by_role`
+ * and anything else with its own `updated_at` (see DESIGN-TOKENS §3.1).
+ */
+export function timestampedReading(
+  value: number | string | null | undefined,
+  updatedAtSec: number | string | null | undefined,
+  staleMs: number = TIMESTAMPED_READING_STALE_MS,
+): TimestampedReading {
+  const num = typeof value === "number" ? value : value == null || value === "" ? NaN : Number(value);
+  const ts = typeof updatedAtSec === "number" ? updatedAtSec : Number(updatedAtSec);
+  if (!Number.isFinite(num)) return { value: NaN, stale: false };
+  const stale = Number.isFinite(ts) ? Date.now() - ts * 1000 > staleMs : true;
+  return { value: num, stale };
+}
+
+/** Hook-named alias of {@link timestampedReading} for call sites that read
+ *  better as a hook. Identical behaviour — it holds no state. */
+export const useTimestampedReading = timestampedReading;
+
 const HUB_UPTIME = "sensor.dsc_hub_uptime";
 const HUB_BEAT = "sensor.dsc_hub_heartbeat";
 

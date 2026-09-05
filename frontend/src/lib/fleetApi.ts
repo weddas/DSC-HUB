@@ -103,6 +103,35 @@ export async function patch_inventory(
   return resp.json();
 }
 
+export type CreateExtraSeatBody = {
+  seat_id: string;
+  role?: string;
+  host?: string | null;
+  mac?: string | null;
+  in_service?: boolean;
+  extra?: Record<string, unknown>;
+};
+
+/** Add a user-defined inventory seat (Zigbee sensor, extra appliance, …). */
+export async function create_extra_seat(body: CreateExtraSeatBody): Promise<Record<string, unknown>> {
+  const resp = await fetch("/settings/inventory/create-extra-seat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    let msg = "add seat failed";
+    try {
+      const j = (await resp.json()) as { detail?: unknown };
+      if (j?.detail) msg = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail);
+    } catch {
+      /* keep default */
+    }
+    throw new Error(msg);
+  }
+  return resp.json();
+}
+
 export async function get_network_status(): Promise<Record<string, unknown>> {
   const resp = await fetch("/settings/network");
   if (!resp.ok) throw new Error("network status failed");
@@ -216,7 +245,21 @@ export type ZigbeeRole = {
   label: string;
   consume?: boolean;
   kind?: ZigbeeRoleKind | string;
+  /** Operator-added via the catalog manager rather than firmware-defined. */
+  custom?: boolean;
 };
+
+/** Operator-definable role kinds (Phase 4 catalog manager). "other" = datapoint only. */
+export const ZIGBEE_CUSTOM_ROLE_KINDS = [
+  "climate",
+  "safety",
+  "plug",
+  "meter",
+  "gas",
+  "light",
+  "button",
+  "other",
+] as const;
 
 export type ZigbeeParamSchemaField = {
   type: string;
@@ -231,6 +274,9 @@ export type ZigbeeRecipe = {
   device_classes?: string[];
   param_schema?: Record<string, ZigbeeParamSchemaField>;
   default_params?: Record<string, unknown>;
+  /** Operator-added via the catalog manager. Custom tasks are datapoint-only. */
+  custom?: boolean;
+  when?: string | null;
 };
 
 export type ZigbeeCapabilityClass = "climate" | "liquid" | "plug" | "motion" | "other" | "safety";
@@ -293,10 +339,46 @@ export function zigbeeFloodBannerTemplate(problemWhen: string): string {
   return "Floor water detected";
 }
 
-export async function get_zigbee_roles(): Promise<{ roles: ZigbeeRole[] }> {
+export async function get_zigbee_roles(): Promise<{ roles: ZigbeeRole[]; custom?: ZigbeeRole[] }> {
   const resp = await fetch("/settings/zigbee/roles");
   if (!resp.ok) throw new Error("zigbee roles failed");
   return resp.json();
+}
+
+async function putZigbeeCatalog(
+  path: string,
+  key: "roles" | "recipes",
+  rows: Array<Record<string, unknown>>,
+): Promise<void> {
+  const resp = await fetch(path, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ [key]: rows }),
+  });
+  if (!resp.ok) {
+    let msg = `${key} save failed`;
+    try {
+      const j = (await resp.json()) as { detail?: unknown };
+      if (j?.detail) msg = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail);
+    } catch {
+      /* keep default */
+    }
+    throw new Error(msg);
+  }
+}
+
+/** Replace the operator role overlay (built-in roles untouched). */
+export async function put_zigbee_custom_roles(
+  roles: Array<{ id: string; label: string; kind: string; consume?: boolean }>,
+): Promise<void> {
+  await putZigbeeCatalog("/settings/zigbee/roles", "roles", roles);
+}
+
+/** Replace the operator task overlay. Custom tasks are datapoint-only. */
+export async function put_zigbee_custom_recipes(
+  recipes: Array<{ id: string; label: string }>,
+): Promise<void> {
+  await putZigbeeCatalog("/settings/zigbee/recipes", "recipes", recipes);
 }
 
 export async function put_zigbee_bindings(
@@ -311,7 +393,7 @@ export async function put_zigbee_bindings(
   return resp.json();
 }
 
-export async function get_zigbee_recipes(): Promise<{ recipes: ZigbeeRecipe[] }> {
+export async function get_zigbee_recipes(): Promise<{ recipes: ZigbeeRecipe[]; custom?: ZigbeeRecipe[] }> {
   const resp = await fetch("/settings/zigbee/recipes");
   if (!resp.ok) throw new Error("zigbee recipes failed");
   return resp.json();

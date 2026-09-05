@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -86,7 +88,9 @@ from .zigbee_mqtt import (
     get_zigbee_devices,
     get_zigbee_health,
     get_zigbee_role_catalog,
+    load_custom_roles,
     load_zigbee_bindings,
+    save_custom_roles,
     save_zigbee_bindings,
     set_permit_join,
     start_zigbee_ingest,
@@ -94,7 +98,9 @@ from .zigbee_mqtt import (
 )
 from .zigbee_policies import (
     get_recipe_catalog,
+    load_custom_recipes,
     load_zigbee_policies,
+    save_custom_recipes,
     save_zigbee_policies,
 )
 
@@ -177,6 +183,14 @@ class ZigbeeBindingsBody(BaseModel):
 
 class ZigbeePoliciesBody(BaseModel):
     policies: dict[str, dict[str, Any]] = Field(default_factory=dict)
+
+
+class ZigbeeCustomRolesBody(BaseModel):
+    roles: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class ZigbeeCustomRecipesBody(BaseModel):
+    recipes: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class EsphomeJobBody(BaseModel):
@@ -637,11 +651,31 @@ def inventory_create(body: InventoryCreate) -> dict[str, Any]:
     return upsert_inventory(body.seat_id, patch, create=True)
 
 
+_EXTRA_SEAT_RE = re.compile(r"^[a-z][a-z0-9_]{1,63}$")
+
+
 @app.post("/settings/inventory/create-extra-seat")
 def inventory_create_extra_seat(body: InventoryCreate) -> dict[str, Any]:
-    """Add a user-defined inventory seat (Zigbee sensor, extra appliance, …)."""
+    """Add a user-defined inventory seat (Zigbee sensor, extra appliance, …).
+
+    Distinct from POST /settings/inventory: enforces a slug seat_id, refuses to
+    clobber an existing seat, and stamps the seat as operator-added so the SPA
+    can list and manage these separately from firmware-defined kit.
+    """
+    seat_id = body.seat_id.strip().lower()
+    if not _EXTRA_SEAT_RE.match(seat_id):
+        raise HTTPException(
+            status_code=422,
+            detail="seat_id must be a slug: lowercase letter first, then letters/digits/underscore (2–64 chars)",
+        )
+    if any(str(r.get("seat_id")) == seat_id for r in list_inventory()):
+        raise HTTPException(status_code=409, detail=f"seat '{seat_id}' already exists")
     patch = body.model_dump(exclude={"seat_id"}, exclude_none=True)
-    return upsert_inventory(body.seat_id, patch, create=True)
+    extra = dict(patch.get("extra") or {})
+    extra.setdefault("added_by", "operator")
+    extra.setdefault("added_at", int(time.time()))
+    patch["extra"] = extra
+    return upsert_inventory(seat_id, patch, create=True)
 
 
 @app.post("/control/service")
@@ -823,7 +857,19 @@ def settings_zigbee_devices() -> dict[str, Any]:
 
 @app.get("/settings/zigbee/roles")
 def settings_zigbee_roles() -> dict[str, Any]:
-    return {"roles": get_zigbee_role_catalog()}
+    return {"roles": get_zigbee_role_catalog(), "custom": load_custom_roles()}
+
+
+@app.put("/settings/zigbee/roles")
+def settings_zigbee_roles_put(body: ZigbeeCustomRolesBody) -> dict[str, Any]:
+    """Replace the operator role overlay. Built-in roles are untouched."""
+    if _demo_mode():
+        _demo_forbidden()
+    try:
+        custom = save_custom_roles(body.roles)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"roles": get_zigbee_role_catalog(), "custom": custom}
 
 
 @app.get("/settings/zigbee/bindings")
@@ -844,7 +890,20 @@ def settings_zigbee_bindings_put(body: ZigbeeBindingsBody) -> dict[str, Any]:
 
 @app.get("/settings/zigbee/recipes")
 def settings_zigbee_recipes() -> dict[str, Any]:
-    return {"recipes": get_recipe_catalog()}
+    return {"recipes": get_recipe_catalog(), "custom": load_custom_recipes()}
+
+
+@app.put("/settings/zigbee/recipes")
+def settings_zigbee_recipes_put(body: ZigbeeCustomRecipesBody) -> dict[str, Any]:
+    """Replace the operator task overlay. Custom tasks are datapoint-only —
+    they wire no actuator or banner behaviour."""
+    if _demo_mode():
+        _demo_forbidden()
+    try:
+        custom = save_custom_recipes(body.recipes)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"recipes": get_recipe_catalog(), "custom": custom}
 
 
 @app.get("/settings/zigbee/policies")

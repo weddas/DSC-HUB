@@ -528,3 +528,56 @@ def test_flood_banner_template() -> None:
 
     assert flood_banner_template("active") == "Floor water detected"
     assert "dry" in flood_banner_template("inactive").lower() or "Dry" in flood_banner_template("inactive")
+
+
+def test_custom_role_overlay(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain.zigbee_mqtt import (
+        get_zigbee_role_catalog,
+        save_custom_roles,
+        save_zigbee_bindings,
+    )
+
+    base_ids = {r["id"] for r in get_zigbee_role_catalog()}
+    assert "sub_canopy_left" not in base_ids
+
+    save_custom_roles([{"id": "sub_canopy_left", "label": "Sub-canopy left", "kind": "climate"}])
+    cat = get_zigbee_role_catalog()
+    row = next(r for r in cat if r["id"] == "sub_canopy_left")
+    assert row["custom"] is True and row["kind"] == "climate" and row["consume"] is True
+
+    # a binding to the custom role now validates
+    cleaned = save_zigbee_bindings(
+        {"0xabc": {"role": "sub_canopy_left", "zone": "4x8", "friendly_name": "s1"}}
+    )
+    assert cleaned["0xabc"]["role"] == "sub_canopy_left"
+
+    # built-in ids and bad slugs are refused
+    with pytest.raises(ValueError):
+        save_custom_roles([{"id": "canopy_4x8", "label": "x", "kind": "climate"}])
+    with pytest.raises(ValueError):
+        save_custom_roles([{"id": "Bad Id", "label": "x", "kind": "climate"}])
+
+
+def test_custom_recipe_is_datapoint_only(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain.zigbee_policies import (
+        evaluate_device_policies,
+        get_recipe_catalog,
+        save_custom_recipes,
+        save_zigbee_policies,
+    )
+
+    save_custom_recipes([{"id": "co2_watch", "label": "CO₂ watch"}])
+    row = next(r for r in get_recipe_catalog() if r["id"] == "co2_watch")
+    assert row["custom"] is True and row["when"] is None
+
+    # bindable, but evaluate never actuates (when is None -> no-op)
+    save_zigbee_policies({"0xco2": {"recipe_id": "co2_watch", "enabled": True, "params": {}}})
+    out = evaluate_device_policies(
+        ieee="0xco2", friendly_name="co2_sensor", payload={"co2": 900, "occupancy": True}
+    )
+    assert out is None
+
+    with pytest.raises(ValueError):
+        save_custom_recipes([{"id": "tank_full_appliance", "label": "x"}])
