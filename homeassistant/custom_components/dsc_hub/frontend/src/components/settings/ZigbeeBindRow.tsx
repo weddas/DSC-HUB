@@ -30,6 +30,9 @@ export function ZigbeeBindRow({
   onPolicyChange,
   liveWet,
   liveProblem,
+  battery,
+  linkquality,
+  lastSeen,
 }: {
   ieee: string;
   name: string;
@@ -52,7 +55,20 @@ export function ZigbeeBindRow({
   onPolicyChange: (ieee: string, patch: { recipe_id: string; params: Record<string, unknown> }) => void;
   liveWet?: boolean | null;
   liveProblem?: boolean | null;
+  /** Percent (0-100), from the device's raw Z2M state payload — absent when the device doesn't report it. */
+  battery?: number | null;
+  linkquality?: number | null;
+  /** Epoch seconds of the last MQTT state message for this device. */
+  lastSeen?: number | null;
 }) {
+  const healthBits: string[] = [];
+  if (typeof battery === "number" && Number.isFinite(battery)) healthBits.push(`Batt ${Math.round(battery)}%`);
+  if (typeof linkquality === "number" && Number.isFinite(linkquality)) healthBits.push(`LQI ${Math.round(linkquality)}`);
+  if (typeof lastSeen === "number" && Number.isFinite(lastSeen)) {
+    const ageMin = Math.max(0, Math.round((Date.now() - lastSeen * 1000) / 60000));
+    healthBits.push(ageMin < 1 ? "seen <1m ago" : `seen ${ageMin}m ago`);
+  }
+  const lowBattery = typeof battery === "number" && Number.isFinite(battery) && battery <= 20;
   const effectiveClass = effectiveZigbeeClass(capabilityClass, capabilityOverride);
   let roleOptions = showAll ? allRoles : filterZigbeeRolesForClass(effectiveClass, allRoles);
   let recipeOptions = showAll ? allRecipes : filterZigbeeRecipesForClass(effectiveClass, allRecipes);
@@ -125,6 +141,11 @@ export function ZigbeeBindRow({
             {ieee || "—"}
             {capabilityOverride ? ` · class ${capabilityOverride}` : capabilityClass ? ` · ${capabilityClass}` : null}
           </div>
+          {healthBits.length ? (
+            <div className={lowBattery ? "dsc-honesty" : "dsc-muted"} style={{ fontSize: 11 }}>
+              {healthBits.join(" · ")}
+            </div>
+          ) : null}
         </td>
         <td>{model || "—"}</td>
         <td>

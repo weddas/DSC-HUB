@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS fleet_history (
   value REAL,
   ts REAL NOT NULL
 );
+CREATE INDEX IF NOT EXISTS idx_fleet_history_seat_metric_ts ON fleet_history(seat_id, metric, ts);
 CREATE TABLE IF NOT EXISTS roster (
   seat_id TEXT PRIMARY KEY,
   strain_id TEXT,

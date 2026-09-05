@@ -165,10 +165,16 @@ class EsphomeIngest:
             "Hub demand poll freshness; not per-Sonoff reachability"
         )
         state.system["relays"] = dict(appliance.get("relays", {}))
+        relay_poll_ts = time.time()
         for seat_id, relay_on in appliance.get("relays", {}).items():
             sonoff = state.sonoffs.get(seat_id)
             if sonoff is not None:
                 sonoff.values["relay_on"] = relay_on
+            # Every other metric is recorded on every poll (see the blanket loop above);
+            # relay_on was command-triggered only, so a manual/fault-driven state change
+            # with no matching brain command was never recorded. Record the observed
+            # state here too so relay history reflects reality, not just brain intent.
+            record_history(seat_id, "relay_on", 1.0 if relay_on else 0.0, relay_poll_ts)
 
         _finalize_hub_binaries(state)
         return state

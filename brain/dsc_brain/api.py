@@ -22,7 +22,7 @@ from .backup_ops import export_backup_zip, import_backup_zip
 from .catalog import get_strain, init_db, reload_catalogs, search
 from .computed_ops import build_computed_hass_states
 from .control_ops import call_service_proxy, sync_inventory_in_service_to_hub
-from .history_ops import query_entity_history
+from .history_ops import ENTITY_METRIC_MAP, query_entity_history
 from .event_log import list_grow_log
 from .decision_loop import decision_tick
 from .appliance_driver import start_appliance_driver, stop_appliance_driver
@@ -594,8 +594,17 @@ def history_get(
     entity_id: str = Query(..., min_length=3),
     hours: float = Query(6.0, ge=0.25, le=168.0),
 ) -> dict[str, Any]:
+    tracked = entity_id in ENTITY_METRIC_MAP
+    if not tracked:
+        import logging
+
+        logging.getLogger(__name__).debug(
+            "GET /history requested for unmapped entity_id=%s — not in ENTITY_METRIC_MAP", entity_id
+        )
     points = query_entity_history(entity_id, hours)
-    return {"entity_id": entity_id, "hours": hours, "points": points}
+    # Distinguishes "recorder never heard of this entity" from "tracked but genuinely
+    # empty in range" — both otherwise looked identical as points: [].
+    return {"entity_id": entity_id, "hours": hours, "points": points, "tracked": tracked}
 
 
 @app.get("/grow-log")

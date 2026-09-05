@@ -4,6 +4,9 @@ export async function get_entity_history(
   entityId: string,
   hours = 6,
 ): Promise<Array<{ t: number; v: number }>> {
+  // Some channel resolvers can hand back "" before a series is bound — an unresolved
+  // channel is an honest empty state, not a request worth sending (backend 422s on it anyway).
+  if (!entityId) return [];
   const resp = await fetch(`/history?entity_id=${encodeURIComponent(entityId)}&hours=${hours}`);
   if (!resp.ok) return [];
   const data = (await resp.json()) as { points?: Array<{ t: number; v: number }> };

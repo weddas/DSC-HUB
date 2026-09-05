@@ -1124,6 +1124,9 @@ export function SettingsPage() {
                           showAll={Boolean(zigbeeShowAll[ieee])}
                           liveWet={liveWet}
                           liveProblem={liveProblem}
+                          battery={typeof d.battery === "number" ? d.battery : null}
+                          linkquality={typeof d.linkquality === "number" ? d.linkquality : null}
+                          lastSeen={typeof d.last_seen === "number" ? d.last_seen : null}
                           onToggleShowAll={() =>
                             setZigbeeShowAll((prev) => ({ ...prev, [ieee]: !prev[ieee] }))
                           }

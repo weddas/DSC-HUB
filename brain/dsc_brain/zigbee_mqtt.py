@@ -508,8 +508,14 @@ class ZigbeeMqttIngest:
         self._running = False
         self._mqtt_connected = False
         if self._client:
-            self._client.loop_stop()
-            self._client.disconnect()
+            # paho-mqtt's Client shape has shifted across major versions (loop_stop has been
+            # observed missing under some installed versions) — teardown must never raise.
+            loop_stop = getattr(self._client, "loop_stop", None)
+            if callable(loop_stop):
+                loop_stop()
+            disconnect = getattr(self._client, "disconnect", None)
+            if callable(disconnect):
+                disconnect()
 
     def _run(self) -> None:
         host = os.environ.get("MQTT_HOST", "mosquitto")
@@ -850,6 +856,13 @@ def get_zigbee_devices() -> list[dict[str, Any]]:
         row["capability_class"] = capability_class
         if capability_override:
             row["capability_override"] = capability_override
+        # Per-device health already lives in _device_states (raw Z2M state payload merged
+        # in on every message) but was never surfaced — only aggregate bridge health was.
+        live_state = _ingest._device_states.get(str(row.get("friendly_name") or ""))
+        if live_state:
+            row["battery"] = live_state.get("battery")
+            row["linkquality"] = live_state.get("linkquality")
+            row["last_seen"] = live_state.get("last_seen") or live_state.get("updated_at")
         out.append(row)
     return out
 
