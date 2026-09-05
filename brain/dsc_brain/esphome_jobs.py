@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 import threading
 import time
-import urllib.parse
-import urllib.request
 import uuid
 from pathlib import Path
 from typing import Any
@@ -85,43 +84,75 @@ def _local_esphome_available() -> bool:
 
 def _run_job_via_dashboard(job: dict[str, Any], db_path: Path | None = None) -> None:
     """No local CLI, but the ESPHome dashboard is reachable — it IS the build
-    service. POST /compile or /upload with `configuration=<yaml>` and stream the
-    build log back into job detail. Connection close = process finished.
+    service. Drive its WebSocket command endpoint (/compile, /upload):
+    connect, send {"type":"spawn","configuration":<yaml>}, stream {"event":"line"}
+    messages, finish on {"event":"exit","code":N}.
     """
     job_id = str(job["job_id"])
     action = str(job["action"])
     yaml_name = str(job["yaml_name"])
-    endpoint = "/compile" if action == "compile" else "/upload"
-    url = dashboard_api().rstrip("/") + endpoint
-    body = urllib.parse.urlencode({"configuration": yaml_name}).encode()
-    _update_job(job_id, "running", f"POST {url}  configuration={yaml_name}\n", db_path)
-    chunks: list[str] = []
-    last = 0.0
+    endpoint = "compile" if action == "compile" else "upload"
+    base = dashboard_api().rstrip("/")
+    ws_url = ("wss://" if base.startswith("https://") else "ws://") + base.split("://", 1)[-1] + "/" + endpoint
+
     try:
-        req = urllib.request.Request(
-            url, data=body, headers={"Content-Type": "application/x-www-form-urlencoded"}
-        )
-        with urllib.request.urlopen(req, timeout=1800) as resp:  # noqa: S310
-            for raw in resp:
-                chunks.append(raw.decode("utf-8", "replace"))
-                if time.time() - last >= 2.0:
-                    _update_job(job_id, "running", "".join(chunks)[-2000:], db_path)
-                    last = time.time()
-        tail = "".join(chunks)
-        low = tail.lower()
-        ok = ("error" not in low and "failed" not in low) or "successfully" in low
+        from websockets.sync.client import connect as ws_connect
+    except ImportError:
         _update_job(
             job_id,
-            "done" if ok else "failed",
-            (tail[-3800:] or f"{action} via dashboard finished")
-            + "\n\n(via ESPHome dashboard — no exit code; check the dashboard for detail)",
+            "failed",
+            "no local esphome CLI and `websockets` unavailable — set esphome_bin to a "
+            "venv CLI, or flash via pi/flash-*-remote.sh.",
             db_path,
         )
+        return
+
+    _update_job(job_id, "running", f"ws {ws_url}  spawn configuration={yaml_name}\n", db_path)
+    lines: list[str] = []
+    code: int | None = None
+    last = 0.0
+    try:
+        with ws_connect(ws_url, open_timeout=10, close_timeout=5) as ws:
+            spawn: dict[str, Any] = {"type": "spawn", "configuration": yaml_name}
+            if endpoint == "upload":
+                spawn["port"] = "OTA"
+            ws.send(json.dumps(spawn))
+            deadline = time.time() + 1800
+            while time.time() < deadline:
+                try:
+                    raw = ws.recv(timeout=60)
+                except TimeoutError:
+                    continue
+                try:
+                    msg = json.loads(raw)
+                except (TypeError, ValueError):
+                    continue
+                ev = msg.get("event")
+                if ev == "line":
+                    lines.append(str(msg.get("data", "")))
+                    if time.time() - last >= 2.0:
+                        _update_job(job_id, "running", "".join(lines)[-2500:], db_path)
+                        last = time.time()
+                elif ev == "exit":
+                    code = int(msg.get("code", 1))
+                    break
+        tail = "".join(lines)[-3600:]
+        if code == 0:
+            _update_job(job_id, "done", tail or f"{action} via dashboard OK (exit 0)", db_path)
+        else:
+            _update_job(
+                job_id,
+                "failed",
+                (tail or f"{action} via dashboard") + f"\n\nesphome exited {code}."
+                + ("\n(dashboard ESPHome is below the pinned min_version — bump the "
+                   "dsc-hub-esphome image / venv.)" if code and "too old" in tail.lower() else ""),
+                db_path,
+            )
     except Exception as exc:  # noqa: BLE001
         _update_job(
             job_id,
             "failed",
-            "".join(chunks)[-2000:] + f"\n\ndashboard {endpoint} failed: {exc}\n"
+            "".join(lines)[-2000:] + f"\n\ndashboard ws {endpoint} failed: {exc}\n"
             "Fallbacks: set esphome_bin to a venv CLI, or use pi/flash-*-remote.sh.",
             db_path,
         )

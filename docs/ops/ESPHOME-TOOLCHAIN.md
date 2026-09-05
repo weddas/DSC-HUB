@@ -58,7 +58,7 @@ mounted at `/config` and is reachable on the `dsc` compose network.
 | Result | When | compile/OTA path |
 |---|---|---|
 | `venv` | `esphome_bin` resolves to a real file / PATH entry (host or bind-mounted venv) | `subprocess` — streamed, real exit code |
-| `dashboard` | no local CLI, but `GET {esphome_dashboard_api}/version` answers | `POST {api}/compile` \| `/upload` with `configuration=<yaml>`, log streamed back, success inferred from output (no exit code) |
+| `dashboard` | no local CLI, but `GET {esphome_dashboard_api}/version` answers | drive the dashboard's **WebSocket** command endpoint (`ws://…/compile` \| `/upload`): send `{"type":"spawn","configuration":<yaml>}`, stream `{"event":"line"}`, finish on `{"event":"exit","code":N}` (real exit code). Uses `websockets` (already a brain dep). |
 | `none` | neither | job fails clean; `pi/flash-*-remote.sh` is the manual path |
 
 Settings keys: `esphome_dashboard_api` (brain→dashboard, default
@@ -74,9 +74,17 @@ browser link, default `http://dsc-brain.local:6052`).
 `/devices` → 47 configs with `current_version` / `deployed_version`.
 `installed()` returned `2025.12.4`, `min_version()` `2026.6.5`, `meets_min` **False**
 (the running `esphome/esphome:2025.12.4` container is below the new pin — bump it,
-or move to the venv unit). `build_backend()` → `dashboard`. The `POST /compile`
-and `/upload` path is written to the dashboard API but has **not** been fired at a
-live device yet — needs one deliberate on-device compile + OTA test.
+or move to the venv unit). `build_backend()` → `dashboard`.
+
+`esphome config firmware/v4/dsc-hub.yaml` with the pin → **"Configuration is
+valid!"** (esphome 2026.8.2, i.e. ≥ pin). Raising the pin to `2099.1.0` →
+`esphome config` fails *"Your ESPHome version is too old. Please update to at
+least 2099.1.0."* — the gate works.
+
+`/compile` and `/upload` on the dashboard are **WebSocket** endpoints
+(`HTTP 101` on upgrade; plain POST → `405`). `_run_job_via_dashboard()` drives
+them via `websockets.sync.client`. The `/upload` (live OTA) path has **not** been
+fired at a device.
 
 The `dsc-hub-esphome` compose service is kept (image bumped `2025.12.4` →
 `2026.6.5`) as the current build backend; the `dsc-esphome-dashboard` systemd
