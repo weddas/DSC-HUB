@@ -293,7 +293,7 @@ export function MultiLineChart({
     for (const mk of timeMarkers) {
       if (!Number.isFinite(mk.t)) continue;
       const color = hexColor(mk.color, HEX.amber);
-      leftMarks.markLine!.data.push({
+      (leftMarks.markLine as { data: object[] }).data.push({
         xAxis: mk.t,
         name: mk.label,
         label: { formatter: mk.label || "", color, fontSize: 9 },

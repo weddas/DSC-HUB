@@ -4,7 +4,7 @@ import { CatalogPicker } from "./CatalogPicker";
 import { Button, Card, StatusChip } from "./ui";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
-import { catalogMediaBase, fetchStrainDetail, hasLocalPpfdMap, loadPpfdManifest, localPpfdMapUrl, resolveKitPpfdUrl, searchCatalog, type CatalogItem, type CatalogKind } from "../lib/catalog";
+import { catalogMediaBase, fetchStrainDetail, hasLocalPpfdMap, loadPpfdManifest, resolveKitPpfdUrl, searchCatalog, type CatalogItem, type CatalogKind } from "../lib/catalog";
 import { applyCatalogPick, applyLightPick } from "../lib/composePlantLogic";
 
 const DOMAINS: { id: CatalogKind; label: string }[] = [
@@ -90,9 +90,6 @@ function chemistryTier(item: CatalogItem, sourceNote: string): { label: string; 
   }
   if (item.composition && typeof item.composition === "object") {
     return { label: "Bank claim · catalog NPK", tone: sourceNote.includes("local") ? "warn" : "ok" };
-  }
-  if (typeof item.composition === "string" && item.composition.trim()) {
-    return { label: "Bank claim · label copy", tone: "warn" };
   }
   return { label: "No chemistry on file", tone: "muted" };
 }
