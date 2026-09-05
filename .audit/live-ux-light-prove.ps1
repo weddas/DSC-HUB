@@ -10,11 +10,11 @@ $HostKey = "SHA256:4XD2kIJ5qNCnULKNmo/L9mvzLbmZdURLwLW7Utt9NJs"
 
 $SpaTar = Join-Path $env:TEMP "live-ux-light-spa.tgz"
 $RemoteSh = Join-Path $Repo ".audit\live-ux-light-prove.sh"
-$SpaDist = Join-Path $Repo "homeassistant\custom_components\dsc_hub\frontend\spa-dist"
+$SpaDist = Join-Path $Repo "frontend\spa-dist"
 $LocalEvid = Join-Path $Repo ".audit\live-ux-light-prove-evidence.json"
 
 if (-not (Test-Path (Join-Path $SpaDist "index.html"))) {
-  throw "Missing SPA dist - run npm run build:spa first"
+  throw "Missing SPA dist - run npm run build first"
 }
 
 $localJs = (Select-String -Path (Join-Path $SpaDist "index.html") -Pattern 'assets/index-[^"]+\.js').Matches.Value | Select-Object -First 1

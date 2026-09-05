@@ -1,91 +1,20 @@
-# SDD progress ? brain control recovery Bar 1
-Branch: feat/brain-control-recovery-bar1
-Started: 2026-08-29
-Plan: docs/superpowers/plans/2026-08-29-brain-control-recovery-bar1.md
+# SDD progress — DSC Kit SD installer 8.0.0
 
-Task 1: complete (commits f3f7b10..77c23f6, review clean)
-Task 2: complete (commits 77c23f6..5ee1b8b, review clean; minors: dual dash emit, on-time ingest gap)
-Task 3: complete (commits 5ee1b8b..bbc9d14, review clean; minors: dead clamp, Overview tone@0%)
-Task 4: complete (commits bbc9d14..2afa4cc, review clean)
-Task 5: complete (commits 2afa4cc..bb8bfce ? hub failover override + TTL re-assert)
-Task 6: not started
-Task 5: complete (commits 2afa4cc..b3c1716 incl sticky reassert fix, review clean)
-Task 6: complete (commits b3c1716..7812f54, DONE_WITH_CONCERNS: failover banner unverifiable)
-Task 6 gate: unblocked after 768cc47 manual_takeover persist; Bar 1 verify complete
+Plan: `docs/superpowers/plans/2026-09-06-dsc-kit-sd-installer.md`
+Spec: `docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md`
+Started: 2026-09-06
+Base HEAD at plan start: `6b1aaf1ac3cb98e2fe3df865fd573bed733a2014`
+Note: Do not commit unless user asks (repo rule). Reviews use working-tree diffs when uncommitted.
 
-Final whole-branch review fix pass:
-- Fan pct when !hub_live ? available=False (not 0.0 theater)
-- Re-assert tick stage from grow_stage/roster (not hardcoded veg)
-- Re-assert except: log + grow-log (not silent pass)
-- FOLLOWUPS: dual dash emit, pending_reassert chip, lights_on_time ingest, 2x4 Got window
+## Ledger
 
+- Task 1: complete (8.0.0 + thin catalog compose)
+- Task 2: complete (eth-first SoftAP policy)
+- Task 3: complete (setup commission API)
+- Task 4: complete (USB flash API + kit-manifest.json)
+- Task 5: complete (SPA `#/setup` wizard; tsc green)
+- Task 6: complete (ethernet-gated update API + Settings note)
+- Task 7: partial (image README + stage scripts + bake-firmware.sh; full pi-gen build needs Linux)
+- Task 8: partial (kit-sd-bench.ps1 + FOLLOWUPS/README/SETUP updates; live Pi prove pending)
 
-# Live UX honesty program SDD
-Branch: master
-Started: 2026-09-01
-Plan: docs/superpowers/plans/2026-09-01-live-ux-honesty-program.md
-
-
-Task 0: complete (commits ed21de4..b0a3e39, review clean)
-
-Task 1: complete (commits b0a3e39..77c8541, review clean ? guard tests)
-
-Task 2: complete (commits 77c8541..3d1ead4, review clean; minor: 2x4 DutyStrip 0.0H vs Got ~12h park for Task3/FOLLOWUPS)
-
-Task 3: complete (commits 3d1ead4..985a2c4, Light gate GREEN; park SV-P1-6 DutyStrip)
-
-Task 4: complete (commits 985a2c4..2feb837, review clean)
-
-Task 5: complete (commits 2feb837..8709c52, Climate SPA honesty + light UX)
-
-Task 5: complete (commits 2feb837..2b9d8e4 approx, Climate SPA honesty; AirPathMap cascade alias parked)
-
-Task 6: complete (commit bb6cf1a, Climate Pi prove + walk fill; gate GREEN; AirPathMap cascade alias remains parked)
-
-Task 6: complete (Climate gate GREEN, commits bb6cf1a..0ef26ce)
-
-Task 7: complete (3b22bcc)
-
-Task 8: complete (0d95cdb..3dbe245)
-
-Task 8: complete (Overview SPA honesty)
-
-Task 9: complete (Overview Pi prove + program close; Passes 1?3 GREEN; Pass 4/5 stubs)
-
-Task 9: complete (Overview gate GREEN, Passes 1-3 closed; commits 2d44c52..183f2f0)
-Program Passes 1-3: DONE
-
-
-# Pass 4 Twin-first SDD
-Plan: docs/superpowers/plans/2026-09-01-live-ux-pass4-twin-integrated.md
-
-Pass4 Task1: c8e0d95
-Pass4 Task2: b4ca126..dada591
-Pass4 Task3: 5144978 (Light Twin honesty + DutyStrip; report in pass4-task-3-report.md)
-
-Pass4 Task3: 5144978..ca106d7
-
-Pass4 Task4: 48b443d Phase A Pi smoke GREEN (see pass4-task-4-report.md)
-
-Pass4 Task4: Phase A GREEN 48b443d
-
-Pass4 Task5: 84a3387..9225d2e Phase B inventory DONE_WITH_CONCERNS (B6 fail; named parks open)
-
-Pass4 Task5: Phase B inventory 6 findings
-
-Pass4 Task6: Phase C debt closeout `083c178` ? SV-P1-6 / AirPathMap cascade / GAUGE-P0-1 / zigbee stubs; pass5 Hold+422 deferred; see pass4-task-6-report.md
-
-Pass4 Task6: Phase C 083c178
-
-Pass4 Task7: gate GREEN `4a40589`..`6d6c592` ? full stress + FOLLOWUPS; bundle `index-BoyhWWR_.js`; Pass 4 proven
-
-Pass4 Task7: gate GREEN 4a40589
-
-# Pass 5 Follow-up SDD
-Plan: docs/superpowers/plans/2026-09-01-live-ux-pass5-followup.md
-
-Pass5 Tasks 2?4: energy 400 / CannaLib / FlowSankey ? done
-Pass5 Task 5: Zigbee Wet?Problem LIVE GREEN (resume no-kill; evidence live-ux-pass5-task5-evidence.json)
-Pass5 Tasks 6?7: soak + three-desk re-walk + GATE GREEN ? Hold clear + FOLLOWUPS; program proven
-
-
+Note: Subagent-Driven blocked by usage limit; Tasks 1–6 (+ scaffolds) executed inline.

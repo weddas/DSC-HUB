@@ -21,7 +21,9 @@ apt-get install -y --no-install-recommends \
   curl \
   ca-certificates \
   python3 \
-  python3-pip
+  python3-pip \
+  python3-serial \
+  esptool || apt-get install -y --no-install-recommends python3-serial
 
 # Docker (official convenience script)
 if ! command -v docker >/dev/null 2>&1; then
@@ -159,7 +161,9 @@ NFEOF
     echo 'nft -f /etc/nftables.dsc-hub.conf' >> /etc/rc.local 2>/dev/null || true
 fi
 
+install -m 0755 "${COMPOSE_DIR}/pi/dsc-hub-net-policy.sh" /etc/dsc-hub/net-policy.sh
 install -m 0644 "${COMPOSE_DIR}/pi/dsc-hub-ap.service" /etc/systemd/system/dsc-hub-ap.service
+install -m 0644 "${COMPOSE_DIR}/pi/dsc-hub-net-policy.service" /etc/systemd/system/dsc-hub-net-policy.service
 install -m 0644 "${COMPOSE_DIR}/pi/dsc-hub-compose.service" /etc/systemd/system/dsc-hub-compose.service
 
 if [[ ! -f "${COMPOSE_DIR}/.env" ]]; then
@@ -168,7 +172,10 @@ if [[ ! -f "${COMPOSE_DIR}/.env" ]]; then
 fi
 
 systemctl daemon-reload
+systemctl enable dsc-hub-net-policy.service
 systemctl enable dsc-hub-compose.service
+# SoftAP unit installed but started only by net-policy when eth carrier is down
+systemctl enable dsc-hub-ap.service || true
 
 # Compose systemd unit expects /opt/dsc-hub — symlink repo compose dir if missing
 if [[ ! -e /opt/dsc-hub ]]; then
@@ -181,8 +188,8 @@ if [[ ! -e /opt/dsc-hub-repo ]]; then
   ln -sfn "${REPO_ROOT}" /opt/dsc-hub-repo
 fi
 
-echo "Bootstrap complete. Next:"
+echo "Bootstrap complete (8.0.0 Ethernet-first). Next:"
 echo "  1. Edit ${COMPOSE_DIR}/.env (API keys, AP PSK, SkyConnect by-id)"
-echo "  2. Copy CannaLib checkpoint sqlite to ${DSC_DATA}/cannalib/dsc_brain.sqlite3"
-echo "  3. systemctl start dsc-hub-ap.service   # after wlan0 is free"
+echo "  2. Optional thin catalog: docker compose --profile thin-catalog up -d"
+echo "  3. systemctl start dsc-hub-net-policy.service  # SoftAP only if no Ethernet"
 echo "  4. systemctl start dsc-hub-compose.service"

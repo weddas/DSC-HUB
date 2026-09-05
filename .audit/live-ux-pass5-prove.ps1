@@ -13,7 +13,7 @@ $Base = "http://${PiHost}:8787"
 $Phase = if ($env:PASS5_PHASE) { $env:PASS5_PHASE } else { "ENERGY" }
 $ExpectedJs = if ($env:PASS5_EXPECTED_JS) { $env:PASS5_EXPECTED_JS } else { "assets/index-BoyhWWR_.js" }
 $LocalEvid = Join-Path $Repo ".audit\live-ux-pass5-prove-evidence.json"
-$SpaIndex = Join-Path $Repo "homeassistant\custom_components\dsc_hub\frontend\spa-dist\index.html"
+$SpaIndex = Join-Path $Repo "frontend\spa-dist\index.html"
 $ClearHold = ($env:PASS5_CLEAR_HOLD -eq "1")
 
 Write-Host "Pass 5 prove phase=$Phase base=$Base"

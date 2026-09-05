@@ -306,7 +306,17 @@ def retire_plant(pot: str | None = None) -> dict[str, Any]:
     return {"pot": n, "removed": removed, "roster_slot": slot_num}
 
 
-def commit_and_assign() -> dict[str, Any]:
+def commit_and_assign(data: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Commit roster then assign. Prefer script `pot` / `variables.pot` over the helper.
+
+    The SPA keeps a local assign draft so Next is not gated on the entity bus; that
+    draft is also passed as script fields. Honoring those fields prevents a silent
+    stock-only commit when the helper is still ``none``.
+    """
+    data = data or {}
+    pot_override = _script_pot(data)
+    if pot_override in ("1", "2", "3", "4"):
+        set_helper("input_select.dsc_build_assign_pot", pot_override)
     strain = str(get_helper("input_text.dsc_build_strain", "")).strip()
     nickname = str(get_helper("input_text.dsc_build_nickname", "")).strip() or strain
     if find_roster_slot_for_strain(strain, nickname) <= 0 and next_empty_roster_slot() <= 0:
@@ -426,7 +436,7 @@ def handle_script(entity_id: str, data: dict[str, Any] | None = None) -> dict[st
     if entity_id == "script.dsc_build_plant_commit":
         return commit_to_roster()
     if entity_id == "script.dsc_build_plant_commit_and_assign":
-        return commit_and_assign()
+        return commit_and_assign(data)
     if entity_id == "script.dsc_plant_assign_to_pot":
         return assign_to_pot(_script_pot(data))
     if entity_id == "script.dsc_plant_retire":

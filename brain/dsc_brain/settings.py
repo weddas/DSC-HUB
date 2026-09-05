@@ -90,6 +90,9 @@ DEFAULT_SETTINGS: dict[str, str] = {
     "cannalib_use_local_fallback": "true",
     "zigbee_permit_join": "false",
     "leaf_offset_c": "2",
+    "kit_commissioned": "false",
+    "kit_setup_phase": "welcome",
+    "kit_setup_debt": "[]",
 }
 
 

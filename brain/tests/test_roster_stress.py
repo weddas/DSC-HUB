@@ -236,3 +236,27 @@ def test_commit_and_assign_carries_sprout_to_pot_and_slot(roster_db: Path) -> No
     computed = build_computed_hass_states(get_fleet_state())
     assert computed["sensor.dsc_probe1_days_since_sprout"]["state"] not in ("", "unknown", "unavailable")
     assert computed["sensor.dsc_probe1_expected_stage"]["state"] not in ("", "unknown", "unavailable")
+
+
+def test_commit_and_assign_honors_script_pot_when_helper_still_none(roster_db: Path) -> None:
+    """SPA local assign draft races the bus; script pot must still seat the probe."""
+    from dsc_brain.compose_ops import handle_script
+    from dsc_brain.compose_store import get_helper, get_roster_slots, set_helper
+    from dsc_brain.settings import list_roster
+
+    set_helper("input_text.dsc_build_strain", "Race Strain")
+    set_helper("input_text.dsc_build_nickname", "Racer")
+    set_helper("input_datetime.dsc_build_sprout_date", "2026-08-01")
+    set_helper("input_select.dsc_build_assign_pot", "none")
+    set_helper("input_select.dsc_build_tent", "4x8")
+
+    result = handle_script(
+        "script.dsc_build_plant_commit_and_assign",
+        {"pot": "2", "variables": {"pot": "2"}},
+    )
+    assert result.get("assign", {}).get("pot") == "2"
+    rows = {r["seat_id"]: r for r in list_roster()}
+    assert "pot2" in rows
+    active = next(s for s in get_roster_slots() if s.get("pot") == "2")
+    assert active.get("strain") == "Race Strain"
+    assert str(get_helper("input_select.dsc_build_assign_pot", "none")) == "2"

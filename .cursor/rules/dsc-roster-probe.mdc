@@ -1,6 +1,6 @@
 ---
 description: Roster slot ↔ probe relationships, compose flush, computed refresh, stress-test edge cases
-globs: "{brain/dsc_brain/**,homeassistant/custom_components/dsc_hub/frontend/src/**}"
+globs: "{brain/dsc_brain/**,frontend/src/**}"
 alwaysApply: false
 ---
 

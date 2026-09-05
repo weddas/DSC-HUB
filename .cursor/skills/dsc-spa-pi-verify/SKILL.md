@@ -18,10 +18,10 @@ disable-model-invocation: true
 
 ## Build + hot-patch (Windows)
 
-From `homeassistant/custom_components/dsc_hub/frontend`:
+From `frontend/`:
 
 ```powershell
-npm.cmd run build:spa
+npm.cmd run build
 ```
 
 Pack `spa-dist`, `pscp` to `/tmp/…tgz`, then on Pi (sudo):

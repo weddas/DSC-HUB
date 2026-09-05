@@ -15,12 +15,12 @@ $Phase = if ($env:PASS4_PHASE) { $env:PASS4_PHASE } else { "GATE" }
 $SpaTar = Join-Path $env:TEMP "live-ux-pass4-spa.tgz"
 $BrainTar = Join-Path $env:TEMP "live-ux-pass4-brain.tgz"
 $RemoteSh = Join-Path $Repo ".audit\live-ux-pass4-prove.sh"
-$SpaDist = Join-Path $Repo "homeassistant\custom_components\dsc_hub\frontend\spa-dist"
+$SpaDist = Join-Path $Repo "frontend\spa-dist"
 $BrainDir = Join-Path $Repo "brain"
 $LocalEvid = Join-Path $Repo ".audit\live-ux-pass4-prove-evidence.json"
 
 if (-not (Test-Path (Join-Path $SpaDist "index.html"))) {
-  throw "Missing SPA dist - run npm run build:spa first"
+  throw "Missing SPA dist - run npm run build first"
 }
 
 $localJs = (Select-String -Path (Join-Path $SpaDist "index.html") -Pattern 'assets/index-[^"]+\.js').Matches.Value | Select-Object -First 1

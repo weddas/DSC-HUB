@@ -1,8 +1,9 @@
 [Unit]
 Description=DSC-HUB Docker Compose stack
-After=docker.service dsc-hub-ap.service
+After=docker.service dsc-hub-net-policy.service
 Requires=docker.service
-Wants=dsc-hub-ap.service
+Wants=dsc-hub-net-policy.service
+# SoftAP is optional (Ethernet-first). Do not hard-require dsc-hub-ap.
 
 [Service]
 Type=oneshot

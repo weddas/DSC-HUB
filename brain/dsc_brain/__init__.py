@@ -3,4 +3,4 @@
 Research corpus (N-087) lives in the sibling CannaLib repo.
 """
 
-__version__ = "7.4.0"
+__version__ = "8.0.0"

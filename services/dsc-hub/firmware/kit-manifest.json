@@ -1,0 +1,59 @@
+{
+  "version": "8.0.0",
+  "roles": {
+    "hub": {
+      "binary": "hub.bin",
+      "chip": "esp32",
+      "offset": "0x0",
+      "boot_mode_note": "Hold BOOT if auto-reset fails."
+    },
+    "control": {
+      "binary": "control.bin",
+      "chip": "esp32",
+      "offset": "0x0",
+      "boot_mode_note": "Hold BOOT if auto-reset fails."
+    },
+    "pot1": {
+      "binary": "pot1.bin",
+      "chip": "esp32",
+      "offset": "0x0",
+      "boot_mode_note": "Hold BOOT if auto-reset fails."
+    },
+    "pot2": {
+      "binary": "pot2.bin",
+      "chip": "esp32",
+      "offset": "0x0",
+      "boot_mode_note": "Hold BOOT if auto-reset fails."
+    },
+    "bridge": {
+      "binary": "bridge.bin",
+      "chip": "esp32",
+      "offset": "0x0",
+      "boot_mode_note": "WT32-ETH01 — hold BOOT as needed; flash_mode dio."
+    },
+    "heater": {
+      "binary": "heater.bin",
+      "chip": "esp8266",
+      "offset": "0x0",
+      "boot_mode_note": "Sonoff: hold button for serial bootloader before flash."
+    },
+    "heatmat": {
+      "binary": "heatmat.bin",
+      "chip": "esp8266",
+      "offset": "0x0",
+      "boot_mode_note": "Sonoff: hold button for serial bootloader before flash."
+    },
+    "humidifier": {
+      "binary": "humidifier.bin",
+      "chip": "esp8266",
+      "offset": "0x0",
+      "boot_mode_note": "Sonoff: hold button for serial bootloader before flash."
+    },
+    "dehumidifier": {
+      "binary": "dehumidifier.bin",
+      "chip": "esp8266",
+      "offset": "0x0",
+      "boot_mode_note": "Sonoff: hold button for serial bootloader before flash."
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "version": "8.0.0",
+  "payload": "dsc-hub-8.0.0-payload.tar.gz",
+  "docker": "dsc-hub-8.0.0-docker.tar.gz",
+  "payload_bytes": 38069,
+  "docker_bytes": 132596720,
+  "built_at": "2026-09-06T03:05:52+10:00",
+  "host": "dsc-brain",
+  "arch": "aarch64"
+}

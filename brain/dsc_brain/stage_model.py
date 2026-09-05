@@ -1,6 +1,6 @@
 """Stage-from-age model + tent vocabulary (port of the retired HA template pack).
 
-Thresholds match homeassistant/packages/dsc_v4_strain_catalog.yaml
+Thresholds match curated Want bands in data/dsc_strain_catalog.yaml.
 (dsc_potN_expected_stage) so the Pi brain derives the same stage the HA
 stack did. Labels match the hub firmware grow-stage presets.
 """

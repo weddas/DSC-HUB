@@ -1,6 +1,6 @@
 ---
 description: Live visual honesty — one CFM surface; no blank WebGL theater
-globs: homeassistant/custom_components/dsc_hub/frontend/**/*.{ts,tsx}
+globs: frontend/**/*.{ts,tsx}
 alwaysApply: false
 ---
 

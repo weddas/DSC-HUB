@@ -87,7 +87,7 @@ def init_db(db_path: Path | None = None) -> Path:
 
 
 def reload_catalogs(db_path: Path | None = None, data_dir: Path | None = None) -> dict[str, int]:
-    """Import curated packs from homeassistant/data into SQLite."""
+    """Import curated packs from repo-root data/ into SQLite."""
     data = data_dir or DATA_DIR
     conn = connect(db_path)
     counts = {"strains": 0, "nutrients": 0, "mediums": 0, "lights": 0}

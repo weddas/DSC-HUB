@@ -11,7 +11,7 @@ $Base = "http://${PiHost}:8787"
 $pscp = "pscp -batch -hostkey `"$HostKey`" -pw $PiPassword"
 $plink = "plink -batch -hostkey `"$HostKey`" -pw $PiPassword ${PiUser}@${PiHost}"
 
-$SpaDir = Join-Path $Repo "homeassistant\custom_components\dsc_hub\frontend\spa-dist"
+$SpaDir = Join-Path $Repo "frontend\spa-dist"
 $ExpectedJs = ([regex]::Match((Get-Content -Raw (Join-Path $SpaDir "index.html")), 'assets/index-[^"]+\.js')).Value
 if (-not $ExpectedJs) { $ExpectedJs = "assets/index-mqa24gAf.js" }
 $EvidPath = Join-Path $Repo ".audit\grow-logs-pi-prove-evidence.json"

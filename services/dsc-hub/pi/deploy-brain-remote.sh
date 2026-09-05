@@ -10,7 +10,7 @@ ENV_FILE="/tmp/dsc-hub-compose.env"
 mkdir -p \
   "${REPO}/brain" \
   "${REPO}/firmware/v4" \
-  "${REPO}/homeassistant/data" \
+  "${REPO}/data" \
   "${REPO}/services/dsc-hub/brain"
 
 tar -xzf /tmp/dsc-brain-src.tgz -C "${REPO}/brain"
@@ -26,9 +26,13 @@ if [ -f /tmp/dsc-spa-static.tgz ]; then
     echo "=== SPA bundle: ${SPA_HASH:-unknown} ==="
   fi
 fi
-if [ -f /tmp/dsc-ha-data.tgz ]; then
-  mkdir -p "${REPO}/homeassistant/data"
-  tar -xzf /tmp/dsc-ha-data.tgz -C "${REPO}/homeassistant/data"
+# Prefer dsc-data.tgz; accept legacy dsc-ha-data.tgz during cutover.
+if [ -f /tmp/dsc-data.tgz ]; then
+  mkdir -p "${REPO}/data"
+  tar -xzf /tmp/dsc-data.tgz -C "${REPO}/data"
+elif [ -f /tmp/dsc-ha-data.tgz ]; then
+  mkdir -p "${REPO}/data"
+  tar -xzf /tmp/dsc-ha-data.tgz -C "${REPO}/data"
 fi
 run_sudo install -m 600 /tmp/dsc-hub.env /opt/dsc-hub/.env
 run_sudo install -m 600 /tmp/dsc-hub.env "${REPO}/services/dsc-hub/.env"

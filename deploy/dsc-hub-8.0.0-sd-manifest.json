@@ -1,0 +1,7 @@
+{
+  "version": "8.0.0",
+  "img": "dsc-hub-8.0.0-arm64.img",
+  "xz": "dsc-hub-8.0.0-arm64.img.xz",
+  "source_base": "raspios-lite-arm64.img",
+  "built_at": "2026-09-06T03:27:14+10:00"
+}

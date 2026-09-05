@@ -1,20 +1,20 @@
-# DSC-HUB panel frontend — typecheck and SPA build on every push/PR touching frontend.
+# DSC-HUB SPA — typecheck and Pi SPA build on every push/PR touching frontend.
 name: Frontend CI
 
 on:
   push:
     branches: [master, main]
     paths:
-      - "homeassistant/custom_components/dsc_hub/frontend/**"
+      - "frontend/**"
       - ".github/workflows/frontend-ci.yml"
   pull_request:
     paths:
-      - "homeassistant/custom_components/dsc_hub/frontend/**"
+      - "frontend/**"
       - ".github/workflows/frontend-ci.yml"
 
 defaults:
   run:
-    working-directory: homeassistant/custom_components/dsc_hub/frontend
+    working-directory: frontend
 
 jobs:
   build:
@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: homeassistant/custom_components/dsc_hub/frontend/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -36,4 +36,4 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Build SPA
-        run: npm run build:spa
+        run: npm run build

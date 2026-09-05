@@ -39,4 +39,4 @@ Demo mode never starts ESPHome, MQTT, Zigbee, or Sonoff ingest. Controls update 
 | `dsc_brain/api.py` | FastAPI surface for future web UI |
 | `dsc_brain/cli.py` | Offline ops without a server |
 
-Catalog authoring remains under `homeassistant/data/` until packs move; the brain **loads** them without needing Home Assistant.
+Catalog authoring lives under repo-root `data/` (`DATA_DIR` in `dsc_brain/paths.py`); the brain loads packs into SQLite without Home Assistant.

@@ -1,0 +1,30 @@
+{
+  "name": "dsc-hub-spa",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:spa": "vite build",
+    "preview": "vite preview",
+    "test:smoke": "npx --yes tsx src/lib/seatApi.smoke.ts",
+    "test:compose": "npx --yes tsx src/lib/composePlantLogic.smoke.ts"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.0.6",
+    "@react-three/fiber": "^9.1.2",
+    "echarts": "^6.1.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.0",
+    "three": "^0.175.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.4.1",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  }
+}

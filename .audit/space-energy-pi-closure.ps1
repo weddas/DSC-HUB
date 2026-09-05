@@ -10,12 +10,12 @@ $HostKey = "SHA256:4XD2kIJ5qNCnULKNmo/L9mvzLbmZdURLwLW7Utt9NJs"
 $SpaTar = Join-Path $env:TEMP "space-energy-spa.tgz"
 $BrainTar = Join-Path $env:TEMP "space-energy-brain.tgz"
 $RemoteSh = Join-Path $Repo ".audit\space-energy-pi-closure.sh"
-$SpaDist = Join-Path $Repo "homeassistant\custom_components\dsc_hub\frontend\spa-dist"
+$SpaDist = Join-Path $Repo "frontend\spa-dist"
 $BrainDir = Join-Path $Repo "brain"
 $LocalEvid = Join-Path $Repo ".audit\space-energy-closure-evidence.json"
 
 if (-not (Test-Path (Join-Path $SpaDist "index.html"))) {
-  throw "Missing SPA dist - run npm run build:spa first"
+  throw "Missing SPA dist - run npm run build first"
 }
 
 Write-Host "Pack tarballs..."

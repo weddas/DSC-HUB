@@ -1,0 +1,15 @@
+[Unit]
+Description=DSC-HUB Ethernet vs SoftAP operator network policy
+After=network-pre.target
+Before=dsc-hub-compose.service
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/etc/dsc-hub/net-policy.sh
+# Re-apply when stopped so SoftAP can return after Ethernet drop (optional timers later).
+ExecStop=/bin/true
+
+[Install]
+WantedBy=multi-user.target

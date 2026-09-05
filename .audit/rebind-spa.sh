@@ -16,5 +16,5 @@ print('bindings', b)
 PY
 # find spa
 printf '%s\n' Digital | sudo -S find /opt/dsc-hub /home/dsc -name 'index-*.js' 2>/dev/null | head -20
-printf '%s\n' Digital | sudo -S sh -c 'grep -l "Zigbee by role" /opt/dsc-hub/homeassistant/custom_components/dsc_hub/frontend/spa-dist/assets/index-*.js 2>/dev/null; ls -la /opt/dsc-hub/homeassistant/custom_components/dsc_hub/frontend/spa-dist/assets/index-*.js 2>/dev/null | head'
+printf '%s\n' Digital | sudo -S sh -c 'grep -l "Zigbee by role" /opt/dsc-hub-repo/frontend/spa-dist/assets/index-*.js 2>/dev/null; ls -la /opt/dsc-hub-repo/frontend/spa-dist/assets/index-*.js 2>/dev/null | head; ls -la /opt/dsc-hub-repo/brain/static/assets/index-*.js 2>/dev/null | head'
 curl -s -m 5 http://127.0.0.1:8787/ | head -20

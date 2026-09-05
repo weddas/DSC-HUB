@@ -1,4 +1,4 @@
-"""DSC Brain API — Pi Release 7.4.0."""
+"""DSC Brain API — Pi Release 8.0.0."""
 
 from __future__ import annotations
 
@@ -31,6 +31,21 @@ from .esphome_jobs import list_esphome_devices, list_jobs, queue_job, start_esph
 from .fleet_state import get_fleet_state, merge_inventory_oos_seats
 from .integrations import CatalogSearchError, catalog_search, catalog_status, catalog_strain_detail, test_cannalib, test_ollama
 from .network_apply import apply_network_configs, network_status
+from .kit_commission import (
+    add_setup_debt,
+    get_setup_state,
+    mark_commissioned,
+    set_setup_phase,
+    setup_health,
+)
+from .usb_flash import (
+    get_usb_flash_job,
+    list_serial_ports,
+    list_usb_flash_jobs,
+    manifest_public,
+    queue_usb_flash,
+)
+from .kit_update import start_full_update, update_status
 from .paths import EXPECTED_FIRMWARE, SURFACE_VERSION
 from .settings import (
     get_all_settings,
@@ -161,6 +176,23 @@ class ZigbeePoliciesBody(BaseModel):
 class EsphomeJobBody(BaseModel):
     seat_id: str
     action: str = "ota"
+
+
+class SetupPhaseBody(BaseModel):
+    phase: str
+
+
+class SetupCommissionBody(BaseModel):
+    require_hub_online: bool = False
+
+
+class SetupDebtBody(BaseModel):
+    item: str
+
+
+class UsbFlashJobBody(BaseModel):
+    role: str
+    port: str
 
 
 class CalibrationStepBody(BaseModel):
@@ -419,6 +451,44 @@ def health() -> dict[str, Any]:
     else:
         payload["zigbee"] = get_zigbee_health()
     return payload
+
+
+@app.get("/setup/state")
+def setup_state() -> dict[str, Any]:
+    return get_setup_state()
+
+
+@app.get("/setup/health")
+def setup_health_route() -> dict[str, Any]:
+    return setup_health()
+
+
+@app.post("/setup/phase")
+def setup_phase(body: SetupPhaseBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    try:
+        return set_setup_phase(body.phase)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.post("/setup/debt")
+def setup_debt(body: SetupDebtBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    return add_setup_debt(body.item.strip())
+
+
+@app.post("/setup/commission")
+def setup_commission(body: SetupCommissionBody | None = None) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    req_hub = bool(body.require_hub_online) if body else False
+    try:
+        return mark_commissioned(require_hub_online=req_hub)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
 
 
 @app.get("/fleet")
@@ -960,6 +1030,56 @@ def settings_esphome_devices() -> dict[str, Any]:
     for dev in devices:
         _merge_fleet_device_status(dev, fleet)
     return {"expected_firmware": EXPECTED_FIRMWARE, "devices": devices}
+
+
+@app.get("/settings/usb-flash/ports")
+def settings_usb_flash_ports() -> dict[str, Any]:
+    return {"ports": list_serial_ports()}
+
+
+@app.get("/settings/update")
+def settings_update_status() -> dict[str, Any]:
+    return update_status()
+
+
+@app.post("/settings/update/pull")
+def settings_update_pull() -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    try:
+        return start_full_update()
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.get("/settings/usb-flash/manifest")
+def settings_usb_flash_manifest() -> dict[str, Any]:
+    return manifest_public()
+
+
+@app.get("/settings/usb-flash/jobs")
+def settings_usb_flash_jobs(limit: int = Query(20, ge=1, le=100)) -> dict[str, Any]:
+    return {"jobs": list_usb_flash_jobs(limit=limit)}
+
+
+@app.get("/settings/usb-flash/jobs/{job_id}")
+def settings_usb_flash_job(job_id: str) -> dict[str, Any]:
+    job = get_usb_flash_job(job_id)
+    if not job:
+        raise HTTPException(404, "job not found")
+    return job
+
+
+@app.post("/settings/usb-flash/jobs")
+def settings_usb_flash_queue(body: UsbFlashJobBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    try:
+        return queue_usb_flash(body.role, body.port)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(409, str(exc)) from exc
 
 
 @app.get("/settings/esphome/jobs")

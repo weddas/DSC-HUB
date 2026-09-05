@@ -1,4 +1,4 @@
-# DSC-HUB ? Master follow-up list
+﻿# DSC-HUB ? Master follow-up list
 
 Standing process for every plan:
 
@@ -10,7 +10,70 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
-## 2026-09-05 ? Live IA reorg + visual-narrative pass
+## 2026-09-06 — DSC-HUB 8.0.0 kit SD installer (Tasks 1–6 landed; 7–8 open)
+
+**Spec/plan:** `docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md`, `docs/superpowers/plans/2026-09-06-dsc-kit-sd-installer.md`
+
+| Item | Status |
+|------|--------|
+| Version bump 8.0.0 (brain/surface/compose) | **done** (working tree) |
+| Thin catalog; cannalib `profiles: [thin-catalog]` | **done** |
+| Ethernet-first SoftAP net-policy | **done** (units + bootstrap; not yet baked into SD) |
+| Setup commission + USB flash APIs + `#/setup` SPA | **done** |
+| Ethernet-gated `/settings/update` | **done** (orchestrator stub) |
+| pi-gen full `.img.xz` build | **in progress** — `bake-on-linux.sh` + `bake-sd-image.sh` + `.audit/kit-linux-bake.ps1`; first Pi run hit docker build then **Pi network drop** mid-pip; resume when `.48` recovers |
+| Kit bench on live Pi / SoftAP path | **next-plan** — `.audit/kit-sd-bench.ps1` written; run after hotpatch |
+| Post-commission Pi SoftAP policy | **deferred** (open point in spec) |
+| Factory AP credentials in Notion | **deferred** (never git) |
+| Subagent-Driven execution | **blocked** this session (usage limit) — Tasks 1–6 inline |
+
+**Verify:** `pytest brain/tests/test_kit_setup.py` → 12 passed; frontend `tsc --noEmit` green. No commit yet.
+
+---
+
+
+
+## 2026-09-06 — HA lab retired; Pi-only repo layout
+
+**Decision:** HA lab soak is done. Product is Pi DSC-Brain + SPA only.
+
+| Change | Notes |
+|--------|-------|
+| SPA → `frontend/` | Was `homeassistant/custom_components/dsc_hub/frontend` |
+| Catalogs → `data/` | Was `homeassistant/data`; `paths.DATA_DIR` updated |
+| Deleted | `homeassistant/`, `dist/`, `dsc-hub-sync/`, HACS, ha-sync CI/scripts, Lovelace archive, HA panel `vite`/`panel-element` |
+| npm | Dropped unused `apex-grid`, `igniteui-webcomponents`, `lit` |
+| Docs | README Pi-first; `HA-SCAFFOLD.md` / `INSTALL.md` marked retired |
+| Kept | HA-shaped entity IDs + brain `call_service` dialect (not HA runtime) |
+
+**Deferred:** historical plan/QA docs still cite old paths; Twin IIFE optional assets no longer shipped from `www/`; `_Archive_Legacy_Code` untouched.
+
+**Verify:** `frontend` `npm run build` + `tsc --noEmit` green this pass. Hotpatch Pi when ready (`deploy-brain.ps1` / spa-only).
+
+---## 2026-09-05 — Add-a-Plant Critical + FleetProvider selectors
+
+**Source:** Cursor catch-up pass against Notion tracker snapshot (DB remains SoT for status fields).
+
+### Add-a-Plant (Critical / High)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Silent probe assign while UI shows success | **done (code + pytest)** | Root cause: SPA assignDraft raced the bus; brain commit_and_assign() ignored script pot and only read the helper. Fix: honor script pot; SPA syncAssignToBus + result assert; modal stays open on failure; guardedCallService on probe picker. Regression: test_commit_and_assign_honors_script_pot_when_helper_still_none. |
+| probeLabel cockpit crash | **already done** | Import present; Notion still Needs Verification → flag Fixed & Verified. |
+| Step write unhandled rejections / double-submit | **done** | guardedCallService + writeErr; busy committing; modal keeps commitErr. |
+
+**Notion flag:** mark Critical assign + probeLabel Fixed & Verified; related High Add-a-Plant rows Fixed & Verified after live Pi compose soak.
+
+### FleetProvider / whole-fleet re-render (High)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Whole-fleet re-render every WS tick | **done (architecture)** | Stable App element under PiFleetShell; revisionDrivesTick=false on Pi; piHassBridge; useEntityBus tracks entities; useFleetEntity/useFleetControlSlice per-entity; FleetProvider hassStates + deepEqual skip. |
+| Per-entity selector adoption | **done (foundation)** | useEntityBus / useFleetEntity benefit immediately; remaining useFleet() call sites coarse — migrate opportunistically. |
+
+**Notion flag:** whole-fleet re-render + per-entity selector foundation → Fixed & Verified (or Needs Verification pending React profiler).
+
+---## 2026-09-05 ? Live IA reorg + visual-narrative pass
 
 **Source:** Notion "DSC-HUB UX Redesign & Visual Narrative" doc, reviewed and implemented in one
 pass. Individual findings logged in the DSC-HUB Issue & Recommendation Tracker (Notion).
@@ -24,17 +87,17 @@ pass (see below); TH-P1-3 is now explicitly tracked as a deliberately deferred i
 
 | Item | Status | Notes |
 |------|--------|-------|
-| **DA-P1-4 / UX-P0-1** Live IA (nine tabs, three homes) | **done** | `routes.ts`/`App.tsx`: cut `/live/twin` (redirects to Overview; zero unique data vs Root, only surface ignoring the shared component system), retired Dash (Legacy) from nav (route kept for old bookmarks), promoted Mission off `demoted` as the Alerts/Triage surface. Live secondary tabs: Overview, Climate, 4×8, 2×4, Root, Light, Mission. |
-| **REP-P1-1** Tune/Fleet split (Calibrate vs Learning clone skins) | **done (nav)** | Tune primary tab removed; Learning moved to `/fleet/learning` as a Fleet sub-tab alongside Calibrate. Legacy `/tune/*` and `/advanced/*` paths redirect. Skin/data-model merge (local m/s vs `TargetNumber` blur) not done — still a real follow-up. |
-| In-service toggle in 3 places with contradictory copy (Settings tracker item) | **done** | `InventoryInServiceToggle` gained a `readOnly` mode; Settings → Device keeps the only live toggle, Fleet → Overview and Fleet → Learning now render a read-only status badge linking there. Fixes the literal contradiction ("open Settings to change In service" copy sitting directly above a live duplicate toggle). |
+| **DA-P1-4 / UX-P0-1** Live IA (nine tabs, three homes) | **done** | `routes.ts`/`App.tsx`: cut `/live/twin` (redirects to Overview; zero unique data vs Root, only surface ignoring the shared component system), retired Dash (Legacy) from nav (route kept for old bookmarks), promoted Mission off `demoted` as the Alerts/Triage surface. Live secondary tabs: Overview, Climate, 4Ã—8, 2Ã—4, Root, Light, Mission. |
+| **REP-P1-1** Tune/Fleet split (Calibrate vs Learning clone skins) | **done (nav)** | Tune primary tab removed; Learning moved to `/fleet/learning` as a Fleet sub-tab alongside Calibrate. Legacy `/tune/*` and `/advanced/*` paths redirect. Skin/data-model merge (local m/s vs `TargetNumber` blur) not done â€” still a real follow-up. |
+| In-service toggle in 3 places with contradictory copy (Settings tracker item) | **done** | `InventoryInServiceToggle` gained a `readOnly` mode; Settings â†’ Device keeps the only live toggle, Fleet â†’ Overview and Fleet â†’ Learning now render a read-only status badge linking there. Fixes the literal contradiction ("open Settings to change In service" copy sitting directly above a live duplicate toggle). |
 | **TH-P1-6** Section tab colors dead | **done** | `.dsc-tab--live.active` etc. rescoped under `.dsc-primary-tabs` to beat `.dsc-tab.active` on specificity instead of losing to source order. Live=blue, Grow=teal, Fleet=purple (reassigned from the removed Tune tab). |
-| Ok/warn/bad/muted tone vocabulary undocumented (UX tracker item) | **done (spec + 2 fixes)** | Closed-meaning spec added to `.superdesign/design-system.md`. Fixed two hardcoded `tone="ok"` call sites that meant "a value exists," not "verified good": grow-stage/clone-mode select chips (`DashHomeSections.tsx`) and the per-entity runtime-hours chip (`EntityInspector.tsx`) — both now `muted`. Full app-wide sweep not done (spec enables it as a follow-up checklist). |
-| Crash: probe-chip click on 4×8/2×4 (`ReferenceError: probeLabel`) | **done** | `LivePages.tsx` called `probeLabel()` without importing it from `lib/seatModel` — added the import. Already tracked as Critical; this is the fix. |
-| Overview duplicates Light's full photoperiod clock | **done** | New `TentLightSummaryLine` (one line per tent, e.g. "4×8 lit, off in 2h14m", links to Light) replaces the full `TentLightClockStrip` on Overview. Light keeps the full clock as sole owner. |
-| Overview duplicates Climate's full band-gauge grid | **deferred** | `DashBandsGrid` left as-is on Overview. Compacting it to a per-zone in-band/drifting/alert row is real new-component design work needing a mockup/visual review pass, not a mechanical nav/data fix — out of scope for this pass. |
-| Twin cut — dead-code follow-up | **deferred (flagged)** | `TwinKeepAlive.tsx`, `TwinViewport.tsx`, `twin/DscTwinCanvas.tsx`, `lib/dsc-twin-api.ts` are now SPA-dead but **not deleted**: `homeassistant/www/dsc-the-dash-card.js` is a standalone Lovelace custom-card file that may be embedded directly in someone's HA dashboard independent of the SPA route, and this repo can't confirm zero external references. Recommend a follow-up pass to confirm and remove. |
-| `--dsc-blue` = `--dsc-teal` alias (**TH-P1-3**) | **deferred (documented)** | Un-aliasing touches every teal/blue call site app-wide (buttons, icons, brand mark) — needs its own visual QA pass. Not bundled into this IA/routing change; see `.superdesign/design-system.md` color table. |
-| Settings → Server / Device merge (Settings tracker item) | **deferred** | Needs a field-by-field diff against a live hub to verify no setting is dropped — couldn't verify without a running HA instance in this pass. |
+| Ok/warn/bad/muted tone vocabulary undocumented (UX tracker item) | **done (spec + 2 fixes)** | Closed-meaning spec added to `.superdesign/design-system.md`. Fixed two hardcoded `tone="ok"` call sites that meant "a value exists," not "verified good": grow-stage/clone-mode select chips (`DashHomeSections.tsx`) and the per-entity runtime-hours chip (`EntityInspector.tsx`) â€” both now `muted`. Full app-wide sweep not done (spec enables it as a follow-up checklist). |
+| Crash: probe-chip click on 4Ã—8/2Ã—4 (`ReferenceError: probeLabel`) | **done** | `LivePages.tsx` called `probeLabel()` without importing it from `lib/seatModel` â€” added the import. Already tracked as Critical; this is the fix. |
+| Overview duplicates Light's full photoperiod clock | **done** | New `TentLightSummaryLine` (one line per tent, e.g. "4Ã—8 lit, off in 2h14m", links to Light) replaces the full `TentLightClockStrip` on Overview. Light keeps the full clock as sole owner. |
+| Overview duplicates Climate's full band-gauge grid | **deferred** | `DashBandsGrid` left as-is on Overview. Compacting it to a per-zone in-band/drifting/alert row is real new-component design work needing a mockup/visual review pass, not a mechanical nav/data fix â€” out of scope for this pass. |
+| Twin cut â€” dead-code follow-up | **deferred (flagged)** | `TwinKeepAlive.tsx`, `TwinViewport.tsx`, `twin/DscTwinCanvas.tsx`, `lib/dsc-twin-api.ts` are now SPA-dead but **not deleted**: `homeassistant/www/dsc-the-dash-card.js` is a standalone Lovelace custom-card file that may be embedded directly in someone's HA dashboard independent of the SPA route, and this repo can't confirm zero external references. Recommend a follow-up pass to confirm and remove. |
+| `--dsc-blue` = `--dsc-teal` alias (**TH-P1-3**) | **deferred (documented)** | Un-aliasing touches every teal/blue call site app-wide (buttons, icons, brand mark) â€” needs its own visual QA pass. Not bundled into this IA/routing change; see `.superdesign/design-system.md` color table. |
+| Settings â†’ Server / Device merge (Settings tracker item) | **deferred** | Needs a field-by-field diff against a live hub to verify no setting is dropped â€” couldn't verify without a running HA instance in this pass. |
 
 ---
 
@@ -4114,7 +4177,7 @@ Passes 1?3 desk gates remain **GREEN**. Pass 4 integrated gate **GREEN**. **Pass
 |----------|------|-------|
 | P3 | Historical SF1000 ? `sf1000_on` | Not backfilled; DutyStrip honesty improves going forward |
 | P3 | Twin Actual ~0.05H while OFF | Brief gate cycles; sub-0.1h rounding |
-| P3 | Prefer stop+start over kill | Task 5 kill hung Pi; Pass 5 gate used stop+start successfully — encoded in `.cursor/rules/dsc-pi-hotpatch.mdc` |
+| P3 | Prefer stop+start over kill | Task 5 kill hung Pi; Pass 5 gate used stop+start successfully â€” encoded in `.cursor/rules/dsc-pi-hotpatch.mdc` |
 
 ### Parks remaining (hardware / out of Pass 5)
 
@@ -4138,74 +4201,76 @@ Passes 1?3 desk gates remain **GREEN**. Pass 4 integrated gate **GREEN**. **Pass
 
 ---
 
-## 2026-09-02 — Grow → Logs (review & journals)
+## 2026-09-02 â€” Grow â†’ Logs (review & journals)
 
 **Spec:** [`docs/superpowers/specs/2026-09-02-grow-logs-review-design.md`](superpowers/specs/2026-09-02-grow-logs-review-design.md)  
 **Plan:** [`docs/superpowers/plans/2026-09-02-grow-logs-review.md`](superpowers/plans/2026-09-02-grow-logs-review.md)  
-**Walk:** [`docs/qa/GROW-LOGS-WALK-2026-09.md`](qa/GROW-LOGS-WALK-2026-09.md) — gate **YELLOW** (HTTP green; browser soak pending)
+**Walk:** [`docs/qa/GROW-LOGS-WALK-2026-09.md`](qa/GROW-LOGS-WALK-2026-09.md) â€” gate **YELLOW** (HTTP green; browser soak pending)
 
 | Item | Status | Notes |
 |------|--------|-------|
 | Brain `snapshot_json` + capture helper | **done (code)** | `journal_snapshot.py`; POST fills scope keys |
-| Brain PATCH/DELETE + pagination | **done (code)** | Operator only; system → 403; limit/offset |
+| Brain PATCH/DELETE + pagination | **done (code)** | Operator only; system â†’ 403; limit/offset |
 | Unified journal stack | **done (code)** | `useJournalScope` + `JournalScopePanel` embedded/full |
 | Embedded teasers (Overview/Light/seat) | **done (code)** | 3 visible / 10 fetch / scroll cap + Open full journal |
-| Grow → Logs page + nav tab | **done (code)** | Hierarchy sidebar; grow log stream separate |
+| Grow â†’ Logs page + nav tab | **done (code)** | Hierarchy sidebar; grow log stream separate |
 | Full browser edit/compare/trends | **done (code)** | Detail drawer; compare pane; `LogsTrendsPanel` |
-| Analytics redirect | **done (code)** | `#/tune/analytics` → `#/grow/logs?view=trends&scope=space&id=4x8` |
+| Analytics redirect | **done (code)** | `#/tune/analytics` â†’ `#/grow/logs?view=trends&scope=space&id=4x8` |
 | Brain pytest (journal) | **done** | 16 passed 2026-09-02 |
 | SPA build | **done (repo)** | `index-C0JbXFQo.js` local `build:spa` |
-| Pi hotpatch + live browser | **partial** | Parks landed in repo (`index-Rxe08ZUG.js`); Pi hung on `docker stop` during redeploy — spa-only hotpatch when host recovers |
+| Pi hotpatch + live browser | **partial** | Parks landed in repo (`index-Rxe08ZUG.js`); Pi hung on `docker stop` during redeploy â€” spa-only hotpatch when host recovers |
 
 ### Closed (this pass)
 
 | ID / topic | Was | Resolution |
 |------------|-----|------------|
-| Siloed Tune Analytics charts | Duplicate tent T/RH in Tune tab | Redirect + trends live under Grow → Logs |
+| Siloed Tune Analytics charts | Duplicate tent T/RH in Tune tab | Redirect + trends live under Grow â†’ Logs |
 | Duplicate journal list markup | Room/Core/Tent/Plant mini components | Single `JournalScopePanel` stack |
 | No operator edit/delete | Read-only journals | PATCH/DELETE + detail drawer (operator only) |
 | No env snapshot at save | Notes without sensor context | `snapshot_json` on POST; chips in row/detail |
-| No compare / chart-at-moment | No review workflow | Compare-two + trends anchor ±6h |
+| No compare / chart-at-moment | No review workflow | Compare-two + trends anchor Â±6h |
 
 ### Parks (closure pass 2026-09-02)
 
 | Severity | Item | Status |
 |----------|------|--------|
-| P1 | Live browser matrix | **partial** — nav/trends/redirect green; journal rows need stable `/journal/*` + spa-only hotpatch for 3-row CSS |
-| P1 | Pi journal API | **open** — hung mid-walk; verify `GET /journal/room/grow_room?limit=10` &lt;2s after brain recovery |
-| P2 | **UX-P1-5** Grow log firehose | **done** — collapse + ×N badge |
-| P2 | **WF-P1-4** Grow log → playbook CTA | **done** — `growLogPlaybook.ts` |
-| P3 | Scope compare (two scopes) | **done** — `compareScopeA`/`compareScopeB` |
-| P3 | Snapshot backfill | **done** — admin POST + history sampling |
-| P3 | Prove scripts | **done** — `.audit/grow-logs-pi-hotpatch-prove.ps1`, spa-only variant |
+| P1 | Live browser matrix | **partial** â€” nav/trends/redirect green; journal rows need stable `/journal/*` + spa-only hotpatch for 3-row CSS |
+| P1 | Pi journal API | **open** â€” hung mid-walk; verify `GET /journal/room/grow_room?limit=10` &lt;2s after brain recovery |
+| P2 | **UX-P1-5** Grow log firehose | **done** â€” collapse + Ã—N badge |
+| P2 | **WF-P1-4** Grow log â†’ playbook CTA | **done** â€” `growLogPlaybook.ts` |
+| P3 | Scope compare (two scopes) | **done** â€” `compareScopeA`/`compareScopeB` |
+| P3 | Snapshot backfill | **done** â€” admin POST + history sampling |
+| P3 | Prove scripts | **done** â€” `.audit/grow-logs-pi-hotpatch-prove.ps1`, spa-only variant |
 
 ---
 
-## 2026-09-05 — Grow → Logs design-honesty + live prove close-out
+## 2026-09-05 â€” Grow â†’ Logs design-honesty + live prove close-out
 
 **Spec:** [`docs/superpowers/specs/2026-09-02-grow-logs-review-design.md`](superpowers/specs/2026-09-02-grow-logs-review-design.md)
 **Plan:** [`docs/superpowers/plans/2026-09-02-grow-logs-review.md`](superpowers/plans/2026-09-02-grow-logs-review.md)
-**Walk:** [`docs/qa/GROW-LOGS-WALK-2026-09.md`](qa/GROW-LOGS-WALK-2026-09.md) — gate closed **GREEN** (was YELLOW)
+**Walk:** [`docs/qa/GROW-LOGS-WALK-2026-09.md`](qa/GROW-LOGS-WALK-2026-09.md) â€” gate closed **GREEN** (was YELLOW)
 
 Closed the 2026-09-02 YELLOW residual (live browser journal rows) and fixed a second wave of honesty/UX bugs found in a deeper design + code re-review, plus a separate control-lag/calibration sweep the user asked for mid-session. Full fix list and live-browser evidence in the walk doc; this entry tracks what's still open.
 
 ### Closed this pass (see walk doc for evidence)
 
-Teaser row-height CSS (52px→78px), journal system-row collapse (`×N`, exact-duplicate only), Trends self-vs-self compare seeding, plant-scope compare-param double-prefix, missing `occurred_at` PATCH editor (frontend + all 4 brain scopes), `growth_stage` PATCH removed (was silently rewriting the frozen-at-create snapshot — real data-integrity bug, confirmed by reading `plant_journal.py`), `useJournalScope` refetch-storm fix (keyed on `scope.kind`/`scope.id` primitives instead of object identity), fake Surface/version fallback → honest `—`, F-001/F-002 Command-card honest OOS toggle (`EntityToggle` `oos` prop), `SeatOverlay.tsx` "POT" → "Probe" copy, stale `live-ux-light-prove` test rows deleted from the live 4×8/2×4 journals, `EntityToggle` optimistic local draft (fixes perceived click lag across every page that uses it), `SoftCalWizard` "Switch phase"/"Ask Brain" no longer blocked by a 15s capture, and a new "Updated Xs ago" freshness chip next to the dash's Honesty rail.
+Teaser row-height CSS (52pxâ†’78px), journal system-row collapse (`Ã—N`, exact-duplicate only), Trends self-vs-self compare seeding, plant-scope compare-param double-prefix, missing `occurred_at` PATCH editor (frontend + all 4 brain scopes), `growth_stage` PATCH removed (was silently rewriting the frozen-at-create snapshot â€” real data-integrity bug, confirmed by reading `plant_journal.py`), `useJournalScope` refetch-storm fix (keyed on `scope.kind`/`scope.id` primitives instead of object identity), fake Surface/version fallback â†’ honest `â€”`, F-001/F-002 Command-card honest OOS toggle (`EntityToggle` `oos` prop), `SeatOverlay.tsx` "POT" â†’ "Probe" copy, stale `live-ux-light-prove` test rows deleted from the live 4Ã—8/2Ã—4 journals, `EntityToggle` optimistic local draft (fixes perceived click lag across every page that uses it), `SoftCalWizard` "Switch phase"/"Ask Brain" no longer blocked by a 15s capture, and a new "Updated Xs ago" freshness chip next to the dash's Honesty rail.
 
 ### Parks (this pass)
 
 | Severity | Item | Status | Next step |
 |----------|------|--------|-----------|
-| P2 | Sidebar scope-nav double-click (Grow → Logs) | **open** | Reproduced 2026-09-02 on 4×8 + a plant entry, first click only highlights. Root cause not isolated this pass — check `LogsScopeNav`'s `<a>`+`onClick preventDefault` handler for a stale-closure or event-order issue against `react-router`'s own click handling. |
-| P2 | Whole-fleet-object re-render on every WS tick, no per-entity selector | **open** | `useBrain.tsx`'s `applyFleet` → `FleetProvider`'s `useMemo` recomputes a brand-new `fleet` object per tick, so every `useFleet()`/`useFleetEntity()`/`useEntityBus()` consumer re-renders on every WS push, not just ones watching the changed entity. `EntityToggle`'s new optimistic draft (this pass) masks the visible symptom on click, but the underlying architecture is unchanged. A real fix is a per-entity selector or `useSyncExternalStore` slice — genuine redesign, out of a "minimal fix" pass. |
-| P2 | Calibration controls still share one `busy` flag beyond SoftCalWizard | **open** | `CalibratePage.tsx`'s `FanCalibrateWizard.savePoint` chains up to 5 sequential awaited calls under one `saving` flag disabling Save/Skip/Abort; `SoilCalHonestyPanel`'s single `busy` flag also disables the unrelated `LabWetCalPanel` button on the same page. Same fix pattern as SoftCalWizard's "Switch phase"/"Ask Brain" split — split by action, not shared. |
-| P3 | Brain admin `backfill_journal_snapshots` (`journal_snapshot.py`) retroactively fills missing snapshot values from `fleet_history` within ±30 min | **open** | Contradicts "missing snapshot field → omit chip, never invented" at the database level (display-time honesty holds; DB-level does not). Not reachable from the operator SPA (`POST /journal/admin/backfill-snapshots`, undocumented in UI) — low urgency. Decide: keep as an explicit maintenance-only escape hatch (document it as such) or remove entirely. |
-| P3 | `DashHomeSections.tsx` grow-stage chip hardcodes `tone="ok"` regardless of entity availability | **open** | Spotted via code read only, not live-verified with the entity actually missing. Confirm live before fixing — may already be masked by an upstream honest-empty-state check. |
-| P3 | Internal `Seat`/`POT` naming (`lib/seatModel.ts`, `PlantSeatPanel`, `SeatSnapshot`, etc.) | **deferred** | Not user-facing today — only `SeatOverlay.tsx`'s title string leaked (fixed this pass) — but the naming increases risk of the next leak. Rename pass is a bigger, non-minimal change; do as its own follow-up, not bundled into a design-honesty pass. |
-| P3 | Pre-existing pytest teardown flakiness | **tracked, not ours** | Full `pytest` run (unrelated to any change in this pass) shows `230 passed, 7 errors` — all 7 are `AttributeError: '_Client' object has no attribute 'loop_stop'` in `zigbee_mqtt.py:511` during FastAPI TestClient lifespan shutdown, in `test_live_ux_light_honesty.py`, `test_live_ux_overview_honesty.py`, `test_space_energy_stress.py`. Reproduces identically with this pass's changed test files fully deselected. Likely a `paho-mqtt` v1→v2 API break (`loop_stop` renamed/removed) surfaced only when the full suite's lifespan/teardown ordering triggers it — each file passes clean in isolation. Needs its own fix pass; not blocking any gate here. |
-| — | InventoryInServiceToggle blocks + forces a full `brain.refresh()` after every write | **considered, not fixed** | Same "waits on round trip" class as the `EntityToggle` fix, but this control is already behind an explicit confirm dialog and is low-frequency/high-consequence (kit gates/alerts) — judged lower priority than the high-frequency demand toggles. Revisit if it's reported as actually annoying in practice. |
-| P2 | Repeated `GET /history?entity_id=&hours=6` / `&hours=12` → **422** on every page load (Overview, Light, Climate) — spotted via live browser console/network during this pass's G3 walk, pre-existing, not caused by anything this session touched | **out-of-scope, logged only** | Some history/series component is firing a request with an unresolved/empty `entity_id` (fires in pairs alongside a valid `sensor.dsc_probe*_soil_moisture`/`soil_ec` request each time — looks like an unassigned-probe or missing-channel case not guarded before the fetch). Check `useEntitySeries.ts` / whatever builds Climate/Overview chart history URLs for a channel resolver that can return `""` without skipping the fetch. Cosmetic today (console noise only, UI shows honest empty chart) but worth a quick guard. |
+| P2 | Sidebar scope-nav double-click (Grow â†’ Logs) | **open** | Reproduced 2026-09-02 on 4Ã—8 + a plant entry, first click only highlights. Root cause not isolated this pass â€” check `LogsScopeNav`'s `<a>`+`onClick preventDefault` handler for a stale-closure or event-order issue against `react-router`'s own click handling. |
+| P2 | Whole-fleet-object re-render on every WS tick, no per-entity selector | **open** | `useBrain.tsx`'s `applyFleet` â†’ `FleetProvider`'s `useMemo` recomputes a brand-new `fleet` object per tick, so every `useFleet()`/`useFleetEntity()`/`useEntityBus()` consumer re-renders on every WS push, not just ones watching the changed entity. `EntityToggle`'s new optimistic draft (this pass) masks the visible symptom on click, but the underlying architecture is unchanged. A real fix is a per-entity selector or `useSyncExternalStore` slice â€” genuine redesign, out of a "minimal fix" pass. |
+| P2 | Calibration controls still share one `busy` flag beyond SoftCalWizard | **open** | `CalibratePage.tsx`'s `FanCalibrateWizard.savePoint` chains up to 5 sequential awaited calls under one `saving` flag disabling Save/Skip/Abort; `SoilCalHonestyPanel`'s single `busy` flag also disables the unrelated `LabWetCalPanel` button on the same page. Same fix pattern as SoftCalWizard's "Switch phase"/"Ask Brain" split â€” split by action, not shared. |
+| P3 | Brain admin `backfill_journal_snapshots` (`journal_snapshot.py`) retroactively fills missing snapshot values from `fleet_history` within Â±30 min | **open** | Contradicts "missing snapshot field â†’ omit chip, never invented" at the database level (display-time honesty holds; DB-level does not). Not reachable from the operator SPA (`POST /journal/admin/backfill-snapshots`, undocumented in UI) â€” low urgency. Decide: keep as an explicit maintenance-only escape hatch (document it as such) or remove entirely. |
+| P3 | `DashHomeSections.tsx` grow-stage chip hardcodes `tone="ok"` regardless of entity availability | **open** | Spotted via code read only, not live-verified with the entity actually missing. Confirm live before fixing â€” may already be masked by an upstream honest-empty-state check. |
+| P3 | Internal `Seat`/`POT` naming (`lib/seatModel.ts`, `PlantSeatPanel`, `SeatSnapshot`, etc.) | **deferred** | Not user-facing today â€” only `SeatOverlay.tsx`'s title string leaked (fixed this pass) â€” but the naming increases risk of the next leak. Rename pass is a bigger, non-minimal change; do as its own follow-up, not bundled into a design-honesty pass. |
+| P3 | Pre-existing pytest teardown flakiness | **tracked, not ours** | Full `pytest` run (unrelated to any change in this pass) shows `230 passed, 7 errors` â€” all 7 are `AttributeError: '_Client' object has no attribute 'loop_stop'` in `zigbee_mqtt.py:511` during FastAPI TestClient lifespan shutdown, in `test_live_ux_light_honesty.py`, `test_live_ux_overview_honesty.py`, `test_space_energy_stress.py`. Reproduces identically with this pass's changed test files fully deselected. Likely a `paho-mqtt` v1â†’v2 API break (`loop_stop` renamed/removed) surfaced only when the full suite's lifespan/teardown ordering triggers it â€” each file passes clean in isolation. Needs its own fix pass; not blocking any gate here. |
+| â€” | InventoryInServiceToggle blocks + forces a full `brain.refresh()` after every write | **considered, not fixed** | Same "waits on round trip" class as the `EntityToggle` fix, but this control is already behind an explicit confirm dialog and is low-frequency/high-consequence (kit gates/alerts) â€” judged lower priority than the high-frequency demand toggles. Revisit if it's reported as actually annoying in practice. |
+| P2 | Repeated `GET /history?entity_id=&hours=6` / `&hours=12` â†’ **422** on every page load (Overview, Light, Climate) â€” spotted via live browser console/network during this pass's G3 walk, pre-existing, not caused by anything this session touched | **out-of-scope, logged only** | Some history/series component is firing a request with an unresolved/empty `entity_id` (fires in pairs alongside a valid `sensor.dsc_probe*_soil_moisture`/`soil_ec` request each time â€” looks like an unassigned-probe or missing-channel case not guarded before the fetch). Check `useEntitySeries.ts` / whatever builds Climate/Overview chart history URLs for a channel resolver that can return `""` without skipping the fetch. Cosmetic today (console noise only, UI shows honest empty chart) but worth a quick guard. |
 
 ---
+
+
 

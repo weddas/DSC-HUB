@@ -1,25 +1,16 @@
-# Home Assistant as lab scaffold
+# Home Assistant lab — retired
 
-**In one line:** Use HA to iterate fast in a real tent; do not make HA helpers the long-term home of catalogs or grower logic.
+**Status:** Retired 2026-09. DSC-HUB is a **Pi-only** product (DSC-Brain + SPA on `:8787`).
 
-Notion: [HA as lab scaffold](https://app.notion.com/p/3b52b4cda370810b9801c53d93a10c13)
+HA packages, HACS `dist/`, Lovelace cards, Sync add-on (`dsc-hub-sync`), and the
+HA custom panel build were removed from the tree. Do not reintroduce them as SoT.
 
-## Rules
+What remains (and is intentional):
 
-1. **Durable logic** (catalog schema, Want resolution, roster, Learning math) is expressed as **repo data + testable functions** under [`brain/`](../brain/) first.
-2. Wire into HA packages/cards only when you need **live soak**.
-3. **Promote** stable rules into the Pi brain; do not invent new SoT that only exists as `input_*` graphs.
-4. Lovelace Pro / Build a Plant cards are **prototypes** for the future webserver — reuse UX ideas, not `hass` entity_id coupling.
-5. Sync + HACS remain the **lab delivery** path (`INSTALL.md`). Product unbox is SoftAP (`SETUP.md`).
+- **HA-shaped entity IDs and `call_service` domains** — implemented by the Pi brain
+  (`hass_states`, `/control/service`), consumed by the SPA. This is an API dialect,
+  not a Home Assistant dependency.
+- Historical research under `docs/superpowers/research/*ha*` may still cite old
+  package paths for archaeology.
 
-## When HA is still right
-
-- Companion notify before brain has its own notify story
-- Recorder / Trends while brain history is immature
-- Your current live tent soak
-
-## When to stop deepening HA
-
-- New Want/Need rules that cannot run offline
-- New catalog SoT only inside package template attributes
-- Product install docs that require HA before SoftAP + Control work
+Product docs: [`SETUP.md`](../SETUP.md), [`docs/DSC-BRAIN.md`](DSC-BRAIN.md), root [`README.md`](../README.md).

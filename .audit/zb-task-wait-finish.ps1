@@ -35,8 +35,8 @@ while ((Get-Date) -lt $deadline) {
 if (-not $ok) { throw "Pi brain never came back" }
 
 Write-Host "== SPA hotpatch ==" -ForegroundColor Cyan
-$spaSrc = Join-Path $RepoRoot "homeassistant\custom_components\dsc_hub\frontend\spa-dist"
-if (-not (Test-Path $spaSrc)) { throw "spa-dist missing - run npm run build:spa first" }
+$spaSrc = Join-Path $RepoRoot "frontend\spa-dist"
+if (-not (Test-Path $spaSrc)) { throw "spa-dist missing - run npm run build first" }
 $spaTar = Join-Path $env:TEMP "dsc-spa-hotpatch.tgz"
 if (Test-Path $spaTar) { Remove-Item $spaTar -Force }
 Push-Location $spaSrc; tar -czf $spaTar *; Pop-Location

@@ -1,5 +1,5 @@
-# DSC-HUB 7.0.0 — The Pi Release
-# Run on Raspberry Pi 4 (linux/arm64). Not for Unraid Compose Manager.
+# DSC-HUB 8.0.0 — Kit SD / Pi release
+# Run on Raspberry Pi 4/5 (linux/arm64). Not for Unraid Compose Manager.
 name: dsc-hub
 
 services:
@@ -7,7 +7,7 @@ services:
     build:
       context: ../..
       dockerfile: services/dsc-hub/brain/Dockerfile.prebuilt
-    image: dsc-hub-brain:7.3.0
+    image: dsc-hub-brain:8.0.0
     container_name: dsc-hub-brain
     restart: unless-stopped
     ports:
@@ -16,7 +16,7 @@ services:
       DSC_DATA: /data
       DSC_BRAIN_API_KEY: ${DSC_BRAIN_API_KEY:-}
       DSC_EXPECTED_FIRMWARE: ${DSC_EXPECTED_FIRMWARE:-7.0.0.0}
-      DSC_SURFACE_VERSION: ${DSC_SURFACE_VERSION:-7.4.0}
+      DSC_SURFACE_VERSION: ${DSC_SURFACE_VERSION:-8.0.0}
       DSC_HUB_API_KEY: ${DSC_HUB_API_KEY:-}
       DSC_CONTROL_API_KEY: ${DSC_CONTROL_API_KEY:-}
       # Must match .env + esphome_client `DSC_{SEAT}_API_KEY` (uppercase).
@@ -30,7 +30,8 @@ services:
       DSC_DEHUMIDIFIER_API_KEY: ${DSC_DEHUMIDIFIER_API_KEY:-}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-}
-      CANNALIB_API_URL: ${CANNALIB_API_URL:-http://cannalib:8790}
+      # Optional thin sidecar (profile thin-catalog). Kit default is local YAML fallback.
+      CANNALIB_API_URL: ${CANNALIB_API_URL:-}
       CANNALIB_API_KEY: ${CANNALIB_API_KEY:-}
       CANNALIB_USE_LOCAL_FALLBACK: ${CANNALIB_USE_LOCAL_FALLBACK:-true}
       CANNALIB_DB_PATH: /cannalib/dsc_brain.sqlite3
@@ -42,15 +43,17 @@ services:
       - ${DSC_DATA:-/var/lib/dsc-hub}/cannalib:/cannalib:ro
     depends_on:
       - mosquitto
-      - cannalib
     networks:
       - dsc
 
+  # Thin local catalog API only — not the fat Unraid/public CannaLib corpus.
+  # Enable with: docker compose --profile thin-catalog up -d
   cannalib:
+    profiles: ["thin-catalog"]
     build:
       context: ../cannalib
       dockerfile: Dockerfile
-    image: dsc-hub-cannalib:7.0.0
+    image: dsc-hub-cannalib:8.0.0
     container_name: dsc-hub-cannalib
     restart: unless-stopped
     ports:

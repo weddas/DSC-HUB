@@ -3,15 +3,65 @@
 from __future__ import annotations
 
 import shutil
+import socket
+import struct
 import subprocess
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+
+try:
+    import fcntl
+except ImportError:  # Windows / non-Linux
+    fcntl = None  # type: ignore[assignment]
 
 from .paths import BRAIN_DATA
 from .settings import get_all_settings, list_inventory
 
 ALLOWED_CHANNELS = {"1", "6", "11"}
 SYSTEM_ETC = Path("/etc/dsc-hub")
+SOFTAP_SPA_URL = "http://10.42.0.1:8787"
+ETH_IFACE = "eth0"
+
+OperatorMode = Literal["ethernet", "softap"]
+
+
+def operator_mode_for_carrier(eth_carrier: bool) -> OperatorMode:
+    """Ethernet carrier up → LAN/mDNS SPA; else Pi SoftAP for operator Setup."""
+    return "ethernet" if eth_carrier else "softap"
+
+
+def eth_carrier_up(iface: str = ETH_IFACE) -> bool:
+    """Read sysfs carrier; False when iface missing (e.g. Windows unit tests)."""
+    path = Path(f"/sys/class/net/{iface}/carrier")
+    try:
+        return path.read_text(encoding="utf-8").strip() == "1"
+    except OSError:
+        return False
+
+
+def _primary_ipv4(iface: str = ETH_IFACE) -> str | None:
+    """Best-effort IPv4 for spa_urls; None if unavailable."""
+    if fcntl is None:
+        return None
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            packed = struct.pack("256s", iface.encode("utf-8")[:15])
+            info = fcntl.ioctl(sock.fileno(), 0x8915, packed)  # SIOCGIFADDR
+            return socket.inet_ntoa(info[20:24])
+        finally:
+            sock.close()
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def spa_urls_for_mode(mode: OperatorMode, eth_ip: str | None = None) -> list[str]:
+    if mode == "softap":
+        return [SOFTAP_SPA_URL]
+    urls = ["http://dsc-brain.local:8787"]
+    if eth_ip:
+        urls.insert(0, f"http://{eth_ip}:8787")
+    return urls
 
 
 def network_status() -> dict[str, Any]:
@@ -27,14 +77,24 @@ def network_status() -> dict[str, Any]:
         for r in inventory
         if r.get("host")
     ]
+    carrier = eth_carrier_up()
+    mode = operator_mode_for_carrier(carrier)
+    eth_ip = _primary_ipv4() if carrier else None
     return {
         "ap_ssid": settings.get("ap_ssid", "DSC-Brain"),
         "ap_channel": settings.get("ap_channel", "6"),
         "ap_psk_set": bool(settings.get("ap_psk")),
         "allowed_channels": sorted(ALLOWED_CHANNELS),
         "dhcp_map": dhcp_map,
-        "eth_uplink": "eth0",
-        "note": "Apply writes configs to data dir; restart dsc-hub-ap.service on the Pi host.",
+        "eth_uplink": ETH_IFACE,
+        "eth_carrier": carrier,
+        "operator_mode": mode,
+        "spa_urls": spa_urls_for_mode(mode, eth_ip),
+        "note": (
+            "Ethernet carrier → Pi SoftAP off, SPA on LAN/mDNS. "
+            "No Ethernet → start dsc-hub-ap for operator Setup. "
+            "Apply writes configs to data dir; net-policy owns SoftAP lifecycle."
+        ),
     }
 
 

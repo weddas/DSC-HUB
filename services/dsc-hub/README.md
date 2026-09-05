@@ -13,7 +13,7 @@ docker compose -f services/dsc-hub/docker-compose.demo.yml up -d --build
 
 Reverse-proxy `brain-demo.plausible-deniability.net` to port **8788** with WebSocket support and CSP `frame-ancestors https://plausible-deniability.net`. WordPress embed lives at `/dsc/demo/` (`push_dsc_demo.py`).
 
-Rebuild SPA after UI changes: `npm run build:spa` in `homeassistant/custom_components/dsc_hub/frontend`, then sync `spa-dist/` → `brain/static/`.
+Rebuild SPA after UI changes: `npm run build` in `frontend/`, then sync `spa-dist/` → `brain/static/`.
 
 ## Quick start (Pi)
 

@@ -28,7 +28,7 @@ Operator SPA for a two-tent grow kit (4×8 flower + 2×4 clone/veg). Product pat
 ## Branding
 
 - Wordmark line: **DSC - A Plausible Deniability Project.**
-- Mark: rounded square + droplet/leaf (stroke, currentColor). Source: `homeassistant/custom_components/dsc_hub/www/assets/brand/dsc-brand-mark.svg`.
+- Mark: rounded square + droplet/leaf (stroke, currentColor). Source: inline SVG key `brand` in `frontend/src/iconSvg.ts` (rendered via `Icon name="brand"`).
 - Logo must render as the real mark in the brand row — never initials, emoji, or invented SVG.
 
 ## Color (CSS variables — use these exact values)

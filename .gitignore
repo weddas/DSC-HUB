@@ -132,3 +132,26 @@ brain/data/staging/_cache_cannlytics/
 brain/data/audit-*.txt
 brain/data/audit-*.json
 brain/data/*-snapshot.json
+
+# Kit SD bake outputs — publish via GitHub Releases, not git
+deploy/*.img
+deploy/*.img.xz
+deploy/*.tar.gz
+deploy/raspios*
+!deploy/*-manifest.json
+
+# Pi SPA build output (built in CI / bake)
+frontend/spa-dist/
+frontend/node_modules/
+
+# Catalog data (curated YAML tracked; dumps ignored)
+data/_cache*/
+data/*.json
+data/*.html
+!data/dsc_*_catalog.yaml
+!data/dsc_*_pack_*.yaml
+!data/dsc_light_pack_photometrics.yaml
+
+# Kit firmware placeholders may be empty; keep manifest
+!services/dsc-hub/firmware/kit-manifest.json
+!services/dsc-hub/firmware/kit/.gitkeep

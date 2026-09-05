@@ -7,7 +7,7 @@ $PiPassword = "Digital"
 $HostKey = "SHA256:4XD2kIJ5qNCnULKNmo/L9mvzLbmZdURLwLW7Utt9NJs"
 $pscp = "pscp -batch -hostkey `"$HostKey`" -pw $PiPassword"
 $plink = "plink -batch -hostkey `"$HostKey`" -pw $PiPassword ${PiUser}@${PiHost}"
-$SpaDir = Join-Path $Repo "homeassistant\custom_components\dsc_hub\frontend\spa-dist"
+$SpaDir = Join-Path $Repo "frontend\spa-dist"
 $SpaTar = Join-Path $env:TEMP "grow-logs-spa-only.tgz"
 Push-Location $SpaDir
 tar -czf $SpaTar *

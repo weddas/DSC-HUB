@@ -15,7 +15,7 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("init-db", help="Create slim operational SQLite schema")
-    sub.add_parser("reload-catalogs", help="Load homeassistant/data packs into SQLite")
+    sub.add_parser("reload-catalogs", help="Load data/ packs into SQLite")
 
     p_search = sub.add_parser("search", help="Search catalog kind")
     p_search.add_argument("kind", choices=["strain", "nutrient", "medium", "light"])

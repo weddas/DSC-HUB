@@ -1,6 +1,6 @@
 ---
 description: Kit probe SoT — KIT_PROBE_NUMBERS, Probe/Plant chrome, WithFleet in-service
-globs: homeassistant/custom_components/dsc_hub/frontend/**/*.{ts,tsx}
+globs: frontend/**/*.{ts,tsx}
 alwaysApply: false
 ---
 

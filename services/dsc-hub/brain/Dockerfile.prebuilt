@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r brain/requirements.txt
 COPY brain/dsc_brain ./dsc_brain
 COPY brain/data/demo-fleet-seed.json ./brain/data/demo-fleet-seed.json
 COPY brain/static ./static
-COPY homeassistant/data ./homeassistant/data
+COPY data ./data
 
 EXPOSE 8787
 CMD ["uvicorn", "dsc_brain.api:app", "--host", "0.0.0.0", "--port", "8787", "--proxy-headers", "--forwarded-allow-ips", "*"]

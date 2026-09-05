@@ -1,6 +1,6 @@
 ---
 description: Space photoperiod, energy, and journal hierarchy — tent parity and confirm gates
-globs: "{brain/dsc_brain/**,brain/tests/test_space_energy*,brain/tests/test_room*,homeassistant/custom_components/dsc_hub/frontend/src/**}"
+globs: "{brain/dsc_brain/**,brain/tests/test_space_energy*,brain/tests/test_room*,frontend/src/**}"
 alwaysApply: false
 ---
 

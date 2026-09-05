@@ -58,9 +58,9 @@ exit 1
 Push-RunBash "onepass-brain.sh" "onepass-brain.sh"
 
 Write-Host "== push SPA to brain/static ==" -ForegroundColor Cyan
-$spaSrc = Join-Path $RepoRoot "homeassistant\custom_components\dsc_hub\frontend\spa-dist"
+$spaSrc = Join-Path $RepoRoot "frontend\spa-dist"
 if (-not (Test-Path $spaSrc)) {
-    Write-Host "spa-dist missing — run npm run build:spa first" -ForegroundColor Red
+    Write-Host "spa-dist missing — run npm run build in frontend/ first" -ForegroundColor Red
     exit 1
 }
 $spaTar = Join-Path $env:TEMP "dsc-spa-hotpatch.tgz"
