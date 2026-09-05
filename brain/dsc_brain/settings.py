@@ -93,6 +93,17 @@ DEFAULT_SETTINGS: dict[str, str] = {
     "kit_commissioned": "false",
     "kit_setup_phase": "welcome",
     "kit_setup_debt": "[]",
+    # ESPHome toolchain (Pi venv — no Home Assistant / Docker in the path).
+    # Empty values resolve to defaults in esphome_toolchain.py / esphome_jobs.py.
+    "esphome_bin": "",
+    "esphome_project_dir": "",
+    # Browser link shown in Settings (operator's LAN view of the dashboard).
+    "esphome_dashboard_url": "http://dsc-brain.local:6052",
+    # brain -> dashboard HTTP base (container DNS). The dashboard is the build
+    # service: version/devices/compile/upload. Empty falls back to the venv CLI.
+    "esphome_dashboard_api": "http://dsc-hub-esphome:6052",
+    "esphome_fleet_ota_prompt": "true",
+    "last_built_esphome": "",
 }
 
 

@@ -54,6 +54,10 @@ install -m 0755 "${COMPOSE}/pi/dsc-hub-ap-run.sh" "${STAGE}/etc/dsc-hub/ap-run.s
 install -m 0644 "${COMPOSE}/pi/dsc-hub-ap.service" "${STAGE}/systemd/dsc-hub-ap.service"
 install -m 0644 "${COMPOSE}/pi/dsc-hub-net-policy.service" "${STAGE}/systemd/dsc-hub-net-policy.service"
 install -m 0644 "${COMPOSE}/pi/dsc-hub-compose.service" "${STAGE}/systemd/dsc-hub-compose.service"
+# ESPHome toolchain: dedicated venv (replaces the dsc-hub-esphome container).
+install -m 0755 "${COMPOSE}/pi/dsc-esphome-venv-setup.sh" "${STAGE}/opt/dsc-hub/pi/dsc-esphome-venv-setup.sh"
+install -m 0644 "${COMPOSE}/pi/dsc-esphome-venv-setup.service" "${STAGE}/systemd/dsc-esphome-venv-setup.service"
+install -m 0644 "${COMPOSE}/pi/dsc-esphome-dashboard.service" "${STAGE}/systemd/dsc-esphome-dashboard.service"
 
 # Install helper for first boot / SD inject
 cat > "${STAGE}/opt/dsc-hub/install-from-payload.sh" <<'INST'
@@ -71,8 +75,10 @@ if [[ -d /tmp/dsc-hub-stage/systemd ]]; then
 fi
 install -m 0755 /opt/dsc-hub/pi/dsc-hub-net-policy.sh /etc/dsc-hub/net-policy.sh
 install -m 0755 /opt/dsc-hub/pi/dsc-hub-ap-run.sh /etc/dsc-hub/ap-run.sh
+chmod 0755 /opt/dsc-hub/pi/dsc-esphome-venv-setup.sh || true
 systemctl daemon-reload
 systemctl enable dsc-hub-net-policy.service dsc-hub-compose.service dsc-hub-ap.service || true
+systemctl enable dsc-esphome-venv-setup.service dsc-esphome-dashboard.service || true
 hostnamectl set-hostname dsc-brain || true
 echo "install-from-payload: enabled units. Start: systemctl start dsc-hub-net-policy dsc-hub-compose"
 INST

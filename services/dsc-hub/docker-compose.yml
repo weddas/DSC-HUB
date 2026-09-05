@@ -98,8 +98,14 @@ services:
     networks:
       - dsc
 
+  # DEPRECATED (v8): superseded by the `dsc-esphome-dashboard` systemd unit, which
+  # runs one Pi venv shared by the dashboard and the brain's OTA/compile runner
+  # (see services/dsc-hub/pi/dsc-esphome-*.{service,sh} and
+  # docs/ops/ESPHOME-TOOLCHAIN.md). Kept one release as a fallback; image bumped
+  # to the firmware-pinned min_version so `esphome config` still passes if used.
+  # Remove once every kit is on the systemd unit.
   esphome:
-    image: esphome/esphome:2025.12.4
+    image: esphome/esphome:2026.6.5
     container_name: dsc-hub-esphome
     restart: unless-stopped
     command: ["dashboard", "/config"]

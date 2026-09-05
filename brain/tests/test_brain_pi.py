@@ -476,7 +476,9 @@ def test_network_apply(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 
     status = network_status()
     assert status["ap_ssid"] == "DSC-Brain"
-    result = apply_network_configs()
+    # restart_ap=False: only render the configs under DSC_DATA; skip the
+    # copy into /etc/dsc-hub + `systemctl restart` (not writable / present off-Pi).
+    result = apply_network_configs(restart_ap=False)
     assert "hostapd" in result
     assert Path(result["hostapd"]).is_file()
 
@@ -659,6 +661,99 @@ def test_esphome_job_queue(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> No
     job = queue_job("hub", "ota", temp_db)
     assert job["status"] == "queued"
     assert list_jobs(db_path=temp_db)[0]["seat_id"] == "hub"
+
+
+def test_esphome_toolchain_min_version_pinned() -> None:
+    """The firmware actually carries the 2026.6.5 pin this module reports."""
+    from dsc_brain import esphome_toolchain as tc
+
+    assert tc.min_version() == tc.PINNED_MIN_VERSION == "2026.6.5"
+
+
+def test_esphome_toolchain_status_shape(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from dsc_brain import esphome_toolchain as tc
+
+    monkeypatch.setattr(tc, "installed", lambda: "2026.6.5")
+    monkeypatch.setattr(
+        tc, "latest", lambda *, force=False: {"version": "2026.8.0", "ok": True, "eth_up": True}
+    )
+    monkeypatch.setattr(tc, "device_versions", lambda: [])
+    monkeypatch.setattr(tc, "build_backend", lambda: "venv")
+    st = tc.status()
+    assert st["installed"] == "2026.6.5"
+    assert st["latest"] == "2026.8.0"
+    assert st["update_available"] is True
+    assert st["meets_min"] is True
+    assert st["dashboard_url"].endswith(":6052")
+    assert st["build_backend"] == "venv"
+
+
+def test_esphome_installed_from_dashboard(monkeypatch: pytest.MonkeyPatch) -> None:
+    """No local CLI: installed() comes from the dashboard /version over HTTP."""
+    from dsc_brain import esphome_toolchain as tc
+
+    monkeypatch.setattr(
+        tc, "_dash_get", lambda path, timeout=4.0: {"version": "2025.12.4"} if path == "/version" else None
+    )
+    monkeypatch.setattr(tc, "esphome_bin", lambda: "/nope/esphome")
+    assert tc.installed() == "2025.12.4"
+    assert tc.build_backend() == "dashboard"
+
+
+def test_esphome_job_routes_to_dashboard(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """With no local CLI but a reachable dashboard, _run_job POSTs to it."""
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from dsc_brain import esphome_jobs as ej
+
+    monkeypatch.setattr(ej, "_local_esphome_available", lambda: False)
+    monkeypatch.setattr(ej, "build_backend", lambda: "dashboard")
+    seen: dict[str, Any] = {}
+    monkeypatch.setattr(ej, "_run_job_via_dashboard", lambda job, db=None: seen.update(job))
+    ej._run_job({"job_id": "j1", "seat_id": "hub", "action": "compile", "yaml_name": "dsc-hub.yaml"}, temp_db)
+    assert seen.get("yaml_name") == "dsc-hub.yaml"
+
+
+def test_esphome_toolchain_update_refuses_below_min(
+    temp_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dsc_brain import esphome_toolchain as tc
+
+    monkeypatch.setattr(tc, "eth_carrier_up", lambda: True)
+    monkeypatch.setattr(tc, "installed", lambda: "2026.6.5")
+    monkeypatch.setattr(
+        tc, "latest", lambda *, force=False: {"version": "2026.5.0", "ok": True, "eth_up": True}
+    )
+    with pytest.raises(RuntimeError, match="below the pinned min_version"):
+        tc.update_to_latest(db_path=temp_db)
+
+
+def test_esphome_toolchain_update_refuses_offline(
+    temp_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dsc_brain import esphome_toolchain as tc
+
+    monkeypatch.setattr(tc, "eth_carrier_up", lambda: False)
+    with pytest.raises(ValueError, match="ethernet"):
+        tc.update_to_latest(db_path=temp_db)
+
+
+def test_esphome_fleet_rollout_hub_last(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from dsc_brain import esphome_toolchain as tc
+    from dsc_brain.esphome_jobs import list_jobs
+    from dsc_brain.settings import get_setting
+
+    monkeypatch.setattr(tc, "installed", lambda: "2026.8.0")
+    plan = tc.pending_fleet_rollout(db_path=temp_db)
+    assert plan["needed"] is True
+    seats = [s["seat_id"] for s in plan["seats"]]
+    assert "hub" in seats and seats[-1] == "hub"  # hub flashed last
+
+    out = tc.start_fleet_rollout(db_path=temp_db)
+    assert "hub" in out["queued"]
+    assert get_setting("last_built_esphome", "", temp_db) == "2026.8.0"
+    queued = {j["seat_id"] for j in list_jobs(limit=50, db_path=temp_db)}
+    assert "hub" in queued
 
 
 def test_public_settings_masks_ap_psk(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:

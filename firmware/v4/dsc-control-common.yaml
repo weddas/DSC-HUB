@@ -151,6 +151,9 @@ substitutions:
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
+  # Pinned 2026-09-06: floor the build toolchain to the last QA-validated
+  # ESPHome (2026.6.5). Bump only after `esphome config` + the QA rig pass.
+  min_version: "2026.6.5"
   project:
     # v4.0.2 — this said "digital_emotions.dsc-hub". Copied in with the
     # rest of the header when the panel was forked from the hub config,

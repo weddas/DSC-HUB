@@ -24,10 +24,17 @@ class JournalForbiddenError(Exception):
 def ensure_journal_snapshot_column(conn: sqlite3.Connection, table: str) -> None:
     """Idempotent migration: add snapshot_json to a journal table."""
     cols = {r[1] for r in conn.execute(f"PRAGMA table_info({table})").fetchall()}
-    if "snapshot_json" not in cols:
+    if "snapshot_json" in cols:
+        return
+    try:
         conn.execute(
             f"ALTER TABLE {table} ADD COLUMN snapshot_json TEXT NOT NULL DEFAULT '{{}}'"
         )
+    except sqlite3.OperationalError as exc:
+        # check-then-act race: a concurrent writer (parallel journal posts) added
+        # the column between our PRAGMA and this ALTER. Harmless.
+        if "duplicate column name" not in str(exc).lower():
+            raise
 
 
 def snapshot_from_json(raw: str | None) -> dict[str, Any]:
