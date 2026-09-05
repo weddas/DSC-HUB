@@ -3,7 +3,7 @@ import { DecisionLayer } from "./DecisionLayer";
 import { Button, Icon, StatusChip, flushEntityTextDrafts, peekEntityTextDraft } from "./ui";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
-import { useBrainContext } from "../hooks/useBrain";
+import { useBrainRefresh } from "../hooks/useBrain";
 import {
   activeNutrientNames,
   applyBlendLayers,
@@ -27,7 +27,7 @@ import { PlantWizardReviewStep } from "./plantWizard/PlantWizardReviewStep";
 export function PlantWizard() {
   const { available, entity, num, state } = useEntityBus();
   const { callService } = useFleetActions();
-  const { refresh: refreshBrain } = useBrainContext();
+  const refreshBrain = useBrainRefresh();
   const [stepIdx, setStepIdx] = useState(0);
   const [customBlend, setCustomBlend] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -86,11 +86,13 @@ export function PlantWizard() {
         // Strain required; probe optional (stock roster when assign is none).
         return Boolean(strainLabel);
       case "soil":
-        return Boolean(vessel.label);
+        // resolveVesselSpec always falls back to DEFAULT_VESSEL (which always has a label),
+        // so vessel.label alone never blocks Next — require an actual vessel or medium pick.
+        return Boolean(vesselRaw && vesselRaw !== "unknown" && vesselRaw !== "unavailable") || mixLabel !== "Not set";
       default:
         return true;
     }
-  }, [step.id, strainLabel, assign, vessel.label]);
+  }, [step.id, strainLabel, assign, vesselRaw, mixLabel]);
 
   useEffect(() => {
     // Clear local assign override once the bus catches up (or operator clears elsewhere).

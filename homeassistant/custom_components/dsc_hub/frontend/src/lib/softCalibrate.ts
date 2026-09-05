@@ -152,10 +152,12 @@ export async function captureSoftCalAverages(
     intervalMs?: number;
     onTick?: (done: number, total: number) => void;
     entityMeta?: (id: string) => SoftCalEntityMeta | undefined;
+    signal?: AbortSignal;
   },
 ): Promise<SoftCalCaptureResult[]> {
   const total = opts?.samples ?? SAMPLE_COUNT;
   const intervalMs = opts?.intervalMs ?? SAMPLE_MS;
+  const signal = opts?.signal;
   const buckets = new Map<SoftCalPot, SoftCalChannels[]>();
   const stamps = new Map<SoftCalPot, Set<string>>();
   for (const pot of pots) {
@@ -163,7 +165,7 @@ export async function captureSoftCalAverages(
     stamps.set(pot, new Set());
   }
 
-  for (let i = 0; i < total; i++) {
+  for (let i = 0; i < total && !signal?.aborted; i++) {
     for (const pot of pots) {
       const ids = softCalEntityIds(pot);
       buckets.get(pot)!.push(readSoftCalChannels(pot, num));
@@ -175,7 +177,7 @@ export async function captureSoftCalAverages(
       }
     }
     opts?.onTick?.(i + 1, total);
-    if (i < total - 1) {
+    if (i < total - 1 && !signal?.aborted) {
       await new Promise((r) => window.setTimeout(r, intervalMs));
     }
   }

@@ -45,6 +45,9 @@ function fmt(n: number, digits = 1): string {
   return Number.isFinite(n) ? n.toFixed(digits) : "—";
 }
 
+/** A dropped Zigbee climate sensor must not read as an ordinary confident number forever. */
+const ZIGBEE_ROLE_STALE_MS = 10 * 60 * 1000;
+
 const FOCUS_OPTIONS: { id: ZoneFocus; label: string }[] = [
   { id: "compare", label: "All" },
   { id: "main", label: "4×8" },
@@ -154,6 +157,17 @@ export function LiveClimatePage() {
   const dTCloneMain = tentTHeld.value - cloneTHeld.value;
   const dAhCloneMain = tentAh - cloneAh;
   const dAhRoomClone = cloneAh - roomAh;
+  // The KPI cards above already flag stale sources individually — this sentence draws from
+  // the same held readings and must not read as fully live when any of them is stale.
+  const deltaLineStale =
+    tentTHeld.stale ||
+    roomTHeld.stale ||
+    cloneTHeld.stale ||
+    tentVpdHeld.stale ||
+    roomVpdHeld.stale ||
+    tentRhHeld.stale ||
+    roomRhHeld.stale ||
+    cloneRhHeld.stale;
   const boughtH = num("sensor.dsc_bought_runtime_today");
   const dumpBtu = num("sensor.dsc_vent_heat_dump_btu");
 
@@ -185,12 +199,20 @@ export function LiveClimatePage() {
         : Number.isFinite(canopyRhHeld.value)
           ? canopyRhHeld.value
           : NaN;
-  const canopyStale =
+  const canopyTempStale =
     Boolean(canopyRole) &&
     Number.isFinite(canopyTemp) &&
     !(canopyTempHeld.live && Number.isFinite(canopyTempHeld.value)) &&
     !Number.isFinite(canopyTempFleet) &&
     canopyTempHeld.stale;
+  const canopyRhStale =
+    Boolean(canopyRole) &&
+    Number.isFinite(canopyRh) &&
+    !(canopyRhHeld.live && Number.isFinite(canopyRhHeld.value)) &&
+    !Number.isFinite(canopyRhFleet) &&
+    canopyRhHeld.stale;
+  // Reflect the worse of the two — a live temp reading must not mask a stale RH one, or vice versa.
+  const canopyStale = canopyTempStale || canopyRhStale;
 
   const zigbeeByRole = (fleet.system.zigbee_by_role ?? fleet.system.zigbee_by_placement) as
     | Record<string, Record<string, unknown>>
@@ -217,15 +239,22 @@ export function LiveClimatePage() {
 
   const zigbeeClimateRows = useMemo(() => {
     if (!zigbeeByRole) return [];
+    const now = Date.now();
     return Object.entries(zigbeeByRole)
       .filter(([role]) => !isZigbeeSafetyLeakRole(role))
-      .map(([role, row]) => ({
-        role,
-        zone: String(row.zone ?? "—"),
-        temp: row.temperature,
-        rh: row.humidity,
-        name: String(row.friendly_name ?? role),
-      }));
+      .map(([role, row]) => {
+        const updatedAt = Number(row.updated_at);
+        // No timestamp evidence -> treat as stale rather than assume it's live (fail closed).
+        const stale = Number.isFinite(updatedAt) ? now - updatedAt * 1000 > ZIGBEE_ROLE_STALE_MS : true;
+        return {
+          role,
+          zone: String(row.zone ?? "—"),
+          temp: row.temperature,
+          rh: row.humidity,
+          name: String(row.friendly_name ?? role),
+          stale,
+        };
+      });
   }, [zigbeeByRole]);
 
   const zigbeeSafetyRows = useMemo(() => {
@@ -323,14 +352,14 @@ export function LiveClimatePage() {
           <Card className="dsc-glass" title="Command" icon="climate">
             <div className="dsc-mode-row">
               <EntityToggle confirm entityId="switch.dsc_hub_tent_full_auto_mode" label="Full Auto" icon="ok" />
-              <EntityToggle confirm entityId="switch.dsc_hub_manual_takeover" label="Master takeover" icon="alert" />
+              <EntityToggle confirm entityId="switch.dsc_hub_manual_takeover" label="Manual takeover" icon="alert" />
               <EntityToggle confirm entityId="switch.dsc_hub_tent_manual_override" label="Fan override" icon="climate" />
               <EntityToggle confirm entityId="switch.dsc_hub_humidifier_intake_routing" label="Hum intake routing" icon="climate" />
               <EntityToggle confirm entityId="switch.dsc_hub_recirc_de_strat_pulse" label="RECIRC de-strat" icon="climate" />
               <HelpTip title="Full Auto vs takeover">
                 <p>
                   <b>Full Auto</b> lets the brain chase Want with fans and demand switches.{" "}
-                  <b>Master takeover</b> freezes automation so you own every flip.
+                  <b>Manual takeover</b> freezes automation so you own every flip.
                 </p>
                 <p>
                   Example: walk-in check → takeover on → nudge exhaust → takeover off when the room is stable again.
@@ -418,6 +447,7 @@ export function LiveClimatePage() {
               />
             </div>
             <p className="dsc-muted" style={{ marginTop: 8, fontSize: 12 }}>
+              {deltaLineStale ? <StatusChip label="HELD" tone="warn" /> : null}{" "}
               ΔT room↔4×8 {fmt(dTRoomMain)}°C · ΔAH {fmt(dAhRoomMain)} g/m³ · ΔVPD {fmt(dVpdRoomMain, 2)} · ΔT/ΔAH 2×4↔4×8{" "}
               {fmt(dTCloneMain)}°C / {fmt(dAhCloneMain)} · ΔAH room↔2×4 {fmt(dAhRoomClone)} g/m³. Early warn is the lung poisoning a tent before Want miss.
             </p>
@@ -597,7 +627,7 @@ export function LiveClimatePage() {
                     </thead>
                     <tbody>
                       {zigbeeClimateRows.map((row) => (
-                        <tr key={row.role}>
+                        <tr key={row.role} className={row.stale ? "dsc-muted" : undefined}>
                           <td>{row.role}</td>
                           <td>{row.zone}</td>
                           <td>{row.name}</td>
@@ -605,11 +635,13 @@ export function LiveClimatePage() {
                             {row.temp != null && Number.isFinite(Number(row.temp))
                               ? Number(row.temp).toFixed(1)
                               : "—"}
+                            {row.stale ? " ⏸" : ""}
                           </td>
                           <td>
                             {row.rh != null && Number.isFinite(Number(row.rh))
                               ? Number(row.rh).toFixed(0)
                               : "—"}
+                            {row.stale ? " ⏸" : ""}
                           </td>
                         </tr>
                       ))}

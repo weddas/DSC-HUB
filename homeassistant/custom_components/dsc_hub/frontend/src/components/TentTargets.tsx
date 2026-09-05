@@ -149,11 +149,21 @@ function TentColumn({
   const wantT = num(e.temp);
   const wantRhMin = num(e.rhMin);
   const wantRhMax = num(e.rhMax);
+  const wantVMin = num(e.vpdMin);
+  const wantVMax = num(e.vpdMax);
   const [draftT, setDraftT] = useState(wantT);
   const [draftRhMin, setDraftRhMin] = useState(wantRhMin);
   const [draftRhMax, setDraftRhMax] = useState(wantRhMax);
-  const [draftVMin, setDraftVMin] = useState(num(e.vpdMin));
-  const [draftVMax, setDraftVMax] = useState(num(e.vpdMax));
+  const [draftVMin, setDraftVMin] = useState(wantVMin);
+  const [draftVMax, setDraftVMax] = useState(wantVMax);
+
+  // Re-sync tone/hint badges when Want changes externally (Follow Plants auto-write,
+  // another client, strategy change) — onLive only updates these while the operator types.
+  useEffect(() => setDraftT(wantT), [wantT]);
+  useEffect(() => setDraftRhMin(wantRhMin), [wantRhMin]);
+  useEffect(() => setDraftRhMax(wantRhMax), [wantRhMax]);
+  useEffect(() => setDraftVMin(wantVMin), [wantVMin]);
+  useEffect(() => setDraftVMax(wantVMax), [wantVMax]);
 
   const tScore = draftTone(draftT, rail.temp, false, rail);
   const rhMinScore = draftTone(draftRhMin, rail.rh, draftRhMin > draftRhMax, rail);

@@ -39,7 +39,11 @@ function FanCalibrateWizard() {
   const [targetIdx, setTargetIdx] = useState(0);
   const [stepIdx, setStepIdx] = useState(0);
   const [msReading, setMsReading] = useState("");
+  // Save/Skip/Abort each own their busy state so a multi-call Save doesn't disable
+  // the unrelated Skip/Abort controls on the same card (Abort especially must stay usable).
   const [saving, setSaving] = useState(false);
+  const [skipping, setSkipping] = useState(false);
+  const [aborting, setAborting] = useState(false);
   const [status, setStatus] = useState("");
   const [confirmStart, setConfirmStart] = useState(false);
 
@@ -84,8 +88,8 @@ function FanCalibrateWizard() {
 
   const savePoint = async () => {
     const ms = Number(msReading);
-    if (!Number.isFinite(ms) || ms <= 0) {
-      setStatus("Enter a valid m/s reading, or skip this step.");
+    if (!Number.isFinite(ms) || ms <= 0 || ms > 15) {
+      setStatus("Enter a real anemometer reading (0–15 m/s), or skip this step.");
       return;
     }
     setSaving(true);
@@ -126,7 +130,7 @@ function FanCalibrateWizard() {
   };
 
   const skipPoint = async () => {
-    setSaving(true);
+    setSkipping(true);
     try {
       await callService("script", "turn_on", { entity_id: "script.dsc_cal_skip_point" });
       const next = stepIdx + 1;
@@ -140,18 +144,18 @@ function FanCalibrateWizard() {
         setStatus(`Skipped @${stepPct}%. Next: ${STEP_PCTS[next]}%.`);
       }
     } finally {
-      setSaving(false);
+      setSkipping(false);
     }
   };
 
   const abortSession = async () => {
-    setSaving(true);
+    setAborting(true);
     try {
       await callService("script", "turn_on", { entity_id: "script.dsc_cal_abort" });
       resetWizard();
       setStatus("Session aborted — fans restored.");
     } finally {
-      setSaving(false);
+      setAborting(false);
     }
   };
 
@@ -252,10 +256,10 @@ function FanCalibrateWizard() {
             <Button variant="primary" disabled={saving} onClick={() => void savePoint()}>
               Save @ {stepPct}%
             </Button>
-            <Button variant="secondary" disabled={saving} onClick={() => void skipPoint()}>
+            <Button variant="secondary" disabled={skipping} onClick={() => void skipPoint()}>
               Skip step
             </Button>
-            <Button variant="danger" disabled={saving} onClick={() => void abortSession()}>
+            <Button variant="danger" disabled={aborting} onClick={() => void abortSession()}>
               Abort
             </Button>
           </div>
@@ -302,8 +306,12 @@ function LightParWizard() {
   const saveStep = async () => {
     const lux = Number(luxReading);
     const par = Number(parReading);
-    if (!Number.isFinite(lux) || lux <= 0) {
-      setStatus("Enter the LUX reading at sensor height.");
+    if (!Number.isFinite(lux) || lux <= 0 || lux > 200000) {
+      setStatus("Enter a real LUX reading at sensor height (0–200,000).");
+      return;
+    }
+    if (parReading.trim() !== "" && (!Number.isFinite(par) || par <= 0 || par > 3000)) {
+      setStatus("PAR/PPFD reading looks out of range (0–3000 µmol/m²/s) — leave blank to skip it.");
       return;
     }
     setSaving(true);
@@ -461,7 +469,7 @@ function TankBiasPanel() {
   );
 }
 
-function LabWetCalPanel({ disabled }: { disabled: boolean }) {
+function LabWetCalPanel() {
   const { callService } = useFleetActions();
   const { state, entity } = useEntityBus();
   const fleet = useFleet();
@@ -469,13 +477,17 @@ function LabWetCalPanel({ disabled }: { disabled: boolean }) {
   const [bufferPct, setBufferPct] = useState("50");
   const [status, setStatus] = useState("");
   const [confirm, setConfirm] = useState(false);
+  // Own busy state — this hits dsc_pots_apply_lab_wet_to_esp, unrelated to the peer-median
+  // capture on this same page, so it must not be gated by that panel's busy flag.
+  const [busy, setBusy] = useState(false);
 
   const potN = Number(pot);
   const assignedId = probeAssignedPlantId(potN, fleet, state);
   const assignedLabel = assignedId ? probeAssignmentDisplay(potN, fleet, state, entity) : "";
 
   const runLabWet = async () => {
-    setStatus(`Stamping pot${pot} via dsc_pots_apply_lab_wet_to_esp…`);
+    setBusy(true);
+    setStatus(`Stamping probe${pot} via dsc_pots_apply_lab_wet_to_esp…`);
     try {
       await callService("input_number", "set_value", {
         entity_id: "input_number.dsc_lab_wet_pot",
@@ -485,11 +497,12 @@ function LabWetCalPanel({ disabled }: { disabled: boolean }) {
         entity_id: "script.dsc_pots_apply_lab_wet_to_esp",
       });
       setStatus(
-        `Lab wet → ESP script triggered for pot${pot} (buffer ${bufferPct}% noted in helpers). Verify on Root Zone.`,
+        `Lab wet → ESP script triggered for probe${pot} (buffer ${bufferPct}% noted in helpers). Verify on Root Zone.`,
       );
     } catch (exc) {
       setStatus(exc instanceof Error ? exc.message : "Lab wet failed — see docs/ops/LAB-WET-CAL.md");
     } finally {
+      setBusy(false);
       setConfirm(false);
     }
   };
@@ -510,8 +523,8 @@ function LabWetCalPanel({ disabled }: { disabled: boolean }) {
       <ol className="dsc-muted" style={{ fontSize: 13, marginBottom: 12, paddingLeft: 18 }}>
         <li>Remove probe from soil; rinse in distilled water.</li>
         <li>Soak probe in known buffer (document target % in notes).</li>
-        <li>Select pot and buffer %; confirm to stamp ESP scale.</li>
-        <li>Re-seat probe in idle home pot; verify reading within tolerance.</li>
+        <li>Select probe and buffer %; confirm to stamp ESP scale.</li>
+        <li>Re-seat probe in idle home slot; verify reading within tolerance.</li>
       </ol>
       <div className="dsc-row-actions">
         <label>
@@ -536,7 +549,7 @@ function LabWetCalPanel({ disabled }: { disabled: boolean }) {
             onChange={(e) => setBufferPct(e.target.value)}
           />
         </label>
-        <Button variant="primary" disabled={disabled} onClick={() => setConfirm(true)}>
+        <Button variant="primary" disabled={busy} onClick={() => setConfirm(true)}>
           Run lab wet stamp
         </Button>
       </div>
@@ -544,13 +557,17 @@ function LabWetCalPanel({ disabled }: { disabled: boolean }) {
       <DecisionLayer
         open={confirm}
         onDismiss={() => setConfirm(false)}
-        onConfirm={() => void runLabWet()}
-        title={`Lab wet pot${pot}`}
+        onConfirm={() => {
+          if (busy) return;
+          void runLabWet();
+        }}
+        title={`Lab wet probe${pot}`}
         confirmLabel="Stamp buffer"
+        busy={busy}
         help={null}
       >
         <p>
-          This triggers the pot lab-wet script with buffer {bufferPct}%. Peer median does not replace this step.
+          This triggers the probe lab-wet script with buffer {bufferPct}%. Peer median does not replace this step.
         </p>
       </DecisionLayer>
     </Card>
@@ -583,7 +600,7 @@ function SoilCalHonestyPanel() {
     setPushStatus("Pushing peer offsets to ESP…");
     try {
       await callService("script", "turn_on", { entity_id: "script.dsc_pots_push_peer_offsets_to_esp" });
-      setPushStatus("Push script triggered — verify dual-stack clears on pots.");
+      setPushStatus("Push script triggered — verify dual-stack clears on probes.");
     } catch (exc) {
       setPushStatus(exc instanceof Error ? exc.message : "Push failed");
     } finally {
@@ -619,12 +636,12 @@ function SoilCalHonestyPanel() {
         EC), writes HA Got offsets, then a second capture after watering. Soft ≠ lab ESP stamp.
       </p>
       <p className="dsc-honesty">
-        <strong>Peer median</strong> aligns in-service pots to the fleet median. Fast for relative drift and mat vote
+        <strong>Peer median</strong> aligns in-service probes to the fleet median. Fast for relative drift and mat vote
         coherence — but it is <em>not</em> lab truth. Use Mark Peer Median on Root Zone when probes agree directionally
-        but one pot is an outlier.
+        but one probe is an outlier.
       </p>
       <p className="dsc-honesty">
-        <strong>Lab buffer (lab wet)</strong> stamps a single channel with a known buffer solution on the pot ESP.
+        <strong>Lab buffer (lab wet)</strong> stamps a single channel with a known buffer solution on the probe ESP.
         After lab wet, treat that channel as buffer-calibrated until Reset. Peer median does not substitute for a wet
         cal pass — see <code>docs/ops/LAB-WET-CAL.md</code> for the operator procedure.
       </p>
@@ -643,7 +660,7 @@ function SoilCalHonestyPanel() {
       </div>
       {peerStatus ? <p className="dsc-honesty">{peerStatus}</p> : null}
       {pushStatus ? <p className="dsc-honesty">{pushStatus}</p> : null}
-      <LabWetCalPanel disabled={busy} />
+      <LabWetCalPanel />
       <DecisionLayer
         open={confirmPush}
         onDismiss={() => setConfirmPush(false)}
@@ -653,7 +670,7 @@ function SoilCalHonestyPanel() {
         help={null}
       >
         <p>
-          Merges HA peer offsets into each pot&apos;s ESP Cal Offset and clears HA offsets. Refuses if scale ≠ 1 unless
+          Merges HA peer offsets into each probe&apos;s ESP Cal Offset and clears HA offsets. Refuses if scale ≠ 1 unless
           forced in HA.
         </p>
       </DecisionLayer>

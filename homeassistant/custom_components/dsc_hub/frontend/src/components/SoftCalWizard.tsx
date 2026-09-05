@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Button, Card, StatusChip } from "./ui";
 import { CalOutcomeStrip } from "./CalOutcomeStrip";
 import { DecisionLayer } from "./DecisionLayer";
@@ -78,6 +78,7 @@ export function SoftCalWizard() {
   const [afterRows, setAfterRows] = useState<SoftCalCaptureResult[] | null>(null);
   const [pendingApply, setPendingApply] = useState<SoftCalCaptureResult[] | null>(null);
   const [aiNote, setAiNote] = useState("");
+  const captureAbort = useRef<AbortController | null>(null);
 
   const askAi = async () => {
     setAiNote("");
@@ -133,6 +134,8 @@ export function SoftCalWizard() {
       return;
     }
 
+    const controller = new AbortController();
+    captureAbort.current = controller;
     setBusy(true);
     setStatus("");
     setProgress(`Sampling ${SAMPLE_COUNT}s (Soil * Raw)…`);
@@ -143,7 +146,13 @@ export function SoftCalWizard() {
           const ent = entity(id);
           return { lastUpdated: (ent as { last_updated?: string } | undefined)?.last_updated ?? null };
         },
+        signal: controller.signal,
       });
+      if (controller.signal.aborted) {
+        setStatus("Capture aborted — partial samples discarded.");
+        setProgress("");
+        return;
+      }
       if (rows.some((r) => r.cachedNotSigma)) {
         setStatus(
           "Warning: fewer than 3 unique Modbus timestamps — showing “cached not σ”. Prefer cal_session burst firmware or wait for fresh polls.",
@@ -174,9 +183,12 @@ export function SoftCalWizard() {
       setStatus(exc instanceof Error ? exc.message : "Capture failed");
       setProgress("");
     } finally {
+      captureAbort.current = null;
       setBusy(false);
     }
   }, [entity, knownEc, knownPh, num, phase, selected]);
+
+  const abortCapture = () => captureAbort.current?.abort();
 
   const applyOffsets = async () => {
     if (!pendingApply) return;
@@ -187,10 +199,10 @@ export function SoftCalWizard() {
       setStatus(
         [
           confirmed.length
-            ? `Blocked: dual_cal_stack on pot ${confirmed.map((b) => b.pot).join(", ")} — push SoftCal to ESP NVS and zero HA offsets first.`
+            ? `Blocked: dual_cal_stack on probe ${confirmed.map((b) => b.pot).join(", ")} — push SoftCal to ESP NVS and zero HA offsets first.`
             : null,
           unknown.length
-            ? `Blocked: dual_cal_stack unknown on pot ${unknown.map((b) => b.pot).join(", ")} — sensor not on the bus yet, cannot confirm it's safe to stack.`
+            ? `Blocked: dual_cal_stack unknown on probe ${unknown.map((b) => b.pot).join(", ")} — sensor not on the bus yet, cannot confirm it's safe to stack.`
             : null,
         ]
           .filter(Boolean)
@@ -256,7 +268,7 @@ export function SoftCalWizard() {
       </div>
       <p className="dsc-honesty" style={{ marginTop: 0 }}>
         Put selected probes in a glass of tap water, enter the real pH, Soft Calibrate to average drift and write{" "}
-        <strong>HA Got offsets</strong> (not lab ESP stamp). Then seat in watered pots and Soft Calibrate again for
+        <strong>HA Got offsets</strong> (not lab ESP stamp). Then seat in watered vessels and Soft Calibrate again for
         capture 2. Samples <strong>Soil * Raw</strong> (moisture, temp, EC, pH) — not N/P/K. Offsets apply to pH /
         moisture
         {knownEc.trim() ? " / EC" : ""} only. Gate: dual_cal_stack blocks commit. SoftCal is allowed while a plant is
@@ -332,6 +344,11 @@ export function SoftCalWizard() {
         <Button variant="primary" disabled={busy || selected.length === 0} onClick={() => void runCapture()}>
           Soft Calibrate
         </Button>
+        {busy ? (
+          <Button variant="danger" onClick={abortCapture}>
+            Abort
+          </Button>
+        ) : null}
         {pendingApply?.some((r) => r.offsets) ? (
           <Button variant="primary" disabled={busy} onClick={() => void applyOffsets()}>
             Apply soft offsets
