@@ -940,9 +940,15 @@ export function SettingsPage() {
                   <StatusChip label="BELOW PINNED MIN" tone="bad" />
                 ) : null}
               </p>
-              {toolchain.latest_error ? (
-                <p className="dsc-muted" style={{ margin: "4px 0" }}>
-                  {String(toolchain.latest_error)}
+              {toolchain.latest_ok === false ? (
+                <p
+                  className="dsc-muted"
+                  style={{ margin: "4px 0", fontSize: 12 }}
+                  title={toolchain.latest_error ? String(toolchain.latest_error) : undefined}
+                >
+                  {toolchain.eth_up === false
+                    ? "Can't check for a newer ESPHome — the Pi has no network uplink."
+                    : "Can't reach PyPI to check for a newer ESPHome (no internet / DNS). Installed + pinned checks still work."}
                 </p>
               ) : null}
               <p style={{ margin: "6px 0", display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
