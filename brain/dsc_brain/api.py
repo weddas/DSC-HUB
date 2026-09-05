@@ -439,11 +439,15 @@ def _spa_index_response(index: Path) -> FileResponse:
     )
 
 
-if STATIC_DIR.is_dir():
-    app.mount("/assets", _SpaCacheStaticFiles(directory=str(STATIC_DIR / "assets")), name="assets")
-    vendor_dir = STATIC_DIR / "vendor"
-    if vendor_dir.is_dir():
-        app.mount("/vendor", _SpaCacheStaticFiles(directory=str(vendor_dir)), name="vendor")
+# Mount each SPA dir only when it actually exists. `brain/static/index.html` is
+# tracked but the built `assets/` bundle is not (Docker frontend stage / deploy),
+# so brain-only checkouts (CI) must import the API without it.
+_assets_dir = STATIC_DIR / "assets"
+if _assets_dir.is_dir():
+    app.mount("/assets", _SpaCacheStaticFiles(directory=str(_assets_dir)), name="assets")
+_vendor_dir = STATIC_DIR / "vendor"
+if _vendor_dir.is_dir():
+    app.mount("/vendor", _SpaCacheStaticFiles(directory=str(_vendor_dir)), name="vendor")
 
 
 @app.get("/health")

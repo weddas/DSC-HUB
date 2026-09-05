@@ -476,7 +476,9 @@ def test_network_apply(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 
     status = network_status()
     assert status["ap_ssid"] == "DSC-Brain"
-    result = apply_network_configs()
+    # restart_ap=False: only render the configs under DSC_DATA; skip the
+    # copy into /etc/dsc-hub + `systemctl restart` (not writable / present off-Pi).
+    result = apply_network_configs(restart_ap=False)
     assert "hostapd" in result
     assert Path(result["hostapd"]).is_file()
 
