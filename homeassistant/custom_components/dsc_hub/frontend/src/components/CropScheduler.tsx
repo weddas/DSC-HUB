@@ -76,7 +76,7 @@ function TentCropColumn({
   seats: { seat: PlantSeat; oos: boolean }[];
   hass: HassBits;
   compact?: boolean;
-  stockSlots: { slot: number; nickname?: string; strain?: string; sprout?: string; status?: string }[];
+  stockSlots: { slot: number; nickname?: string; strain?: string; sprout?: string; status?: string; tent?: string }[];
 }) {
   const tentSeats = seats.filter(({ seat, oos }) => !oos && seat.tent === tent);
   const stockInTent = stockSlots.filter((s) => normalizeTent(s.tent) === tent);

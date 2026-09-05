@@ -146,11 +146,11 @@ export function NextRecommendedCard({ gaps }: { gaps?: HonestyGap[] }) {
     return (
       <Card className="dsc-glass dsc-next-rec" title="Next" icon="ok">
         <p className="dsc-muted" style={{ margin: 0 }}>
-          No critical gaps — fly Live or open Twin.
+          No critical gaps — fly Live or open Overview.
         </p>
         <div className="dsc-row-actions">
-          <Button primary onClick={() => navigate("/live/twin")}>
-            Open Twin
+          <Button primary onClick={() => navigate("/live/overview")}>
+            Open Overview
           </Button>
           <Button teal onClick={() => navigate("/live/climate")}>
             Climate Want

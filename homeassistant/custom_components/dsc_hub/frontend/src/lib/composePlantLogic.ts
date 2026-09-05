@@ -45,7 +45,7 @@ export const SOIL_PRESETS: SoilPreset[] = [
   },
 ];
 
-type CallService = (domain: string, service: string, data: Record<string, unknown>) => Promise<void> | void;
+type CallService = (domain: string, service: string, data: Record<string, unknown>) => Promise<unknown> | void;
 
 type EntityState = (id: string, fallback?: string) => string;
 
@@ -173,10 +173,10 @@ export function hasComposeDraft(state: EntityState): boolean {
   const strain = state("input_text.dsc_build_strain", "");
   const nick = state("input_text.dsc_build_nickname", "");
   const pot = state("input_select.dsc_build_assign_pot", "none");
-  return (
+  return Boolean(
     (strain && strain !== "unknown" && strain !== "unavailable") ||
-    (nick && nick !== "unknown" && nick !== "unavailable") ||
-    (pot && pot !== "none" && pot !== "unknown")
+      (nick && nick !== "unknown" && nick !== "unavailable") ||
+      (pot && pot !== "none" && pot !== "unknown"),
   );
 }
 

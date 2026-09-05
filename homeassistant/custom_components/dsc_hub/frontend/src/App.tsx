@@ -18,7 +18,6 @@ import {
   LiveLightPage,
   LiveMainPage,
   LiveRootPage,
-  LiveTwinPage,
 } from "./pages/LivePages";
 import {
   GrowComposePage,
@@ -30,7 +29,6 @@ import {
   SECONDARY_TABS,
   resolveLegacyRedirect,
   sectionFromPath,
-  TuneAnalyticsPage,
   TuneLearningPage,
   FleetOverviewPage,
   CalibratePage,
@@ -167,7 +165,7 @@ function Shell({ surfaceVersion = "7.4.0" }: { surfaceVersion?: string }) {
           <Route path="/live" element={<Navigate to="/live/overview" replace />} />
           <Route path="/live/overview" element={<OverviewPage />} />
           <Route path="/live/mission" element={<LiveMissionPage />} />
-          <Route path="/live/twin" element={<LiveTwinPage />} />
+          <Route path="/live/twin" element={<Navigate to="/live/overview" replace />} />
           <Route path="/live/climate" element={<LiveClimatePage />} />
           <Route path="/live/4x8" element={<LiveMainPage />} />
           <Route path="/live/2x4" element={<LiveClonePage />} />
@@ -180,16 +178,17 @@ function Shell({ surfaceVersion = "7.4.0" }: { surfaceVersion?: string }) {
           <Route path="/grow/research" element={<GrowResearchPage />} />
           <Route path="/grow/roster" element={<GrowRosterPage />} />
           <Route path="/grow/logs" element={<GrowLogsPage />} />
-          <Route path="/tune" element={<Navigate to="/tune/learning" replace />} />
-          <Route path="/tune/learning" element={<TuneLearningPage />} />
-          <Route path="/tune/analytics" element={<TuneAnalyticsPage />} />
+          <Route path="/tune" element={<Navigate to="/fleet/learning" replace />} />
+          <Route path="/tune/learning" element={<Navigate to="/fleet/learning" replace />} />
+          <Route path="/tune/*" element={<LegacyRedirect />} />
           <Route path="/fleet" element={<FleetOverviewPage />} />
+          <Route path="/fleet/learning" element={<TuneLearningPage />} />
           <Route path="/fleet/calibrate" element={<CalibratePage />} />
           <Route path="/fleet/settings" element={<Navigate to="/settings/device" replace />} />
           <Route path="/settings" element={<Navigate to="/settings/device" replace />} />
           <Route path="/settings/:section" element={<SettingsPage />} />
           <Route path="/ops/home" element={<DashHomePage />} />
-          <Route path="/ops/dash" element={<LiveTwinPage />} />
+          <Route path="/ops/dash" element={<Navigate to="/live/overview" replace />} />
           {/* Legacy → 7.0 */}
           <Route path="/ops/*" element={<LegacyRedirect />} />
           <Route path="/plant/*" element={<LegacyRedirect />} />
