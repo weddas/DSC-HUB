@@ -109,7 +109,7 @@ const ALERTS: Record<string, PlaybookEntry> = {
   "binary_sensor.dsc_plant_specs_incomplete": {
     title: "Plant specs incomplete",
     what: "Equipment ratings or volumes needed for climate planning are missing.",
-    fix: "Fill in the specs under Tune. Missing specs are shown as missing, not defaulted.",
+    fix: "Fill in the specs under Fleet → Learning. Missing specs are shown as missing, not defaulted.",
   },
   "binary_sensor.dsc_plant_specs_intake_over_exhaust": {
     title: "Intake over exhaust",

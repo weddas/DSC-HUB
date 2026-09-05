@@ -19,7 +19,7 @@ import { readPotTrust } from "../lib/potTrust";
 import { VesselGlyph } from "../components/VesselGlyph";
 import { readPotVessel } from "../lib/vesselSpec";
 import { useEntityBus } from "../hooks/useEntityBus";
-import { useTentVitals, useFleet } from "../hooks/useFleet";
+import { useTentVitals } from "../hooks/useFleet";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { useChartHours } from "../hooks/useChartHours";
@@ -28,7 +28,6 @@ import { MultiLineChart } from "../viz/charts";
 import { potsInTent, isPotInServiceWithFleet, probeLabel, type TentId } from "../lib/seatModel";
 import { HelpTip } from "../components/HelpTip";
 import { PlantSeatPanel } from "./GrowPages";
-import { TwinViewport } from "../components/TwinViewport";
 
 export { LiveClimatePage } from "./ClimatePage";
 export { LiveRootPage } from "./RootPage";
@@ -36,118 +35,6 @@ export { LiveLightPage } from "./LightPage";
 
 function fmt(n: number, digits = 1): string {
   return Number.isFinite(n) ? n.toFixed(digits) : "—";
-}
-
-/** Spec path: Twin consumes Zigbee canopy the same way Climate/Overview do. */
-function TwinCanopyStrip() {
-  const fleet = useFleet();
-  const navigate = useNavigate();
-  const canopyRole =
-    typeof fleet.canopy?.role === "string" ? String(fleet.canopy.role) : null;
-  const canopyDevice =
-    typeof fleet.canopy?.friendly_name === "string" ? String(fleet.canopy.friendly_name) : null;
-  const canopyTemp =
-    fleet.canopy?.temp_c != null && Number.isFinite(Number(fleet.canopy.temp_c))
-      ? Number(fleet.canopy.temp_c)
-      : null;
-  const canopyRh =
-    fleet.canopy?.rh_pct != null && Number.isFinite(Number(fleet.canopy.rh_pct))
-      ? Number(fleet.canopy.rh_pct)
-      : null;
-  return (
-    <div className="dsc-chip-row" style={{ marginBottom: 10 }}>
-      {canopyRole ? (
-        <StatusChip
-          label={
-            canopyTemp != null
-              ? `Canopy ${canopyTemp.toFixed(1)}°C${
-                  canopyRh != null ? ` / ${canopyRh.toFixed(0)}%` : ""
-                } ← ${canopyRole}${canopyDevice ? ` (${canopyDevice})` : ""}`
-              : `Canopy ← ${canopyRole}${canopyDevice ? ` (${canopyDevice})` : ""}`
-          }
-          tone="ok"
-          onClick={() => navigate("/live/climate")}
-        />
-      ) : (
-        <StatusChip
-          label="Canopy unbound"
-          tone="muted"
-          onClick={() => navigate("/settings/device")}
-        />
-      )}
-    </div>
-  );
-}
-
-/** Pi SPA builds with VITE_DSC_PI=1 — R3F TwinKeepAlive portals into TwinViewport. */
-const PI_TWIN_SURFACE = import.meta.env.VITE_DSC_PI === "1";
-
-export function LiveTwinPage() {
-  const navigate = useNavigate();
-  if (PI_TWIN_SURFACE) {
-    return (
-      <div className="dsc-page dsc-page--twin">
-        <PageHeader
-          icon="twin"
-          title="Twin"
-          subtitle="3D grow room — probes and tents. Prefer Climate Air path for CFM mass-balance."
-          primaryAction={
-            <Button teal onClick={() => navigate("/live/climate")}>
-              Climate air path
-            </Button>
-          }
-          actions={
-            <>
-              <HelpTip title="Twin status">
-                <p>
-                  R3F twin owns resize on Pi. Climate <b>Air path</b> remains the CFM SoT; Root owns probe soil.
-                  Canopy chip below is Zigbee-by-role (same SoT as Climate/Overview).
-                </p>
-              </HelpTip>
-              <Button onClick={() => navigate("/live/root")}>Open Root</Button>
-              <Button onClick={() => navigate("/live/4x8")}>4×8 cockpit</Button>
-              <Button onClick={() => navigate("/live/2x4")}>2×4 cockpit</Button>
-            </>
-          }
-        />
-        <TwinCanopyStrip />
-        <TwinViewport />
-      </div>
-    );
-  }
-  return (
-    <div className="dsc-page dsc-page--twin-chrome">
-      <PageHeader
-        icon="twin"
-        title="Twin"
-        subtitle="Demoted — gated until the WebGL canvas resizes correctly. Use Climate Air path for CFM."
-        primaryAction={
-          <Button teal onClick={() => navigate("/live/climate")}>
-            Climate air path
-          </Button>
-        }
-        actions={
-          <>
-            <HelpTip title="Twin status">
-              <p>
-                Twin is demoted. The viewport often stuck at a blank 300×150 canvas. Prefer Climate&apos;s{" "}
-                <b>Air path</b> for CFM and Root for probe soil.
-              </p>
-            </HelpTip>
-            <Button onClick={() => navigate("/live/root")}>Open Root</Button>
-            <Button onClick={() => navigate("/live/4x8")}>4×8 cockpit</Button>
-            <Button onClick={() => navigate("/live/2x4")}>2×4 cockpit</Button>
-          </>
-        }
-      />
-      <Card className="dsc-glass" title="3D twin unavailable" icon="twin">
-        <p className="dsc-muted" style={{ margin: 0 }}>
-          The cinematic twin is parked until resize and kit Probe labeling are honest. It is not a live ops surface.
-          Crop schedule stays on Mission / Grow; air CFM lives on Climate.
-        </p>
-      </Card>
-    </div>
-  );
 }
 
 function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
@@ -303,7 +190,7 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
         title={title}
         subtitle={`Tent cockpit — ${seats.length} seat(s). ${pathNote}`}
         primaryAction={
-          <Button teal onClick={() => navigate("/live/twin")}>
+          <Button teal onClick={() => navigate("/live/overview")}>
             Both tents
           </Button>
         }

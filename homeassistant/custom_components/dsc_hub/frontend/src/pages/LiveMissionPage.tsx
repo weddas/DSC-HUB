@@ -105,8 +105,8 @@ export function LiveMissionPage() {
         title="Mission"
         subtitle="Triage glance — Next, faults, seats, lung. Command lives on Climate."
         primaryAction={
-          <Button teal onClick={() => navigate("/live/twin")}>
-            Open Twin
+          <Button teal onClick={() => navigate("/live/root")}>
+            Open Root
           </Button>
         }
         actions={
@@ -325,7 +325,6 @@ export function LiveMissionPage() {
         <div className="dsc-chip-row">
           {[
             { path: "/live/climate", label: "Climate" },
-            { path: "/live/twin", label: "Twin" },
             { path: "/live/4x8", label: "4×8" },
             { path: "/live/2x4", label: "2×4" },
             { path: "/live/root", label: "Root" },

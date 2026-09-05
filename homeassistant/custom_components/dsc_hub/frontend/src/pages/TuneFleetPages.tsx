@@ -11,7 +11,6 @@ import { resolveCfm } from "../lib/cfmProvenance";
 import { buildKitNodesFromFleet, kitInServiceCount, type KitNode } from "../lib/kitInventory";
 import { useFleet } from "../hooks/useFleet";
 import { useInspector } from "../components/InspectorHost";
-import { Navigate } from "react-router-dom";
 
 export function TuneLearningPage() {
   return (
@@ -36,19 +35,18 @@ export function TuneLearningPage() {
         </div>
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Kit / In service" icon="settings">
+            <p className="dsc-muted" style={{ marginTop: 0 }}>
+              Status only — change In service on Settings → Device.
+            </p>
             <div className="dsc-mode-row">
-              <InventoryInServiceToggle seatId="pot1" label="Probe 1" icon="root" />
-              <InventoryInServiceToggle seatId="pot2" label="Probe 2" icon="root" />
+              <InventoryInServiceToggle seatId="pot1" label="Probe 1" icon="root" readOnly />
+              <InventoryInServiceToggle seatId="pot2" label="Probe 2" icon="root" readOnly />
             </div>
           </Card>
         </div>
       </div>
     </div>
   );
-}
-
-export function TuneAnalyticsPage() {
-  return <Navigate to="/grow/logs?view=trends&scope=space&id=4x8" replace />;
 }
 
 export function FleetOverviewPage() {
@@ -132,11 +130,11 @@ export function FleetOverviewPage() {
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Kit / In service" icon="settings">
             <p className="dsc-muted" style={{ marginTop: 0 }}>
-              Inventory gates only — wired to Settings inventory PATCH, not dead input_boolean helpers.
+              Status only — change In service on Settings → Device.
             </p>
             <div className="dsc-mode-row">
-              <InventoryInServiceToggle seatId="pot1" label="Probe 1" icon="root" />
-              <InventoryInServiceToggle seatId="pot2" label="Probe 2" icon="root" />
+              <InventoryInServiceToggle seatId="pot1" label="Probe 1" icon="root" readOnly />
+              <InventoryInServiceToggle seatId="pot2" label="Probe 2" icon="root" readOnly />
             </div>
           </Card>
         </div>

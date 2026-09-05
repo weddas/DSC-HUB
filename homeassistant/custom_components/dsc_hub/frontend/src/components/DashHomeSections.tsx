@@ -393,8 +393,8 @@ export function DashOperationalNow({ bus, onNavigate }: { bus: Bus; onNavigate: 
   return (
     <Card className="dsc-glass" title="Operational now" icon="climate">
       <div className="dsc-chip-row" style={{ marginBottom: 10 }}>
-        <StatusChip label={state("select.dsc_hub_grow_stage", "—")} tone="ok" />
-        <StatusChip label={state("select.dsc_hub_clone_mode", "—")} tone="ok" />
+        <StatusChip label={state("select.dsc_hub_grow_stage", "—")} tone="muted" />
+        <StatusChip label={state("select.dsc_hub_clone_mode", "—")} tone="muted" />
         <StatusChip label={state("select.dsc_hub_control_strategy", "—")} tone="muted" />
         <StatusChip label={`Priority ${pri}`} tone="muted" />
         <StatusChip label={mode} tone={mode === "Full Auto" ? "ok" : mode === "Standby" ? "muted" : "warn"} />

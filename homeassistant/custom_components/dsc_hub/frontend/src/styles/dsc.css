@@ -268,12 +268,18 @@ body {
   pointer-events: auto;
 }
 
-.dsc-tab--live.active { color: var(--dsc-blue); border-color: var(--dsc-blue-dim); }
-.dsc-tab--grow.active { color: var(--dsc-teal); border-color: var(--dsc-teal-dim); }
-.dsc-tab--tune.active { color: var(--dsc-purple); border-color: var(--dsc-purple-dim); }
-/* --dsc-teal and --dsc-blue are the same hex value, so Fleet needs its own accent
-   rather than reusing either — otherwise it's indistinguishable from Live/Grow. */
-.dsc-tab--fleet.active { color: var(--dsc-amber); border-color: rgba(255, 183, 77, 0.4); }
+/* Scoped to .dsc-primary-tabs so these beat the later, equal-specificity
+   .dsc-tab.active fallback (dsc.css below) instead of losing to source order —
+   previously every primary tab rendered white+neon regardless of section
+   (an unscoped version of this same fix, from a concurrent commit, doesn't
+   actually beat that fallback — kept the scoping, not the unscoped rules).
+   --dsc-teal and --dsc-blue are the same hex value (tracked separately as a
+   deferred token-alias fix), so Grow reads identically to Live either way;
+   Fleet gets purple rather than amber since amber already means "warn" in
+   the status-tone vocabulary and would collide with that meaning here. */
+.dsc-primary-tabs .dsc-tab--live.active { color: var(--dsc-blue); border-color: var(--dsc-blue-dim); }
+.dsc-primary-tabs .dsc-tab--grow.active { color: var(--dsc-teal); border-color: var(--dsc-teal-dim); }
+.dsc-primary-tabs .dsc-tab--fleet.active { color: var(--dsc-purple); border-color: var(--dsc-purple-dim); }
 
 .dsc-secondary-tabs .dsc-tab.active {
   color: var(--dsc-teal);
@@ -1198,6 +1204,17 @@ body {
   cursor: not-allowed;
   border-style: dashed;
   background: transparent;
+}
+
+/* Status-only badge (redundancy-map fix) — links to the single owning control on
+   Settings → Device rather than acting as a toggle itself. */
+.dsc-demand--readonly {
+  border-style: dashed;
+  text-decoration: none;
+}
+
+.dsc-demand--readonly:hover {
+  border-color: var(--dsc-blue-dim);
 }
 
 .dsc-demand-label {

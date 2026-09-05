@@ -5,7 +5,7 @@ import {
   type ZigbeeRecipe,
 } from "../../lib/fleetApi";
 import type { FleetSnapshot, SeatSnapshot } from "../../lib/fleetModel";
-import { FLOOD_TASK_ID, TANK_TASK_ID } from "./settingsConstants";
+import { FLOOD_TASK_ID } from "./settingsConstants";
 
 export function pickSettings(settings: Record<string, string>, keys: readonly string[]): Record<string, string> {
   const out: Record<string, string> = {};

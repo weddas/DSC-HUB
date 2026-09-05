@@ -648,7 +648,7 @@ function SoilCalHonestyPanel() {
       <p className="dsc-honesty">
         Fan CFM and light PAR sessions on this page own <code>input_number.dsc_cal_*</code> and{" "}
         <code>script.dsc_cal_*</code>. <strong>Calibrate</strong> owns Soft/lab/peer soil offsets;
-        Tune → <strong>Learning</strong> owns measured fan CFM only — do not duplicate fan/light commit models here.
+        Fleet → <strong>Learning</strong> owns measured fan CFM only — do not duplicate fan/light commit models here.
       </p>
       <div className="dsc-row-actions">
         <Button variant="secondary" disabled={busy} onClick={() => void capturePeer()}>

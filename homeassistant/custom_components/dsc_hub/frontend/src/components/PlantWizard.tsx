@@ -14,7 +14,7 @@ import {
   hasComposeDraft,
   SOIL_PRESETS,
 } from "../lib/composePlantLogic";
-import { DEFAULT_VESSEL, resolveVesselSpec, vesselEntityId, VESSEL_CATALOG } from "../lib/vesselSpec";
+import { resolveVesselSpec, vesselEntityId, VESSEL_CATALOG } from "../lib/vesselSpec";
 import type { CatalogItem } from "../lib/catalog";
 import { KIT_PROBE_NUMBERS, probeLabel } from "../lib/seatModel";
 import { STEPS, strainOk } from "./plantWizard/plantWizardSteps";
@@ -296,7 +296,7 @@ export function PlantWizard() {
               <span className="dsc-wizard-step-num">{i + 1}</span>
               <span className="dsc-wizard-step-label">
                 {s.label}
-                {s.optional ? " (optional)" : ""}
+                {"optional" in s && s.optional ? " (optional)" : ""}
               </span>
             </button>
           );
@@ -411,7 +411,7 @@ export function PlantWizard() {
           <Button variant="primary" icon="ok" disabled={!canNext} onClick={() => void goNext()}>
             {step.id === "light" && (!light || light === "unknown")
               ? "Skip light"
-              : step.optional
+              : "optional" in step && step.optional
                 ? "Next (or skip above)"
                 : "Next"}
           </Button>

@@ -79,6 +79,7 @@ export function Button({
   disabled,
   icon,
   iconMotion,
+  style,
 }: {
   children: ReactNode;
   primary?: boolean;
@@ -89,6 +90,7 @@ export function Button({
   disabled?: boolean;
   icon?: IconName;
   iconMotion?: "pulse" | "spin" | "glow" | "breathe" | "duty";
+  style?: CSSProperties;
 }) {
   const cls = ["dsc-btn"];
   if (primary) cls.push("primary");
@@ -111,7 +113,7 @@ export function Button({
     }
   }
   return (
-    <button type={type} className={cls.join(" ")} onClick={onClick} disabled={disabled}>
+    <button type={type} className={cls.join(" ")} onClick={onClick} disabled={disabled} style={style}>
       {icon ? <Icon name={icon} size={14} motion={iconMotion} /> : null}
       {children}
     </button>

@@ -10,6 +10,34 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-09-05 ? Live IA reorg + visual-narrative pass
+
+**Source:** Notion "DSC-HUB UX Redesign & Visual Narrative" doc, reviewed and implemented in one
+pass. Individual findings logged in the DSC-HUB Issue & Recommendation Tracker (Notion).
+
+**Correction to the 2026-08-27 closure claim below:** re-verified live against `dsc.css` before
+starting this pass. **TH-P1-3** (`--dsc-blue` = `--dsc-teal`, byte-identical) and **TH-P1-6**
+(`.dsc-tab.active` overriding all section-tab colors to white) were both still present in code
+despite the `AUDIT-CLOSURE-7.1.2.md` "all P0/P1 fixed" claim below. TH-P1-6 is fixed in this
+pass (see below); TH-P1-3 is now explicitly tracked as a deliberately deferred item in
+`.superdesign/design-system.md` rather than silently re-closed.
+
+| Item | Status | Notes |
+|------|--------|-------|
+| **DA-P1-4 / UX-P0-1** Live IA (nine tabs, three homes) | **done** | `routes.ts`/`App.tsx`: cut `/live/twin` (redirects to Overview; zero unique data vs Root, only surface ignoring the shared component system), retired Dash (Legacy) from nav (route kept for old bookmarks), promoted Mission off `demoted` as the Alerts/Triage surface. Live secondary tabs: Overview, Climate, 4×8, 2×4, Root, Light, Mission. |
+| **REP-P1-1** Tune/Fleet split (Calibrate vs Learning clone skins) | **done (nav)** | Tune primary tab removed; Learning moved to `/fleet/learning` as a Fleet sub-tab alongside Calibrate. Legacy `/tune/*` and `/advanced/*` paths redirect. Skin/data-model merge (local m/s vs `TargetNumber` blur) not done — still a real follow-up. |
+| In-service toggle in 3 places with contradictory copy (Settings tracker item) | **done** | `InventoryInServiceToggle` gained a `readOnly` mode; Settings → Device keeps the only live toggle, Fleet → Overview and Fleet → Learning now render a read-only status badge linking there. Fixes the literal contradiction ("open Settings to change In service" copy sitting directly above a live duplicate toggle). |
+| **TH-P1-6** Section tab colors dead | **done** | `.dsc-tab--live.active` etc. rescoped under `.dsc-primary-tabs` to beat `.dsc-tab.active` on specificity instead of losing to source order. Live=blue, Grow=teal, Fleet=purple (reassigned from the removed Tune tab). |
+| Ok/warn/bad/muted tone vocabulary undocumented (UX tracker item) | **done (spec + 2 fixes)** | Closed-meaning spec added to `.superdesign/design-system.md`. Fixed two hardcoded `tone="ok"` call sites that meant "a value exists," not "verified good": grow-stage/clone-mode select chips (`DashHomeSections.tsx`) and the per-entity runtime-hours chip (`EntityInspector.tsx`) — both now `muted`. Full app-wide sweep not done (spec enables it as a follow-up checklist). |
+| Crash: probe-chip click on 4×8/2×4 (`ReferenceError: probeLabel`) | **done** | `LivePages.tsx` called `probeLabel()` without importing it from `lib/seatModel` — added the import. Already tracked as Critical; this is the fix. |
+| Overview duplicates Light's full photoperiod clock | **done** | New `TentLightSummaryLine` (one line per tent, e.g. "4×8 lit, off in 2h14m", links to Light) replaces the full `TentLightClockStrip` on Overview. Light keeps the full clock as sole owner. |
+| Overview duplicates Climate's full band-gauge grid | **deferred** | `DashBandsGrid` left as-is on Overview. Compacting it to a per-zone in-band/drifting/alert row is real new-component design work needing a mockup/visual review pass, not a mechanical nav/data fix — out of scope for this pass. |
+| Twin cut — dead-code follow-up | **deferred (flagged)** | `TwinKeepAlive.tsx`, `TwinViewport.tsx`, `twin/DscTwinCanvas.tsx`, `lib/dsc-twin-api.ts` are now SPA-dead but **not deleted**: `homeassistant/www/dsc-the-dash-card.js` is a standalone Lovelace custom-card file that may be embedded directly in someone's HA dashboard independent of the SPA route, and this repo can't confirm zero external references. Recommend a follow-up pass to confirm and remove. |
+| `--dsc-blue` = `--dsc-teal` alias (**TH-P1-3**) | **deferred (documented)** | Un-aliasing touches every teal/blue call site app-wide (buttons, icons, brand mark) — needs its own visual QA pass. Not bundled into this IA/routing change; see `.superdesign/design-system.md` color table. |
+| Settings → Server / Device merge (Settings tracker item) | **deferred** | Needs a field-by-field diff against a live hub to verify no setting is dropped — couldn't verify without a running HA instance in this pass. |
+
+---
+
 ## 2026-08-31 ? Operator correctness Wave 1 (SoftCal / Build-a-Plant / cal UX)
 
 **Spec:** [`docs/superpowers/specs/2026-08-31-operator-correctness-wave1-design.md`](superpowers/specs/2026-08-31-operator-correctness-wave1-design.md)  

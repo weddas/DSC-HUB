@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { fmtDurationMs } from "../lib/formatDuration";
 import type { TentPhotoperiodId } from "../lib/lightSchedule";
 import { tentLabel } from "../lib/seatModel";
@@ -119,6 +120,53 @@ export function TentLightClockStrip() {
     <div className="dsc-light-clock-strip">
       <TentLightClock tent="main" compact />
       <TentLightClock tent="clone" compact />
+    </div>
+  );
+}
+
+/**
+ * One-line-per-tent status ("4×8 lit, off in 2h") that links to Light rather than
+ * duplicating its full clock widget — Light stays the single owner of the detail
+ * (redundancy-map fix). Overview and Dash Legacy should use this, not the full strip.
+ */
+function TentLightSummaryChip({ tent }: { tent: TentPhotoperiodId }) {
+  const navigate = useNavigate();
+  const schedule = useTentLightSchedule(tent);
+  const title = tentLabel(tent);
+
+  if (!schedule.valid) {
+    return (
+      <StatusChip
+        icon="alert"
+        label={`${title} — no schedule`}
+        tone="warn"
+        onClick={() => navigate("/live/light")}
+      />
+    );
+  }
+
+  const isLit = schedule.phase === "lit";
+  const durationMs = isLit ? schedule.untilOffMs : schedule.untilOnMs;
+  const durationLabel = durationMs != null ? fmtDurationMs(durationMs) : null;
+  const label = isLit
+    ? `${title} lit${durationLabel ? `, off in ${durationLabel}` : ""}`
+    : `${title} dark${durationLabel ? `, on in ${durationLabel}` : ""}`;
+
+  return (
+    <StatusChip
+      icon="lighting"
+      label={label}
+      tone={isLit ? "ok" : "muted"}
+      onClick={() => navigate("/live/light")}
+    />
+  );
+}
+
+export function TentLightSummaryLine() {
+  return (
+    <div className="dsc-chip-row" style={{ marginBottom: 4 }}>
+      <TentLightSummaryChip tent="main" />
+      <TentLightSummaryChip tent="clone" />
     </div>
   );
 }
