@@ -676,12 +676,39 @@ def test_esphome_toolchain_status_shape(temp_db: Path, monkeypatch: pytest.Monke
         tc, "latest", lambda *, force=False: {"version": "2026.8.0", "ok": True, "eth_up": True}
     )
     monkeypatch.setattr(tc, "device_versions", lambda: [])
+    monkeypatch.setattr(tc, "build_backend", lambda: "venv")
     st = tc.status()
     assert st["installed"] == "2026.6.5"
     assert st["latest"] == "2026.8.0"
     assert st["update_available"] is True
     assert st["meets_min"] is True
     assert st["dashboard_url"].endswith(":6052")
+    assert st["build_backend"] == "venv"
+
+
+def test_esphome_installed_from_dashboard(monkeypatch: pytest.MonkeyPatch) -> None:
+    """No local CLI: installed() comes from the dashboard /version over HTTP."""
+    from dsc_brain import esphome_toolchain as tc
+
+    monkeypatch.setattr(
+        tc, "_dash_get", lambda path, timeout=4.0: {"version": "2025.12.4"} if path == "/version" else None
+    )
+    monkeypatch.setattr(tc, "esphome_bin", lambda: "/nope/esphome")
+    assert tc.installed() == "2025.12.4"
+    assert tc.build_backend() == "dashboard"
+
+
+def test_esphome_job_routes_to_dashboard(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """With no local CLI but a reachable dashboard, _run_job POSTs to it."""
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from dsc_brain import esphome_jobs as ej
+
+    monkeypatch.setattr(ej, "_local_esphome_available", lambda: False)
+    monkeypatch.setattr(ej, "build_backend", lambda: "dashboard")
+    seen: dict[str, Any] = {}
+    monkeypatch.setattr(ej, "_run_job_via_dashboard", lambda job, db=None: seen.update(job))
+    ej._run_job({"job_id": "j1", "seat_id": "hub", "action": "compile", "yaml_name": "dsc-hub.yaml"}, temp_db)
+    assert seen.get("yaml_name") == "dsc-hub.yaml"
 
 
 def test_esphome_toolchain_update_refuses_below_min(

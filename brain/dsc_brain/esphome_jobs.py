@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import threading
 import time
+import urllib.parse
+import urllib.request
 import uuid
 from pathlib import Path
 from typing import Any
 
-from .esphome_toolchain import esphome_bin, project_dir, run_env
+from .esphome_toolchain import build_backend, dashboard_api, esphome_bin, project_dir, run_env
 from .paths import DEFAULT_DB, EXPECTED_FIRMWARE
 from .settings import connect, list_inventory
 
@@ -75,6 +78,55 @@ def _update_job(
     conn.close()
 
 
+def _local_esphome_available() -> bool:
+    eb = esphome_bin()
+    return bool(eb and (Path(eb).exists() or shutil.which(eb)))
+
+
+def _run_job_via_dashboard(job: dict[str, Any], db_path: Path | None = None) -> None:
+    """No local CLI, but the ESPHome dashboard is reachable — it IS the build
+    service. POST /compile or /upload with `configuration=<yaml>` and stream the
+    build log back into job detail. Connection close = process finished.
+    """
+    job_id = str(job["job_id"])
+    action = str(job["action"])
+    yaml_name = str(job["yaml_name"])
+    endpoint = "/compile" if action == "compile" else "/upload"
+    url = dashboard_api().rstrip("/") + endpoint
+    body = urllib.parse.urlencode({"configuration": yaml_name}).encode()
+    _update_job(job_id, "running", f"POST {url}  configuration={yaml_name}\n", db_path)
+    chunks: list[str] = []
+    last = 0.0
+    try:
+        req = urllib.request.Request(
+            url, data=body, headers={"Content-Type": "application/x-www-form-urlencoded"}
+        )
+        with urllib.request.urlopen(req, timeout=1800) as resp:  # noqa: S310
+            for raw in resp:
+                chunks.append(raw.decode("utf-8", "replace"))
+                if time.time() - last >= 2.0:
+                    _update_job(job_id, "running", "".join(chunks)[-2000:], db_path)
+                    last = time.time()
+        tail = "".join(chunks)
+        low = tail.lower()
+        ok = ("error" not in low and "failed" not in low) or "successfully" in low
+        _update_job(
+            job_id,
+            "done" if ok else "failed",
+            (tail[-3800:] or f"{action} via dashboard finished")
+            + "\n\n(via ESPHome dashboard — no exit code; check the dashboard for detail)",
+            db_path,
+        )
+    except Exception as exc:  # noqa: BLE001
+        _update_job(
+            job_id,
+            "failed",
+            "".join(chunks)[-2000:] + f"\n\ndashboard {endpoint} failed: {exc}\n"
+            "Fallbacks: set esphome_bin to a venv CLI, or use pi/flash-*-remote.sh.",
+            db_path,
+        )
+
+
 def _run_job(job: dict[str, Any], db_path: Path | None = None) -> None:
     job_id = str(job["job_id"])
     seat_id = str(job["seat_id"])
@@ -83,6 +135,9 @@ def _run_job(job: dict[str, Any], db_path: Path | None = None) -> None:
     host = _inventory_host(seat_id)
     _update_job(job_id, "running", f"Running {action} for {seat_id}…", db_path)
     eb = esphome_bin()
+    if not _local_esphome_available() and build_backend() == "dashboard":
+        _run_job_via_dashboard(job, db_path)
+        return
     if action == "compile":
         cmd = [eb, "compile", yaml_name]
     else:

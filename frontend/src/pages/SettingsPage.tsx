@@ -962,9 +962,17 @@ export function SettingsPage() {
                   Open ESPHome Dashboard ↗
                 </a>
               </p>
+              <p className="dsc-muted" style={{ margin: "4px 0", fontSize: 12 }}>
+                Build backend:{" "}
+                {toolchain.build_backend === "dashboard"
+                  ? `ESPHome dashboard (${String(toolchain.dashboard_api ?? "")})`
+                  : toolchain.build_backend === "venv"
+                    ? `local venv (${String(toolchain.esphome_bin ?? "")})`
+                    : "none — compile/OTA unavailable; use pi/flash-*-remote.sh"}
+              </p>
               {Array.isArray(toolchain.devices_behind) && (toolchain.devices_behind as string[]).length > 0 ? (
                 <p className="dsc-muted" style={{ margin: "4px 0" }}>
-                  Running a different ESPHome than the venv:{" "}
+                  Running an ESPHome other than {String(toolchain.installed ?? "installed")}:{" "}
                   {(toolchain.devices_behind as string[]).join(", ")}
                 </p>
               ) : null}
@@ -987,7 +995,8 @@ export function SettingsPage() {
             </>
           ) : (
             <p className="dsc-muted" style={{ margin: "4px 0" }}>
-              Toolchain status unavailable — brain offline, or the ESPHome venv is not installed on this Pi.
+              Toolchain status unavailable — brain offline, or neither the ESPHome dashboard (:6052) nor a
+              local venv is reachable.
             </p>
           )}
           {toolchainMsg ? <p className="dsc-muted">{toolchainMsg}</p> : null}

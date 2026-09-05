@@ -96,9 +96,40 @@ def project_dir() -> Path:
 
 
 def dashboard_url() -> str:
+    """Browser link for Settings (operator's LAN view)."""
     return get_setting("esphome_dashboard_url", "http://dsc-brain.local:6052").strip() or (
         "http://dsc-brain.local:6052"
     )
+
+
+def dashboard_api() -> str:
+    """brain -> ESPHome dashboard HTTP base. The dashboard is the build service."""
+    return (
+        get_setting("esphome_dashboard_api", "").strip()
+        or os.environ.get("DSC_ESPHOME_DASHBOARD_API", "").strip()
+        or "http://dsc-hub-esphome:6052"
+    )
+
+
+def _dash_get(path: str, timeout: float = 4.0) -> Any:
+    """GET JSON from the dashboard; None on any failure (offline / not deployed)."""
+    url = dashboard_api().rstrip("/") + path
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "dsc-brain"})
+        with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
+            return json.loads(resp.read().decode("utf-8"))
+    except Exception:  # noqa: BLE001 — status must never raise
+        return None
+
+
+def dashboard_devices() -> list[dict[str, Any]]:
+    """`GET /devices` from the dashboard: configuration + current/deployed version."""
+    data = _dash_get("/devices")
+    if isinstance(data, dict):
+        return [d for d in data.get("configured", []) if isinstance(d, dict)]
+    if isinstance(data, list):  # some builds return a bare list
+        return [d for d in data if isinstance(d, dict)]
+    return []
 
 
 def platformio_core_dir() -> str:
@@ -122,7 +153,16 @@ def run_env() -> dict[str, str]:
 # Versions
 # --------------------------------------------------------------------------- #
 def installed() -> str | None:
-    """ESPHome version in the venv, or None if the binary is unavailable."""
+    """Installed ESPHome version.
+
+    Prefer the dashboard's `/version` (works cross-container, no binary needed);
+    fall back to the venv `esphome version` for a host/venv deployment.
+    """
+    data = _dash_get("/version", timeout=3.0)
+    if isinstance(data, dict):
+        m = _VERSION_RE.search(str(data.get("version", "")))
+        if m:
+            return m.group(1)
     try:
         out = subprocess.run(
             [esphome_bin(), "version"],
@@ -200,6 +240,16 @@ def device_versions() -> list[dict[str, Any]]:
         seats.append((str(key), seat))
 
     inst = installed()
+    # dashboard `/devices`: configuration -> deployed_version (last flash by the dashboard)
+    from .esphome_jobs import SEAT_YAML
+
+    deployed_by_yaml: dict[str, str] = {}
+    for d in dashboard_devices():
+        cfg = str(d.get("configuration") or "")
+        dv = str(d.get("deployed_version") or "")
+        if cfg and dv:
+            deployed_by_yaml[cfg] = dv
+
     out: list[dict[str, Any]] = []
     for seat_id, seat in seats:
         values = seat.get("values") if isinstance(seat, dict) else None
@@ -208,11 +258,13 @@ def device_versions() -> list[dict[str, Any]]:
             running = seat.get("firmware")
         if not running and isinstance(values, dict):
             running = values.get("esphome_version")
+        deployed = deployed_by_yaml.get(SEAT_YAML.get(seat_id, ""))
         out.append(
             {
                 "seat_id": seat_id,
                 "online": bool(seat.get("online")) if isinstance(seat, dict) else False,
                 "running": running,
+                "deployed": deployed,
                 "matches_installed": bool(running and inst and _vtuple(running) == _vtuple(inst)),
             }
         )
@@ -222,6 +274,16 @@ def device_versions() -> list[dict[str, Any]]:
 # --------------------------------------------------------------------------- #
 # Status snapshot
 # --------------------------------------------------------------------------- #
+def build_backend() -> str:
+    """Where compile/OTA actually runs: 'venv' (local CLI), 'dashboard' (HTTP), or 'none'."""
+    eb = esphome_bin()
+    if eb and (Path(eb).exists() or shutil.which(eb)):
+        return "venv"
+    if _dash_get("/version", timeout=3.0) is not None:
+        return "dashboard"
+    return "none"
+
+
 def status(*, force_latest: bool = False) -> dict[str, Any]:
     inst = installed()
     lat = latest(force=force_latest)
@@ -230,6 +292,7 @@ def status(*, force_latest: bool = False) -> dict[str, Any]:
     update_available = bool(lat.get("ok") and inst and _vtuple(lat["version"]) > _vtuple(inst))
     devices = device_versions()
     behind = [d for d in devices if d["running"] and not d["matches_installed"]]
+    backend = build_backend()
     return {
         "installed": inst,
         "latest": lat.get("version"),
@@ -241,6 +304,8 @@ def status(*, force_latest: bool = False) -> dict[str, Any]:
         "checked_at": lat.get("checked_at"),
         "update_available": update_available,
         "dashboard_url": dashboard_url(),
+        "dashboard_api": dashboard_api(),
+        "build_backend": backend,
         "esphome_bin": esphome_bin(),
         "project_dir": str(project_dir()),
         "last_built_esphome": last_built or None,
