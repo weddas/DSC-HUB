@@ -10,6 +10,33 @@ export type HeldReading = {
   live: boolean;
 };
 
+/** Default staleness horizon for readings that carry their own `updated_at`
+ *  (Zigbee-by-role, and other fleet-snapshot values that aren't HA entities). */
+export const TIMESTAMPED_READING_STALE_MS = 10 * 60 * 1000;
+
+export type TimestampedReading = { value: number; stale: boolean };
+
+/**
+ * Pure last-known-good for a value that arrives with its own epoch-seconds
+ * timestamp in the fleet snapshot rather than as an entity on the bus. No
+ * subscription — call it with values you already have.
+ *
+ * Fails closed: a non-finite value, or no usable timestamp, is `stale` (we do
+ * not assume a bare number is live). Mirrors the inline gate ClimatePage uses
+ * for `zigbee_by_role` so surfaces can share one rule (see DESIGN-TOKENS §3.1).
+ */
+export function useTimestampedReading(
+  value: number | string | null | undefined,
+  updatedAtSec: number | string | null | undefined,
+  staleMs: number = TIMESTAMPED_READING_STALE_MS,
+): TimestampedReading {
+  const num = typeof value === "number" ? value : value == null || value === "" ? NaN : Number(value);
+  const ts = typeof updatedAtSec === "number" ? updatedAtSec : Number(updatedAtSec);
+  if (!Number.isFinite(num)) return { value: NaN, stale: false };
+  const stale = Number.isFinite(ts) ? Date.now() - ts * 1000 > staleMs : true;
+  return { value: num, stale };
+}
+
 const HUB_UPTIME = "sensor.dsc_hub_uptime";
 const HUB_BEAT = "sensor.dsc_hub_heartbeat";
 
