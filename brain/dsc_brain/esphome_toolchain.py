@@ -425,8 +425,18 @@ def _run_update(job_id: str, target: str | None, db_path: Path | None = None) ->
 
 
 def update_to_latest(*, target: str | None = None, db_path: Path | None = None) -> dict[str, Any]:
-    """Kick off `pip install -U esphome` in the venv. Ethernet-gated, one at a time."""
+    """Kick off `pip install -U esphome` in the venv. Ethernet-gated, one at a time.
+
+    Only for the 'venv' build backend. When ESPHome runs as the dashboard
+    container, `pip` can't touch its image — bump the tag in docker-compose.yml.
+    """
     global _update_running
+    if build_backend() != "venv":
+        raise RuntimeError(
+            "this kit runs ESPHome as the dashboard container — `pip` can't update it. "
+            "Bump `image: esphome/esphome:<version>` in services/dsc-hub/docker-compose.yml, "
+            "redeploy, then `docker compose pull esphome && docker compose up -d esphome`."
+        )
     if not eth_carrier_up():
         raise ValueError("toolchain update needs an ethernet link")
 

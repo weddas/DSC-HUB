@@ -718,6 +718,7 @@ def test_esphome_toolchain_update_refuses_below_min(
 ) -> None:
     from dsc_brain import esphome_toolchain as tc
 
+    monkeypatch.setattr(tc, "build_backend", lambda: "venv")
     monkeypatch.setattr(tc, "eth_carrier_up", lambda: True)
     monkeypatch.setattr(tc, "installed", lambda: "2026.6.5")
     monkeypatch.setattr(
@@ -732,8 +733,19 @@ def test_esphome_toolchain_update_refuses_offline(
 ) -> None:
     from dsc_brain import esphome_toolchain as tc
 
+    monkeypatch.setattr(tc, "build_backend", lambda: "venv")
     monkeypatch.setattr(tc, "eth_carrier_up", lambda: False)
     with pytest.raises(ValueError, match="ethernet"):
+        tc.update_to_latest(db_path=temp_db)
+
+
+def test_esphome_toolchain_update_refuses_on_container_backend(
+    temp_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dsc_brain import esphome_toolchain as tc
+
+    monkeypatch.setattr(tc, "build_backend", lambda: "dashboard")
+    with pytest.raises(RuntimeError, match="dashboard container"):
         tc.update_to_latest(db_path=temp_db)
 
 
