@@ -9,6 +9,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from .esphome_toolchain import esphome_bin, project_dir, run_env
 from .paths import DEFAULT_DB, EXPECTED_FIRMWARE
 from .settings import connect, list_inventory
 
@@ -38,7 +39,8 @@ SEAT_YAML: dict[str, str] = {
     "dehumidifier": "dsc-de-humidifier.yaml",
 }
 
-ESPHOME_CONTAINER = "dsc-hub-esphome"
+# v8: the ESPHome CLI now runs from the Pi venv (esphome_toolchain.esphome_bin),
+# not `docker exec dsc-hub-esphome …`. One venv serves the dashboard + this queue.
 
 _worker_thread: threading.Thread | None = None
 _worker_running = False
@@ -80,22 +82,16 @@ def _run_job(job: dict[str, Any], db_path: Path | None = None) -> None:
     yaml_name = str(job["yaml_name"])
     host = _inventory_host(seat_id)
     _update_job(job_id, "running", f"Running {action} for {seat_id}…", db_path)
+    eb = esphome_bin()
     if action == "compile":
-        cmd = ["docker", "exec", ESPHOME_CONTAINER, "esphome", "compile", yaml_name]
+        cmd = [eb, "compile", yaml_name]
     else:
         if not host:
             _update_job(job_id, "failed", f"No host configured for seat {seat_id}", db_path)
             return
-        cmd = [
-            "docker",
-            "exec",
-            ESPHOME_CONTAINER,
-            "esphome",
-            "run",
-            yaml_name,
-            "--device",
-            host,
-        ]
+        # --no-logs: OTA returns once the image is uploaded instead of attaching
+        # to the device log stream and blocking the worker forever.
+        cmd = [eb, "run", yaml_name, "--device", host, "--no-logs"]
     chunks: list[str] = []
     last_detail_at = 0.0
     try:
@@ -105,6 +101,8 @@ def _run_job(job: dict[str, Any], db_path: Path | None = None) -> None:
             stderr=subprocess.STDOUT,
             text=True,
             bufsize=1,
+            cwd=str(project_dir()),
+            env=run_env(),
         )
         if proc.stdout:
             for line in proc.stdout:
@@ -127,7 +125,8 @@ def _run_job(job: dict[str, Any], db_path: Path | None = None) -> None:
         _update_job(
             job_id,
             "failed",
-            f"docker not available — run manually: docker exec {ESPHOME_CONTAINER} esphome run {yaml_name}",
+            f"esphome CLI not found at '{eb}' — check the Pi venv / esphome_bin setting. "
+            f"Run manually: {eb} {action} {yaml_name}",
             db_path,
         )
     except Exception as exc:  # noqa: BLE001
@@ -231,7 +230,7 @@ def queue_job(seat_id: str, action: str, db_path: Path | None = None) -> dict[st
                 raise RuntimeError("OTA already queued for this seat")
     now = time.time()
     job_id = str(uuid.uuid4())
-    detail = f"Queued — worker will docker exec {ESPHOME_CONTAINER} esphome {action} {yaml_name}"
+    detail = f"Queued — worker will run: {esphome_bin()} {action} {yaml_name}"
     conn.execute(
         """
         INSERT INTO esphome_jobs(job_id, seat_id, action, yaml_name, status, detail, created_at, updated_at)

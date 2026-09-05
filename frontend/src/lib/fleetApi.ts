@@ -150,6 +150,34 @@ export async function get_esphome_jobs(): Promise<Array<Record<string, unknown>>
   return data.jobs as Array<Record<string, unknown>>;
 }
 
+export async function get_esphome_toolchain(refresh = false): Promise<Record<string, unknown>> {
+  const resp = await fetch(`/settings/esphome/toolchain${refresh ? "?refresh=true" : ""}`);
+  if (!resp.ok) throw new Error("esphome toolchain status failed");
+  return resp.json();
+}
+
+export async function update_esphome_toolchain(target?: string): Promise<Record<string, unknown>> {
+  const resp = await fetch("/settings/esphome/toolchain/update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ target: target ?? null }),
+  });
+  if (!resp.ok) throw new Error((await resp.text()) || "esphome toolchain update failed");
+  return resp.json();
+}
+
+export async function get_esphome_rollout(): Promise<Record<string, unknown>> {
+  const resp = await fetch("/settings/esphome/rollout");
+  if (!resp.ok) throw new Error("esphome rollout status failed");
+  return resp.json();
+}
+
+export async function start_esphome_rollout(): Promise<Record<string, unknown>> {
+  const resp = await fetch("/settings/esphome/rollout", { method: "POST" });
+  if (!resp.ok) throw new Error((await resp.text()) || "esphome rollout failed");
+  return resp.json();
+}
+
 export async function test_ollama(): Promise<Record<string, unknown>> {
   const resp = await fetch("/settings/integrations/test-ollama", { method: "POST" });
   return resp.json();

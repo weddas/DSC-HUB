@@ -93,6 +93,13 @@ DEFAULT_SETTINGS: dict[str, str] = {
     "kit_commissioned": "false",
     "kit_setup_phase": "welcome",
     "kit_setup_debt": "[]",
+    # ESPHome toolchain (Pi venv — no Home Assistant / Docker in the path).
+    # Empty values resolve to defaults in esphome_toolchain.py / esphome_jobs.py.
+    "esphome_bin": "",
+    "esphome_project_dir": "",
+    "esphome_dashboard_url": "http://dsc-brain.local:6052",
+    "esphome_fleet_ota_prompt": "true",
+    "last_built_esphome": "",
 }
 
 

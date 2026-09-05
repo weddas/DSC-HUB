@@ -1,0 +1,21 @@
+[Unit]
+Description=DSC-HUB ESPHome dashboard (Pi venv on :6052 — supersedes the dsc-hub-esphome container)
+After=network-online.target dsc-esphome-venv-setup.service
+Wants=network-online.target
+Requires=dsc-esphome-venv-setup.service
+
+[Service]
+Type=simple
+User=dsc
+WorkingDirectory=/opt/dsc-hub-repo/firmware/v4
+Environment=PLATFORMIO_CORE_DIR=/var/lib/dsc-hub/platformio
+Environment=ESPHOME_DASHBOARD_USE_PING=true
+ExecStart=/opt/dsc-esphome-venv/bin/esphome dashboard /opt/dsc-hub-repo/firmware/v4 --address 0.0.0.0 --port 6052
+Restart=always
+RestartSec=5
+# `POST /settings/esphome/toolchain/update` runs `pip -U esphome` then restarts
+# this unit; keep restarts unthrottled so that always succeeds.
+StartLimitIntervalSec=0
+
+[Install]
+WantedBy=multi-user.target

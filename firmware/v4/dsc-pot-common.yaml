@@ -129,6 +129,9 @@ substitutions:
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
+  # Pinned 2026-09-06: floor the build toolchain to the last QA-validated
+  # ESPHome (2026.6.5). Bump only after `esphome config` + the QA rig pass.
+  min_version: "2026.6.5"
   project:
     name: digital_emotions.dsc-probe
     version: "7.1.0.0"

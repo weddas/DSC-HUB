@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- **ESPHome toolchain** — firmware pins `esphome: min_version: "2026.6.5"` across all
+  device families (`dsc-hub-v4_0`, `dsc-control-common`, `dsc-pot-common`,
+  `dsc-sonoff-common`); builds on an older ESPHome now fail fast. Settings → Device
+  gains an ESPHome card: installed vs latest (PyPI, Ethernet-gated) vs pinned min,
+  a one-click **Update ESPHome** action (venv `pip install -U esphome`), per-seat
+  running-version drift, and an **Open ESPHome Dashboard** link
+  (`http://dsc-brain.local:6052`). After a toolchain bump the brain stages a
+  fleet-OTA rollout that runs on one confirm click (serialised, hub last).
+- **ESPHome job runner** — moved from `docker exec dsc-hub-esphome …` to the Pi's
+  ESPHome venv (`esphome_bin` / `esphome_project_dir` settings); dashboard runs as
+  `dsc-esphome-dashboard.service`.
+- **Zigbee UX (phase 0–1)** — shared `ZigbeeDeviceTable` primitive; Zigbee
+  temp/RH readings now carry a staleness badge (`last_seen`), including the
+  Climate → Zigbee-by-role table.
+
 ## Pi appliance — **v7.3.0** (2026-08-27)
 
 Full software closure: version truth, graph QoL, flow Sankey (air/heat/humidity), lab wet cal, R3F Twin on Pi SPA, Lovelace YAML retired. See [`docs/qa/AUDIT-CLOSURE-7.3.md`](docs/qa/AUDIT-CLOSURE-7.3.md).

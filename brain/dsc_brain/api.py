@@ -28,6 +28,12 @@ from .decision_loop import decision_tick
 from .appliance_driver import start_appliance_driver, stop_appliance_driver
 from .esphome_client import start_esphome_ingest, stop_esphome_ingest
 from .esphome_jobs import list_esphome_devices, list_jobs, queue_job, start_esphome_worker, stop_esphome_worker
+from .esphome_toolchain import (
+    pending_fleet_rollout,
+    start_fleet_rollout,
+    status as esphome_toolchain_status,
+    update_to_latest as esphome_toolchain_update,
+)
 from .fleet_state import get_fleet_state, merge_inventory_oos_seats
 from .integrations import CatalogSearchError, catalog_search, catalog_status, catalog_strain_detail, test_cannalib, test_ollama
 from .network_apply import apply_network_configs, network_status
@@ -176,6 +182,10 @@ class ZigbeePoliciesBody(BaseModel):
 class EsphomeJobBody(BaseModel):
     seat_id: str
     action: str = "ota"
+
+
+class EsphomeToolchainUpdateBody(BaseModel):
+    target: str | None = None  # pin to an explicit version, else latest
 
 
 class SetupPhaseBody(BaseModel):
@@ -1099,6 +1109,39 @@ def settings_esphome_queue(body: EsphomeJobBody) -> dict[str, Any]:
         raise HTTPException(409, str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
+
+
+@app.get("/settings/esphome/toolchain")
+def settings_esphome_toolchain(refresh: bool = Query(False)) -> dict[str, Any]:
+    """Installed vs latest (PyPI) vs pinned min_version, plus per-seat drift."""
+    return esphome_toolchain_status(force_latest=refresh)
+
+
+@app.post("/settings/esphome/toolchain/update")
+def settings_esphome_toolchain_update(body: EsphomeToolchainUpdateBody) -> dict[str, Any]:
+    """`pip install -U esphome` in the Pi venv. Ethernet-gated, one at a time."""
+    if _demo_mode():
+        _demo_forbidden()
+    try:
+        return esphome_toolchain_update(target=body.target)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(409, str(exc)) from exc
+
+
+@app.get("/settings/esphome/rollout")
+def settings_esphome_rollout() -> dict[str, Any]:
+    """Seats that would be reflashed if the operator confirms a post-upgrade rollout."""
+    return pending_fleet_rollout()
+
+
+@app.post("/settings/esphome/rollout")
+def settings_esphome_rollout_start() -> dict[str, Any]:
+    """One confirm click: enqueue an OTA per in-service seat, hub last."""
+    if _demo_mode():
+        _demo_forbidden()
+    return start_fleet_rollout()
 
 
 @app.get("/settings/backup/export")

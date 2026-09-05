@@ -1,0 +1,14 @@
+[Unit]
+Description=DSC-HUB ESPHome venv provisioning (one-shot, idempotent)
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=!/opt/dsc-esphome-venv/bin/esphome
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/opt/dsc-hub/pi/dsc-esphome-venv-setup.sh
+TimeoutStartSec=1200
+
+[Install]
+WantedBy=multi-user.target

@@ -28,6 +28,8 @@ import {
   get_catalog_status,
   get_esphome_devices,
   get_esphome_jobs,
+  get_esphome_rollout,
+  get_esphome_toolchain,
   get_fleet_state,
   getGlobalModifiers,
   get_network_status,
@@ -47,8 +49,10 @@ import {
   put_zigbee_policies,
   queue_esphome_job,
   reload_catalogs,
+  start_esphome_rollout,
   test_cannalib,
   test_ollama,
+  update_esphome_toolchain,
   type GlobalModifiers,
   type ProbeStation,
   type ZigbeeRecipe,
@@ -70,6 +74,11 @@ export function SettingsPage() {
   const [catalog, setCatalog] = useState<Record<string, unknown> | null>(null);
   const [esphome, setEsphome] = useState<Array<Record<string, unknown>>>([]);
   const [jobs, setJobs] = useState<Array<Record<string, unknown>>>([]);
+  const [toolchain, setToolchain] = useState<Record<string, unknown> | null>(null);
+  const [rollout, setRollout] = useState<Record<string, unknown> | null>(null);
+  const [toolchainMsg, setToolchainMsg] = useState<string>("");
+  const [pendingToolchain, setPendingToolchain] = useState(false);
+  const [pendingRollout, setPendingRollout] = useState(false);
   const [zigbeeDevices, setZigbeeDevices] = useState<Array<Record<string, unknown>>>([]);
   const [zigbeeHealth, setZigbeeHealth] = useState<Record<string, unknown> | null>(null);
   const [zigbeeRoles, setZigbeeRoles] = useState<ZigbeeRole[]>([]);
@@ -147,6 +156,12 @@ export function SettingsPage() {
     setCatalog(cat);
     setEsphome((esp.devices as Array<Record<string, unknown>>) ?? []);
     setJobs(j);
+    void get_esphome_toolchain()
+      .then(setToolchain)
+      .catch(() => setToolchain(null));
+    void get_esphome_rollout()
+      .then(setRollout)
+      .catch(() => setRollout(null));
     setFleet(fleetRaw ? parseFleetSnapshot(fleetRaw) : null);
     setZigbeeDevices(zigbee.devices ?? []);
     setZigbeeHealth(zigbeeHealthRaw);
@@ -911,6 +926,73 @@ export function SettingsPage() {
           Updates are sent over the air. One build runs at a time, and nothing is flashed unless you queue it.
         </p>
         <p className="dsc-muted">Pot 5 and beyond are unavailable until their firmware exists.</p>
+
+        <div className="dsc-honesty" style={{ marginBottom: 12 }}>
+          <b>Build toolchain</b>
+          {toolchain ? (
+            <>
+              <p className="dsc-muted" style={{ margin: "4px 0" }}>
+                Installed <b>{String(toolchain.installed ?? "—")}</b>
+                {" · "}Latest{" "}
+                <b>{toolchain.latest_ok ? String(toolchain.latest ?? "—") : "offline"}</b>
+                {" · "}Pinned min <b>{String(toolchain.min_version ?? "—")}</b>{" "}
+                {toolchain.meets_min === false ? (
+                  <StatusChip label="BELOW PINNED MIN" tone="bad" />
+                ) : null}
+              </p>
+              {toolchain.latest_error ? (
+                <p className="dsc-muted" style={{ margin: "4px 0" }}>
+                  {String(toolchain.latest_error)}
+                </p>
+              ) : null}
+              <p style={{ margin: "6px 0", display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                <Button
+                  onClick={() => setPendingToolchain(true)}
+                  disabled={toolchain.update_available !== true || toolchain.eth_up !== true}
+                >
+                  {toolchain.update_available === true
+                    ? `Update ESPHome → ${String(toolchain.latest)}`
+                    : "ESPHome up to date"}
+                </Button>
+                <a
+                  href={String(toolchain.dashboard_url ?? "http://dsc-brain.local:6052")}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Open ESPHome Dashboard ↗
+                </a>
+              </p>
+              {Array.isArray(toolchain.devices_behind) && (toolchain.devices_behind as string[]).length > 0 ? (
+                <p className="dsc-muted" style={{ margin: "4px 0" }}>
+                  Running a different ESPHome than the venv:{" "}
+                  {(toolchain.devices_behind as string[]).join(", ")}
+                </p>
+              ) : null}
+              {toolchain.update_job ? (
+                <pre style={{ maxHeight: 160, overflow: "auto", fontSize: 11, whiteSpace: "pre-wrap" }}>
+                  [{String((toolchain.update_job as Record<string, unknown>).status ?? "")}]{"\n"}
+                  {String((toolchain.update_job as Record<string, unknown>).detail ?? "")}
+                </pre>
+              ) : null}
+              {rollout &&
+              rollout.needed === true &&
+              Array.isArray(rollout.seats) &&
+              (rollout.seats as unknown[]).length > 0 ? (
+                <p className="dsc-honesty" style={{ margin: "6px 0" }}>
+                  Toolchain changed — {(rollout.seats as unknown[]).length} device(s) can be reflashed on the new
+                  ESPHome (serialised, hub last).{" "}
+                  <Button onClick={() => setPendingRollout(true)}>Reflash fleet</Button>
+                </p>
+              ) : null}
+            </>
+          ) : (
+            <p className="dsc-muted" style={{ margin: "4px 0" }}>
+              Toolchain status unavailable — brain offline, or the ESPHome venv is not installed on this Pi.
+            </p>
+          )}
+          {toolchainMsg ? <p className="dsc-muted">{toolchainMsg}</p> : null}
+        </div>
+
         <div className="dsc-table-scroll">
           <table className="dsc-table">
           <thead>
@@ -959,6 +1041,54 @@ export function SettingsPage() {
           <p>
             Queues an ESPHome {pendingOta?.action === "compile" ? "compile" : "OTA"} job for{" "}
             <strong>{pendingOta?.seatId ?? "device"}</strong>. Nothing flashes until the build worker runs.
+          </p>
+        </DecisionLayer>
+        <DecisionLayer
+          open={pendingToolchain}
+          onDismiss={() => setPendingToolchain(false)}
+          onConfirm={async () => {
+            setPendingToolchain(false);
+            setToolchainMsg("Updating ESPHome venv…");
+            try {
+              const r = await update_esphome_toolchain();
+              setToolchainMsg(`Update started → ${String(r.target ?? "latest")}. Watch the log below.`);
+            } catch (e) {
+              setToolchainMsg(String((e as Error).message || e));
+            }
+            await refresh();
+          }}
+          title="Update the ESPHome build toolchain"
+          confirmLabel="Update ESPHome"
+          help={null}
+        >
+          <p>
+            Runs <code>pip install -U esphome</code> in the Pi venv, then restarts the dashboard service.
+            No devices are touched. After it finishes you&apos;ll be offered a fleet reflash.
+          </p>
+        </DecisionLayer>
+        <DecisionLayer
+          open={pendingRollout}
+          onDismiss={() => setPendingRollout(false)}
+          onConfirm={async () => {
+            setPendingRollout(false);
+            try {
+              const r = await start_esphome_rollout();
+              const q = Array.isArray(r.queued) ? (r.queued as string[]).length : 0;
+              setToolchainMsg(`Queued ${q} OTA job(s). They run one at a time; the hub is flashed last.`);
+            } catch (e) {
+              setToolchainMsg(String((e as Error).message || e));
+            }
+            await refresh();
+          }}
+          title="Reflash the fleet on the new ESPHome"
+          confirmLabel="Queue fleet OTA"
+          help={null}
+        >
+          <p>
+            Enqueues one OTA per in-service device
+            {Array.isArray(rollout?.seats) ? ` (${(rollout!.seats as unknown[]).length})` : ""}. Jobs run
+            serialised through the existing build worker, with the hub flashed last so a mid-rollout failure
+            doesn&apos;t drop everything at once.
           </p>
         </DecisionLayer>
         {jobs.length ? (
@@ -1270,10 +1400,6 @@ export function SettingsPage() {
           <p className="dsc-honesty">
             Settings are split by blast radius: Hub (backup), Brain (tuning), Device (kit), API, Network, Server
             (ESPHome jobs), General.
-          </p>
-          <p className="dsc-muted">
-            HA-native automations (<code>homeassistant/packages/dsc_v4_automations.yaml</code>) are not managed from
-            this app — edit them via Home Assistant&apos;s own Settings → Automations editor, or the file directly.
           </p>
         </section>
       ) : null}
