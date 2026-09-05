@@ -22,6 +22,7 @@ export const SECTION_SUBTITLE: Record<SettingsSectionId, string> = {
 };
 
 export const AP_KEYS = ["ap_ssid", "ap_psk", "ap_channel"] as const;
+export const BRAIN_KEYS = ["leaf_offset_c"] as const;
 export const INTEGRATION_KEYS = [
   "ollama_base_url",
   "ollama_model",

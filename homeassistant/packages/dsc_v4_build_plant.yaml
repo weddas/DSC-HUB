@@ -1041,8 +1041,18 @@ script:
     alias: "DSC Build Plant · Commit and assign"
     description: "Commit the builder to roster, then assign it when a pot is selected."
     mode: single
+    fields:
+      pot:
+        name: Pot
+        description: "1–4; falls back to input_select.dsc_build_assign_pot if omitted."
+        example: "1"
+        required: false
+        selector:
+          select:
+            options: ["1", "2", "3", "4"]
     sequence:
       - variables:
+          n: "{{ (pot if pot is defined and pot|string|trim else states('input_select.dsc_build_assign_pot'))|string|trim }}"
           roster_free: >
             {% set ns = namespace(s=0) %}
             {% for i in range(1,9) %}
@@ -1064,10 +1074,10 @@ script:
                 error: true
       - action: script.dsc_build_plant_commit
       - condition: template
-        value_template: "{{ states('input_select.dsc_build_assign_pot') in ['1','2','3','4'] }}"
+        value_template: "{{ n in ['1','2','3','4'] }}"
       - action: script.dsc_plant_assign_to_pot
         data:
-          pot: "{{ states('input_select.dsc_build_assign_pot') }}"
+          pot: "{{ n }}"
 
   dsc_blend_autofill_from_medium:
     alias: "DSC Build Plant · Autofill medium blend"

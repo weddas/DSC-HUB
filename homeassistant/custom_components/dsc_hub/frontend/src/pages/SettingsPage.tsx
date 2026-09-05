@@ -8,6 +8,7 @@ import { DeviceDetailCard } from "../components/settings/DeviceDetailCard";
 import {
   AP_CHANNELS,
   AP_KEYS,
+  BRAIN_KEYS,
   CLIMATE_ZONES,
   FLOOD_TASK_ID,
   IDLE_POT_OPTIONS,
@@ -62,6 +63,7 @@ export function SettingsPage() {
   const section = parseSettingsSection(location.pathname);
   const [apDraft, setApDraft] = useState<Record<string, string>>({});
   const [integrationsDraft, setIntegrationsDraft] = useState<Record<string, string>>({});
+  const [brainDraft, setBrainDraft] = useState<Record<string, string>>({});
   const [inventory, setInventory] = useState<Array<Record<string, unknown>>>([]);
   const [fleet, setFleet] = useState<FleetSnapshot | null>(null);
   const [network, setNetwork] = useState<Record<string, unknown> | null>(null);
@@ -139,6 +141,7 @@ export function SettingsPage() {
     ]);
     setApDraft(pickSettings(s.settings, AP_KEYS));
     setIntegrationsDraft(pickSettings(s.settings, INTEGRATION_KEYS));
+    setBrainDraft(pickSettings(s.settings, BRAIN_KEYS));
     setInventory(s.inventory);
     setNetwork(net);
     setCatalog(cat);
@@ -470,6 +473,25 @@ export function SettingsPage() {
                 />
                 <span className="dsc-muted">{globalModifiers.light_brightness_scale.toFixed(2)}</span>
               </label>
+              <label>
+                Leaf temp offset °C
+                <input
+                  type="number"
+                  step="0.1"
+                  value={brainDraft.leaf_offset_c ?? "2"}
+                  onChange={(e) => setBrainDraft({ ...brainDraft, leaf_offset_c: e.target.value })}
+                />
+              </label>
+              <p className="dsc-muted" style={{ marginTop: -6, fontSize: 12 }}>
+                Subtracted from air temp to estimate leaf temp for VPD (main + clone). Default 2°C.
+              </p>
+              <Button
+                onClick={async () => {
+                  await patch_settings(brainDraft);
+                }}
+              >
+                Save leaf offset
+              </Button>
               <div className="dsc-table-scroll">
                 <table className="dsc-table">
                   <thead>

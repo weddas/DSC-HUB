@@ -22,6 +22,7 @@ export function DecisionLayer({
   onConfirm,
   title,
   confirmLabel = "Confirm",
+  busy = false,
   help,
   children,
 }: {
@@ -30,6 +31,8 @@ export function DecisionLayer({
   onConfirm?: () => void;
   title: string;
   confirmLabel?: string;
+  /** Disables Confirm/Dismiss and blocks Escape/backdrop close while an action is in flight. */
+  busy?: boolean;
   help?: ReactNode;
   children: ReactNode;
 }) {
@@ -50,7 +53,7 @@ export function DecisionLayer({
     const layerId = pushModalLayer();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        if (!isTopModalLayer(layerId)) return;
+        if (!isTopModalLayer(layerId) || busy) return;
         e.preventDefault();
         e.stopPropagation();
         onDismiss();
@@ -77,13 +80,13 @@ export function DecisionLayer({
       if (shell instanceof HTMLElement) shell.inert = false;
       restoreRef.current?.focus?.();
     };
-  }, [open, onDismiss]);
+  }, [open, onDismiss, busy]);
 
   if (!open) return null;
 
   const layer = (
     <div className="dsc-decision-root is-open" role="presentation">
-      <div className="dsc-decision-scrim" aria-hidden="true" onClick={onDismiss} />
+      <div className="dsc-decision-scrim" aria-hidden="true" onClick={busy ? undefined : onDismiss} />
       <aside
         ref={panelRef}
         className="dsc-decision-panel"
@@ -93,17 +96,19 @@ export function DecisionLayer({
       >
         <header className="dsc-decision-head">
           <h2 id={titleId}>{title}</h2>
-          <button type="button" className="dsc-icon-btn" aria-label="Dismiss" onClick={onDismiss}>
+          <button type="button" className="dsc-icon-btn" aria-label="Dismiss" onClick={onDismiss} disabled={busy}>
             <Icon name="close" size={16} />
           </button>
         </header>
         <div className="dsc-decision-body">{children}</div>
         {help ? <div className="dsc-decision-help">{help}</div> : <div className="dsc-decision-help is-empty" />}
         <footer className="dsc-decision-foot">
-          <Button onClick={onDismiss}>Dismiss</Button>
+          <Button onClick={onDismiss} disabled={busy}>
+            Dismiss
+          </Button>
           {onConfirm ? (
-            <Button primary onClick={onConfirm}>
-              {confirmLabel}
+            <Button primary onClick={onConfirm} disabled={busy}>
+              {busy ? "Working…" : confirmLabel}
             </Button>
           ) : null}
         </footer>

@@ -692,7 +692,11 @@ export function LiveClimatePage() {
           <Card className="dsc-glass" title="Efficacy · buying kW because the lung could not transfer" icon="alert">
             <div className="dsc-chip-row">
               <StatusChip label={`Heat ${state("switch.dsc_hub_heater_demand") === "on" ? "ON" : "off"}`} tone={state("switch.dsc_hub_heater_demand") === "on" ? "ok" : "muted"} onClick={() => open("switch.dsc_hub_heater_demand", "Heater", undefined)} />
-              <StatusChip label={`Cool ${state("switch.dsc_hub_ac_demand") === "on" ? "ON" : "off"}`} tone={state("switch.dsc_hub_ac_demand") === "on" ? "ok" : "muted"} onClick={() => open("switch.dsc_hub_ac_demand", "Cool", undefined)} />
+              <StatusChip
+                label={!inventoryInService(fleet, "ac") ? "Cool on hold" : `Cool ${state("switch.dsc_hub_ac_demand") === "on" ? "ON" : "off"}`}
+                tone={!inventoryInService(fleet, "ac") ? "muted" : state("switch.dsc_hub_ac_demand") === "on" ? "ok" : "muted"}
+                onClick={() => open("switch.dsc_hub_ac_demand", "Cool", undefined)}
+              />
               <StatusChip label={`Hum ${state("switch.dsc_hub_humidifier_demand") === "on" ? "ON" : "off"}`} tone={state("switch.dsc_hub_humidifier_demand") === "on" ? "ok" : "muted"} onClick={() => open("switch.dsc_hub_humidifier_demand", "Humidifier", undefined)} />
               <StatusChip label={`Dehum ${state("switch.dsc_hub_dehumidifier_demand") === "on" ? "ON" : "off"}`} tone={state("switch.dsc_hub_dehumidifier_demand") === "on" ? "ok" : "muted"} onClick={() => open("switch.dsc_hub_dehumidifier_demand", "Dehumidifier", undefined)} />
               <StatusChip

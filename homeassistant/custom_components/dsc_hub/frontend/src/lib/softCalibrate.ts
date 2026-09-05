@@ -168,8 +168,11 @@ export async function captureSoftCalAverages(
       const ids = softCalEntityIds(pot);
       buckets.get(pot)!.push(readSoftCalChannels(pot, num));
       const meta = opts?.entityMeta?.(ids.ph);
-      const stamp = meta?.lastUpdated != null ? String(meta.lastUpdated) : `tick-${i}`;
-      stamps.get(pot)!.add(stamp);
+      // Only count a real Modbus last_updated stamp as evidence — a missing meta must never
+      // fabricate a fake-unique tick, or cachedNotSigma reads as fresh with zero real evidence.
+      if (meta?.lastUpdated != null) {
+        stamps.get(pot)!.add(String(meta.lastUpdated));
+      }
     }
     opts?.onTick?.(i + 1, total);
     if (i < total - 1) {
@@ -208,8 +211,12 @@ export function attachWaterOffsets(
 export function softCalBlockedByDualStack(
   pot: SoftCalPot,
   state: (id: string, fb?: string) => string,
+  available?: (id: string) => boolean,
 ): boolean {
-  return state(softCalEntityIds(pot).dualCalStack, "off") === "on";
+  const id = softCalEntityIds(pot).dualCalStack;
+  // Fail closed: an unknown dual-stack state (sensor not on the bus yet) must block, not pass through.
+  if (available && !available(id)) return true;
+  return state(id, "off") === "on";
 }
 
 export { SAMPLE_COUNT, WATER_MOISTURE_TARGET, MIN_UNIQUE_MODBUS };

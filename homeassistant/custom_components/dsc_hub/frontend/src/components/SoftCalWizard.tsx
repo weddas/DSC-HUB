@@ -61,7 +61,7 @@ function CaptureTable({ rows }: { rows: SoftCalCaptureResult[] }) {
  * then second capture after watering in pots (verify / optional pH refine).
  */
 export function SoftCalWizard() {
-  const { num, entity, state } = useEntityBus();
+  const { num, entity, state, available } = useEntityBus();
   const fleet = useFleet();
   const { callService } = useFleetActions();
   const [selected, setSelected] = useState<SoftCalPot[]>([1, 2]);
@@ -180,10 +180,21 @@ export function SoftCalWizard() {
 
   const applyOffsets = async () => {
     if (!pendingApply) return;
-    const blocked = pendingApply.filter((row) => softCalBlockedByDualStack(row.pot, state));
+    const blocked = pendingApply.filter((row) => softCalBlockedByDualStack(row.pot, state, available));
     if (blocked.length) {
+      const unknown = blocked.filter((b) => !available(softCalEntityIds(b.pot).dualCalStack));
+      const confirmed = blocked.filter((b) => available(softCalEntityIds(b.pot).dualCalStack));
       setStatus(
-        `Blocked: dual_cal_stack on pot ${blocked.map((b) => b.pot).join(", ")} — push SoftCal to ESP NVS and zero HA offsets first.`,
+        [
+          confirmed.length
+            ? `Blocked: dual_cal_stack on pot ${confirmed.map((b) => b.pot).join(", ")} — push SoftCal to ESP NVS and zero HA offsets first.`
+            : null,
+          unknown.length
+            ? `Blocked: dual_cal_stack unknown on pot ${unknown.map((b) => b.pot).join(", ")} — sensor not on the bus yet, cannot confirm it's safe to stack.`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(" "),
       );
       return;
     }

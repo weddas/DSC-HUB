@@ -133,8 +133,11 @@ function TentColumn({
   const inspector = useInspector();
   const e = TENT_ENTITIES[tent];
   const rail = tentWantRail(tent, { state, entity });
-  const climateFollowsMain =
-    tent === "clone" && state("select.dsc_hub_clone_mode", "") === "Follow 4x8";
+  const cloneMode = state("select.dsc_hub_clone_mode", "");
+  // Follow 4x8 AND Follow Plants are both Pi/brain-owned (is_external_targets_mode in climate_mode.py) —
+  // only Custom/Off leave the sliders to the operator.
+  const climateFollowsPlants = tent === "clone" && cloneMode === "Follow Plants";
+  const climateFollowsMain = tent === "clone" && (cloneMode === "Follow 4x8" || climateFollowsPlants);
   const tHeld = useHeldReading(e.gotTemp);
   const rhHeld = useHeldReading(e.gotRh);
   const vpdHeld = useHeldReading(e.gotVpd);
@@ -205,9 +208,15 @@ function TentColumn({
       ) : null}
       {climateFollowsMain ? (
         <div className="dsc-tent-follow-banner" style={{ marginBottom: 10 }}>
-          <StatusChip label="Climate follows 4×8" tone="ok" icon="tent" />
+          <StatusChip
+            label={climateFollowsPlants ? "Climate follows plants" : "Climate follows 4×8"}
+            tone="ok"
+            icon="tent"
+          />
           <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 13 }}>
-            Clone climate mode is Follow 4×8 — Want targets lock here. Edit 4×8 climate or change mode below.
+            {climateFollowsPlants
+              ? "Clone climate mode is Follow Plants — the Pi writes these targets on a ~12h cycle, so Want sliders lock here. Manual edits would be silently overwritten. Change mode below to edit by hand."
+              : "Clone climate mode is Follow 4×8 — Want targets lock here. Edit 4×8 climate or change mode below."}
           </p>
         </div>
       ) : null}

@@ -25,7 +25,7 @@ import { useHeldReading } from "../hooks/useHeldReading";
 import { useChartHours } from "../hooks/useChartHours";
 import { useInspector } from "../components/InspectorHost";
 import { MultiLineChart } from "../viz/charts";
-import { potsInTent, isPotInServiceWithFleet, type TentId } from "../lib/seatModel";
+import { potsInTent, isPotInServiceWithFleet, probeLabel, type TentId } from "../lib/seatModel";
 import { HelpTip } from "../components/HelpTip";
 import { PlantSeatPanel } from "./GrowPages";
 import { TwinViewport } from "../components/TwinViewport";

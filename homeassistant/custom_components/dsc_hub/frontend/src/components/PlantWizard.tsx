@@ -32,6 +32,7 @@ export function PlantWizard() {
   const [customBlend, setCustomBlend] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [confirmAdd, setConfirmAdd] = useState(false);
+  const [committing, setCommitting] = useState(false);
   const [commitErr, setCommitErr] = useState<string | null>(null);
   const [pickedStrain, setPickedStrain] = useState<CatalogItem | null>(null);
   const [pickedLight, setPickedLight] = useState<CatalogItem | null>(null);
@@ -41,6 +42,16 @@ export function PlantWizard() {
   const [retireConfirm, setRetireConfirm] = useState(false);
   /** Local assign so Next enables immediately (bus round-trip must not deactivate mid-step). */
   const [assignDraft, setAssignDraft] = useState<string | null>(null);
+  const [writeErr, setWriteErr] = useState<string | null>(null);
+
+  /** Steps 1-4 fire background writes without awaiting them; this surfaces a failure instead of an unhandled rejection. */
+  const guardedCallService: typeof callService = (domain, service, data) => {
+    const result = callService(domain, service, data);
+    void Promise.resolve(result).catch((exc) => {
+      setWriteErr(exc instanceof Error ? exc.message : `${domain}.${service} failed`);
+    });
+    return result;
+  };
 
   const step = STEPS[stepIdx];
   const strain = state("input_text.dsc_build_strain", "");
@@ -88,34 +99,34 @@ export function PlantWizard() {
 
   const onPickStrain = (item: CatalogItem) => {
     setPickedStrain(item);
-    applyCatalogPick("strain", item, callService, state);
+    applyCatalogPick("strain", item, guardedCallService, state);
   };
 
   const onPickMedium = (item: CatalogItem) => {
     setSoilPresetId(null);
-    applyCatalogPick("medium", item, callService, state);
+    applyCatalogPick("medium", item, guardedCallService, state);
   };
 
   const onPickNutrient = (item: CatalogItem) => {
     setSkippedFeed(false);
-    applyCatalogPick("nutrient", item, callService, state);
+    applyCatalogPick("nutrient", item, guardedCallService, state);
   };
 
   const onPickLight = (item: CatalogItem) => {
     setSkippedLight(false);
     setPickedLight(item);
-    applyLightPick(item, callService, fixtureOptions);
+    applyLightPick(item, guardedCallService, fixtureOptions);
   };
 
   const selectVessel = (spec: (typeof VESSEL_CATALOG)[number]) => {
     const opts = (entity("input_select.dsc_build_vessel")?.attributes?.options as string[]) || [];
     if (opts.includes(spec.id) && available("input_select.dsc_build_vessel")) {
-      void callService("input_select", "select_option", {
+      void guardedCallService("input_select", "select_option", {
         entity_id: "input_select.dsc_build_vessel",
         option: spec.id,
       });
     }
-    void callService("input_number", "set_value", {
+    void guardedCallService("input_number", "set_value", {
       entity_id: "input_number.dsc_blend_total_l",
       value: spec.volumeL,
     });
@@ -126,7 +137,7 @@ export function PlantWizard() {
     if (!preset) return;
     setSoilPresetId(presetId);
     setCustomBlend(false);
-    applyBlendLayers(preset.layers, callService);
+    applyBlendLayers(preset.layers, guardedCallService);
   };
 
   const copyVesselToPot = (pot: string) => {
@@ -134,7 +145,7 @@ export function PlantWizard() {
     if (!Number.isFinite(potN) || pot === "none") return;
     const id = vesselEntityId(potN);
     if (!available(id)) return;
-    void callService("input_select", "select_option", { entity_id: id, option: vessel.id });
+    void guardedCallService("input_select", "select_option", { entity_id: id, option: vessel.id });
   };
 
   const flushEntityDrafts = async () => {
@@ -175,7 +186,11 @@ export function PlantWizard() {
       if (assign !== "none") {
         copyVesselToPot(assign);
         if (available("script.dsc_build_plant_commit_and_assign")) {
-          await callService("script", "turn_on", { entity_id: "script.dsc_build_plant_commit_and_assign" });
+          await callService("script", "turn_on", {
+            entity_id: "script.dsc_build_plant_commit_and_assign",
+            pot: assign,
+            variables: { pot: assign },
+          });
         } else {
           await callService("script", "turn_on", { entity_id: "script.dsc_build_plant_commit" });
           await callService("script", "turn_on", {
@@ -187,7 +202,8 @@ export function PlantWizard() {
       } else {
         await callService("script", "turn_on", { entity_id: "script.dsc_build_plant_commit" });
       }
-      clearComposeDraft(callService);
+      clearComposeDraft(guardedCallService);
+      setWriteErr(null);
       setPickedStrain(null);
       setPickedLight(null);
       setStepIdx(0);
@@ -294,6 +310,18 @@ export function PlantWizard() {
         </div>
       ) : null}
 
+      {writeErr ? (
+        <div className="dsc-banner dsc-banner--bad" style={{ marginBottom: 12 }}>
+          <StatusChip label="A write failed" tone="bad" />
+          <span className="dsc-muted" style={{ fontSize: 13, marginLeft: 8 }}>
+            {writeErr}
+          </span>
+          <Button variant="secondary" onClick={() => setWriteErr(null)}>
+            Dismiss
+          </Button>
+        </div>
+      ) : null}
+
       {step.id === "plant" ? (
         <PlantWizardPlantStep
           onPickStrain={onPickStrain}
@@ -392,10 +420,20 @@ export function PlantWizard() {
         open={confirmAdd}
         onDismiss={() => setConfirmAdd(false)}
         onConfirm={() => {
-          void commitAssign().then(() => setConfirmAdd(false));
+          if (committing) return;
+          setCommitting(true);
+          void commitAssign()
+            .catch(() => {
+              /* commitErr already set inside commitAssign; surfaced on Review after modal closes */
+            })
+            .finally(() => {
+              setCommitting(false);
+              setConfirmAdd(false);
+            });
         }}
         title="Add plant"
         confirmLabel={`Add to ${potLabel}`}
+        busy={committing}
         help={null}
       >
         <p>

@@ -153,8 +153,18 @@ function domainForAxis(
   unitHintOverride?: string,
   hasTargets?: boolean,
 ): { min: number; max: number } {
-  if (fixed?.min != null && fixed?.max != null) return { min: fixed.min, max: fixed.max };
   const vals = series.filter((s) => (s.axis || "left") === axis).flatMap((s) => s.series.map((p) => p.v));
+  if (fixed?.min != null && fixed?.max != null) {
+    // Honor the configured band, but never let a genuine out-of-range reading (heater runaway,
+    // failed dehumidifier) get silently clipped off the chart — expand outward only when data
+    // actually exceeds the fixed bounds.
+    if (!vals.length) return { min: fixed.min, max: fixed.max };
+    const dataMin = Math.min(...vals);
+    const dataMax = Math.max(...vals);
+    if (dataMin >= fixed.min && dataMax <= fixed.max) return { min: fixed.min, max: fixed.max };
+    const expanded = padDomain(Math.min(fixed.min, dataMin), Math.max(fixed.max, dataMax));
+    return { min: Math.min(fixed.min, expanded.min), max: Math.max(fixed.max, expanded.max) };
+  }
   const unitHint =
     unitHintOverride?.toLowerCase() ??
     series.find((s) => (s.axis || "left") === axis)?.unit?.toLowerCase() ??
