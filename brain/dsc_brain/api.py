@@ -103,6 +103,11 @@ from .zigbee_policies import (
     save_custom_recipes,
     save_zigbee_policies,
 )
+from .automation_rules import (
+    automation_rules_summary,
+    evaluate_automation_rules,
+    save_automation_rules,
+)
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 if not STATIC_DIR.exists():
@@ -191,6 +196,10 @@ class ZigbeeCustomRolesBody(BaseModel):
 
 class ZigbeeCustomRecipesBody(BaseModel):
     recipes: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class AutomationRulesBody(BaseModel):
+    rules: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class EsphomeJobBody(BaseModel):
@@ -526,6 +535,11 @@ def fleet(
 ) -> dict[str, Any]:
     state = get_fleet_state()
     inventory = list_inventory()
+    try:
+        evaluate_automation_rules(state, inventory)
+        inventory = list_inventory()  # a rule may have flipped a seat's in_service
+    except Exception as exc:  # noqa: BLE001
+        _logger.warning("automation rule eval (/fleet) failed: %s", exc)
     payload = state.to_dict()
     merge_inventory_oos_seats(payload, inventory)
     payload["inventory"] = inventory
@@ -602,6 +616,11 @@ async def fleet_ws(websocket: WebSocket) -> None:
         while True:
             st = get_fleet_state()
             inv = list_inventory()
+            try:
+                evaluate_automation_rules(st, inv)
+                inv = list_inventory()
+            except Exception as exc:  # noqa: BLE001
+                _logger.warning("automation rule eval (ws) failed: %s", exc)
             ws_payload = st.to_dict()
             merge_inventory_oos_seats(ws_payload, inv)
             ws_payload["inventory"] = inv
@@ -611,6 +630,27 @@ async def fleet_ws(websocket: WebSocket) -> None:
             await asyncio.sleep(2.0)
     except WebSocketDisconnect:
         pass
+
+
+@app.get("/settings/automations")
+def settings_automations_get() -> dict[str, Any]:
+    return automation_rules_summary()
+
+
+@app.put("/settings/automations")
+def settings_automations_put(body: AutomationRulesBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    try:
+        save_automation_rules(body.rules)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    # Re-run immediately so a freshly-enabled rule takes effect without a tick wait.
+    try:
+        evaluate_automation_rules()
+    except Exception as exc:  # noqa: BLE001
+        _logger.warning("automation rule re-eval after save failed: %s", exc)
+    return automation_rules_summary()
 
 
 @app.get("/settings")

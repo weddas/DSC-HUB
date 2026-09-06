@@ -185,7 +185,15 @@ def get_all_settings(db_path: Path | None = None) -> dict[str, str]:
 
 
 # Keys returned by GET /settings — internal HA helper dumps stay in sqlite only.
-_SETTINGS_RESPONSE_STRIP = frozenset({"compose_helpers_json", "plant_roster_slots_json"})
+_SETTINGS_RESPONSE_STRIP = frozenset(
+    {
+        "compose_helpers_json",
+        "plant_roster_slots_json",
+        # served via /settings/automations, not the generic settings blob
+        "automation_rules",
+        "automation_rules_state",
+    }
+)
 
 
 def public_settings(db_path: Path | None = None) -> dict[str, Any]:
