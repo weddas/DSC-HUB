@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **Firmware HA removal (phase 1: time)** — dropped the `platform: homeassistant`
+  backup time source (`grow_time` / `ha_time`) from `dsc-hub-v4_0`,
+  `dsc-control-common`, `dsc-pot-common`. It never synced on the HA-less Pi, so
+  `clock_valid` is now `sntp_time` alone and the `if (!now.is_valid()) now =
+  ha_time.now()` fallbacks are gone — behaviour-identical, needs a re-cut +
+  reflash to land. Remaining firmware HA coupling (hub `ha_plant_*` →
+  `api:` service, `rootzone_temp_*` HA mirrors → ESP-NOW-only) is spec'd in
+  `docs/FIRMWARE-HA-REMOVAL.md` — it needs the ESPHome toolchain + a device.
+
 - **ESPHome toolchain** — firmware pins `esphome: min_version: "2026.6.5"` across all
   device families (`dsc-hub-v4_0`, `dsc-control-common`, `dsc-pot-common`,
   `dsc-sonoff-common`); builds on an older ESPHome now fail fast. Settings → Device

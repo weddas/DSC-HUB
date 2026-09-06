@@ -205,15 +205,12 @@ modbus_controller:
 #  soil_calibrated. set_action stamps method=manual (muted during Reset).
 # ==================================================================
 time:
-  # v5.1.7: SNTP alongside HA time so the clock can be valid with HA down —
-  # cal_stamp_manual / cal_mark_peer_median / cal_mark_lab_buffer still read
-  # ha_time (unchanged; those are provenance stamps for HA-facing entities).
-  # clock_valid (below) is sntp_time.now().is_valid() || ha_time.now().is_valid().
+  # v8: SNTP only. The `platform: homeassistant` backup (`ha_time`) never synced
+  # on the Pi (no HA). cal_stamp_manual / cal_mark_* and clock_valid all read
+  # sntp_time now.
   - platform: sntp
     id: sntp_time
     timezone: "Australia/Sydney"
-  - platform: homeassistant
-    id: ha_time
 
 number:
   - platform: template
@@ -763,7 +760,7 @@ button:
           id: cal_method
           value: "peer_median"
       - lambda: |-
-          auto now = id(ha_time).now();
+          auto now = id(sntp_time).now();
           if (now.is_valid()) {
             char buf[32];
             snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d",
@@ -784,7 +781,7 @@ button:
           id: cal_method
           value: "lab_buffer"
       - lambda: |-
-          auto now = id(ha_time).now();
+          auto now = id(sntp_time).now();
           if (now.is_valid()) {
             char buf[32];
             snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d",
@@ -1091,8 +1088,7 @@ script:
                 id: cal_method
                 value: "manual"
             - lambda: |-
-                ESPTime now = id(ha_time).now();
-                if (!now.is_valid()) now = id(sntp_time).now();
+                ESPTime now = id(sntp_time).now();
                 if (!now.is_valid()) return;
                 char buf[32];
                 snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d",
@@ -1303,7 +1299,7 @@ interval:
   - interval: 15s
     then:
       - lambda: |-
-          bool cv = id(sntp_time).now().is_valid() || id(ha_time).now().is_valid();
+          bool cv = id(sntp_time).now().is_valid();
           if (cv != id(clock_valid)) {
             id(clock_valid) = cv;
             id(clock_valid_bs).publish_state(cv);
