@@ -46,6 +46,25 @@ grep espnow_control "${REPO}/firmware/v4/dsc-hub.yaml"
 test -f "${REPO}/brain/dsc_brain/appliance_driver.py" && echo appliance_driver_ok
 grep wpa_passphrase /etc/dsc-hub/hostapd.conf || true
 
+echo "=== ESPHome: venv dashboard unit is the default backend now ==="
+# The dsc-hub-esphome container moved behind `--profile legacy-esphome`; retire any
+# running one so it stops fighting the host unit for :6052.
+run_sudo docker rm -f dsc-hub-esphome 2>/dev/null || true
+ESPHOME_UNIT_DIR="${REPO}/services/dsc-hub/pi"
+if [ -f "${ESPHOME_UNIT_DIR}/dsc-esphome-dashboard.service" ]; then
+  run_sudo install -d /opt/dsc-hub/pi /etc/dsc-hub
+  run_sudo install -m 0755 "${ESPHOME_UNIT_DIR}/dsc-esphome-venv-setup.sh" /opt/dsc-hub/pi/dsc-esphome-venv-setup.sh
+  run_sudo install -m 0755 "${ESPHOME_UNIT_DIR}/dsc-esphome-dashboard-run.sh" /opt/dsc-hub/pi/dsc-esphome-dashboard-run.sh
+  run_sudo install -m 0644 "${ESPHOME_UNIT_DIR}/dsc-esphome-venv-setup.service" /etc/systemd/system/dsc-esphome-venv-setup.service
+  run_sudo install -m 0644 "${ESPHOME_UNIT_DIR}/dsc-esphome-dashboard.service" /etc/systemd/system/dsc-esphome-dashboard.service
+  echo "DSC_ESPHOME_PROJECT_DIR=${REPO}/firmware/v4" | run_sudo tee /etc/dsc-hub/esphome.env >/dev/null
+  run_sudo systemctl daemon-reload
+  run_sudo systemctl enable --now dsc-esphome-venv-setup.service dsc-esphome-dashboard.service || true
+  run_sudo systemctl restart dsc-esphome-dashboard.service || true
+else
+  echo "  (unit files not in this checkout — skipping; SD-bake install covers it)"
+fi
+
 echo "=== eth0 + docker DNS ==="
 if [ -f /tmp/bring-up-eth0.sh ]; then
   tr -d '\r' < /tmp/bring-up-eth0.sh > /tmp/eth0-up.sh

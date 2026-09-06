@@ -1,1 +1,4 @@
 services/dsc-hub/pi/*.sh text eol=lf
+services/dsc-hub/pi/*.service text eol=lf
+services/dsc-hub/image/*.sh text eol=lf
+services/dsc-hub/image/**/*.sh text eol=lf

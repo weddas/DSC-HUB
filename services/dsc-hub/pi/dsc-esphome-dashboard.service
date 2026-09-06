@@ -3,15 +3,20 @@ Description=DSC-HUB ESPHome dashboard (Pi venv on :6052 — supersedes the dsc-h
 After=network-online.target dsc-esphome-venv-setup.service
 Wants=network-online.target
 Requires=dsc-esphome-venv-setup.service
+ConditionPathExists=/opt/dsc-esphome-venv/bin/esphome
 
 [Service]
 Type=simple
 User=dsc
-WorkingDirectory=/opt/dsc-hub-repo/firmware/v4
+# Layout differs by deploy (remote-deploy: /opt/dsc-hub-repo/firmware/v4;
+# SD bake: /opt/dsc-hub/firmware/v4). The wrapper resolves it — or writes
+# DSC_ESPHOME_PROJECT_DIR into /etc/dsc-hub/esphome.env to pin it.
+EnvironmentFile=-/etc/dsc-hub/esphome.env
 Environment=PLATFORMIO_CORE_DIR=/var/lib/dsc-hub/platformio
-Environment=ESPHOME_DASHBOARD_USE_PING=true
-ExecStart=/opt/dsc-esphome-venv/bin/esphome dashboard /opt/dsc-hub-repo/firmware/v4 --address 0.0.0.0 --port 6052
-Restart=always
+ExecStart=/opt/dsc-hub/pi/dsc-esphome-dashboard-run.sh
+# on-failure (not always): the wrapper exits 0 when there is no firmware tree yet,
+# and that must not crash-loop. A real dashboard crash is non-zero → restarted.
+Restart=on-failure
 RestartSec=5
 # `POST /settings/esphome/toolchain/update` runs `pip -U esphome` then restarts
 # this unit; keep restarts unthrottled so that always succeeds.
