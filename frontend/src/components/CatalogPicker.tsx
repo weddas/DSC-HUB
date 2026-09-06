@@ -239,8 +239,8 @@ export function CatalogPicker({
       </ul>
       {hasMore && !busy ? (
         <div className="dsc-row-actions" style={{ marginTop: 8 }}>
-          <Button variant="secondary" disabled={loadingMore} onClick={() => void loadMore()}>
-            {loadingMore ? "Loading…" : `Load more (${PAGE_SIZE})`}
+          <Button variant="secondary" busy={loadingMore} onClick={() => void loadMore()}>
+            {`Load more (${PAGE_SIZE})`}
           </Button>
           {offset > 0 ? (
             <span className="dsc-muted" style={{ fontSize: 12 }}>

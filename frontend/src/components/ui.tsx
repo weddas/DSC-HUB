@@ -7,6 +7,30 @@ import { useFleetEntity } from "../hooks/useFleetEntity";
 
 export type { IconName };
 
+/**
+ * "Dim dash" loading indicator — three muted dashes pulsing in sequence.
+ * Use inline for a route/panel that is still fetching, or let `<Button busy>`
+ * render it, so an async action reads as "working" rather than a dead hang.
+ */
+function SpinnerDots() {
+  return (
+    <span className="dsc-spinner-dots" aria-hidden="true">
+      <i />
+      <i />
+      <i />
+    </span>
+  );
+}
+
+export function Spinner({ label, className }: { label?: string; className?: string }) {
+  return (
+    <span className={`dsc-spinner${className ? ` ${className}` : ""}`} role="status">
+      <SpinnerDots />
+      {label ? <span>{label}…</span> : <span className="dsc-sr-only">Loading…</span>}
+    </span>
+  );
+}
+
 export function Icon({
   name,
   size = 16,
@@ -77,6 +101,7 @@ export function Button({
   onClick,
   type = "button",
   disabled,
+  busy,
   icon,
   iconMotion,
   style,
@@ -88,6 +113,8 @@ export function Button({
   onClick?: () => void;
   type?: "button" | "submit";
   disabled?: boolean;
+  /** In-flight: disables the button and swaps the icon for the dim-dash spinner. */
+  busy?: boolean;
   icon?: IconName;
   iconMotion?: "pulse" | "spin" | "glow" | "breathe" | "duty";
   style?: CSSProperties;
@@ -113,8 +140,15 @@ export function Button({
     }
   }
   return (
-    <button type={type} className={cls.join(" ")} onClick={onClick} disabled={disabled} style={style}>
-      {icon ? <Icon name={icon} size={14} motion={iconMotion} /> : null}
+    <button
+      type={type}
+      className={cls.join(" ")}
+      onClick={onClick}
+      disabled={disabled || busy}
+      aria-busy={busy || undefined}
+      style={style}
+    >
+      {busy ? <SpinnerDots /> : icon ? <Icon name={icon} size={14} motion={iconMotion} /> : null}
       {children}
     </button>
   );
