@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button, Card, Kpi, PageHeader, StatusChip } from "../components/ui";
+import { DecisionLayer } from "../components/DecisionLayer";
+import { useBrainRefresh } from "../hooks/useBrain";
 import { SlideDrawer } from "../components/chrome";
 import { DutyStrip } from "../components/DutyStrip";
 import { SoilTestWizard } from "../components/SoilTestWizard";
@@ -27,7 +29,7 @@ import { readPotVessel } from "../lib/vesselSpec";
 import { VesselGlyph } from "../components/VesselGlyph";
 import { PlantSeatPanel } from "./GrowPages";
 import { fmtDurationMs } from "../lib/formatDuration";
-import { getProbeStations, type ProbeStation } from "../lib/fleetApi";
+import { getProbeStations, set_root_steering_override, type ProbeStation } from "../lib/fleetApi";
 
 function fmt(n: number, digits = 1): string {
   return Number.isFinite(n) ? n.toFixed(digits) : "—";
@@ -57,6 +59,10 @@ export function LiveRootPage() {
   const matSec = num("sensor.dsc_heatmat_relay_on_time");
   const [probeStations, setProbeStations] = useState<ProbeStation[]>([]);
   const [soilWizardOpen, setSoilWizardOpen] = useState(false);
+  const refreshBrain = useBrainRefresh();
+  const steerOverride = Boolean((fleet.root_steering as { override?: boolean } | undefined)?.override);
+  const [pendingSteer, setPendingSteer] = useState(false);
+  const [steerBusy, setSteerBusy] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -147,6 +153,39 @@ export function LiveRootPage() {
               Mat loop uses per-probe sense with a plausibility filter. Metric click opens inspector; card opens the
               plant panel.
             </p>
+          </Card>
+        </div>
+
+        <div className="dsc-col-4">
+          <Card
+            title="Auto root-steering"
+            icon="root"
+          >
+            <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
+              <StatusChip
+                label={steerOverride ? "MANUAL — auto off" : "AUTO — P1–P3"}
+                tone={steerOverride ? "warn" : "ok"}
+              />
+              <HelpTip title="Auto root-steering">
+                <p>
+                  On <b>Auto</b>, the brain reads dryback and picks phase P1–P3, gating when
+                  irrigation act windows are allowed. <b>Manual</b> stops the brain emitting those
+                  windows — irrigation timing is entirely yours until you resume.
+                </p>
+              </HelpTip>
+            </div>
+            <p className="dsc-muted" style={{ fontSize: 12, margin: "0 0 8px" }}>
+              {steerOverride
+                ? "The brain is not emitting phase act windows."
+                : "The brain picks P1–P3 from dryback and gates act windows."}
+            </p>
+            <Button
+              variant={steerOverride ? "primary" : "secondary"}
+              disabled={steerBusy}
+              onClick={() => setPendingSteer(true)}
+            >
+              {steerOverride ? "Resume auto steering" : "Take manual control"}
+            </Button>
           </Card>
         </div>
 
@@ -257,6 +296,33 @@ export function LiveRootPage() {
       <SlideDrawer open={soilWizardOpen} onClose={() => setSoilWizardOpen(false)} title="Soil test">
         <SoilTestWizard onClose={() => setSoilWizardOpen(false)} />
       </SlideDrawer>
+
+      <DecisionLayer
+        open={pendingSteer}
+        onDismiss={() => setPendingSteer(false)}
+        busy={steerBusy}
+        onConfirm={async () => {
+          setSteerBusy(true);
+          try {
+            await set_root_steering_override(!steerOverride);
+            await refreshBrain();
+          } catch {
+            /* surfaced by the unchanged chip on failure */
+          } finally {
+            setSteerBusy(false);
+            setPendingSteer(false);
+          }
+        }}
+        title={steerOverride ? "Resume auto root-steering" : "Take manual irrigation control"}
+        confirmLabel={steerOverride ? "Resume auto" : "Go manual"}
+        help={null}
+      >
+        <p>
+          {steerOverride
+            ? "The brain resumes reading dryback and gating irrigation act windows by phase (P1–P3)."
+            : "The brain stops emitting phase act windows. Irrigation timing is entirely yours until you resume auto."}
+        </p>
+      </DecisionLayer>
 
       <p className="dsc-muted" style={{ marginTop: 8 }}>
         <button type="button" className="dsc-chip" onClick={() => navigate("/live/climate")}>
