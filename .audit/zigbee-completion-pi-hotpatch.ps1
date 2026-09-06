@@ -51,6 +51,12 @@ for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
   if curl -sf http://127.0.0.1:8787/health >/dev/null; then echo "health ok after `$((i*5))s"; break; fi
   sleep 5
 done
+# A container restart creates a new veth; dhcpcd on this Pi manages veth* and has
+# rewritten the IPv4 default route onto wlan0 (LAN unreachable while the brain still
+# answers over IPv6). Re-assert the eth0 subnet + default routes (repo remedy).
+ETH_UP=/opt/dsc-hub-repo/services/dsc-hub/pi/bring-up-eth0.sh
+[ -f "`$ETH_UP" ] || ETH_UP=/tmp/eth0-up.sh
+[ -f "`$ETH_UP" ] && bash "`$ETH_UP" "`$PW" 2>&1 | grep -v 'password for' | tail -3
 echo "=== after: `$(curl -sf http://127.0.0.1:8787/health | head -c 160)"
 echo "=== served bundle: `$(curl -sf http://127.0.0.1:8787/ | grep -oE 'assets/index-[^"]+\.js' | head -1)"
 echo "=== targets: `$(curl -sf -m 10 http://127.0.0.1:8787/settings/automations/targets | head -c 200)"

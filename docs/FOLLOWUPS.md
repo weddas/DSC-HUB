@@ -10,6 +10,31 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-09-06 (late) — Physical relay soak, ESPHome venv smoke, relay honesty, shadow-mode decision
+
+**PRs:** #197 **merged** (automation v2 + datapoint exposure + safety/toolchain fixes + Probe rename). #198 open: relay honesty + yaml-map fix + shadow-mode decision + soak scripts. Both hotpatched to `dsc-brain.local`.
+
+| Check (operator-authorised, live grow) | Result |
+|------|--------|
+| v2 Sonoff cut-out rule on the heat mat (`.audit/zbc-soak-e.sh`, relay read straight from the Sonoff native API via `.audit/zbc-sonoff-state.sh`) | **passed** — relay physically OFF at fire, held OFF 20 s while OOS with hub demand ON, back ON 6 s after clear |
+| v2 setpoint rule (`rh_target_max` 60→61) | **passed** — written on fire, restored on clear (hub mirror lag ~60 s) |
+| Stale-hub failsafe with an OOS seat whose relay was ON | **passed** — forced OFF ~30 s after the hub host went unreachable (STALE_SEC 45), back 12 s after restore |
+| Operator relay flip re-assert | **inconclusive** — hub demand cycled OFF in the same window; not contradicted |
+| ESPHome venv dashboard (`.audit/zbc-esphome-smoke.ps1`) | **passed** — venv 2026.6.5 provisioned in ~3 min, `:6052/version` up, brain `build_backend=dashboard`, `meets_min` true, latest 2026.8.2 |
+| Compile-only job pot2 | first run **failed** — `SEAT_YAML` still `DSC-Probe2.yaml` (High, fixed in #198: `dsc-potN.yaml` + queue-time existence check); rerun **passed** — `esphome compile dsc-pot2.yaml` via brain → venv dashboard WebSocket, SUCCESS in 817 s, `firmware.ota.bin` written; no upload (flashing a live seat is the operator's call) |
+| Relay honesty (#198) | **verified live** — entity `source: device` matched a direct read for an ON and an OFF relay |
+
+**red-flag (logged to tracker):**
+- **dhcpcd manages docker `veth*`** — the brain restart at 22:24:57 rewrote the IPv4 default route onto wlan0 and dropped the eth0 subnet route; `.48` vanished on 22/8787/6052 while `dsc-brain.local` (IPv6) still served the brain. Recovered with the repo's `bring-up-eth0.sh` over IPv6 SSH; the hotpatch script now re-runs it after every restart. Real fix = `denyinterfaces veth* docker0 br-*` shipped by the bakers (High).
+- Every brain-side relay field mirrored hub demand (fixed #198); the brain stopped polling OOS Sonoffs (fixed #198, needs a live OOS check).
+- `SEAT_YAML` stale since the Probe rename — no pot compile/OTA job could ever have run (fixed #198).
+
+**decision:** hub demand proposals stay shadow-mode (`docs/DSC-BRAIN.md`); brain-driven demand needs a firmware brain-owned demand mode + symmetric proposals (tracker Suggested Feature).
+
+**soak / residual:** OOS-Sonoff observation not yet exercised live; `canopy_4x8` ZY-ZTH02 still silent since the earlier restart; StatusChip uppercases units in the Climate Other-sensors row (cosmetic); operator-flip re-assert to re-run with demand held ON.
+
+---
+
 ## 2026-09-06 — Zigbee track: state re-derivation + completion plan (no code changes)
 
 **Source:** `CLAUDE - DSC-HUB/plan-zigbee-completion-2026-09-06.md` (supersedes `plan-zigbee-ux-rollout-and-esphome.md`). Tracker rows updated in Notion.
