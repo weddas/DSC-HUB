@@ -934,6 +934,21 @@ def settings_zigbee_bindings_put(body: ZigbeeBindingsBody) -> dict[str, Any]:
     return {"bindings": cleaned}
 
 
+@app.get("/settings/zigbee/device-types")
+def settings_zigbee_device_types() -> dict[str, Any]:
+    from .zigbee_catalog import get_zigbee_device_types
+
+    return {"device_types": get_zigbee_device_types()}
+
+
+@app.get("/settings/zigbee/actuatable")
+def settings_zigbee_actuatable() -> dict[str, Any]:
+    """Bound plug/switch devices — the pickable targets for a zigbee_switch rule."""
+    from .zigbee_mqtt import actuatable_zigbee_devices
+
+    return {"devices": actuatable_zigbee_devices()}
+
+
 @app.get("/settings/zigbee/recipes")
 def settings_zigbee_recipes() -> dict[str, Any]:
     return {"recipes": get_recipe_catalog(), "custom": load_custom_recipes()}

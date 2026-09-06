@@ -5,6 +5,7 @@ import { StatusChip } from "../ui";
 import { SettingsTable, SettingsRow, InlineEditCell, ActionsCell } from "./SettingsTable";
 import {
   get_automations,
+  get_zigbee_actuatable,
   put_automations,
   type AutomationRule,
 } from "../../lib/fleetApi";
@@ -55,6 +56,13 @@ export function AutomationRulesCard({ seats }: { seats: string[] }) {
   const [dirty, setDirty] = useState(false);
   const [msg, setMsg] = useState("");
   const [nextN, setNextN] = useState(1);
+  const [zbSwitches, setZbSwitches] = useState<string[]>([]);
+
+  useEffect(() => {
+    void get_zigbee_actuatable()
+      .then((r) => setZbSwitches((r.devices ?? []).map((d) => d.friendly_name).filter(Boolean)))
+      .catch(() => undefined);
+  }, []);
 
   const load = () => {
     void get_automations()
@@ -79,7 +87,9 @@ export function AutomationRulesCard({ seats }: { seats: string[] }) {
     patch(i, (r) => ({
       ...r,
       action:
-        type === "oos_seat"
+        type === "zigbee_switch"
+          ? { type, params: { friendly_name: zbSwitches[0] ?? "", on_when_firing: true } }
+          : type === "oos_seat"
           ? { type, params: { seat_id: seats[0] ?? "", banner: "" } }
           : { type, params: { text: "", tone: "warn" } },
     }));
@@ -117,7 +127,8 @@ export function AutomationRulesCard({ seats }: { seats: string[] }) {
   const invalid = rules.some(
     (r) => !SLUG_RE.test(r.id) || !String(r.trigger.entity_id).includes(".") ||
       (r.action.type === "banner" && !String(r.action.params.text ?? "").trim()) ||
-      (r.action.type === "oos_seat" && !String(r.action.params.seat_id ?? "").trim()),
+      (r.action.type === "oos_seat" && !String(r.action.params.seat_id ?? "").trim()) ||
+      (r.action.type === "zigbee_switch" && !String(r.action.params.friendly_name ?? "").trim()),
   );
 
   return (
@@ -188,6 +199,9 @@ export function AutomationRulesCard({ seats }: { seats: string[] }) {
                 <select value={r.action.type} onChange={(e) => setActionType(i, e.target.value)}>
                   <option value="banner">Raise banner</option>
                   <option value="oos_seat">Seat out of service</option>
+                  <option value="zigbee_switch" disabled={zbSwitches.length === 0}>
+                    Zigbee switch {zbSwitches.length === 0 ? "(none bound)" : ""}
+                  </option>
                 </select>
                 {r.action.type === "banner" ? (
                   <>
@@ -204,6 +218,35 @@ export function AutomationRulesCard({ seats }: { seats: string[] }) {
                       <option value="info">info</option>
                       <option value="warn">warn</option>
                       <option value="critical">critical</option>
+                    </select>
+                  </>
+                ) : r.action.type === "zigbee_switch" ? (
+                  <>
+                    <select
+                      value={String(r.action.params.friendly_name ?? "")}
+                      onChange={(e) => setActionParam(i, "friendly_name", e.target.value)}
+                    >
+                      <option value="">— device —</option>
+                      {zbSwitches.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={r.action.params.on_when_firing === false ? "off" : "on"}
+                      onChange={(e) =>
+                        patch(i, (x) => ({
+                          ...x,
+                          action: {
+                            ...x.action,
+                            params: { ...x.action.params, on_when_firing: e.target.value === "on" },
+                          },
+                        }))
+                      }
+                    >
+                      <option value="on">turn ON while firing</option>
+                      <option value="off">turn OFF while firing</option>
                     </select>
                   </>
                 ) : (

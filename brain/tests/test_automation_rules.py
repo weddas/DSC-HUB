@@ -148,3 +148,34 @@ def test_deleting_a_firing_rule_clears_its_effect(temp_db: Path, monkeypatch: py
 
     save_automation_rules([])  # rule removed
     assert not [b for b in _banners() if b.get("id") == "auto-hot_tent"]
+
+
+def test_zigbee_switch_action(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain import automation_rules
+    from dsc_brain.automation_rules import evaluate_automation_rules, save_automation_rules
+
+    calls: list[tuple[str, bool]] = []
+    monkeypatch.setattr(
+        "dsc_brain.zigbee_mqtt.set_zigbee_state",
+        lambda fn, on: calls.append((fn, on)) or {"ok": True},
+    )
+
+    with pytest.raises(ValueError):
+        save_automation_rules([_rule(action={"type": "zigbee_switch", "params": {}})])
+
+    save_automation_rules(
+        [
+            _rule(
+                id="hot_kick_fan",
+                action={"type": "zigbee_switch", "params": {"friendly_name": "aux_fan_plug"}},
+            )
+        ]
+    )
+    _fleet(temp_c=35.0)
+    evaluate_automation_rules()
+    assert ("aux_fan_plug", True) in calls
+
+    _fleet(temp_c=20.0)
+    evaluate_automation_rules()
+    assert ("aux_fan_plug", False) in calls  # cleared -> off

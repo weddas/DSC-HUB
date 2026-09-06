@@ -523,6 +523,30 @@ export async function put_zigbee_bindings(
   return resp.json();
 }
 
+export type ZigbeeDeviceType = {
+  id: string;
+  label: string;
+  capability_class: string;
+  datapoints: Array<{ key: string; unit: string; kind: string }>;
+  suggested_roles: string[];
+  can_trigger: boolean;
+  can_actuate: boolean;
+};
+
+export async function get_zigbee_device_types(): Promise<{ device_types: ZigbeeDeviceType[] }> {
+  const resp = await fetch("/settings/zigbee/device-types");
+  if (!resp.ok) throw new Error("zigbee device types failed");
+  return resp.json();
+}
+
+export async function get_zigbee_actuatable(): Promise<{
+  devices: Array<{ ieee: string; friendly_name: string; alias: string; role: string }>;
+}> {
+  const resp = await fetch("/settings/zigbee/actuatable");
+  if (!resp.ok) throw new Error("zigbee actuatable failed");
+  return resp.json();
+}
+
 export async function get_zigbee_recipes(): Promise<{ recipes: ZigbeeRecipe[]; custom?: ZigbeeRecipe[] }> {
   const resp = await fetch("/settings/zigbee/recipes");
   if (!resp.ok) throw new Error("zigbee recipes failed");

@@ -3,11 +3,13 @@ import { Button } from "../ui";
 import { HelpTip } from "../HelpTip";
 import { SettingsTable, SettingsRow, ActionsCell } from "./SettingsTable";
 import {
+  get_zigbee_device_types,
   get_zigbee_recipes,
   get_zigbee_roles,
   put_zigbee_custom_recipes,
   put_zigbee_custom_roles,
   ZIGBEE_CUSTOM_ROLE_KINDS,
+  type ZigbeeDeviceType,
   type ZigbeeRecipe,
   type ZigbeeRole,
 } from "../../lib/fleetApi";
@@ -31,6 +33,13 @@ export function ZigbeeCatalogCard({ onSaved }: { onSaved?: () => void }) {
   const [rolesDirty, setRolesDirty] = useState(false);
   const [tasksDirty, setTasksDirty] = useState(false);
   const [msg, setMsg] = useState("");
+  const [deviceTypes, setDeviceTypes] = useState<ZigbeeDeviceType[]>([]);
+
+  useEffect(() => {
+    void get_zigbee_device_types()
+      .then((r) => setDeviceTypes(r.device_types ?? []))
+      .catch(() => undefined);
+  }, []);
 
   const load = () => {
     void get_zigbee_roles()
@@ -110,6 +119,42 @@ export function ZigbeeCatalogCard({ onSaved }: { onSaved?: () => void }) {
         Extend the Role and Task lists in the Zigbee binding table below. Built-ins can&apos;t be
         edited or removed.
       </p>
+
+      {deviceTypes.length ? (
+        <details className="dsc-inventory-group">
+          <summary>Supported device types ({deviceTypes.length})</summary>
+          <p className="dsc-muted" style={{ fontSize: 12, marginTop: 4 }}>
+            What a joined device can do in a rule — its datapoints are trigger sources;{" "}
+            <b>actuates</b> means an automation can turn it on/off.
+          </p>
+          <div className="dsc-table-scroll">
+            <table className="dsc-table dsc-table--settings">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Class</th>
+                  <th>Datapoints</th>
+                  <th>Actuates</th>
+                </tr>
+              </thead>
+              <tbody>
+                {deviceTypes.map((t) => (
+                  <tr key={t.id}>
+                    <td>{t.label}</td>
+                    <td>{t.capability_class}</td>
+                    <td className="dsc-muted" style={{ fontSize: 12 }}>
+                      {t.datapoints.map((d) => `${d.key}${d.unit ? ` (${d.unit})` : ""}`).join(", ")}
+                    </td>
+                    <td className={t.can_actuate ? "is-ok" : "is-muted"}>
+                      {t.can_actuate ? "yes" : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      ) : null}
 
       <SettingsTable
         columns={[

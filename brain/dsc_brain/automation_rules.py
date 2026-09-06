@@ -40,7 +40,7 @@ _NUMERIC_OPS = frozenset({"gt", "lt", "gte", "lte"})
 _STRING_OPS = frozenset({"eq", "ne"})
 _BOOL_OPS = frozenset({"is", "is_not"})
 VALID_OPS = _NUMERIC_OPS | _STRING_OPS | _BOOL_OPS
-VALID_ACTIONS = frozenset({"banner", "oos_seat"})
+VALID_ACTIONS = frozenset({"banner", "oos_seat", "zigbee_switch"})
 VALID_TONES = frozenset({"critical", "warn", "info"})
 
 _TRUEISH = frozenset({"on", "true", "1", "yes", "open", "wet"})
@@ -120,6 +120,15 @@ def _normalize_rule(row: Any) -> dict[str, Any]:
         banner = str(params.get("banner") or "").strip()
         if banner:
             clean_params["banner"] = banner
+    elif atype == "zigbee_switch":
+        fn = str(params.get("friendly_name") or "").strip()
+        if not fn:
+            raise ValueError("zigbee_switch action needs params.friendly_name")
+        clean_params = {
+            "friendly_name": fn,
+            # ON while the trigger holds, OFF when it clears (invert to flip).
+            "on_when_firing": bool(params.get("on_when_firing", True)),
+        }
 
     return {
         "id": rid,
@@ -270,7 +279,12 @@ def _apply_effect(rule: dict[str, Any], fleet: FleetState) -> dict[str, Any]:
     rid = rule["id"]
     action = rule["action"]
     params = action["params"]
-    owned: dict[str, Any] = {"firing": True, "owned_banner": None, "owned_seat": None}
+    owned: dict[str, Any] = {
+        "firing": True,
+        "owned_banner": None,
+        "owned_seat": None,
+        "owned_switch": None,
+    }
     banner_id = f"auto-{rid}"
     if action["type"] == "banner":
         _set_banner(fleet, banner_id, params["text"], params["tone"])
@@ -282,6 +296,16 @@ def _apply_effect(rule: dict[str, Any], fleet: FleetState) -> dict[str, Any]:
         text = params.get("banner") or f"{rule['name']}: {seat} taken out of service by a rule"
         _set_banner(fleet, banner_id, text, "warn")
         owned["owned_banner"] = banner_id
+    elif action["type"] == "zigbee_switch":
+        fn = params["friendly_name"]
+        on = bool(params.get("on_when_firing", True))
+        try:
+            from .zigbee_mqtt import set_zigbee_state
+
+            set_zigbee_state(fn, on)
+        except Exception as exc:  # noqa: BLE001
+            _logger.warning("automation zigbee_switch %s -> %s failed: %s", fn, on, exc)
+        owned["owned_switch"] = {"friendly_name": fn, "on_when_firing": on}
     return owned
 
 
@@ -291,6 +315,14 @@ def _clear_effect(rid: str, owned: dict[str, Any], fleet: FleetState) -> None:
     seat = owned.get("owned_seat")
     if seat:
         upsert_inventory(str(seat), {"in_service": True})
+    sw = owned.get("owned_switch")
+    if isinstance(sw, dict) and sw.get("friendly_name"):
+        try:
+            from .zigbee_mqtt import set_zigbee_state
+
+            set_zigbee_state(str(sw["friendly_name"]), not bool(sw.get("on_when_firing", True)))
+        except Exception as exc:  # noqa: BLE001
+            _logger.warning("automation zigbee_switch clear failed: %s", exc)
 
 
 # ------------------------------------------------------------------- evaluate
