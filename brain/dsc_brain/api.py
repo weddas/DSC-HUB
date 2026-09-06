@@ -1108,6 +1108,32 @@ def settings_network_apply() -> dict[str, Any]:
     return apply_network_configs(restart_ap=True)
 
 
+@app.post("/settings/network/internet-check")
+def settings_network_internet_check() -> dict[str, Any]:
+    from .network_apply import internet_reachable
+
+    return internet_reachable(force=True)
+
+
+class EthConfigBody(BaseModel):
+    mode: str = "auto"
+    static_ip: str = ""
+    gateway: str = ""
+    dns: str = ""
+
+
+@app.post("/settings/network/ethernet")
+def settings_network_ethernet(body: EthConfigBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .network_apply import save_eth_config
+
+    try:
+        return save_eth_config(body.mode, body.static_ip, body.gateway, body.dns)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
 @app.get("/settings/catalog/status")
 async def settings_catalog_status() -> dict[str, Any]:
     return await catalog_status()

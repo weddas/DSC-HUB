@@ -24,6 +24,7 @@ import { SettingsTable, SettingsRow } from "../components/settings/SettingsTable
 import { ZigbeeCatalogCard } from "../components/settings/ZigbeeCatalogCard";
 import { AutomationRulesCard } from "../components/settings/AutomationRulesCard";
 import { KitUpdateCard } from "../components/settings/KitUpdateCard";
+import { NetworkExtrasCard } from "../components/settings/NetworkExtrasCard";
 import { SpaceEnergySettingsCard } from "../components/settings/SpaceEnergySettingsCard";
 import {
   apply_network,
@@ -956,6 +957,8 @@ export function SettingsPage() {
           </p>
         </DecisionLayer>
       </section>
+
+      {section === "network" ? <NetworkExtrasCard /> : null}
 
       <section className="dsc-card" hidden={section !== "api"}>
         <h3>Integrations</h3>

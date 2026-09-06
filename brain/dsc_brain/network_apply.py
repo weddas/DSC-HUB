@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import ipaddress
 import shutil
 import socket
 import struct
 import subprocess
+import threading
+import time
 from pathlib import Path
 from typing import Any, Literal
 
@@ -15,7 +18,7 @@ except ImportError:  # Windows / non-Linux
     fcntl = None  # type: ignore[assignment]
 
 from .paths import BRAIN_DATA
-from .settings import get_all_settings, list_inventory
+from .settings import get_all_settings, get_setting, list_inventory, set_setting
 
 ALLOWED_CHANNELS = {"1", "6", "11"}
 SYSTEM_ETC = Path("/etc/dsc-hub")
@@ -88,12 +91,161 @@ def network_status() -> dict[str, Any]:
         "dhcp_map": dhcp_map,
         "eth_uplink": ETH_IFACE,
         "eth_carrier": carrier,
+        "eth": eth_config(),
+        "internet": internet_reachable(),
+        "internet_check_host": settings.get("internet_check_host", _DEFAULT_CHECK_HOST),
         "operator_mode": mode,
         "spa_urls": spa_urls_for_mode(mode, eth_ip),
         "note": (
             "Ethernet carrier → Pi SoftAP off, SPA on LAN/mDNS. "
             "No Ethernet → start dsc-hub-ap for operator Setup. "
             "Apply writes configs to data dir; net-policy owns SoftAP lifecycle."
+        ),
+    }
+
+
+# --------------------------------------------------------------- internet check
+
+_DEFAULT_CHECK_HOST = "1.1.1.1:443"
+_INET_TTL = 30.0
+_inet_cache: dict[str, Any] = {"reachable": None, "dns_ok": None, "checked_at": 0.0, "error": None}
+_inet_lock = threading.Lock()
+
+
+def _check_host_parts() -> tuple[str, int]:
+    raw = str(get_setting("internet_check_host", _DEFAULT_CHECK_HOST)).strip() or _DEFAULT_CHECK_HOST
+    host, _, port = raw.partition(":")
+    try:
+        p = int(port) if port else 443
+    except ValueError:
+        p = 443
+    return host or "1.1.1.1", p
+
+
+def internet_reachable(*, force: bool = False) -> dict[str, Any]:
+    """Best-effort internet check: a TCP connect to the configured host plus a DNS
+    resolve. Cached ~30 s, never raises."""
+    now = time.time()
+    with _inet_lock:
+        if not force and _inet_cache["checked_at"] and now - _inet_cache["checked_at"] < _INET_TTL:
+            return dict(_inet_cache)
+
+    host, port = _check_host_parts()
+    reachable = False
+    dns_ok = False
+    error: str | None = None
+    try:
+        with socket.create_connection((host, port), timeout=2.5):
+            reachable = True
+    except OSError as exc:
+        error = f"{host}:{port} unreachable: {exc}"
+    try:
+        socket.getaddrinfo("github.com", 443)
+        dns_ok = True
+    except OSError as exc:
+        if error is None:
+            error = f"DNS resolve failed: {exc}"
+
+    result = {
+        "reachable": reachable,
+        "dns_ok": dns_ok,
+        "host": f"{host}:{port}",
+        "checked_at": now,
+        "error": None if (reachable and dns_ok) else error,
+    }
+    with _inet_lock:
+        _inet_cache.update(result)
+    return result
+
+
+# ------------------------------------------------------------- ethernet (LAN)
+
+EthMode = Literal["auto", "static"]
+
+
+def eth_config() -> dict[str, Any]:
+    mode = str(get_setting("eth_mode", "auto")).strip().lower()
+    if mode not in ("auto", "static"):
+        mode = "auto"
+    return {
+        "iface": ETH_IFACE,
+        "mode": mode,
+        "static_ip": get_setting("eth_static_ip", ""),  # CIDR, e.g. 192.168.1.50/24
+        "gateway": get_setting("eth_gateway", ""),
+        "dns": get_setting("eth_dns", ""),  # space/comma separated
+        "carrier": eth_carrier_up(),
+        "current_ip": _primary_ipv4(),
+    }
+
+
+def _validate_static(ip_cidr: str, gateway: str, dns: str) -> None:
+    s = ip_cidr.strip()
+    if "/" not in s:
+        raise ValueError("static_ip must include a prefix, e.g. 192.168.1.50/24")
+    try:
+        iface = ipaddress.ip_interface(s)
+    except ValueError as exc:
+        raise ValueError(f"static_ip must be CIDR (e.g. 192.168.1.50/24): {exc}") from exc
+    if gateway.strip():
+        try:
+            gw = ipaddress.ip_address(gateway.strip())
+        except ValueError as exc:
+            raise ValueError(f"gateway must be an IP: {exc}") from exc
+        if gw not in iface.network:
+            raise ValueError(f"gateway {gw} is not on {iface.network}")
+    for d in dns.replace(",", " ").split():
+        try:
+            ipaddress.ip_address(d)
+        except ValueError as exc:
+            raise ValueError(f"dns entry {d!r} is not an IP: {exc}") from exc
+
+
+def render_eth_dhcpcd(cfg: dict[str, Any]) -> str:
+    if cfg["mode"] != "static":
+        return f"# {ETH_IFACE}: DHCP (auto). No static block.\n"
+    dns = cfg["dns"].replace(",", " ").split()
+    lines = [f"interface {ETH_IFACE}", f"static ip_address={cfg['static_ip'].strip()}"]
+    if cfg["gateway"].strip():
+        lines.append(f"static routers={cfg['gateway'].strip()}")
+    if dns:
+        lines.append(f"static domain_name_servers={' '.join(dns)}")
+    return "\n".join(lines) + "\n"
+
+
+def save_eth_config(mode: str, static_ip: str = "", gateway: str = "", dns: str = "") -> dict[str, Any]:
+    """Persist ethernet settings + render a dhcpcd drop-in. Does NOT restart
+    networking — a bad static config can lock out a headless Pi; the operator
+    applies it explicitly."""
+    mode = str(mode).strip().lower()
+    if mode not in ("auto", "static"):
+        raise ValueError("mode must be 'auto' or 'static'")
+    if mode == "static":
+        if not static_ip.strip():
+            raise ValueError("static mode needs static_ip (CIDR)")
+        _validate_static(static_ip, gateway, dns)
+
+    set_setting("eth_mode", mode)
+    set_setting("eth_static_ip", static_ip.strip())
+    set_setting("eth_gateway", gateway.strip())
+    set_setting("eth_dns", dns.strip())
+
+    cfg = eth_config()
+    out_dir = BRAIN_DATA / "network"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    conf_path = out_dir / "eth0-dhcpcd.conf"
+    conf_path.write_text(render_eth_dhcpcd(cfg), encoding="utf-8")
+    return {
+        "eth": cfg,
+        "rendered": str(conf_path),
+        "apply": (
+            "auto (DHCP): remove any static block for eth0 from /etc/dhcpcd.conf, then "
+            "`sudo systemctl restart dhcpcd`."
+            if mode == "auto"
+            else (
+                f"static: append {conf_path} to /etc/dhcpcd.conf (or drop into "
+                "/etc/dhcpcd.d/), then `sudo systemctl restart dhcpcd` — or reboot. "
+                "Verify you can still reach the Pi before disconnecting."
+            )
         ),
     }
 
