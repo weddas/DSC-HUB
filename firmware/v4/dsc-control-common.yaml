@@ -4727,13 +4727,13 @@ script:
           auto setc = [](lv_obj_t* o, uint32_t c){
             lv_color_t want = lv_color_hex(c);
             lv_color_t cur = lv_obj_get_style_text_color(o, LV_PART_MAIN);
-            if (lv_color_to32(cur) != lv_color_to32(want))
+            if (!lv_color_eq(cur, want))  // LVGL 9: lv_color_to32 is gone (ESPHome 2026.6+)
               lv_obj_set_style_text_color(o, want, LV_PART_MAIN);
           };
           auto bordc = [](lv_obj_t* o, uint32_t c){
             lv_color_t want = lv_color_hex(c);
             lv_color_t cur = lv_obj_get_style_border_color(o, LV_PART_MAIN);
-            if (lv_color_to32(cur) != lv_color_to32(want))
+            if (!lv_color_eq(cur, want))  // LVGL 9: lv_color_to32 is gone (ESPHome 2026.6+)
               lv_obj_set_style_border_color(o, want, LV_PART_MAIN);
           };
           auto setbar = [](lv_obj_t* o, int v){
@@ -4742,7 +4742,7 @@ script:
           auto setbarb = [](lv_obj_t* o, uint32_t c){
             lv_color_t want = lv_color_hex(c);
             lv_color_t cur = lv_obj_get_style_bg_color(o, LV_PART_INDICATOR);
-            if (lv_color_to32(cur) != lv_color_to32(want))
+            if (!lv_color_eq(cur, want))  // LVGL 9: lv_color_to32 is gone (ESPHome 2026.6+)
               lv_obj_set_style_bg_color(o, want, LV_PART_INDICATOR);
           };
           auto setl = [](lv_obj_t* o, const char* s){
