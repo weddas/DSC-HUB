@@ -181,12 +181,20 @@ class _FakeWs:
         return json.dumps(self._events.pop(0))
 
 
+seen_url: dict[str, str] = {}
+
+
 def _install_fake_ws(monkeypatch: pytest.MonkeyPatch, ws: _FakeWs) -> None:
     import sys
     import types
 
     client = types.ModuleType("websockets.sync.client")
-    client.connect = lambda url, **kw: ws  # type: ignore[attr-defined]
+
+    def _connect(url: str, **kw: Any) -> _FakeWs:
+        seen_url["url"] = url
+        return ws
+
+    client.connect = _connect  # type: ignore[attr-defined]
     sync = types.ModuleType("websockets.sync")
     sync.client = client  # type: ignore[attr-defined]
     root = types.ModuleType("websockets")
@@ -216,6 +224,7 @@ def test_dashboard_ws_upload_streams_and_succeeds(temp_db: Path, monkeypatch: py
 
     spawn = json.loads(ws.sent[0])
     assert spawn == {"type": "spawn", "configuration": "dsc-pot2.yaml", "port": "OTA"}
+    assert seen_url["url"].endswith("/run")  # compile + upload, never bare /upload
     row = ej.get_job("j-ws", temp_db)
     assert row["status"] == "done"
     assert "Uploading" in row["detail"]
@@ -749,3 +758,18 @@ def test_rollback_target_offered_when_failed_job_still_moved_the_venv(temp_db: P
     tc._set_toolchain_job_versions(job_id, "2026.6.5", "2026.8.2", temp_db)
     tc._update_job_row(job_id, "failed", "dashboard restart died", temp_db)
     assert tc.rollback_target(temp_db, inst="2026.8.2") == "2026.6.5"
+
+
+def test_queue_job_allows_a_fleet_behind_a_running_job(temp_db: Path) -> None:
+    """Bulk rollout: the first job goes `running` immediately; the rest must still queue."""
+    from dsc_brain import esphome_jobs as ej
+
+    first = ej.queue_job("control", "ota", temp_db)
+    ej._update_job(first["job_id"], "running", "flashing", temp_db)
+    for seat in ("heater", "heatmat", "humidifier", "pot1", "hub"):
+        ej.queue_job(seat, "ota", temp_db)
+    with pytest.raises(RuntimeError, match="already queued or running for heater"):
+        ej.queue_job("heater", "ota", temp_db)
+    ej.queue_job("heater", "compile", temp_db)  # a different action for the same seat is fine
+    statuses = {(j["seat_id"], j["action"]): j["status"] for j in ej.list_jobs(limit=20, db_path=temp_db)}
+    assert statuses[("hub", "ota")] == "queued" and statuses[("control", "ota")] == "running"

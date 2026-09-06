@@ -87,14 +87,18 @@ def _local_esphome_available() -> bool:
 
 def _run_job_via_dashboard(job: dict[str, Any], db_path: Path | None = None) -> None:
     """No local CLI, but the ESPHome dashboard is reachable — it IS the build
-    service. Drive its WebSocket command endpoint (/compile, /upload):
+    service. Drive its WebSocket command endpoint (/compile, /run):
     connect, send {"type":"spawn","configuration":<yaml>}, stream {"event":"line"}
     messages, finish on {"event":"exit","code":N}.
+
+    OTA uses `/run` (= `esphome run`: compile THEN upload). `/upload` only ships an
+    already-built binary and fails with FileNotFoundError on a seat that was never
+    compiled on this Pi — five of seven fleet seats, live on 2026-09-06.
     """
     job_id = str(job["job_id"])
     action = str(job["action"])
     yaml_name = str(job["yaml_name"])
-    endpoint = "compile" if action == "compile" else "upload"
+    endpoint = "compile" if action == "compile" else "run"
     base = dashboard_api().rstrip("/")
     ws_url = ("wss://" if base.startswith("https://") else "ws://") + base.split("://", 1)[-1] + "/" + endpoint
 
@@ -117,7 +121,7 @@ def _run_job_via_dashboard(job: dict[str, Any], db_path: Path | None = None) -> 
     try:
         with ws_connect(ws_url, open_timeout=10, close_timeout=5) as ws:
             spawn: dict[str, Any] = {"type": "spawn", "configuration": yaml_name}
-            if endpoint == "upload":
+            if endpoint == "run":
                 spawn["port"] = "OTA"
             ws.send(json.dumps(spawn))
             deadline = time.time() + 1800
@@ -288,37 +292,21 @@ def queue_job(seat_id: str, action: str, db_path: Path | None = None) -> dict[st
         raise KeyError(seat_id)
     conn = connect(db_path)
     _ensure_jobs(conn)
-    running = conn.execute(
-        "SELECT job_id FROM esphome_jobs WHERE status='running' LIMIT 1"
+    # The worker is strictly serial, so queueing behind a running job is safe —
+    # a fleet rollout enqueues seven seats in one call and the first is already
+    # `running` by the time the second arrives (the old "flash already running"
+    # guard rejected five of seven live on 2026-09-06). Only exact duplicates
+    # (same seat, same action, still queued/running) are refused.
+    dup = conn.execute(
+        """
+        SELECT job_id FROM esphome_jobs
+        WHERE seat_id=? AND action=? AND status IN ('queued','running') LIMIT 1
+        """,
+        (seat_id, action),
     ).fetchone()
-    if running:
+    if dup:
         conn.close()
-        raise RuntimeError("flash already running — wait for current job")
-    if action == "ota":
-        dup = conn.execute(
-            """
-            SELECT job_id FROM esphome_jobs
-            WHERE seat_id=? AND action='ota' AND status IN ('queued','running') LIMIT 1
-            """,
-            (seat_id,),
-        ).fetchone()
-        if dup:
-            conn.close()
-            raise RuntimeError(f"OTA already queued or running for {seat_id}")
-    active = conn.execute(
-        """
-        SELECT job_id, seat_id, action FROM esphome_jobs
-        WHERE status IN ('queued','running')
-        """
-    ).fetchall()
-    if action == "compile" and active:
-        conn.close()
-        raise RuntimeError("compile already queued or running — one job at a time on Pi")
-    if action == "ota":
-        for row in active:
-            if row["seat_id"] == seat_id and row["action"] == "ota":
-                conn.close()
-                raise RuntimeError("OTA already queued for this seat")
+        raise RuntimeError(f"{'OTA' if action == 'ota' else 'compile'} already queued or running for {seat_id}")
     now = time.time()
     job_id = str(uuid.uuid4())
     detail = f"Queued — worker will run: {esphome_bin()} {action} {yaml_name}"
