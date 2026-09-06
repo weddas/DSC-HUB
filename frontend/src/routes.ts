@@ -39,6 +39,7 @@ export const SETTINGS_SECTIONS = [
   "api",
   "network",
   "server",
+  "system",
   "general",
 ] as const;
 
@@ -72,6 +73,7 @@ export const SECONDARY_TABS: Record<PrimarySection, TabRoute[]> = {
     { id: "api", label: "API", subtitle: "Integrations", path: "/settings/api", icon: "catalog" },
     { id: "network", label: "Network", subtitle: "AP", path: "/settings/network", icon: "climate" },
     { id: "server", label: "Server", subtitle: "Jobs", path: "/settings/server", icon: "system" },
+    { id: "system", label: "System", subtitle: "Logs", path: "/settings/system", icon: "advanced" },
     { id: "general", label: "General", path: "/settings/general", icon: "settings" },
   ],
 };

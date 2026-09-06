@@ -376,6 +376,12 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
 
     init_soft_cal_history()
     try:
+        from .system_ops import apply_log_level_from_settings
+
+        apply_log_level_from_settings()
+    except Exception:  # noqa: BLE001
+        pass
+    try:
         from .energy_model import ensure_default_tariff
         from .room_model import ensure_kit_rooms
         from .space_model import ensure_kit_spaces
@@ -1130,6 +1136,67 @@ def settings_network_ethernet(body: EthConfigBody) -> dict[str, Any]:
 
     try:
         return save_eth_config(body.mode, body.static_ip, body.gateway, body.dns)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+# ---- system diagnostics (logs / verbosity / power) --------------------------
+
+
+class LogVerbosityBody(BaseModel):
+    level: str = "INFO"
+
+
+class PowerActionBody(BaseModel):
+    action: str
+
+
+@app.get("/settings/system/logs")
+def settings_system_logs(
+    source: str = Query("brain"),
+    lines: int = Query(200, ge=10, le=2000),
+) -> dict[str, Any]:
+    from .system_ops import log_verbosity, tail_log
+
+    try:
+        return {**tail_log(source, lines), "verbosity": log_verbosity()}
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.get("/settings/system/logs/download")
+def settings_system_logs_download(source: str = Query("brain")) -> Response:
+    from .system_ops import log_download_text
+
+    try:
+        fname, text = log_download_text(source)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return Response(
+        content=text,
+        media_type="text/plain",
+        headers={"Content-Disposition": f'attachment; filename="{fname}"'},
+    )
+
+
+@app.post("/settings/system/verbosity")
+def settings_system_verbosity(body: LogVerbosityBody) -> dict[str, Any]:
+    from .system_ops import set_log_verbosity
+
+    try:
+        return set_log_verbosity(body.level)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.post("/settings/system/power")
+def settings_system_power(body: PowerActionBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .system_ops import power_action
+
+    try:
+        return power_action(body.action)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
 
