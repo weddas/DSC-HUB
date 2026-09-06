@@ -195,6 +195,56 @@ export async function update_esphome_toolchain(target?: string): Promise<Record<
   return resp.json();
 }
 
+export type KitUpdateStatus = {
+  eth_up: boolean;
+  can_full_pull: boolean;
+  brain: {
+    version: string;
+    latest_tag: string | null;
+    latest_name: string | null;
+    latest_url: string | null;
+    published_at: string | null;
+    update_available: boolean;
+    checked_at: number | null;
+    ok: boolean;
+    error: string | null;
+  };
+  fleet: {
+    expected_firmware: string;
+    behind_count: number;
+    devices: Array<{
+      seat_id: string;
+      running: string | null;
+      expected: string;
+      behind: boolean;
+      online: boolean;
+      in_service: boolean;
+    }>;
+  };
+  update_job: { status: string; detail: string; started_at: number } | null;
+  note: string;
+};
+
+export async function get_kit_update(): Promise<KitUpdateStatus> {
+  const resp = await fetch("/settings/update");
+  if (!resp.ok) throw new Error("update status failed");
+  return resp.json();
+}
+
+/** Force a fresh GitHub release lookup + fleet firmware diff. */
+export async function check_kit_updates(): Promise<KitUpdateStatus> {
+  const resp = await fetch("/settings/update/check", { method: "POST" });
+  if (!resp.ok) throw new Error("update check failed");
+  return resp.json();
+}
+
+/** Run the operator-configured brain self-update (Ethernet-gated). */
+export async function start_kit_update(): Promise<Record<string, unknown>> {
+  const resp = await fetch("/settings/update/pull", { method: "POST" });
+  if (!resp.ok) throw new Error((await resp.text()) || "update pull failed");
+  return resp.json();
+}
+
 export async function get_esphome_rollout(): Promise<Record<string, unknown>> {
   const resp = await fetch("/settings/esphome/rollout");
   if (!resp.ok) throw new Error("esphome rollout status failed");

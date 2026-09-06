@@ -23,6 +23,7 @@ import { ZigbeeBindRow } from "../components/settings/ZigbeeBindRow";
 import { SettingsTable, SettingsRow } from "../components/settings/SettingsTable";
 import { ZigbeeCatalogCard } from "../components/settings/ZigbeeCatalogCard";
 import { AutomationRulesCard } from "../components/settings/AutomationRulesCard";
+import { KitUpdateCard } from "../components/settings/KitUpdateCard";
 import { SpaceEnergySettingsCard } from "../components/settings/SpaceEnergySettingsCard";
 import {
   apply_network,
@@ -1646,6 +1647,8 @@ export function SettingsPage() {
           </p>
         </section>
       ) : null}
+
+      {section === "server" ? <KitUpdateCard /> : null}
 
       {section === "server" ? (
         <div style={{ marginTop: 8 }}>

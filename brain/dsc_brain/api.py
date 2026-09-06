@@ -53,7 +53,7 @@ from .usb_flash import (
     manifest_public,
     queue_usb_flash,
 )
-from .kit_update import start_full_update, update_status
+from .kit_update import check_updates, start_full_update, update_status
 from .paths import EXPECTED_FIRMWARE, SURFACE_VERSION
 from .settings import (
     get_all_settings,
@@ -1153,6 +1153,12 @@ def settings_usb_flash_ports() -> dict[str, Any]:
 @app.get("/settings/update")
 def settings_update_status() -> dict[str, Any]:
     return update_status()
+
+
+@app.post("/settings/update/check")
+def settings_update_check() -> dict[str, Any]:
+    """Force a fresh GitHub release lookup + fleet firmware diff."""
+    return check_updates()
 
 
 @app.post("/settings/update/pull")
