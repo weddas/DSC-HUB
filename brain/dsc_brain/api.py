@@ -382,6 +382,12 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
     except Exception:  # noqa: BLE001
         pass
     try:
+        from .settings import prune_fleet_history
+
+        prune_fleet_history()
+    except Exception:  # noqa: BLE001
+        pass
+    try:
         from .energy_model import ensure_default_tariff
         from .room_model import ensure_kit_rooms
         from .space_model import ensure_kit_spaces
@@ -1214,6 +1220,29 @@ def settings_system_power(body: PowerActionBody) -> dict[str, Any]:
         return power_action(body.action)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
+
+
+class HistoryRetentionBody(BaseModel):
+    days: int = 45
+
+
+@app.get("/settings/system/history-stats")
+def settings_system_history_stats() -> dict[str, Any]:
+    from .settings import fleet_history_stats
+
+    return fleet_history_stats()
+
+
+@app.post("/settings/system/history-retention")
+def settings_system_history_retention(body: HistoryRetentionBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .settings import fleet_history_stats, prune_fleet_history, set_setting
+
+    days = max(0, min(int(body.days), 3650))
+    set_setting("fleet_history_retention_days", str(days))
+    removed = prune_fleet_history()
+    return {"pruned": removed, **fleet_history_stats()}
 
 
 @app.get("/settings/catalog/status")

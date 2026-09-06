@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Navigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 
 import { GrowLogStream } from "../components/journal/GrowLogStream";
 import { JournalComparePane } from "../components/journal/JournalComparePane";
@@ -104,16 +104,23 @@ function LogsScopeNav({
           compareScopeB != null &&
           item.scope.kind === compareScopeB.kind &&
           String(item.scope.id ?? "") === String(compareScopeB.id ?? "");
-        const href = `/grow/logs?${buildLogsSearchParams(item.scope, view).toString()}`;
+        // HashRouter app — hand `<Link>` a route-relative target so it renders a
+        // correct `#/grow/logs?…` href (copy-link / middle-click / open-in-new-tab
+        // now work) instead of the raw-path `<a href="/grow/logs?…">` that only
+        // navigated because onClick preventDefault'd it. Plain clicks still route
+        // through onSelect so compare-picking + anchor carry-through are unchanged.
+        const to = `/grow/logs?${buildLogsSearchParams(item.scope, view).toString()}`;
 
         return (
-          <a
+          <Link
             key={item.key}
-            href={href}
+            to={to}
+            replace
             className={`dsc-logs-scope-link${active ? " dsc-logs-scope-link--active" : ""}${
               item.indent ? " dsc-logs-scope-link--indent" : ""
             }${compareScopeMode && compareable && (isA || isB) ? " dsc-logs-scope-link--compare-pick" : ""}`}
             onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
               e.preventDefault();
               onSelect(item.scope);
             }}
@@ -129,7 +136,7 @@ function LogsScopeNav({
                 B
               </span>
             ) : null}
-          </a>
+          </Link>
         );
       })}
     </nav>

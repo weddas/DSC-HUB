@@ -212,6 +212,30 @@ export async function power_action(
   return resp.json();
 }
 
+export type FleetHistoryStats = {
+  rows: number;
+  oldest_ts: number | null;
+  newest_ts: number | null;
+  retention_days: number;
+  pruned?: number;
+};
+
+export async function get_history_stats(): Promise<FleetHistoryStats> {
+  const resp = await fetch("/settings/system/history-stats");
+  if (!resp.ok) throw new Error((await resp.text()) || "history stats failed");
+  return resp.json();
+}
+
+export async function set_history_retention(days: number): Promise<FleetHistoryStats> {
+  const resp = await fetch("/settings/system/history-retention", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ days }),
+  });
+  if (!resp.ok) throw new Error((await resp.text()) || "retention update failed");
+  return resp.json();
+}
+
 export type EthConfigBody = { mode: "auto" | "static"; static_ip?: string; gateway?: string; dns?: string };
 
 export async function set_ethernet(body: EthConfigBody): Promise<Record<string, unknown>> {
