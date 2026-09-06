@@ -773,3 +773,14 @@ def test_queue_job_allows_a_fleet_behind_a_running_job(temp_db: Path) -> None:
     ej.queue_job("heater", "compile", temp_db)  # a different action for the same seat is fine
     statuses = {(j["seat_id"], j["action"]): j["status"] for j in ej.list_jobs(limit=20, db_path=temp_db)}
     assert statuses[("hub", "ota")] == "queued" and statuses[("control", "ota")] == "running"
+
+
+def test_rollback_target_never_offers_a_dashboardless_release(temp_db: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """After rolling 2026.8.2 -> 2026.6.5 the last done job's from_version is 2026.8.2 - not an offer."""
+    from dsc_brain import esphome_toolchain as tc
+
+    _host_env(monkeypatch, tc, tmp_path, installed="2026.6.5")
+    job_id = tc._new_toolchain_job("host-rollback", "2026.6.5", temp_db)
+    tc._set_toolchain_job_versions(job_id, "2026.8.2", "2026.6.5", temp_db)
+    tc._update_job_row(job_id, "done", "ok", temp_db)
+    assert tc.rollback_target(temp_db, inst="2026.6.5") is None

@@ -736,6 +736,8 @@ def rollback_target(db_path: Path | None = None, inst: str | None = None) -> str
         return None
     if _vtuple(prev) < _vtuple(min_version()):
         return None
+    if _vtuple(prev) >= _vtuple(DASHBOARD_REMOVED_FROM) and not device_builder_supported():
+        return None  # never offer a "rollback" onto the release that removed the dashboard
     return prev
 
 
