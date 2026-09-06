@@ -340,7 +340,7 @@ export function SoftCalWizard() {
         </label>
       </div>
 
-      <p className="dsc-muted" style={{ fontSize: 12, marginTop: 0 }}>
+      <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginTop: 0 }}>
         Live (raw):{" "}
         {livePreview
           .map(
@@ -390,7 +390,7 @@ export function SoftCalWizard() {
 
       {waterRows ? (
         <>
-          <p className="dsc-muted" style={{ fontSize: 12, marginBottom: 4 }}>
+          <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginBottom: 4 }}>
             Capture 1 · tap water ({waterRows[0]?.sampleCount ?? 0} samples)
           </p>
           <CaptureTable rows={waterRows} />
@@ -398,7 +398,7 @@ export function SoftCalWizard() {
       ) : null}
       {afterRows ? (
         <>
-          <p className="dsc-muted" style={{ fontSize: 12, marginBottom: 4, marginTop: 12 }}>
+          <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginBottom: 4, marginTop: 12 }}>
             Capture 2 · after water ({afterRows[0]?.sampleCount ?? 0} samples)
           </p>
           <CaptureTable rows={afterRows} />

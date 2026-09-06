@@ -124,8 +124,16 @@ def list_probe_stations() -> list[dict[str, Any]]:
         # Thereabouts = dock home soil only when that home is trustworthy.
         # Never mirror home moisture as live station truth when Modbus/fault disagree.
         thereabouts: dict[str, Any] = {}
+        thereabouts_updated_at: float | None = None
         if source_id and home_trust["trustworthy"]:
-            thereabouts = dict(fleet.pots[source_id].values or {})
+            src_pot = fleet.pots[source_id]
+            thereabouts = dict(src_pot.values or {})
+            thereabouts_updated_at = src_pot.last_seen
+        # Independent of home_trustworthy: even a "trustworthy" home can go quiet.
+        thereabouts_stale = bool(
+            thereabouts_updated_at is not None
+            and (time.time() - float(thereabouts_updated_at)) > 900
+        )
         out.append(
             {
                 "seat_id": seat_id,
@@ -134,6 +142,8 @@ def list_probe_stations() -> list[dict[str, Any]]:
                 "reading_mode": extra.get("reading_mode") or "idle",
                 "thereabouts": thereabouts,
                 "thereabouts_source": source_id or None,
+                "thereabouts_updated_at": thereabouts_updated_at,
+                "thereabouts_stale": thereabouts_stale,
                 "online": bool(home_trust["online"]),
                 "home_online": bool(home_trust["online"]),
                 "home_trustworthy": bool(home_trust["trustworthy"]),

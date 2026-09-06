@@ -218,7 +218,7 @@ export function SetupPage() {
           </label>
           {bootNote ? <p className="dsc-honesty">{bootNote}</p> : null}
           {jobDetail ? (
-            <pre className="dsc-muted" style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>
+            <pre className="dsc-muted" style={{ whiteSpace: "pre-wrap", fontSize: "var(--dsc-fs-sm)" }}>
               {jobOk === true ? "OK — " : jobOk === false ? "FAILED — " : ""}
               {jobDetail}
             </pre>

@@ -29,6 +29,8 @@ export function PlantWizard() {
   const { callService } = useFleetActions();
   const refreshBrain = useBrainRefresh();
   const [stepIdx, setStepIdx] = useState(0);
+  /** Furthest step the operator has reached — visited steps stay freely navigable via the chips. */
+  const [maxStepIdx, setMaxStepIdx] = useState(0);
   const [customBlend, setCustomBlend] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [confirmAdd, setConfirmAdd] = useState(false);
@@ -231,6 +233,7 @@ export function PlantWizard() {
       setPickedStrain(null);
       setPickedLight(null);
       setStepIdx(0);
+      setMaxStepIdx(0);
       await refreshBrain();
     } catch (exc) {
       setCommitErr(exc instanceof Error ? exc.message : "Add plant failed");
@@ -239,14 +242,39 @@ export function PlantWizard() {
   };
 
   const goNext = async () => {
-    if (step.id === "plant") await syncComposeTextToBus();
-    await flushEntityDrafts();
-    if (step.id === "feed") setSkippedFeed(nutrients.length === 0);
-    if (step.id === "light") setSkippedLight(!light || light === "unknown");
+    const from = step.id;
+    // Local-first: bus writes catch up on their own — a slow/failed sync must never
+    // freeze the Next button or leave it feeling inert with no feedback.
+    try {
+      if (from === "plant") await syncComposeTextToBus();
+      await flushEntityDrafts();
+    } catch (exc) {
+      setWriteErr(exc instanceof Error ? exc.message : "draft sync failed — retry from Review");
+    }
+    if (from === "feed") setSkippedFeed(nutrients.length === 0);
+    if (from === "light") setSkippedLight(!light || light === "unknown");
     setStepIdx((i) => Math.min(i + 1, STEPS.length - 1));
   };
 
   const goBack = () => setStepIdx((i) => Math.max(i - 1, 0));
+
+  const discardDraft = () => {
+    clearComposeDraft(guardedCallService);
+    setPickedStrain(null);
+    setPickedLight(null);
+    setSoilPresetId(null);
+    setSkippedFeed(false);
+    setSkippedLight(false);
+    setAssignDraft(null);
+    setWriteErr(null);
+    setCommitErr(null);
+    setStepIdx(0);
+    setMaxStepIdx(0);
+  };
+
+  useEffect(() => {
+    setMaxStepIdx((m) => Math.max(m, stepIdx));
+  }, [stepIdx]);
 
   useEffect(() => {
     try {
@@ -304,9 +332,10 @@ export function PlantWizard() {
               key={s.id}
               type="button"
               className={`dsc-wizard-step${current ? " is-current" : ""}${done ? " is-done" : ""}`}
-              disabled={i > stepIdx && !canNext}
+              disabled={i > maxStepIdx && !(i === stepIdx + 1 && canNext)}
               onClick={() => {
-                if (i <= stepIdx) setStepIdx(i);
+                if (i <= maxStepIdx) setStepIdx(i);
+                else if (i === stepIdx + 1 && canNext) void goNext();
               }}
             >
               <Icon
@@ -328,16 +357,19 @@ export function PlantWizard() {
       {draftOpen ? (
         <div className="dsc-banner dsc-banner--warn" style={{ marginBottom: 12 }}>
           <StatusChip label="Unsaved compose draft" tone="warn" />
-          <span className="dsc-muted" style={{ fontSize: 13, marginLeft: 8 }}>
-            Strain or probe is set — finish add or retire clears the draft.
+          <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-md)", marginLeft: 8 }}>
+            Strain or probe is set — this draft is shared across the kit until you add the plant or discard it.
           </span>
+          <Button variant="secondary" icon="history" onClick={discardDraft}>
+            Discard draft
+          </Button>
         </div>
       ) : null}
 
       {writeErr ? (
         <div className="dsc-banner dsc-banner--bad" style={{ marginBottom: 12 }}>
           <StatusChip label="A write failed" tone="bad" />
-          <span className="dsc-muted" style={{ fontSize: 13, marginLeft: 8 }}>
+          <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-md)", marginLeft: 8 }}>
             {writeErr}
           </span>
           <Button variant="secondary" onClick={() => setWriteErr(null)}>

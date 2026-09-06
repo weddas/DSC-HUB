@@ -40,7 +40,7 @@ export function PlantExtra({ pot }: { pot: number }) {
         />
       </div>
       {!available(`sensor.dsc_probe${pot}_expected_stage`) ? (
-        <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 12 }}>
+        <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: "var(--dsc-fs-sm)" }}>
           No cultivar mesh. Missing fields stay empty.
         </p>
       ) : null}

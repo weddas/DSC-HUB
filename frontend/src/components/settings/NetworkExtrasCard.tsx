@@ -81,7 +81,7 @@ export function NetworkExtrasCard() {
         <b>Internet</b>{" "}
         <StatusChip label={online ? "ONLINE" : "OFFLINE"} tone={online ? "ok" : "warn"} />
         {inet && !online ? (
-          <span className="dsc-muted" style={{ fontSize: 12, marginLeft: 8 }}>
+          <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginLeft: 8 }}>
             {inet.reachable ? "TCP ok, DNS failing" : inet.dns_ok ? "DNS ok, no route" : "no route, no DNS"}
             {inet.error ? ` — ${inet.error}` : ""}
           </span>
@@ -100,7 +100,7 @@ export function NetworkExtrasCard() {
           tone={eth?.carrier ? "ok" : "muted"}
         />
         {eth?.current_ip ? (
-          <span className="dsc-muted" style={{ fontSize: 12, marginLeft: 8 }}>
+          <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginLeft: 8 }}>
             {eth.current_ip}
           </span>
         ) : null}

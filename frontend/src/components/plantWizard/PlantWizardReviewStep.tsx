@@ -187,7 +187,7 @@ export function PlantWizardReviewStep({
           }
         />
       </details>
-      <p className="dsc-muted" style={{ fontSize: 12, marginBottom: 0 }}>
+      <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginBottom: 0 }}>
         Default vessel if unset: {DEFAULT_VESSEL.label}.
       </p>
     </Card>

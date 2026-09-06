@@ -31,7 +31,7 @@ export function PlantWizardPlantStep({
 }: PlantWizardPlantStepProps) {
   return (
     <Card className="dsc-glass dsc-wizard-panel" title="1 · Which plant, which probe?" icon="roster">
-      <p className="dsc-muted" style={{ marginTop: 0, fontSize: 13 }}>
+      <p className="dsc-muted" style={{ marginTop: 0, fontSize: "var(--dsc-fs-md)" }}>
         Search the catalog, give it a nickname, pick an empty kit probe, and set sprout date if you know it.
       </p>
       <CatalogPicker kind="strain" onPick={onPickStrain} placeholder="Search strains…" />
@@ -83,7 +83,7 @@ export function PlantWizardPlantStep({
           {expectedDays ? <StatusChip icon="history" label={`Day ${expectedDays}`} tone="muted" /> : null}
         </div>
       ) : (
-        <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 12 }}>
+        <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: "var(--dsc-fs-sm)" }}>
           Sprout date auto-calculates growth stage after commit.
         </p>
       )}

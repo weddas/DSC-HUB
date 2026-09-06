@@ -97,7 +97,7 @@ export function CoupledMix({ volumeL }: { volumeL: number }) {
       <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
         <StatusChip label={`Σ ${Math.round(sum)}%`} tone={Math.round(sum) === 100 ? "ok" : "warn"} icon="compose" />
         <StatusChip label={`${vol} L vessel`} tone="muted" icon="tank" />
-        <span className="dsc-muted" style={{ fontSize: 12 }}>
+        <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
           Lock the layers you want to keep — the remainder layer soaks up the rest so the total is always 100%.
         </span>
       </div>
@@ -148,7 +148,7 @@ export function CoupledMix({ volumeL }: { volumeL: number }) {
           </div>
         );
       })}
-      <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 12 }}>
+      <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: "var(--dsc-fs-sm)" }}>
         Recipe: {recipe || "Mix not set yet."}
       </p>
     </div>

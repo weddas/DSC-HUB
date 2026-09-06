@@ -466,7 +466,7 @@ function TankBiasPanel() {
   const phCal = state("sensor.dsc_tank_ph_calibrated", "—");
 
   return (
-    <Card className="dsc-glass" title="Tank EC / pH bias (N-023)" icon="learning">
+    <Card className="dsc-glass" title="Tank EC / pH bias" icon="learning">
       <CalOutcomeStrip
         what="Correct Water Tester EC/pH before stage-band checks (bias, not SoftCal)."
         process="Rinse probe → known reference sample → set multiplier/bias → confirm normalized chips."
@@ -532,7 +532,7 @@ function LabWetCalPanel() {
   };
 
   return (
-    <Card className="dsc-glass" title="Lab wet calibration wizard (N-016)" icon="root">
+    <Card className="dsc-glass" title="Lab wet calibration" icon="root">
       <CalOutcomeStrip
         what="Stamp one channel with a known buffer on the probe ESP."
         process="Rinse → soak in buffer → select probe + buffer % → stamp → re-seat and verify."
@@ -544,7 +544,7 @@ function LabWetCalPanel() {
           {assignedLabel ? ` (${assignedLabel})` : ""}
         </p>
       ) : null}
-      <ol className="dsc-muted" style={{ fontSize: 13, marginBottom: 12, paddingLeft: 18 }}>
+      <ol className="dsc-muted" style={{ fontSize: "var(--dsc-fs-md)", marginBottom: 12, paddingLeft: 18 }}>
         <li>Remove probe from soil; rinse in distilled water.</li>
         <li>Soak probe in known buffer (document target % in notes).</li>
         <li>Select probe and buffer %; confirm to stamp ESP scale.</li>
@@ -649,7 +649,7 @@ function SoilCalHonestyPanel() {
         {showWizard ? <SoilTestWizard compact /> : null}
       </Card>
 
-      <Card className="dsc-glass" title="Soil cal — peer median vs lab buffer (N-016)" icon="learning">
+      <Card className="dsc-glass" title="Soil cal — peer median vs lab buffer" icon="learning">
       <CalOutcomeStrip
         what="Capture / push peer median offsets across in-service probes."
         process="Capture peer baseline → review Root / Strains → optional push to ESP."

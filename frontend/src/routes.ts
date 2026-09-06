@@ -81,8 +81,8 @@ export const SECONDARY_TABS: Record<PrimarySection, TabRoute[]> = {
 /** Legacy paths → 7.1 destinations (query preserved by caller when needed). */
 export const LEGACY_REDIRECTS: Record<string, string> = {
   "/": "/live/overview",
-  "/ops": "/ops/home",
-  "/ops/home": "/ops/home",
+  "/ops": "/live/overview",
+  "/ops/home": "/live/overview",
   "/ops/dash": "/live/overview",
   "/live/twin": "/live/overview",
   "/ops/climate": "/live/climate",

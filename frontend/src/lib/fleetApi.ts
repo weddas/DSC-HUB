@@ -676,6 +676,8 @@ export type ClimateZone = "room" | "clone" | "main";
 export type GlobalModifiers = {
   fan_demand_scale: number;
   light_brightness_scale: number;
+  /** Pot-moisture "dry" reference line on the Root band charts (%). */
+  moisture_dry_pct: number;
   temp_offset_c: Record<ClimateZone, number>;
   rh_offset_pct: Record<ClimateZone, number>;
   sensor_clamp?: Record<string, { min: number; max: number }>;
@@ -684,6 +686,7 @@ export type GlobalModifiers = {
 export type GlobalModifiersPatch = {
   fan_demand_scale?: number;
   light_brightness_scale?: number;
+  moisture_dry_pct?: number;
   temp_offset_c?: Partial<Record<ClimateZone, number>>;
   rh_offset_pct?: Partial<Record<ClimateZone, number>>;
 };
@@ -714,6 +717,8 @@ export type ProbeStation = {
   thereabouts: Record<string, unknown>;
   online: boolean;
   thereabouts_source?: string | null;
+  thereabouts_updated_at?: number | null;
+  thereabouts_stale?: boolean;
   home_online?: boolean;
   home_trustworthy?: boolean;
   home_sensor_fault?: boolean;

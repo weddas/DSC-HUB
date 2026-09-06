@@ -123,7 +123,7 @@ export function ZigbeeCatalogCard({ onSaved }: { onSaved?: () => void }) {
       {deviceTypes.length ? (
         <details className="dsc-inventory-group">
           <summary>Supported device types ({deviceTypes.length})</summary>
-          <p className="dsc-muted" style={{ fontSize: 12, marginTop: 4 }}>
+          <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginTop: 4 }}>
             What a joined device can do in a rule — its datapoints are trigger sources;{" "}
             <b>actuates</b> means an automation can turn it on/off.
           </p>
@@ -142,7 +142,7 @@ export function ZigbeeCatalogCard({ onSaved }: { onSaved?: () => void }) {
                   <tr key={t.id}>
                     <td>{t.label}</td>
                     <td>{t.capability_class}</td>
-                    <td className="dsc-muted" style={{ fontSize: 12 }}>
+                    <td className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
                       {t.datapoints.map((d) => `${d.key}${d.unit ? ` (${d.unit})` : ""}`).join(", ")}
                     </td>
                     <td className={t.can_actuate ? "is-ok" : "is-muted"}>

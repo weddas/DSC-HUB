@@ -153,8 +153,8 @@ export function CatalogPicker({
             tone={source === "cannalib" ? "ok" : "warn"}
           />
           {busy ? <StatusChip icon="search" motion="breathe" label="Searching…" tone="muted" /> : null}
-          {note ? <span className="dsc-muted" style={{ fontSize: 12 }}>{note}</span> : null}
-          {resultNote ? <span className="dsc-muted" style={{ fontSize: 12 }}>{resultNote}</span> : null}
+          {note ? <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>{note}</span> : null}
+          {resultNote ? <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>{resultNote}</span> : null}
         </div>
       </div>
       <label className="dsc-catalog-search">
@@ -243,7 +243,7 @@ export function CatalogPicker({
             {`Load more (${PAGE_SIZE})`}
           </Button>
           {offset > 0 ? (
-            <span className="dsc-muted" style={{ fontSize: 12 }}>
+            <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
               Showing {items.length}
             </span>
           ) : null}

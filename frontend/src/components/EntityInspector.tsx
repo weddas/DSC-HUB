@@ -175,7 +175,7 @@ export function EntityInspector({
 
       <details className="dsc-inspector-details">
         <summary>Details</summary>
-        <p className="dsc-muted" style={{ fontFamily: "var(--dsc-mono)", fontSize: 12 }}>
+        <p className="dsc-muted" style={{ fontFamily: "var(--dsc-mono)", fontSize: "var(--dsc-fs-sm)" }}>
           {target.entityId}
           {!available(target.entityId) ? " · unavailable" : ""}
         </p>

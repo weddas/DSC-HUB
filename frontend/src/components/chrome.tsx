@@ -179,17 +179,8 @@ export function SlideDrawer({
         inert={!open ? true : undefined}
         hidden={!open ? true : undefined}
       >
-        {open ? (
-          <button
-            type="button"
-            className="dsc-drawer-rail"
-            aria-label="Close"
-            title="Close"
-            onClick={onClose}
-          >
-            Close
-          </button>
-        ) : null}
+        {/* Close affordances: the head ✕, click-the-scrim, and Escape. The old edge
+            "Close" rail was redundant and its label overlapped card content. */}
         <div className="dsc-drawer-head">
           <h2 id={titleId}>{title}</h2>
           <IconButton label="Close" icon="close" onClick={onClose} />

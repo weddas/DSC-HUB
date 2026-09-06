@@ -293,7 +293,7 @@ export function CatalogResearch() {
                         ))}
                       </div>
                     ) : (
-                      <p className="dsc-muted" style={{ fontSize: 12, margin: 0 }}>
+                      <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", margin: 0 }}>
                         {hydrateNote || "No licensed image."}
                       </p>
                     )}
@@ -314,7 +314,7 @@ export function CatalogResearch() {
                         }}
                       />
                     ) : (
-                      <p className="dsc-muted" style={{ fontSize: 12, margin: 0 }}>
+                      <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", margin: 0 }}>
                         No local PPFD crop on file
                         {selected.ppfd_url && String(selected.ppfd_url).startsWith("http")
                           ? " (manufacturer CDN not shown)"

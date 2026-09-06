@@ -148,7 +148,8 @@ export function SystemDiagnosticsCard() {
         </div>
         {log && !log.ok ? (
           <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
-            {log.hint} <code>{log.cmd}</code>
+            <StatusChip label="Log unavailable here" tone="muted" /> {log.hint}{" "}
+            <code style={{ wordBreak: "break-all" }}>{log.cmd}</code>
           </p>
         ) : null}
         <pre
@@ -162,7 +163,13 @@ export function SystemDiagnosticsCard() {
             borderRadius: 6,
           }}
         >
-          {log?.lines.length ? log.lines.join("\n") : loading ? "loading…" : "— no output —"}
+          {log && !log.ok
+            ? "— this log source is not available in this environment —"
+            : log?.lines.length
+              ? log.lines.join("\n")
+              : loading
+                ? "loading…"
+                : "— no output —"}
         </pre>
       </div>
 

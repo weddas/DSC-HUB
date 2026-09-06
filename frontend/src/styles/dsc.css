@@ -10,8 +10,10 @@
   --dsc-gray-4: #8b95a8;
   --dsc-gray-5: #8b95a8;
   --dsc-muted: #8b95a8;
-  --dsc-blue: #26c6da;
-  --dsc-blue-dim: rgba(38, 198, 218, 0.4);
+  /* Distinct from --dsc-teal so the Live primary tab / "4x8 main" segment read
+     as their own accent instead of aliasing Grow's teal. */
+  --dsc-blue: #4f9dff;
+  --dsc-blue-dim: rgba(79, 157, 255, 0.4);
   --dsc-purple: #a78bfa;
   --dsc-purple-dim: rgba(167, 139, 250, 0.35);
   --dsc-neon: #66bb6a;
@@ -438,6 +440,12 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+/* Canonical HelpTip slot: sits just after the card title text. */
+.dsc-card-title-help {
+  display: inline-flex;
+  align-items: center;
 }
 
 .dsc-primary-tabs,
@@ -1253,6 +1261,24 @@ body {
   cursor: not-allowed;
 }
 
+/* Optimistic flip still in flight — the hub mirror can lag a write ~60 s, so this
+   reads as "sent, not yet confirmed" rather than a settled state. */
+.dsc-demand.is-pending {
+  border-style: dashed;
+  animation: dsc-chip-pulse 1.4s ease-in-out infinite;
+}
+
+.dsc-demand.is-pending .dsc-demand-state {
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.dsc-demand-oos-help {
+  display: inline-flex;
+  align-self: center;
+  margin-left: -4px;
+}
+
 /* On-hold-indefinitely device (F-001/F-002): honestly out of service, not a live
    control — dashed border reads as "not installed", distinct from "unavailable". */
 .dsc-demand.is-oos {
@@ -1959,35 +1985,8 @@ body {
   transform: none;
 }
 
-.dsc-drawer-rail {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 28px;
-  height: 64px;
-  border: 1px solid var(--dsc-gray-3);
-  background: var(--dsc-gray-2);
-  color: var(--dsc-white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 2;
-}
-
-.dsc-drawer-root:not(.is-open) .dsc-drawer-rail,
 .dsc-drawer-root:not(.is-open) .dsc-drawer-panel {
   display: none;
-}
-
-.dsc-drawer-panel.right .dsc-drawer-rail {
-  left: -28px;
-  border-radius: 10px 0 0 10px;
-}
-
-.dsc-drawer-panel.left .dsc-drawer-rail {
-  right: -28px;
-  border-radius: 0 10px 10px 0;
 }
 
 .dsc-drawer-head {

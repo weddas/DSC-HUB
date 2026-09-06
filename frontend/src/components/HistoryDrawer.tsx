@@ -113,7 +113,7 @@ export function HistoryDrawer({
           ]}
         />
       ) : null}
-      <p className="dsc-muted" style={{ marginTop: 10, fontSize: 12 }}>
+      <p className="dsc-muted" style={{ marginTop: 10, fontSize: "var(--dsc-fs-sm)" }}>
         {entityId}
       </p>
     </SlideDrawer>

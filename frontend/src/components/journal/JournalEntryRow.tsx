@@ -6,8 +6,10 @@ import {
   formatSnapshotValue,
   isJournalEntryEditable,
   provenanceTone,
+  snapshotBackfillKeys,
   snapshotChipLabel,
   snapshotEntries,
+  snapshotGapCount,
   type DisplayJournalEntry,
 } from "./journalFormat";
 import type { Ref } from "react";
@@ -35,7 +37,10 @@ export function JournalEntryRow({
 }: JournalEntryRowProps) {
   const provenance = String(row.provenance || "operator");
   const highlighted = entryHasHighlightTag(row);
-  const snapRows = snapshotEntries(row.snapshot as Record<string, unknown> | undefined);
+  const snap = row.snapshot as Record<string, unknown> | undefined;
+  const snapRows = snapshotEntries(snap);
+  const snapGaps = snapshotGapCount(snap);
+  const snapBackfilled = snapshotBackfillKeys(snap);
   const interactive = Boolean(onOpen || (compareMode && onCompareToggle));
   const editable = scope ? isJournalEntryEditable(scope, row) : row.source !== "system";
 
@@ -110,22 +115,36 @@ export function JournalEntryRow({
         {highlighted ? <StatusChip label="highlight" tone="ok" /> : null}
       </div>
       <div>{row.note || "—"}</div>
-      {snapRows.length ? (
+      {snapRows.length || snapGaps ? (
         <div className="dsc-chip-row dsc-journal-snapshot-chips" style={{ marginTop: 6 }}>
-          {snapRows.map(([key, val]) => (
-            <StatusChip
-              key={`${row.id}-snap-${key}`}
-              label={`${snapshotChipLabel(key)} ${formatSnapshotValue(key, val)}`}
-              tone="muted"
-            />
-          ))}
-          <span className="dsc-muted" style={{ fontSize: 11 }}>
+          {snapRows.map(([key, val]) => {
+            const bf = snapBackfilled.has(key);
+            return (
+              <span
+                key={`${row.id}-snap-${key}`}
+                title={
+                  bf
+                    ? "Reconstructed from history (±30 min) after the fact — not captured live"
+                    : undefined
+                }
+              >
+                <StatusChip
+                  label={`${snapshotChipLabel(key)} ${bf ? "~" : ""}${formatSnapshotValue(key, val)}`}
+                  tone="muted"
+                />
+              </span>
+            );
+          })}
+          <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-xs)" }}>
             Env captured when saved
+            {snapGaps
+              ? ` · ${snapGaps} value${snapGaps > 1 ? "s" : ""} not captured (sensor offline then)`
+              : ""}
           </span>
         </div>
       ) : null}
       {interactive && !compareMode && editable ? (
-        <span className="dsc-muted dsc-journal-row-action-hint" style={{ fontSize: 11 }}>
+        <span className="dsc-muted dsc-journal-row-action-hint" style={{ fontSize: "var(--dsc-fs-xs)" }}>
           Click to edit
         </span>
       ) : null}

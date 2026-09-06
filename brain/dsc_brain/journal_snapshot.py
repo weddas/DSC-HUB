@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import time
 from pathlib import Path
 from typing import Any
 
@@ -356,6 +357,7 @@ def _backfill_snapshot_from_history(
     if not missing:
         return snap
     merged = dict(snap)
+    filled: list[str] = []
     for key in missing:
         src = _history_metric_for_key(scope_kind, scope_id, key, plant_id=plant_id)
         if not src:
@@ -363,6 +365,14 @@ def _backfill_snapshot_from_history(
         val = _nearest_history_value(src[0], src[1], occurred_at, db_path=db_path)
         if val is not None:
             merged[key] = val
+            filled.append(key)
+    if filled:
+        # Mark reconstructed-after-the-fact values so a reader never mistakes a
+        # ±30 min history sample for a value frozen at compose time.
+        meta = dict(merged.get("_backfill") or {})
+        meta["keys"] = sorted(set(meta.get("keys", [])) | set(filled))
+        meta["at"] = time.time()
+        merged["_backfill"] = meta
     return merged
 
 

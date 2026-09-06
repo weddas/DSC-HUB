@@ -130,11 +130,19 @@ export function JournalEntryDetail({
               </span>
             </label>
             <label className="dsc-seat-editors" style={{ marginTop: 10 }}>
-              When
+              When{" "}
+              <span className="dsc-muted" style={{ fontWeight: 400 }}>
+                (
+                {Intl.DateTimeFormat().resolvedOptions().timeZone ||
+                  `UTC${new Date().getTimezoneOffset() <= 0 ? "+" : "-"}${Math.abs(
+                    new Date().getTimezoneOffset() / 60,
+                  )}`}
+                , this device)
+              </span>
               <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
             </label>
             {otherTags.length ? (
-              <p className="dsc-muted" style={{ margin: "10px 0 0", fontSize: 12 }}>
+              <p className="dsc-muted" style={{ margin: "10px 0 0", fontSize: "var(--dsc-fs-sm)" }}>
                 Tags: {otherTags.join(", ")}
               </p>
             ) : null}
@@ -149,7 +157,7 @@ export function JournalEntryDetail({
                 ))}
               </div>
             ) : null}
-            <p className="dsc-muted" style={{ margin: 0, fontSize: 12 }}>
+            <p className="dsc-muted" style={{ margin: 0, fontSize: "var(--dsc-fs-sm)" }}>
               {entry.source === "system"
                 ? "System rows are read-only."
                 : "Rolled-up entries from another scope — open that scope to edit."}
@@ -159,7 +167,7 @@ export function JournalEntryDetail({
 
         {snapRows.length ? (
           <div style={{ marginTop: 14 }}>
-            <p className="dsc-muted" style={{ margin: "0 0 6px", fontSize: 12 }}>
+            <p className="dsc-muted" style={{ margin: "0 0 6px", fontSize: "var(--dsc-fs-sm)" }}>
               Env snapshot (captured when saved)
             </p>
             <div className="dsc-chip-row dsc-journal-snapshot-chips">
@@ -182,7 +190,7 @@ export function JournalEntryDetail({
             >
               Chart this moment
             </Button>
-            <span className="dsc-muted" style={{ fontSize: 12 }}>
+            <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
               Opens trends ±6h around this entry
             </span>
           </div>

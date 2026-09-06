@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { DecisionLayer } from "./DecisionLayer";
+import { HelpTip } from "./HelpTip";
 import { iconSvg, type IconName } from "../icons";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
@@ -71,12 +72,16 @@ export function Card({
   className = "",
   style,
   icon,
+  help,
 }: {
   title?: string;
   children: ReactNode;
   className?: string;
   style?: CSSProperties;
   icon?: IconName;
+  /** Canonical HelpTip slot — renders inline right after the card title. Prefer this
+   *  over dropping a <HelpTip> loose in the card body. */
+  help?: ReactNode;
 }) {
   return (
     <section className={`dsc-card ${className}`.trim()} style={style}>
@@ -84,6 +89,7 @@ export function Card({
         <h3 className="dsc-card-title">
           {icon ? <Icon name={icon} size={14} color="var(--dsc-teal)" /> : null}
           {title}
+          {help ? <span className="dsc-card-title-help">{help}</span> : null}
         </h3>
       ) : null}
       {children}
@@ -309,6 +315,7 @@ export function EntityToggle({
   confirm,
   oos,
   oosLabel = "On hold",
+  oosHelp,
 }: {
   entityId: string;
   label: string;
@@ -321,6 +328,8 @@ export function EntityToggle({
    *  service, not a live control, regardless of the underlying entity state. */
   oos?: boolean;
   oosLabel?: string;
+  /** Explanation shown as a `?` next to an on-hold control (why it's OOS, when it comes back). */
+  oosHelp?: ReactNode;
 }) {
   const { state, available, attributes } = useFleetEntity(entityId);
   const { callService } = useFleetActions();
@@ -342,9 +351,15 @@ export function EntityToggle({
 
   useEffect(() => {
     if (pendingOn == null) return;
-    const t = window.setTimeout(() => setPendingOn(null), 8000);
+    // Hub control mirrors can lag a write by up to ~60 s (measured), so hold the
+    // optimistic state well past that before giving up — an 8 s fallback made the
+    // button snap back to the old value while the write was still in flight.
+    const t = window.setTimeout(() => setPendingOn(null), 75000);
     return () => window.clearTimeout(t);
   }, [pendingOn]);
+
+  /** Optimistic flip still in flight — the hub hasn't echoed it back yet. */
+  const pending = pendingOn != null && busOn !== pendingOn;
 
   useEffect(() => {
     setPendingOn(null);
@@ -374,17 +389,18 @@ export function EntityToggle({
     toggle();
   };
 
+  const genericBody = `${label} → ${on ? "off" : "on"}. Applies on the hub immediately.`;
   const confirmCopy =
     confirm === true
       ? {
           title: on ? `Turn off ${label}` : `Turn on ${label}`,
-          body: `This writes ${entityId} on the hub immediately.`,
+          body: genericBody,
           confirmLabel: on ? "Turn off" : "Turn on",
         }
       : confirm
         ? {
             title: confirm.title ?? (on ? `Turn off ${label}` : `Turn on ${label}`),
-            body: confirm.body ?? `This writes ${entityId} on the hub immediately.`,
+            body: confirm.body ?? genericBody,
             confirmLabel: confirm.confirmLabel ?? (on ? "Turn off" : "Turn on"),
           }
         : null;
@@ -398,10 +414,18 @@ export function EntityToggle({
     <>
       <button
         type="button"
-        className={`dsc-demand${on && !oos ? " is-on" : ""}${!ok && !oos ? " is-missing" : ""}${oos ? " is-oos" : ""}`}
+        className={`dsc-demand${on && !oos ? " is-on" : ""}${!ok && !oos ? " is-missing" : ""}${oos ? " is-oos" : ""}${pending ? " is-pending" : ""}`}
         onClick={onPress}
         disabled={oos || (!ok && !warnWhenMissing)}
-        title={oos ? `${label} is on hold — honest OOS, not live` : ok ? entityId : warnWhenMissing || `${entityId} unavailable`}
+        title={
+          oos
+            ? `${label} is on hold — honest OOS, not live`
+            : pending
+              ? `${entityId} — waiting for the hub to confirm ${on ? "on" : "off"}`
+              : ok
+                ? entityId
+                : warnWhenMissing || `${entityId} unavailable`
+        }
       >
         {icon ? (
           <Icon
@@ -414,9 +438,24 @@ export function EntityToggle({
         ) : null}
         <span className="dsc-demand-label">{label}</span>
         <span className="dsc-demand-state">
-          {oos ? oosLabel : !ok ? warnWhenMissing || "—" : brightness != null ? `${brightness}%` : on ? "ON" : "OFF"}
+          {oos
+            ? oosLabel
+            : !ok
+              ? warnWhenMissing || "—"
+              : pending
+                ? `${on ? "ON" : "OFF"}…`
+                : brightness != null
+                  ? `${brightness}%`
+                  : on
+                    ? "ON"
+                    : "OFF"}
         </span>
       </button>
+      {oos && oosHelp ? (
+        <span className="dsc-demand-oos-help">
+          <HelpTip title={`Why is ${label} on hold?`}>{oosHelp}</HelpTip>
+        </span>
+      ) : null}
       {confirmCopy ? (
         <DecisionLayer
           open={layerOpen}

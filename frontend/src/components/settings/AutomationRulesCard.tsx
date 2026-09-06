@@ -274,7 +274,7 @@ export function AutomationRulesCard({ seats }: { seats: string[] }) {
               )}
             </td>
             <ActionsCell>
-              <label style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12 }}>
+              <label style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "var(--dsc-fs-sm)" }}>
                 <input
                   type="checkbox"
                   checked={r.enabled}

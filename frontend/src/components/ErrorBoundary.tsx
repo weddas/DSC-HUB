@@ -21,7 +21,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="dsc-shell" style={{ padding: 24 }}>
           <p className="dsc-honesty">Something went wrong loading this view.</p>
-          <p className="dsc-muted" style={{ fontSize: 13 }}>
+          <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-md)" }}>
             {this.state.error.message}
           </p>
           <div className="dsc-chip-row" style={{ marginTop: 12 }}>

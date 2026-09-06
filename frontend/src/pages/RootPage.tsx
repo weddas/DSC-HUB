@@ -160,12 +160,7 @@ export function LiveRootPage() {
           <Card
             title="Auto root-steering"
             icon="root"
-          >
-            <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
-              <StatusChip
-                label={steerOverride ? "MANUAL — auto off" : "AUTO — P1–P3"}
-                tone={steerOverride ? "warn" : "ok"}
-              />
+            help={
               <HelpTip title="Auto root-steering">
                 <p>
                   On <b>Auto</b>, the brain reads dryback and picks phase P1–P3, gating when
@@ -173,8 +168,15 @@ export function LiveRootPage() {
                   windows — irrigation timing is entirely yours until you resume.
                 </p>
               </HelpTip>
+            }
+          >
+            <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
+              <StatusChip
+                label={steerOverride ? "MANUAL — auto off" : "AUTO — P1–P3"}
+                tone={steerOverride ? "warn" : "ok"}
+              />
             </div>
-            <p className="dsc-muted" style={{ fontSize: 12, margin: "0 0 8px" }}>
+            <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", margin: "0 0 8px" }}>
               {steerOverride
                 ? "The brain is not emitting phase act windows."
                 : "The brain picks P1–P3 from dryback and gates act windows."}
@@ -239,11 +241,13 @@ export function LiveRootPage() {
                         />
                         {st.home_sensor_fault ? <StatusChip label="HOME FAULT" tone="bad" /> : null}
                         {st.home_modbus_ok === false ? <StatusChip label="HOME PROBE DARK" tone="warn" /> : null}
+                        {st.thereabouts_stale ? <StatusChip label="READING STALE" tone="warn" /> : null}
                       </div>
-                      <p className="dsc-muted" style={{ margin: 0, fontSize: 12 }}>
+                      <p className="dsc-muted" style={{ margin: 0, fontSize: "var(--dsc-fs-sm)" }}>
                         Home {homeLabel} · moisture{" "}
                         {moist != null && Number.isFinite(Number(moist)) ? `${Number(moist).toFixed(1)} %` : "—"} · soil{" "}
                         {soilT != null && Number.isFinite(Number(soilT)) ? `${Number(soilT).toFixed(1)} °C` : "—"}
+                        {st.thereabouts_stale ? " · last seen >15 min ago" : ""}
                       </p>
                     </div>
                   );

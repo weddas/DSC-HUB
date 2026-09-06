@@ -69,6 +69,35 @@ import { parseFleetSnapshot, type FleetSnapshot, type InventoryRow } from "../li
 import { parseSettingsSection } from "../routes";
 import { probeLabel } from "../lib/seatModel";
 
+/** Connectivity-test result as a readable status line + collapsible raw payload,
+ *  instead of a single-line JSON blob that scrolls the whole settings page sideways. */
+function IntegrationTestResult({ raw }: { raw: string }) {
+  if (!raw) return null;
+  let ok: boolean | null = null;
+  let summary = raw;
+  try {
+    const parsed = JSON.parse(raw) as { ok?: boolean; detail?: string; models?: unknown[] };
+    ok = typeof parsed.ok === "boolean" ? parsed.ok : null;
+    if (parsed.ok && Array.isArray(parsed.models)) summary = `${parsed.models.length} model(s) available`;
+    else if (parsed.ok) summary = "Reachable";
+    else summary = parsed.detail ? String(parsed.detail) : "Unreachable";
+  } catch {
+    /* non-JSON — show as-is */
+  }
+  return (
+    <div className="dsc-chip-row" style={{ margin: "6px 0", flexWrap: "wrap", alignItems: "center" }}>
+      <StatusChip label={ok === true ? "Reachable" : ok === false ? "Unreachable" : "Result"} tone={ok === true ? "ok" : ok === false ? "bad" : "muted"} />
+      <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", wordBreak: "break-word" }}>{summary}</span>
+      <details className="dsc-wizard-details" style={{ width: "100%" }}>
+        <summary style={{ fontSize: "var(--dsc-fs-xs)" }}>Raw response</summary>
+        <pre className="dsc-honesty" style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", overflowX: "auto" }}>
+          {raw}
+        </pre>
+      </details>
+    </div>
+  );
+}
+
 export function SettingsPage() {
   const location = useLocation();
   const section = parseSettingsSection(location.pathname);
@@ -403,7 +432,7 @@ export function SettingsPage() {
 
         <details className="dsc-inventory-group">
           <summary>Add device / seat</summary>
-          <p className="dsc-muted" style={{ fontSize: 13, marginTop: 4 }}>
+          <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-md)", marginTop: 4 }}>
             Register a Zigbee sensor or extra appliance the firmware doesn&apos;t define. It lands{" "}
             <b>out of service</b> — bind its Role/Zone/Task below, then enable it once it&apos;s wired.
           </p>
@@ -622,6 +651,26 @@ export function SettingsPage() {
                 <span className="dsc-muted">{globalModifiers.light_brightness_scale.toFixed(2)}</span>
               </label>
               <label>
+                Pot “dry” line %
+                <input
+                  type="number"
+                  min="5"
+                  max="80"
+                  step="1"
+                  value={globalModifiers.moisture_dry_pct ?? 30}
+                  onChange={(e) => {
+                    setModifiersDirty(true);
+                    setGlobalModifiers({
+                      ...globalModifiers,
+                      moisture_dry_pct: Number(e.target.value),
+                    });
+                  }}
+                />
+              </label>
+              <p className="dsc-muted" style={{ marginTop: -6, fontSize: "var(--dsc-fs-sm)" }}>
+                The red reference line on Root pot-moisture charts. Default 30%.
+              </p>
+              <label>
                 Leaf temp offset °C
                 <input
                   type="number"
@@ -630,7 +679,7 @@ export function SettingsPage() {
                   onChange={(e) => setBrainDraft({ ...brainDraft, leaf_offset_c: e.target.value })}
                 />
               </label>
-              <p className="dsc-muted" style={{ marginTop: -6, fontSize: 12 }}>
+              <p className="dsc-muted" style={{ marginTop: -6, fontSize: "var(--dsc-fs-sm)" }}>
                 Subtracted from air temp to estimate leaf temp for VPD (main + clone). Default 2°C.
               </p>
               <Button
@@ -702,6 +751,7 @@ export function SettingsPage() {
                   const saved = await patchGlobalModifiers({
                     fan_demand_scale: globalModifiers.fan_demand_scale,
                     light_brightness_scale: globalModifiers.light_brightness_scale,
+                    moisture_dry_pct: globalModifiers.moisture_dry_pct,
                     temp_offset_c: globalModifiers.temp_offset_c,
                     rh_offset_pct: globalModifiers.rh_offset_pct,
                   });
@@ -983,7 +1033,7 @@ export function SettingsPage() {
           />
         </label>
         <Button onClick={async () => setOllamaResult(JSON.stringify(await test_ollama()))}>Test Ollama</Button>
-        {ollamaResult ? <pre className="dsc-honesty">{ollamaResult}</pre> : null}
+        <IntegrationTestResult raw={ollamaResult} />
 
         <label>
           CannaLib API URL
@@ -1017,7 +1067,7 @@ export function SettingsPage() {
         <Button onClick={async () => setCannalibResult(JSON.stringify(await test_cannalib()))}>
           Test CannaLib
         </Button>
-        {cannalibResult ? <pre className="dsc-honesty">{cannalibResult}</pre> : null}
+        <IntegrationTestResult raw={cannalibResult} />
       </section>
 
       <section className="dsc-card" hidden={section !== "brain"}>
@@ -1084,7 +1134,7 @@ export function SettingsPage() {
               {toolchain.latest_ok === false ? (
                 <p
                   className="dsc-muted"
-                  style={{ margin: "4px 0", fontSize: 12 }}
+                  style={{ margin: "4px 0", fontSize: "var(--dsc-fs-sm)" }}
                   title={toolchain.latest_error ? String(toolchain.latest_error) : undefined}
                 >
                   {toolchain.eth_up === false
@@ -1099,7 +1149,11 @@ export function SettingsPage() {
                 >
                   {toolchain.update_available === true
                     ? `Update ESPHome → ${String(toolchain.latest)}`
-                    : "ESPHome up to date"}
+                    : toolchain.installed == null
+                      ? "ESPHome not installed"
+                      : toolchain.meets_min === false
+                        ? "ESPHome below pinned minimum"
+                        : "ESPHome up to date"}
                 </Button>
                 <a
                   href={String(toolchain.dashboard_url ?? "http://dsc-brain.local:6052")}
@@ -1109,7 +1163,7 @@ export function SettingsPage() {
                   Open ESPHome Dashboard ↗
                 </a>
               </p>
-              <p className="dsc-muted" style={{ margin: "4px 0", fontSize: 12 }}>
+              <p className="dsc-muted" style={{ margin: "4px 0", fontSize: "var(--dsc-fs-sm)" }}>
                 Build backend:{" "}
                 {toolchain.build_backend === "dashboard"
                   ? `ESPHome dashboard (${String(toolchain.dashboard_api ?? "")})`
@@ -1117,6 +1171,13 @@ export function SettingsPage() {
                     ? `local venv (${String(toolchain.esphome_bin ?? "")})`
                     : "none — compile/OTA unavailable; use pi/flash-*-remote.sh"}
               </p>
+              {toolchain.build_backend === "dashboard" ? (
+                <p style={{ margin: "4px 0", fontSize: "var(--dsc-fs-sm)" }}>
+                  <StatusChip label="Deprecated backend" tone="warn" /> The{" "}
+                  <code>dsc-hub-esphome</code> container backend is being retired in 8.x — the host
+                  ESPHome venv is the supported path. Switch when you can.
+                </p>
+              ) : null}
               {Array.isArray(toolchain.devices_behind) && (toolchain.devices_behind as string[]).length > 0 ? (
                 <p className="dsc-muted" style={{ margin: "4px 0" }}>
                   Running an ESPHome other than {String(toolchain.installed ?? "installed")}:{" "}
@@ -1124,7 +1185,7 @@ export function SettingsPage() {
                 </p>
               ) : null}
               {toolchain.update_job ? (
-                <pre style={{ maxHeight: 160, overflow: "auto", fontSize: 11, whiteSpace: "pre-wrap" }}>
+                <pre style={{ maxHeight: 160, overflow: "auto", fontSize: "var(--dsc-fs-xs)", whiteSpace: "pre-wrap" }}>
                   [{String((toolchain.update_job as Record<string, unknown>).status ?? "")}]{"\n"}
                   {String((toolchain.update_job as Record<string, unknown>).detail ?? "")}
                 </pre>
@@ -1335,7 +1396,7 @@ export function SettingsPage() {
                           : "—"}
                       </td>
                       <td>
-                        <span className="dsc-muted" style={{ fontSize: 12, whiteSpace: "pre-wrap" }}>
+                        <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", whiteSpace: "pre-wrap" }}>
                           {String(j.detail ?? "").slice(0, 160)}
                         </span>
                       </td>
@@ -1396,7 +1457,7 @@ export function SettingsPage() {
           ) : null}
           {zigbeeHealth?.permit_join === true ? <StatusChip label="JOIN OPEN" tone="warn" /> : null}
           {zigbeeHealth?.radio_note ? (
-            <span className="dsc-muted" style={{ fontSize: 12 }}>
+            <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
               {String(zigbeeHealth.radio_note)}
             </span>
           ) : null}
@@ -1433,7 +1494,7 @@ export function SettingsPage() {
               optional <strong>Task</strong> — lists are filtered by device type; use <strong>Show all</strong> for
               mis-fingerprinted sensors (e.g. occupancy-only liquid probes).
             </p>
-            <p className="dsc-muted" style={{ marginTop: 8, fontSize: 13 }}>
+            <p className="dsc-muted" style={{ marginTop: 8, fontSize: "var(--dsc-fs-md)" }}>
               Role is where this sensor lives (intake, canopy, tank…). Task is optional — leave <strong>No task</strong>{" "}
               to only report into Live/Climate.
             </p>
@@ -1628,7 +1689,7 @@ export function SettingsPage() {
             Loading Zigbee radio status…
           </p>
         ) : zigbeeHealth.radio_up === true ? (
-          <div className="dsc-muted" style={{ marginTop: 10, fontSize: 13, lineHeight: 1.45 }}>
+          <div className="dsc-muted" style={{ marginTop: 10, fontSize: "var(--dsc-fs-md)", lineHeight: 1.45 }}>
             <p style={{ margin: "0 0 8px" }}>
               Coordinator online — no end devices yet. Role/Zone rows appear here as soon as a sensor joins
               (this page polls while JOIN OPEN).
@@ -1710,6 +1771,19 @@ export function SettingsPage() {
             Settings are split by blast radius: Hub (backup), Brain (tuning), Device (kit), API, Network, Server
             (ESPHome jobs), General.
           </p>
+          <div className="dsc-honesty" style={{ marginTop: 12 }}>
+            <b>Versions</b>
+            <p className="dsc-muted" style={{ margin: "6px 0 0", fontSize: "var(--dsc-fs-sm)" }}>
+              Surface <b>{fleet?.surface ?? "—"}</b> · Expected firmware <b>{fleet?.expected_firmware ?? "—"}</b>
+              <br />
+              SPA bundle{" "}
+              <code>{(import.meta.env.VITE_DSC_SPA_BUILD as string | undefined) ?? "dev"}</code>
+            </p>
+            <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-xs)", margin: "6px 0 0" }}>
+              SPA bundle is the git SHA + build time of the JS the Pi is serving right now — use it to confirm a
+              deploy actually took.
+            </p>
+          </div>
         </section>
       ) : null}
 

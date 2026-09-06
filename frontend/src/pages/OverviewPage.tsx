@@ -78,6 +78,13 @@ export function OverviewPage() {
     fleet.canopy?.rh_pct != null && Number.isFinite(Number(fleet.canopy.rh_pct))
       ? Number(fleet.canopy.rh_pct)
       : null;
+  // The chip was hardcoded tone="ok" — a canopy sensor that stopped reporting still
+  // read green. Warn once its last update is older than ~10 min (covers T and RH both).
+  const canopyUpdatedAt = Number(fleet.canopy?.updated_at);
+  const canopyStale =
+    Boolean(canopyRole) &&
+    Number.isFinite(canopyUpdatedAt) &&
+    Date.now() / 1000 - canopyUpdatedAt > 600;
 
   const criticalBanners = Array.isArray(fleet.system?.critical_banners)
     ? (fleet.system.critical_banners as Array<Record<string, unknown>>)
@@ -126,10 +133,10 @@ export function OverviewPage() {
               canopyTemp != null
                 ? `Canopy ${canopyTemp.toFixed(1)}°C${
                     canopyRh != null ? ` / ${canopyRh.toFixed(0)}%` : ""
-                  } ← ${canopyRole}${canopyDevice ? ` (${canopyDevice})` : ""}`
+                  }${canopyStale ? " · stale" : ""} ← ${canopyRole}${canopyDevice ? ` (${canopyDevice})` : ""}`
                 : `Canopy ← ${canopyRole}${canopyDevice ? ` (${canopyDevice})` : ""}`
             }
-            tone="ok"
+            tone={canopyStale ? "warn" : "ok"}
             onClick={() => navigate("/live/climate")}
           />
         ) : (
@@ -214,7 +221,7 @@ export function OverviewPage() {
       </div>
 
       <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
-        <span className="dsc-muted" style={{ fontSize: 12, alignSelf: "center" }}>
+        <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", alignSelf: "center" }}>
           Climate bands
         </span>
         <HelpTip title="Want · Got · Need">
@@ -230,6 +237,7 @@ export function OverviewPage() {
       </div>
 
       <DashBandsGrid
+        compact
         readings={{
           tentT: tentT.value,
           tentRh: tentRh.value,
@@ -283,7 +291,7 @@ export function OverviewPage() {
 
       <DashGrowLog bus={bus} />
 
-      <p className="dsc-muted" style={{ fontSize: 12, marginTop: 8 }}>
+      <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginTop: 8 }}>
         Fleet {fleet.version} · expected {fleet.expected_firmware}
       </p>
     </div>

@@ -6,6 +6,7 @@ import {
   EntityFanSlider,
   EntitySelect,
   EntityToggle,
+  type EntityToggleConfirm,
   Kpi,
   PageHeader,
   StatusChip,
@@ -72,6 +73,13 @@ export function LiveClimatePage() {
   const fanOverride = useFleetEntity("switch.dsc_hub_tent_manual_override").state === "on";
   const fullAuto = useFleetEntity("switch.dsc_hub_tent_full_auto_mode").state === "on";
   const manualTakeover = useFleetEntity("switch.dsc_hub_manual_takeover").state === "on";
+  // Under Full Auto a manual demand flip is swallowed by the brain on the next tick — say so
+  // up front instead of letting the toggle look like it did nothing.
+  const demandConfirm: EntityToggleConfirm = fullAuto
+    ? {
+        body: "Full Auto is on, so the brain owns this demand and will set it back within a few seconds. Turn Full Auto off (or use Manual takeover) to hold it yourself.",
+      }
+    : true;
   const honesty = String(entity("sensor.dsc_keepup_gaps")?.attributes?.full_auto_honesty ?? "");
   // Capacity offline SoT is computed hass_extras — not fleet.system (often unset on /fleet).
   const reducedKit = state("binary_sensor.dsc_reduced_kit") === "on";
@@ -367,9 +375,30 @@ export function LiveClimatePage() {
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Command" icon="climate">
             <div className="dsc-mode-row">
-              <EntityToggle confirm entityId="switch.dsc_hub_tent_full_auto_mode" label="Full Auto" icon="ok" />
-              <EntityToggle confirm entityId="switch.dsc_hub_manual_takeover" label="Manual takeover" icon="alert" />
-              <EntityToggle confirm entityId="switch.dsc_hub_tent_manual_override" label="Fan override" icon="climate" />
+              <EntityToggle
+                confirm={{
+                  body: "Full Auto ON hands fans and appliance demand back to the brain. OFF freezes them at their current state until you re-enable it or take manual takeover.",
+                }}
+                entityId="switch.dsc_hub_tent_full_auto_mode"
+                label="Full Auto"
+                icon="ok"
+              />
+              <EntityToggle
+                confirm={{
+                  body: "Manual takeover ON hands every fan and appliance to you and turns Full Auto off — the brain stops driving climate until you clear it (it re-plans on clear or hub reconnect).",
+                }}
+                entityId="switch.dsc_hub_manual_takeover"
+                label="Manual takeover"
+                icon="alert"
+              />
+              <EntityToggle
+                confirm={{
+                  body: "Fan override frees the fan duty sliders for you to set by hand. Appliance demand toggles stay brain-owned unless Manual takeover is also on.",
+                }}
+                entityId="switch.dsc_hub_tent_manual_override"
+                label="Fan override"
+                icon="climate"
+              />
               <EntityToggle confirm entityId="switch.dsc_hub_humidifier_intake_routing" label="Hum intake routing" icon="climate" />
               <EntityToggle confirm entityId="switch.dsc_hub_recirc_de_strat_pulse" label="RECIRC de-strat" icon="climate" />
               <HelpTip title="Full Auto vs takeover">
@@ -388,26 +417,39 @@ export function LiveClimatePage() {
               <EntitySelect entityId="select.dsc_hub_priority_tent" label="Priority tent" icon="tent" />
             </div>
             <div className="dsc-demand-row" style={{ marginTop: 12 }}>
-              <EntityToggle confirm entityId="switch.dsc_hub_heater_demand" label="Heat" icon="climate" />
+              <EntityToggle confirm={demandConfirm} entityId="switch.dsc_hub_heater_demand" label="Heat" icon="climate" />
               <EntityToggle
-                confirm
+                confirm={demandConfirm}
                 entityId="switch.dsc_hub_ac_demand"
                 label="Cool"
                 icon="climate"
                 oos={!inventoryInService(fleet, "ac")}
+                oosHelp={
+                  <p>
+                    The room AC relay (F-001) is on hold indefinitely for this kit. Cool stays out of
+                    service — this is honest state, not a pending install. Bring it back from{" "}
+                    <b>Settings → Device</b> if the relay is fitted.
+                  </p>
+                }
                 warnWhenMissing={
                   state("binary_sensor.dsc_ac_capacity_offline") === "on" ? "AC ○" : undefined
                 }
               />
-              <EntityToggle confirm entityId="switch.dsc_hub_humidifier_demand" label="Hum" icon="climate" />
-              <EntityToggle confirm entityId="switch.dsc_hub_dehumidifier_demand" label="Dehum" icon="climate" />
-              <EntityToggle confirm entityId="switch.dsc_hub_grow_mat_demand" label="Mat" icon="root" />
+              <EntityToggle confirm={demandConfirm} entityId="switch.dsc_hub_humidifier_demand" label="Hum" icon="climate" />
+              <EntityToggle confirm={demandConfirm} entityId="switch.dsc_hub_dehumidifier_demand" label="Dehum" icon="climate" />
+              <EntityToggle confirm={demandConfirm} entityId="switch.dsc_hub_grow_mat_demand" label="Mat" icon="root" />
               <EntityToggle
-                confirm
+                confirm={demandConfirm}
                 entityId="switch.dsc_hub_clone_humidifier_demand"
                 label="Mister"
                 icon="clone"
                 oos={!inventoryInService(fleet, "mister")}
+                oosHelp={
+                  <p>
+                    The 2×4 clone mister (F-002) is on hold indefinitely for this kit. It stays out of
+                    service until the mister is fitted and set in service under <b>Settings → Device</b>.
+                  </p>
+                }
               />
             </div>
             {fullAuto ? (
@@ -424,7 +466,8 @@ export function LiveClimatePage() {
                     })
                   }
                 />{" "}
-                {honesty || "The hub drives fans and appliances automatically while Full Auto is on."}
+                {honesty ||
+                  "The hub drives fans and appliances automatically while Full Auto is on — a manual demand flip is re-asserted on the next tick."}
               </p>
             ) : null}
           </Card>
@@ -462,7 +505,7 @@ export function LiveClimatePage() {
                 onClick={() => open("sensor.dsc_ah_room", "Room AH", "g/m³")}
               />
             </div>
-            <p className="dsc-muted" style={{ marginTop: 8, fontSize: 12 }}>
+            <p className="dsc-muted" style={{ marginTop: 8, fontSize: "var(--dsc-fs-sm)" }}>
               {deltaLineStale ? <StatusChip label="HELD" tone="warn" /> : null}{" "}
               ΔT room↔4×8 {fmt(dTRoomMain)}°C · ΔAH {fmt(dAhRoomMain)} g/m³ · ΔVPD {fmt(dVpdRoomMain, 2)} · ΔT/ΔAH 2×4↔4×8{" "}
               {fmt(dTCloneMain)}°C / {fmt(dAhCloneMain)} · ΔAH room↔2×4 {fmt(dAhRoomClone)} g/m³. Early warn is the lung poisoning a tent before Want miss.
@@ -607,7 +650,7 @@ export function LiveClimatePage() {
         zigbeeSafetyRows.length ? (
           <div className="dsc-col-12">
             <Card className="dsc-glass" title="Zigbee by role" icon="gauge">
-              <p className="dsc-muted" style={{ fontSize: 12, marginBottom: 8 }}>
+              <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginBottom: 8 }}>
                 Assign Role/Zone in Settings → Device → Zigbee. Save re-routes into Climate immediately.
                 Unbound sensors never fill canopy.
               </p>
@@ -660,13 +703,13 @@ export function LiveClimatePage() {
                   ))}
                 </SettingsTable>
               ) : zigbeeSafetyRows.length ? null : (
-                <p className="dsc-muted" style={{ fontSize: 12 }}>
+                <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
                   No climate roles bound yet — permit join, then set Role + Zone and Save.
                 </p>
               )}
               {zigbeeSafetyRows.length ? (
                 <>
-                  <p className="dsc-muted" style={{ fontSize: 12, marginTop: 12, marginBottom: 8 }}>
+                  <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginTop: 12, marginBottom: 8 }}>
                     Safety — Wet/Dry is the raw sensor. Problem/Clear appears only when a Task is bound.
                   </p>
                   <div className="dsc-chip-row">
@@ -732,7 +775,10 @@ export function LiveClimatePage() {
         </div>
 
         <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Efficacy · buying kW because the lung could not transfer" icon="alert">
+          <Card className="dsc-glass" title="Efficacy" icon="alert">
+            <p className="dsc-muted" style={{ margin: "0 0 8px", fontSize: "var(--dsc-fs-sm)" }}>
+              Buying kW because the lung could not transfer.
+            </p>
             <div className="dsc-chip-row">
               <StatusChip label={`Heat ${state("switch.dsc_hub_heater_demand") === "on" ? "ON" : "off"}`} tone={state("switch.dsc_hub_heater_demand") === "on" ? "ok" : "muted"} onClick={() => open("switch.dsc_hub_heater_demand", "Heater", undefined)} />
               <StatusChip

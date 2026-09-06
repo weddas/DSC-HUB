@@ -43,10 +43,10 @@ export function SpaceEnergySettingsCard() {
 
   return (
     <Card className="dsc-glass" title="Space energy">
-      <p className="dsc-muted" style={{ margin: "0 0 10px", fontSize: 13 }}>
+      <p className="dsc-muted" style={{ margin: "0 0 10px", fontSize: "var(--dsc-fs-md)" }}>
         Local watts × tariff estimates and Learning duty proxies. Suggestions never auto-apply photoperiod.
       </p>
-      <h4 style={{ margin: "0 0 6px", fontSize: 14 }}>Devices</h4>
+      <h4 style={{ margin: "0 0 6px", fontSize: "var(--dsc-fs-lg)" }}>Devices</h4>
       {devices.map((d) => (
         <label key={`${d.space_id}-${d.device_id}`} className="dsc-seat-editors" style={{ display: "block", marginBottom: 8 }}>
           {d.space_id} · {d.label || d.device_id} (W)
@@ -74,7 +74,7 @@ export function SpaceEnergySettingsCard() {
           </Button>
         </label>
       ))}
-      <h4 style={{ margin: "12px 0 6px", fontSize: 14 }}>Tariff ($/kWh)</h4>
+      <h4 style={{ margin: "12px 0 6px", fontSize: "var(--dsc-fs-lg)" }}>Tariff ($/kWh)</h4>
       {tariff.map((b) => (
         <label key={b.band_id} className="dsc-seat-editors" style={{ display: "block", marginBottom: 8 }}>
           {b.label || b.band_id}
@@ -103,8 +103,8 @@ export function SpaceEnergySettingsCard() {
       ))}
       {learning ? (
         <>
-          <h4 style={{ margin: "12px 0 6px", fontSize: 14 }}>Learning</h4>
-          <label style={{ display: "block", fontSize: 13, marginBottom: 6 }}>
+          <h4 style={{ margin: "12px 0 6px", fontSize: "var(--dsc-fs-lg)" }}>Learning</h4>
+          <label style={{ display: "block", fontSize: "var(--dsc-fs-md)", marginBottom: 6 }}>
             <input
               type="checkbox"
               checked={learning.enabled}
@@ -112,7 +112,7 @@ export function SpaceEnergySettingsCard() {
             />{" "}
             Enabled (re-rank / planning signal only)
           </label>
-          <label style={{ display: "block", fontSize: 13, marginBottom: 6 }}>
+          <label style={{ display: "block", fontSize: "var(--dsc-fs-md)", marginBottom: 6 }}>
             <input
               type="checkbox"
               checked={learning.prefer_growth_outliers}

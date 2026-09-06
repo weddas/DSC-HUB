@@ -37,7 +37,6 @@ import {
 import { SettingsPage } from "./pages/SettingsPage";
 import { OverviewPage } from "./pages/OverviewPage";
 import { GrowLogsPage } from "./pages/GrowLogsPage";
-import { DashHomePage } from "./pages/DashHomePage";
 import { SetupPage } from "./pages/SetupPage";
 import dscCss from "./styles/dsc.css?inline";
 
@@ -87,7 +86,7 @@ function Shell({ surfaceVersion = "8.0.0" }: { surfaceVersion?: string }) {
   const secondary = SECONDARY_TABS[section];
 
   useEffect(() => {
-    if (location.pathname === "/live/climate" || location.pathname === "/ops/home") return;
+    if (location.pathname === "/live/climate") return;
     const p = new URLSearchParams(location.search);
     if (!p.has("tent") && !p.has("zone")) return;
     p.delete("tent");
@@ -105,7 +104,7 @@ function Shell({ surfaceVersion = "8.0.0" }: { surfaceVersion?: string }) {
             <strong>DSC - A Plausible Deniability Project.</strong>
           </div>
         </NavLink>
-        <div className="dsc-muted" style={{ fontSize: 12, letterSpacing: "0.08em" }}>
+        <div className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", letterSpacing: "0.08em" }}>
           SURFACE {displaySurface}
         </div>
       </div>
@@ -184,7 +183,9 @@ function Shell({ surfaceVersion = "8.0.0" }: { surfaceVersion?: string }) {
           <Route path="/settings" element={<Navigate to="/settings/device" replace />} />
           <Route path="/settings/:section" element={<SettingsPage />} />
           <Route path="/setup" element={<SetupPage />} />
-          <Route path="/ops/home" element={<DashHomePage />} />
+          {/* Dash (Legacy) retired 2026-09 — it duplicated Overview. DashHomePage kept
+              in-tree for revive; both legacy paths now land on Overview. */}
+          <Route path="/ops/home" element={<Navigate to="/live/overview" replace />} />
           <Route path="/ops/dash" element={<Navigate to="/live/overview" replace />} />
           {/* Legacy → 7.0 */}
           <Route path="/ops/*" element={<LegacyRedirect />} />
