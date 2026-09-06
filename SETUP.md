@@ -8,8 +8,9 @@
 Catalogs / Want / advanced UI destination: Pi offline brain — see
 [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md) and Notion
 [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c).
-Home Assistant remains an optional lab scaffold ([`INSTALL.md`](INSTALL.md),
-[`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md)).
+The Home Assistant lab was retired 2026-09 — see [`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md).
+The SPA still speaks an HA-shaped entity / `call_service` dialect, but DSC-Brain
+implements it natively; there is no HA runtime.
 
 Kit firmware stubs: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-kit.yaml`, `dsc-bridge-kit.yaml`
 
@@ -60,10 +61,10 @@ Portal → **Factory reset fleet config** clears NVS Wi‑Fi/pairing on the HUB 
 
 ## Modes
 
-| Mode | Network | HA | Internet |
-|---|---|---|---|
-| Local only | HUB SoftAP | Not required | Not required |
-| Home Wi‑Fi | Your router | Optional later | Optional (SNTP/OTA) |
+| Mode | Network | Internet |
+|---|---|---|
+| Local only | HUB SoftAP | Not required |
+| Home Wi‑Fi | Your router | Optional (SNTP/OTA) |
 
 ## Lab vs kit
 
@@ -80,6 +81,8 @@ Portal → **Factory reset fleet config** clears NVS Wi‑Fi/pairing on the HUB 
 - Satellite packages: `dsc-fleet-setup-satellite.yaml`, `dsc-fleet-setup-pot-kit.yaml`
 - WiFi splits: `dsc-*-wifi-lab.yaml` / `dsc-*-wifi-kit.yaml`
 
-## HA note
+## Fleet-setup component
 
-Home Assistant install remains documented in `INSTALL.md`. After this change, lab packages expect the `dsc_fleet_setup` component (copy `firmware/v4/components` beside your ESPHome configs, or use a git `external_components` source once published). Kit SoftAP setup does not require HA at all.
+Lab/bench ESPHome builds expect the `dsc_fleet_setup` component — copy
+`firmware/v4/components` beside your ESPHome configs, or use a git
+`external_components` source. Kit SoftAP setup needs nothing else.

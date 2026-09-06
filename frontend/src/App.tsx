@@ -39,7 +39,6 @@ import { OverviewPage } from "./pages/OverviewPage";
 import { GrowLogsPage } from "./pages/GrowLogsPage";
 import { DashHomePage } from "./pages/DashHomePage";
 import { SetupPage } from "./pages/SetupPage";
-import { preloadPiTwinAssets, piTwinRouteNeedsAssets } from "./lib/ensureLocalCards";
 import dscCss from "./styles/dsc.css?inline";
 
 
@@ -86,12 +85,6 @@ function Shell({ surfaceVersion = "8.0.0" }: { surfaceVersion?: string }) {
   const navigate = useNavigate();
   const section: PrimarySection = sectionFromPath(location.pathname);
   const secondary = SECONDARY_TABS[section];
-
-  useEffect(() => {
-    if (piTwinRouteNeedsAssets(location.pathname)) {
-      void preloadPiTwinAssets();
-    }
-  }, [location.pathname]);
 
   useEffect(() => {
     if (location.pathname === "/live/climate" || location.pathname === "/ops/home") return;
