@@ -443,6 +443,44 @@ export async function save_calibration(
   return resp.json();
 }
 
+export type AutomationOp = "gt" | "lt" | "gte" | "lte" | "eq" | "ne" | "is" | "is_not";
+export type AutomationActionType = "banner" | "oos_seat";
+
+export type AutomationRule = {
+  id: string;
+  name: string;
+  enabled: boolean;
+  trigger: { entity_id: string; op: AutomationOp | string; value: number | string | boolean };
+  action: { type: AutomationActionType | string; params: Record<string, unknown> };
+  /** Server-computed: is this rule's condition met right now. */
+  firing?: boolean;
+};
+
+export async function get_automations(): Promise<{ rules: AutomationRule[] }> {
+  const resp = await fetch("/settings/automations");
+  if (!resp.ok) throw new Error("automations fetch failed");
+  return resp.json();
+}
+
+export async function put_automations(rules: AutomationRule[]): Promise<{ rules: AutomationRule[] }> {
+  const resp = await fetch("/settings/automations", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rules }),
+  });
+  if (!resp.ok) {
+    let msg = "automations save failed";
+    try {
+      const j = (await resp.json()) as { detail?: unknown };
+      if (j?.detail) msg = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail);
+    } catch {
+      /* keep default */
+    }
+    throw new Error(msg);
+  }
+  return resp.json();
+}
+
 export function backup_export_url(): string {
   return "/settings/backup/export";
 }
