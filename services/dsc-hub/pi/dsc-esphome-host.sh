@@ -35,7 +35,15 @@ if [[ -z "${PROJECT_DIR}" ]]; then
   done
 fi
 
-mkdir -p "${HOST_DIR}"
+if [[ ! -d "${HOST_DIR}" ]]; then
+  mkdir -p "${HOST_DIR}"
+fi
+# The dashboard wrapper runs as ${RUN_AS}; root-only would leave capabilities stale
+# ("Permission denied" seen live). Best effort — a non-root caller skips this.
+if [[ "$(id -u)" == "0" ]] && id "${RUN_AS}" >/dev/null 2>&1; then
+  chown "${RUN_AS}:${RUN_AS}" "${HOST_DIR}" 2>/dev/null || true
+  chmod 0775 "${HOST_DIR}" 2>/dev/null || true
+fi
 
 venv_version() {
   if [[ -x "${VENV}/bin/esphome" ]]; then
@@ -53,6 +61,7 @@ disk_free_bytes() {
 json_bool() { if [[ "$1" == "1" ]]; then echo true; else echo false; fi; }
 
 write_capabilities() {
+  [[ -w "${HOST_DIR}" ]] || { echo "dsc-esphome-host: ${HOST_DIR} not writable by $(id -un); capabilities not refreshed" >&2; return 0; }
   local ver secrets
   ver="$(venv_version)"
   secrets=0
@@ -72,7 +81,7 @@ write_capabilities() {
   "written_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }
 EOF
-  chmod 0644 "${tmp}"
+  chmod 0644 "${tmp}" 2>/dev/null || true
   mv -f "${tmp}" "${HOST_DIR}/capabilities.json"
 }
 
@@ -92,7 +101,7 @@ write_result() {  # write_result JOB_ID OK FROM TO EXIT MESSAGE
   local tmp="${HOST_DIR}/.result.json.tmp"
   local tail_txt=""
   if [[ -f "${HOST_DIR}/progress.log" ]]; then
-    tail_txt="$(tail -c 3000 "${HOST_DIR}/progress.log" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')"
+    tail_txt="$(tail -c 3000 "${HOST_DIR}/progress.log" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.buffer.read().decode("utf-8", "replace")))' 2>/dev/null || echo '""')"
   else
     tail_txt='""'
   fi
@@ -133,7 +142,17 @@ do_update() {
   # .path unit re-fire the service in a loop (seen live 2026-09-06).
   mv -f "${req}" "${HOST_DIR}/.request.done" 2>/dev/null || rm -f "${req}"
   REQ_DONE="${HOST_DIR}/.request.done"
-  finish() { rm -f "${REQ_DONE}" "${HOST_DIR}/request.json"; write_capabilities; }
+  JOB_ID_FOR_TRAP="${job_id}"
+  FROM_FOR_TRAP="${from}"
+  finish() {
+    local rc=$?
+    rm -f "${REQ_DONE}" "${HOST_DIR}/request.json"
+    if [[ ! -f "${HOST_DIR}/result.json" ]]; then
+      # Something above died with set -e before write_result ran.
+      write_result "${JOB_ID_FOR_TRAP}" 0 "${FROM_FOR_TRAP}" "$(venv_version)" "${rc:-1}"         "helper exited unexpectedly (rc ${rc:-?}) — see journalctl -u dsc-esphome-update" 2>/dev/null || true
+    fi
+    write_capabilities || true
+  }
   trap finish EXIT
 
   echo "dsc-esphome-host: job ${job_id} action=${action} target=${target:-latest} (installed ${from:-none})"

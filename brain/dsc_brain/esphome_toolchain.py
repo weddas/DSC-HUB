@@ -133,6 +133,7 @@ def dashboard_api() -> str:
 # Host helper (pi/dsc-esphome-host.sh) — files in the ops dir the container mounts
 # --------------------------------------------------------------------------- #
 _last_dash_base: str | None = None
+_last_dash_ok: bool = False
 
 
 def host_dir() -> Path:
@@ -253,16 +254,20 @@ def _dash_get(path: str, timeout: float = 4.0) -> Any:
     Tries the configured base, then the legacy container name — so a kit part-way
     through the venv-unit cutover keeps working whichever one is up.
     """
-    global _last_dash_base
+    global _last_dash_base, _last_dash_ok
     primary = dashboard_api()
     data = _dash_get_one(primary, path, timeout)
     if data is not None:
         _last_dash_base = primary
+        _last_dash_ok = True
         return data
     if primary != _LEGACY_DASHBOARD_API:
         data = _dash_get_one(_LEGACY_DASHBOARD_API, path, min(timeout, 2.0))
         if data is not None:
             _last_dash_base = _LEGACY_DASHBOARD_API
+            _last_dash_ok = True
+            return data
+    _last_dash_ok = False
     return data
 
 
@@ -307,6 +312,11 @@ def installed() -> str | None:
         m = _VERSION_RE.search(str(data.get("version", "")))
         if m:
             return m.group(1)
+    caps = host_capabilities()
+    if caps and caps.get("esphome_version"):
+        m = _VERSION_RE.search(str(caps["esphome_version"]))
+        if m:
+            return m.group(1)  # dashboard down, but the host helper knows the venv
     try:
         out = subprocess.run(
             [esphome_bin(), "version"],
@@ -454,11 +464,14 @@ def build_backend() -> str:
     eb = esphome_bin()
     if eb and (Path(eb).exists() or shutil.which(eb)):
         return "venv"
-    if _dash_get("/version", timeout=3.0) is None:
-        return "none"
-    if host_capabilities() is not None and not dashboard_is_legacy():
+    dash_up = _dash_get("/version", timeout=3.0) is not None
+    if host_capabilities() is not None and not (dash_up and dashboard_is_legacy()):
+        # The helper can pip / roll back even while the dashboard is down — which
+        # is exactly when a rollback is needed (a bad ESPHome bump took :6052 with it).
         return "venv-host"
-    return "dashboard"
+    if dash_up:
+        return "dashboard"
+    return "none"
 
 
 def status(*, force_latest: bool = False) -> dict[str, Any]:
@@ -485,6 +498,7 @@ def status(*, force_latest: bool = False) -> dict[str, Any]:
         "dashboard_url": dashboard_url(),
         "dashboard_api": dashboard_api(),
         "build_backend": backend,
+        "dashboard_up": _last_dash_ok,
         "dashboard_legacy": dashboard_is_legacy(),
         "host_helper": bool(caps),
         "host_helper_written_at": (caps or {}).get("written_at"),

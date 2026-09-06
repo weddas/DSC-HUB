@@ -673,3 +673,17 @@ def test_run_job_routes_to_dashboard_on_venv_host(temp_db: Path, monkeypatch: py
     monkeypatch.setattr(ej.subprocess, "Popen", lambda *a, **k: (_ for _ in ()).throw(AssertionError("subprocess path used")))
     ej._run_job({"job_id": "j-vh", "seat_id": "pot2", "action": "compile", "yaml_name": "dsc-pot2.yaml"}, temp_db)
     assert seen.get("yaml_name") == "dsc-pot2.yaml"
+
+
+def test_backend_venv_host_survives_dashboard_down(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """A bad ESPHome bump can take :6052 down; the helper must still be usable for rollback."""
+    from dsc_brain import esphome_toolchain as tc
+
+    _no_local_cli(monkeypatch, tc)
+    hd = tmp_path / "esphome-host"
+    hd.mkdir()
+    (hd / "capabilities.json").write_text(json.dumps({"helper": True, "esphome_version": "2026.8.2"}), encoding="utf-8")
+    monkeypatch.setenv("DSC_ESPHOME_HOST_DIR", str(hd))
+    monkeypatch.setattr(tc, "_dash_get_one", lambda base, path, timeout: None)
+    assert tc.build_backend() == "venv-host"
+    assert tc.installed() == "2026.8.2"  # from the helper, not the (dead) dashboard
