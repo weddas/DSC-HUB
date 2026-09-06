@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { fmtDurationMs } from "../lib/formatDuration";
 import type { TentPhotoperiodId } from "../lib/lightSchedule";
-import { tentLabel } from "../lib/seatModel";
+import { tentLabel } from "../lib/probeModel";
 import { useTentLightSchedule } from "../hooks/useTentLightSchedule";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { buildCloneLightDesk, headerSfLabel } from "../lib/lightViewModel";

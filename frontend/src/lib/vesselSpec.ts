@@ -58,8 +58,8 @@ const CATALOG_BY_ID = new Map(VESSEL_CATALOG.map((v) => [v.id, v]));
 
 export const DEFAULT_VESSEL: VesselSpec = VESSEL_CATALOG[2];
 
-export function vesselEntityId(pot: number): string {
-  return `input_select.dsc_probe${pot}_vessel`;
+export function vesselEntityId(probe: number): string {
+  return `input_select.dsc_probe${probe}_vessel`;
 }
 
 export function parseVesselId(raw: string | undefined | null): string {
@@ -79,12 +79,12 @@ export function resolveVesselSpec(
   return spec;
 }
 
-export function readPotVessel(
-  pot: number,
+export function readProbeVessel(
+  probe: number,
   state: (id: string, fallback?: string) => string,
   entity?: (id: string) => { attributes?: Record<string, unknown> } | undefined,
 ): VesselSpec {
-  const id = vesselEntityId(pot);
+  const id = vesselEntityId(probe);
   const fromSelect = state(id, "");
   if (fromSelect && fromSelect !== "unknown" && fromSelect !== "unavailable") {
     return resolveVesselSpec(fromSelect);
@@ -93,7 +93,7 @@ export function readPotVessel(
   if (Array.isArray(roster)) {
     const slot = roster.find((s) => {
       const rec = s as { pot?: string | number; vessel?: string };
-      return String(rec.pot) === String(pot);
+      return String(rec.pot) === String(probe);
     }) as { vessel?: string } | undefined;
     if (slot?.vessel) return resolveVesselSpec(slot.vessel);
   }

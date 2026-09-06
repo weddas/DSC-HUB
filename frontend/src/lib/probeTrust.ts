@@ -1,26 +1,26 @@
-import { isPotInService } from "./seatModel";
+import { isProbeInService } from "./probeModel";
 
-export type PotTrustTone = "ok" | "warn" | "bad" | "muted";
+export type ProbeTrustTone = "ok" | "warn" | "bad" | "muted";
 
-export interface PotTrust {
+export interface ProbeTrust {
   stuck: boolean;
   untrusted: boolean;
   peerDivergence: boolean;
   /** Do not glow Need as an action when untrusted. */
   blockNeedAct: boolean;
-  tone: PotTrustTone;
+  tone: ProbeTrustTone;
   labels: string[];
 }
 
-export function readPotTrust(
-  pot: number,
+export function readProbeTrust(
+  probe: number,
   state: (id: string, fallback?: string) => string,
-): PotTrust {
-  const inService = isPotInService(pot, state);
-  const stuck = isBinaryOn(state(`binary_sensor.dsc_probe${pot}_sensor_stuck`));
-  const untrusted = isBinaryOn(state(`binary_sensor.dsc_probe${pot}_untrusted`));
-  const sensorFault = isBinaryOn(state(`binary_sensor.dsc_probe${pot}_sensor_fault`));
-  const modbusId = `binary_sensor.dsc_probe${pot}_modbus_probe_online`;
+): ProbeTrust {
+  const inService = isProbeInService(probe, state);
+  const stuck = isBinaryOn(state(`binary_sensor.dsc_probe${probe}_sensor_stuck`));
+  const untrusted = isBinaryOn(state(`binary_sensor.dsc_probe${probe}_untrusted`));
+  const sensorFault = isBinaryOn(state(`binary_sensor.dsc_probe${probe}_sensor_fault`));
+  const modbusId = `binary_sensor.dsc_probe${probe}_modbus_probe_online`;
   const modbusRaw = state(modbusId, "");
   const modbusKnown =
     modbusRaw !== "" && modbusRaw !== "unavailable" && modbusRaw !== "—";
@@ -33,7 +33,7 @@ export function readPotTrust(
   if (sensorFault) labels.push("sensor fault");
   if (modbusOffline) labels.push("probe dark");
   if (peer) labels.push("peer divergence");
-  let tone: PotTrustTone = "ok";
+  let tone: ProbeTrustTone = "ok";
   if (untrusted || stuck || sensorFault) tone = "bad";
   else if (peer || modbusOffline) tone = "warn";
   return {

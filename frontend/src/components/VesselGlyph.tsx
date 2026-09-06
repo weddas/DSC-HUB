@@ -83,14 +83,14 @@ export function VesselGlyph({
 }
 
 export function VesselSelect({
-  pot,
+  probe,
   onPicked,
 }: {
-  pot: number;
+  probe: number;
   onPicked?: () => void;
 }) {
   const { available, callService, entity, state } = useEntityBus();
-  const id = `input_select.dsc_probe${pot}_vessel`;
+  const id = `input_select.dsc_probe${probe}_vessel`;
   const ok = available(id);
   const options = (entity(id)?.attributes?.options as string[] | undefined) || [];
   const current = state(id, "");

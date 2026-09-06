@@ -16,18 +16,18 @@ import { ArcGauge, Sparkline } from "../viz/charts";
 import { defaultBandMargin, toneCssColor, zoneTone } from "../lib/zoneTone";
 import {
   KIT_PROBE_NUMBERS,
-  buildPlantSeat,
+  buildPlantProbe,
   inServiceCountWithFleet,
-  isPotInServiceWithFleet,
-  potGotEntity,
+  isProbeInServiceWithFleet,
+  probeGotEntity,
   probeLabel,
   tentLabel,
-} from "../lib/seatModel";
-import { potWantBand } from "../lib/tentWant";
-import { readPotTrust } from "../lib/potTrust";
-import { readPotVessel } from "../lib/vesselSpec";
+} from "../lib/probeModel";
+import { probeWantBand } from "../lib/tentWant";
+import { readProbeTrust } from "../lib/probeTrust";
+import { readProbeVessel } from "../lib/vesselSpec";
 import { VesselGlyph } from "../components/VesselGlyph";
-import { PlantSeatPanel } from "./GrowPages";
+import { PlantProbePanel } from "./GrowPages";
 import { fmtDurationMs } from "../lib/formatDuration";
 import { getProbeStations, set_root_steering_override, type ProbeStation } from "../lib/fleetApi";
 
@@ -41,18 +41,18 @@ export function LiveRootPage() {
   const inspector = useInspector();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const pots = [...KIT_PROBE_NUMBERS]
+  const probes = [...KIT_PROBE_NUMBERS]
     .map((n) => ({
       n,
-      seat: buildPlantSeat(n, { state, entity }),
-      oos: !isPotInServiceWithFleet(n, state, fleet),
+      plant: buildPlantProbe(n, { state, entity }),
+      oos: !isProbeInServiceWithFleet(n, state, fleet),
     }))
     .sort((a, b) => Number(a.oos) - Number(b.oos));
   const svc = inServiceCountWithFleet(state, fleet, [...KIT_PROBE_NUMBERS]);
   const raw = Number(params.get("pot") || 0);
-  const pot =
+  const probe =
     (KIT_PROBE_NUMBERS as readonly number[]).includes(raw) &&
-    isPotInServiceWithFleet(raw, state, fleet)
+    isProbeInServiceWithFleet(raw, state, fleet)
       ? raw
       : null;
   const matHours = num("sensor.dsc_growmat_runtime_today");
@@ -63,6 +63,7 @@ export function LiveRootPage() {
   const steerOverride = Boolean((fleet.root_steering as { override?: boolean } | undefined)?.override);
   const [pendingSteer, setPendingSteer] = useState(false);
   const [steerBusy, setSteerBusy] = useState(false);
+  const [steerMsg, setSteerMsg] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -85,12 +86,12 @@ export function LiveRootPage() {
     // tick: Settings dock patches must reach Root without opening Soil test
   }, [soilWizardOpen, tick]);
 
-  const openPot = (n: number) => {
+  const openProbe = (n: number) => {
     const next = new URLSearchParams(params);
     next.set("pot", String(n));
     setParams(next, { replace: true });
   };
-  const closePot = () => {
+  const closeProbe = () => {
     const next = new URLSearchParams(params);
     next.delete("pot");
     setParams(next, { replace: true });
@@ -218,8 +219,8 @@ export function LiveRootPage() {
                 {probeStations.map((st) => {
                   const moist = st.home_trustworthy === false ? null : st.thereabouts?.moisture_pct;
                   const soilT = st.home_trustworthy === false ? null : st.thereabouts?.soil_temp_c;
-                  const seatProbe = /^pot(\d+)$/i.exec(st.seat_id);
-                  const seatTitle = seatProbe ? probeLabel(Number(seatProbe[1])) : st.seat_id;
+                  const stationMatch = /^pot(\d+)$/i.exec(st.seat_id);
+                  const stationTitle = stationMatch ? probeLabel(Number(stationMatch[1])) : st.seat_id;
                   const homeProbe = /^pot(\d+)$/i.exec(st.idle_home_pot_id || "");
                   const homeLabel = homeProbe
                     ? probeLabel(Number(homeProbe[1]))
@@ -229,7 +230,7 @@ export function LiveRootPage() {
                   return (
                     <div key={st.seat_id} className="dsc-col-6">
                       <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
-                        <strong>{seatTitle}</strong>
+                        <strong>{stationTitle}</strong>
                         <StatusChip label={st.tent} tone="muted" />
                         <StatusChip
                           label={st.reading_mode === "idle" ? "IDLE" : st.reading_mode.toUpperCase()}
@@ -265,26 +266,26 @@ export function LiveRootPage() {
           </div>
         ) : null}
 
-        {pots.map(({ n, oos }) => (
+        {probes.map(({ n, oos }) => (
           <div key={n} className="dsc-col-12">
             <RootProbeCard
-              pot={n}
+              probe={n}
               oos={oos}
               station={probeStations.some((st) => st.seat_id === `pot${n}`)}
-              onOpen={() => (oos ? undefined : openPot(n))}
+              onOpen={() => (oos ? undefined : openProbe(n))}
             />
           </div>
         ))}
       </div>
 
       <SlideDrawer
-        open={pot != null}
-        onClose={closePot}
+        open={probe != null}
+        onClose={closeProbe}
         title={
-          pot != null
-            ? `${probeLabel(pot)}${
+          probe != null
+            ? `${probeLabel(probe)}${
                 (() => {
-                  const name = pots.find((p) => p.n === pot)?.seat.plantName;
+                  const name = probes.find((p) => p.n === probe)?.plant.plantName;
                   return name && name !== "—" ? ` · ${name}` : "";
                 })()
               }`
@@ -292,8 +293,8 @@ export function LiveRootPage() {
         }
         wide
       >
-        {pot != null ? (
-          <PlantSeatPanel pot={pot} onSelectPot={openPot} onRetired={closePot} />
+        {probe != null ? (
+          <PlantProbePanel probe={probe} onSelectProbe={openProbe} onRetired={closeProbe} />
         ) : null}
       </SlideDrawer>
 
@@ -307,11 +308,15 @@ export function LiveRootPage() {
         busy={steerBusy}
         onConfirm={async () => {
           setSteerBusy(true);
+          setSteerMsg("");
           try {
             await set_root_steering_override(!steerOverride);
             await refreshBrain();
-          } catch {
-            /* surfaced by the unchanged chip on failure */
+          } catch (exc) {
+            // Surface the failure — the chip alone would silently keep the old state.
+            setSteerMsg(
+              `Root-steering change failed: ${exc instanceof Error ? exc.message : String(exc)}. Chip shows the brain's current mode.`,
+            );
           } finally {
             setSteerBusy(false);
             setPendingSteer(false);
@@ -327,6 +332,11 @@ export function LiveRootPage() {
             : "The brain stops emitting phase act windows. Irrigation timing is entirely yours until you resume auto."}
         </p>
       </DecisionLayer>
+      {steerMsg ? (
+        <p className="dsc-honesty" role="alert">
+          {steerMsg}
+        </p>
+      ) : null}
 
       <p className="dsc-muted" style={{ marginTop: 8 }}>
         <button type="button" className="dsc-chip" onClick={() => navigate("/live/climate")}>
@@ -338,31 +348,31 @@ export function LiveRootPage() {
 }
 
 function RootProbeCard({
-  pot,
+  probe,
   oos,
   station,
   onOpen,
 }: {
-  pot: number;
+  probe: number;
   oos: boolean;
   station: boolean;
   onOpen: (() => void) | undefined;
 }) {
   const { state, entity } = useEntityBus();
   const inspector = useInspector();
-  const seat = buildPlantSeat(pot, { state, entity });
-  const trust = readPotTrust(pot, state);
-  const moistId = potGotEntity(pot, "moisture", state);
-  const ecId = potGotEntity(pot, "ec", state);
-  const phId = potGotEntity(pot, "ph", state);
-  const nId = `sensor.dsc_probe${pot}_soil_nitrogen`;
-  const pId = `sensor.dsc_probe${pot}_soil_phosphorus`;
-  const kId = `sensor.dsc_probe${pot}_soil_potassium`;
-  const dryId = `sensor.dsc_probe${pot}_dryback_pct`;
-  const rateId = `sensor.dsc_probe${pot}_soil_moisture_rate`;
+  const plant = buildPlantProbe(probe, { state, entity });
+  const trust = readProbeTrust(probe, state);
+  const moistId = probeGotEntity(probe, "moisture", state);
+  const ecId = probeGotEntity(probe, "ec", state);
+  const phId = probeGotEntity(probe, "ph", state);
+  const nId = `sensor.dsc_probe${probe}_soil_nitrogen`;
+  const pId = `sensor.dsc_probe${probe}_soil_phosphorus`;
+  const kId = `sensor.dsc_probe${probe}_soil_potassium`;
+  const dryId = `sensor.dsc_probe${probe}_dryback_pct`;
+  const rateId = `sensor.dsc_probe${probe}_soil_moisture_rate`;
   const series = useEntitySeries(moistId, { hours: 6, maxPoints: 48 });
   const dry = useHeldReading(dryId);
-  const soil = useHeldReading(`sensor.dsc_probe${pot}_soil_temperature`);
+  const soil = useHeldReading(`sensor.dsc_probe${probe}_soil_temperature`);
   const moist = useHeldReading(moistId);
   const ec = useHeldReading(ecId);
   const ph = useHeldReading(phId);
@@ -370,9 +380,9 @@ function RootProbeCard({
   const nHeld = useHeldReading(nId);
   const pHeld = useHeldReading(pId);
   const kHeld = useHeldReading(kId);
-  const mBand = potWantBand(pot, "moisture", state);
-  const ecBand = potWantBand(pot, "ec", state);
-  const phBand = potWantBand(pot, "ph", state);
+  const mBand = probeWantBand(probe, "moisture", state);
+  const ecBand = probeWantBand(probe, "ec", state);
+  const phBand = probeWantBand(probe, "ph", state);
   const dryBand = { min: 0, max: 45 };
   const showDryback = Number.isFinite(dry.value);
   const fmtChip = (v: number, digits = 0) => (Number.isFinite(v) ? v.toFixed(digits) : "—");
@@ -386,19 +396,19 @@ function RootProbeCard({
   const pV = readingOk ? pHeld.value : Number.NaN;
   const kV = readingOk ? kHeld.value : Number.NaN;
   const rateV = readingOk ? rate.value : Number.NaN;
-  const unassigned = !oos && (seat.plantName === "—" || seat.plantName.trim() === "");
-  const headName = oos ? "Out of service" : unassigned ? (station ? "Probe station" : "Unassigned") : seat.plantName;
+  const unassigned = !oos && (plant.plantName === "—" || plant.plantName.trim() === "");
+  const headName = oos ? "Out of service" : unassigned ? (station ? "Probe station" : "Unassigned") : plant.plantName;
   const needLabel = oos
     ? "No data"
     : unassigned
       ? "No targets"
       : trust.blockNeedAct
-        ? `${seat.need} (no act)`
-        : `Need ${seat.need}`;
+        ? `${plant.need} (no act)`
+        : `Need ${plant.need}`;
   const needTone =
-    oos || unassigned || seat.need === "ok" || seat.need === "—"
+    oos || unassigned || plant.need === "ok" || plant.need === "—"
       ? "muted"
-      : seat.need
+      : plant.need
         ? "warn"
         : "ok";
 
@@ -408,13 +418,26 @@ function RootProbeCard({
   };
 
   return (
-    <Card className={`dsc-glass dsc-pot-card${oos ? " is-oos" : ""}`} title={probeLabel(pot)} icon="root">
-      <div className="dsc-pot-card-head" onClick={onOpen} role="presentation">
-        <VesselGlyph spec={readPotVessel(pot, state, entity)} size={28} />
+    <Card className={`dsc-glass dsc-pot-card${oos ? " is-oos" : ""}`} title={probeLabel(probe)} icon="root">
+      <div
+        className="dsc-pot-card-head"
+        onClick={onOpen}
+        role={onOpen ? "button" : undefined}
+        tabIndex={onOpen ? 0 : undefined}
+        aria-label={onOpen ? `Open ${probeLabel(probe)}` : undefined}
+        onKeyDown={(e) => {
+          if (!onOpen) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onOpen();
+          }
+        }}
+      >
+        <VesselGlyph spec={readProbeVessel(probe, state, entity)} size={28} />
         <div>
           <strong>{headName}</strong>
           <div className="dsc-chip-row">
-            <StatusChip label={tentLabel(seat.tent)} tone={oos || seat.tent === "unassigned" ? "muted" : "ok"} />
+            <StatusChip label={tentLabel(plant.tent)} tone={oos || plant.tent === "unassigned" ? "muted" : "ok"} />
             <StatusChip label={needLabel} tone={needTone} />
             {trust.labels.map((l) => (
               <StatusChip key={l} label={l} tone="warn" />
@@ -450,7 +473,7 @@ function RootProbeCard({
               band={mBand}
               stale={moist.stale || !readingOk}
               onClick={() =>
-                inspector.open({ entityId: moistId, label: `${probeLabel(pot)} moisture`, unit: "%" })
+                inspector.open({ entityId: moistId, label: `${probeLabel(probe)} moisture`, unit: "%" })
               }
             />
             <ArcGauge
@@ -462,8 +485,8 @@ function RootProbeCard({
               stale={soil.stale || !readingOk}
               onClick={() =>
                 inspector.open({
-                  entityId: `sensor.dsc_probe${pot}_soil_temperature`,
-                  label: `${probeLabel(pot)} soil T`,
+                  entityId: `sensor.dsc_probe${probe}_soil_temperature`,
+                  label: `${probeLabel(probe)} soil T`,
                   unit: "°C",
                 })
               }
@@ -478,7 +501,7 @@ function RootProbeCard({
                 band={dryBand}
                 stale={dry.stale || !readingOk}
                 onClick={() =>
-                  inspector.open({ entityId: dryId, label: `${probeLabel(pot)} dryback`, unit: "%" })
+                  inspector.open({ entityId: dryId, label: `${probeLabel(probe)} dryback`, unit: "%" })
                 }
               />
             ) : null}
@@ -490,7 +513,7 @@ function RootProbeCard({
               unit=""
               band={ecBand}
               stale={ec.stale || !readingOk}
-              onClick={() => inspector.open({ entityId: ecId, label: `${probeLabel(pot)} EC` })}
+              onClick={() => inspector.open({ entityId: ecId, label: `${probeLabel(probe)} EC` })}
             />
             <ArcGauge
               label="pH"
@@ -500,21 +523,21 @@ function RootProbeCard({
               unit=""
               band={phBand}
               stale={ph.stale || !readingOk}
-              onClick={() => inspector.open({ entityId: phId, label: `${probeLabel(pot)} pH` })}
+              onClick={() => inspector.open({ entityId: phId, label: `${probeLabel(probe)} pH` })}
             />
           </div>
           <div className="dsc-npk-row">
-            <button type="button" className="dsc-npk-hit" onClick={open(nId, `${probeLabel(pot)} N (from EC)`)}>
+            <button type="button" className="dsc-npk-hit" onClick={open(nId, `${probeLabel(probe)} N (from EC)`)}>
               N {fmtChip(nV, 0)}
               {readingOk && nHeld.stale ? " *" : ""}
               <span className="dsc-npk-hint">from EC</span>
             </button>
-            <button type="button" className="dsc-npk-hit" onClick={open(pId, `${probeLabel(pot)} P (from EC)`)}>
+            <button type="button" className="dsc-npk-hit" onClick={open(pId, `${probeLabel(probe)} P (from EC)`)}>
               P {fmtChip(pV, 0)}
               {readingOk && pHeld.stale ? " *" : ""}
               <span className="dsc-npk-hint">from EC</span>
             </button>
-            <button type="button" className="dsc-npk-hit" onClick={open(kId, `${probeLabel(pot)} K (from EC)`)}>
+            <button type="button" className="dsc-npk-hit" onClick={open(kId, `${probeLabel(probe)} K (from EC)`)}>
               K {fmtChip(kV, 0)}
               {readingOk && kHeld.stale ? " *" : ""}
               <span className="dsc-npk-hint">from EC</span>
@@ -531,7 +554,7 @@ function RootProbeCard({
                 {station ? "Rate · waiting" : "Rate · no channel"}
               </span>
             ) : (
-              <button type="button" className="dsc-npk-hit" onClick={open(rateId, `${probeLabel(pot)} moisture rate`)}>
+              <button type="button" className="dsc-npk-hit" onClick={open(rateId, `${probeLabel(probe)} moisture rate`)}>
                 Rate {rateV.toFixed(2)}
                 {rate.stale ? " *" : ""}
               </button>

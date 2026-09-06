@@ -1,49 +1,49 @@
 import { DecisionLayer } from "../DecisionLayer";
-import { probeLabel } from "../../lib/seatModel";
+import { probeLabel } from "../../lib/probeModel";
 
 export type RosterLifecycleDialogsProps = {
-  detachPot: number | null;
+  detachProbe: number | null;
   onDismissDetach: () => void;
   onConfirmDetach: () => void;
   assignSlot: number | null;
-  assignPot: number;
-  onAssignPotChange: (pot: number) => void;
+  assignProbe: number;
+  onAssignProbeChange: (probe: number) => void;
   vacantProbes: number[];
   onDismissAssign: () => void;
   onConfirmAssign: () => void;
   retireSlot: number | null;
-  retirePot: number | null;
+  retireProbe: number | null;
   onDismissRetire: () => void;
   onConfirmRetire: () => void;
 };
 
 export function RosterLifecycleDialogs({
-  detachPot,
+  detachProbe,
   onDismissDetach,
   onConfirmDetach,
   assignSlot,
-  assignPot,
-  onAssignPotChange,
+  assignProbe,
+  onAssignProbeChange,
   vacantProbes,
   onDismissAssign,
   onConfirmAssign,
   retireSlot,
-  retirePot,
+  retireProbe,
   onDismissRetire,
   onConfirmRetire,
 }: RosterLifecycleDialogsProps) {
   return (
     <>
       <DecisionLayer
-        open={detachPot != null}
+        open={detachProbe != null}
         onDismiss={onDismissDetach}
         onConfirm={onConfirmDetach}
-        title={detachPot != null ? `Detach plant from ${probeLabel(detachPot)}?` : "Detach"}
+        title={detachProbe != null ? `Detach plant from ${probeLabel(detachProbe)}?` : "Detach"}
         confirmLabel="Detach"
         help={null}
       >
         <p>
-          Frees {detachPot != null ? probeLabel(detachPot) : "this probe"} and keeps the plant on the roster with no
+          Frees {detachProbe != null ? probeLabel(detachProbe) : "this probe"} and keeps the plant on the roster with no
           probe. SoftCal and probe-station home are unchanged. Delete if you mean to destroy the plant.
         </p>
       </DecisionLayer>
@@ -60,8 +60,8 @@ export function RosterLifecycleDialogs({
         <label>
           Probe
           <select
-            value={assignPot}
-            onChange={(e) => onAssignPotChange(Number(e.target.value))}
+            value={assignProbe}
+            onChange={(e) => onAssignProbeChange(Number(e.target.value))}
             style={{ display: "block", marginTop: 8 }}
           >
             {vacantProbes.map((n) => (
@@ -82,8 +82,8 @@ export function RosterLifecycleDialogs({
         help={null}
       >
         <p>
-          {retirePot != null
-            ? `Destroys the plant on ${probeLabel(retirePot)} and clears roster slot #${retireSlot}. Use Detach if you only want to free the probe.`
+          {retireProbe != null
+            ? `Destroys the plant on ${probeLabel(retireProbe)} and clears roster slot #${retireSlot}. Use Detach if you only want to free the probe.`
             : `Removes roster slot #${retireSlot} (stock or detached). This cannot be undone.`}
         </p>
       </DecisionLayer>

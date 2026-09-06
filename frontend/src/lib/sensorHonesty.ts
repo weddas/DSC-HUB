@@ -1,5 +1,5 @@
 import { resolveCfm } from "./cfmProvenance";
-import { KIT_PROBE_NUMBERS, isPotInServiceWithFleet } from "./seatModel";
+import { KIT_PROBE_NUMBERS, isProbeInServiceWithFleet } from "./probeModel";
 import type { FleetSnapshot } from "./fleetModel";
 
 export type HonestyTone = "ok" | "warn" | "bad" | "muted";
@@ -121,14 +121,14 @@ export function collectHonestyGaps(
 
   // Live omits OOS kit probes (no fake Got) — never nag about retired 3/4.
   // Prefer fleet inventory when present so Root / Settings / honesty agree.
-  const oosPots = [...KIT_PROBE_NUMBERS].filter(
-    (n) => !isPotInServiceWithFleet(n, st, fleet ?? null),
+  const oosProbes = [...KIT_PROBE_NUMBERS].filter(
+    (n) => !isProbeInServiceWithFleet(n, st, fleet ?? null),
   );
-  if (oosPots.length) {
+  if (oosProbes.length) {
     gaps.push({
       id: "oos-pots",
-      label: oosPots.length === 1 ? `Probe ${oosPots[0]} OOS` : `${oosPots.length} probes OOS`,
-      detail: `Probe${oosPots.length === 1 ? "" : "s"} ${oosPots.join(", ")} out of service — omitted from Live on purpose. Open Root or Settings to put back in service.`,
+      label: oosProbes.length === 1 ? `Probe ${oosProbes[0]} OOS` : `${oosProbes.length} probes OOS`,
+      detail: `Probe${oosProbes.length === 1 ? "" : "s"} ${oosProbes.join(", ")} out of service — omitted from Live on purpose. Open Root or Settings to put back in service.`,
       tone: "muted",
       href: "/live/root",
       cta: "Open Root",

@@ -1,4 +1,4 @@
-import type { TentId } from "./seatModel";
+import type { TentId } from "./probeModel";
 
 export type TentPhotoperiodId = Exclude<TentId, "unassigned">;
 

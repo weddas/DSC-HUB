@@ -22,4 +22,4 @@ assert.ok(!(GROWTH_STAGE_FALLBACK as readonly string[]).includes("Off"));
 assert.equal(GROWTH_STAGE_FALLBACK[0], "Germination");
 assert.equal(GROWTH_STAGE_FALLBACK[GROWTH_STAGE_FALLBACK.length - 1], "Final 48-72h Flowering");
 
-console.log("seat/api smoke tests ok");
+console.log("probe/api smoke tests ok");

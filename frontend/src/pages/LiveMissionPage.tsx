@@ -11,12 +11,12 @@ import { NextRecommendedCard } from "../components/Honesty";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useHeldReading, useHubOfflineMs, useBeatOfflineMs, usePanelOfflineMs } from "../hooks/useHeldReading";
 import { fmtDurationMs } from "../lib/formatDuration";
-import { buildPlantSeat, KIT_PROBE_NUMBERS, isPotInService } from "../lib/seatModel";
+import { buildPlantProbe, KIT_PROBE_NUMBERS, isProbeInService } from "../lib/probeModel";
 import { HubLinkLine } from "../components/HubLinkLine";
 import { HelpTip } from "../components/HelpTip";
 import { VesselGlyph } from "../components/VesselGlyph";
-import { readPotVessel } from "../lib/vesselSpec";
-import { readPotTrust } from "../lib/potTrust";
+import { readProbeVessel } from "../lib/vesselSpec";
+import { readProbeTrust } from "../lib/probeTrust";
 import { resolveCfm } from "../lib/cfmProvenance";
 import { CfmTrustLine } from "../components/CfmBadge";
 import { KitPulse } from "../components/KitPulse";
@@ -49,11 +49,11 @@ export function LiveMissionPage() {
   const cloneT = useHeldReading("sensor.dsc_hub_clone_temperature");
   const cloneRh = useHeldReading("sensor.dsc_hub_clone_humidity");
   const cloneVpd = useHeldReading("sensor.dsc_hub_clone_vpd_kpa");
-  const potM1 = useHeldReading("sensor.dsc_probe1_got_moisture");
-  const potM2 = useHeldReading("sensor.dsc_probe2_got_moisture");
-  const potM3 = useHeldReading("sensor.dsc_probe3_got_moisture");
-  const potM4 = useHeldReading("sensor.dsc_probe4_got_moisture");
-  const potMoistureHeld = [potM1, potM2, potM3, potM4];
+  const probeM1 = useHeldReading("sensor.dsc_probe1_got_moisture");
+  const probeM2 = useHeldReading("sensor.dsc_probe2_got_moisture");
+  const probeM3 = useHeldReading("sensor.dsc_probe3_got_moisture");
+  const probeM4 = useHeldReading("sensor.dsc_probe4_got_moisture");
+  const probeMoistureHeld = [probeM1, probeM2, probeM3, probeM4];
 
   const panelLink = fleet.panel.online ? "on" : state("binary_sensor.dsc_hub_panel_link");
   const panelOk = fleet.panel.online || panelLink === "on";
@@ -77,7 +77,7 @@ export function LiveMissionPage() {
     id,
     label: id.split(".").pop()?.replace(/dsc_/, "").replace(/_/g, " ") || id,
   }));
-  const seats = KIT_PROBE_NUMBERS.map((n) => buildPlantSeat(n, { state, entity }));
+  const probes = KIT_PROBE_NUMBERS.map((n) => buildPlantProbe(n, { state, entity }));
   const kitNodes: KitNode[] = buildKitNodesFromFleet(fleet);
   const svc = kitInServiceCount(kitNodes);
   const outCfm = resolveCfm("sensor.dsc_cfm_exhaust_out_allocated", "sensor.dsc_cfm_exhaust_out", {
@@ -103,7 +103,7 @@ export function LiveMissionPage() {
       <PageHeader
         icon="mission"
         title="Mission"
-        subtitle="Triage glance — Next, faults, seats, lung. Command lives on Climate."
+        subtitle="Triage glance — Next, faults, probes, lung. Command lives on Climate."
         primaryAction={
           <Button teal onClick={() => navigate("/live/root")}>
             Open Root
@@ -262,25 +262,25 @@ export function LiveMissionPage() {
         </div>
 
         <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Plant seats" icon="seat">
+          <Card className="dsc-glass" title="Plant probes" icon="seat">
             <div className="dsc-chip-row">
-              {seats.map((s) => {
-                const oos = !isPotInService(s.pot, state);
-                const trust = readPotTrust(s.pot, state);
-                const held = potMoistureHeld[s.pot - 1];
+              {probes.map((s) => {
+                const oos = !isProbeInService(s.probe, state);
+                const trust = readProbeTrust(s.probe, state);
+                const held = probeMoistureHeld[s.probe - 1];
                 const glow = !oos && !trust.blockNeedAct && s.need && s.need !== "—" && s.need !== "ok";
                 return (
                   <button
-                    key={s.pot}
+                    key={s.probe}
                     type="button"
                     className={`dsc-chip${oos ? "" : " dsc-chip--ok"}${glow ? " dsc-chip--pulse" : ""}`}
                     onClick={() =>
-                      window.dispatchEvent(new CustomEvent("dsc-dash-select-pot", { detail: { pot: s.pot } }))
+                      window.dispatchEvent(new CustomEvent("dsc-dash-select-probe", { detail: { probe: s.probe } }))
                     }
                     title={oos ? "Out of service — no data" : s.need}
                   >
-                    <VesselGlyph spec={readPotVessel(s.pot, state, entity)} size={18} />
-                    P{s.pot} {s.plantName !== "—" ? s.plantName : "—"} · Got M{" "}
+                    <VesselGlyph spec={readProbeVessel(s.probe, state, entity)} size={18} />
+                    P{s.probe} {s.plantName !== "—" ? s.plantName : "—"} · Got M{" "}
                     {oos ? "—" : held.stale ? `${Number.isFinite(held.value) ? held.value.toFixed(0) : "—"}*` : s.moisture}
                     {oos ? " · Out of service" : ` · Need ${s.need}`}
                     {held.stale && !oos ? " · HELD" : ""}

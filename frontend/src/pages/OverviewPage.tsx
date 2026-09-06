@@ -19,7 +19,7 @@ import { HelpTip } from "../components/HelpTip";
 import { useAlertSnooze } from "../hooks/useAlertSnooze";
 import { useSettledAvailability } from "../hooks/useSettledAvailability";
 import { alertRoute, playbookFor } from "../lib/alertPlaybook";
-import type { RosterSlot } from "../lib/seatModel";
+import type { RosterSlot } from "../lib/probeModel";
 import { fmtUptimeSeconds } from "../lib/formatDuration";
 
 /** Operational overview — critical alerts, area vitals, duties, root strip, grow log. */
@@ -90,10 +90,10 @@ export function OverviewPage() {
     ? (fleet.system.critical_banners as Array<Record<string, unknown>>)
     : [];
 
-  const openPot = (n: number) => {
-    // Stay on Overview — SeatOverlayHost opens the seat. Navigating to /live/root without
+  const openProbe = (n: number) => {
+    // Stay on Overview — ProbeOverlayHost opens the plant layer. Navigating to /live/root without
     // ?pot= drops the selection when the overlay closes (U-09 stay/overlay).
-    window.dispatchEvent(new CustomEvent("dsc-dash-select-pot", { detail: { pot: n } }));
+    window.dispatchEvent(new CustomEvent("dsc-dash-select-probe", { detail: { probe: n } }));
   };
 
   return (
@@ -285,8 +285,8 @@ export function OverviewPage() {
         bus={bus}
         rosterSlots={rosterSlots}
         onNavigate={navigate}
-        onPot={openPot}
-        onPotChart={openBandChart}
+        onProbe={openProbe}
+        onProbeChart={openBandChart}
       />
 
       <DashGrowLog bus={bus} />

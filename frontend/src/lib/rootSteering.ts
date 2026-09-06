@@ -2,7 +2,7 @@
 
 export type RootSteeringPhase = "P0" | "P1" | "P2" | "P3" | null;
 
-export type RootSteeringPot = {
+export type RootSteeringProbe = {
   phase: RootSteeringPhase;
   reason?: string;
   dryback_pct?: number | null;
@@ -16,14 +16,14 @@ export type RootSteeringSnapshot = {
   override?: boolean;
   lights_on?: boolean;
   targets?: Record<string, number>;
-  pots?: Record<string, RootSteeringPot>;
+  pots?: Record<string, RootSteeringProbe>;
 };
 
-export function potSteering(
+export function probeSteering(
   snapshot: RootSteeringSnapshot | null | undefined,
-  potId: string,
-): RootSteeringPot | null {
-  const row = snapshot?.pots?.[potId];
+  probeId: string,
+): RootSteeringProbe | null {
+  const row = snapshot?.pots?.[probeId];
   return row ?? null;
 }
 

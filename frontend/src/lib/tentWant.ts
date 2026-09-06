@@ -1,4 +1,4 @@
-import { KIT_PROBE_NUMBERS, isPotInService, potsInTent, type TentId } from "./seatModel";
+import { KIT_PROBE_NUMBERS, isProbeInService, probesInTent, type TentId } from "./probeModel";
 import { zoneTone, type ZoneTone } from "./zoneTone";
 
 /** Hub firmware stage presets (dsc-hub-v4_0 apply_stage) — labeled stage rail, not catalog Want. */
@@ -83,7 +83,7 @@ type HassBits = {
 };
 
 export function tentWantRail(tent: Exclude<TentId, "unassigned">, hass: HassBits): TentWantRail {
-  const seats = potsInTent(tent, hass.state, hass.entity).filter((s) => isPotInService(s.pot, hass.state));
+  const probes = probesInTent(tent, hass.state, hass.entity).filter((s) => isProbeInService(s.probe, hass.state));
   let temp: Band | null = null;
   let rh: Band | null = null;
   let vpd: Band | null = null;
@@ -92,20 +92,20 @@ export function tentWantRail(tent: Exclude<TentId, "unassigned">, hass: HassBits
   const needs: string[] = [];
   let mixed = false;
 
-  for (const s of seats) {
+  for (const s of probes) {
     if (s.stage && s.stage !== "—") {
       if (stages.length && !stages.includes(s.stage)) mixed = true;
       if (!stages.includes(s.stage)) stages.push(s.stage);
     }
     if (s.need && s.need !== "—" && s.need !== "ok" && !needs.includes(s.need)) needs.push(s.need);
 
-    const tMin = numWant(hass.state, `sensor.dsc_probe${s.pot}_want_temp_min`);
-    const tMax = numWant(hass.state, `sensor.dsc_probe${s.pot}_want_temp_max`);
+    const tMin = numWant(hass.state, `sensor.dsc_probe${s.probe}_want_temp_min`);
+    const tMax = numWant(hass.state, `sensor.dsc_probe${s.probe}_want_temp_max`);
     if (Number.isFinite(tMin) && Number.isFinite(tMax)) {
       temp = intersect(temp, { min: tMin, max: tMax, source: "plant" });
     }
-    const rMin = numWant(hass.state, `sensor.dsc_probe${s.pot}_want_rh_min`);
-    const rMax = numWant(hass.state, `sensor.dsc_probe${s.pot}_want_rh_max`);
+    const rMin = numWant(hass.state, `sensor.dsc_probe${s.probe}_want_rh_min`);
+    const rMax = numWant(hass.state, `sensor.dsc_probe${s.probe}_want_rh_max`);
     if (Number.isFinite(rMin) && Number.isFinite(rMax)) {
       rh = intersect(rh, { min: rMin, max: rMax, source: "plant" });
     }
@@ -124,7 +124,7 @@ export function tentWantRail(tent: Exclude<TentId, "unassigned">, hass: HassBits
     tent === "main"
       ? hass.state("select.dsc_hub_grow_stage", "")
       : hass.state("select.dsc_hub_clone_mode", "");
-  if (!seats.length || (!temp && !rh && !vpd)) {
+  if (!probes.length || (!temp && !rh && !vpd)) {
     const fallbackStage =
       tent === "clone"
         ? tentStage === "Follow Plants" || tentStage === "Clones & Seedlings"
@@ -232,20 +232,20 @@ export function draftTone(
   }
 }
 
-export function potWantBand(
-  pot: number,
+export function probeWantBand(
+  probe: number,
   kind: "moisture" | "ec" | "ph",
   state: (id: string, fb?: string) => string,
 ): { min: number; max: number } | undefined {
-  const lo = Number(state(`sensor.dsc_probe${pot}_want_${kind}_min`, ""));
-  const hi = Number(state(`sensor.dsc_probe${pot}_want_${kind}_max`, ""));
+  const lo = Number(state(`sensor.dsc_probe${probe}_want_${kind}_min`, ""));
+  const hi = Number(state(`sensor.dsc_probe${probe}_want_${kind}_max`, ""));
   // Do not invent a theater band when Want sensors are absent (Need — / NO TARGET).
   if (Number.isFinite(lo) && Number.isFinite(hi) && hi >= lo) return { min: lo, max: hi };
   return undefined;
 }
 
-export function inServicePots(state: (id: string, fb?: string) => string): number[] {
-  return [...KIT_PROBE_NUMBERS].filter((n) => isPotInService(n, state));
+export function inServiceProbes(state: (id: string, fb?: string) => string): number[] {
+  return [...KIT_PROBE_NUMBERS].filter((n) => isProbeInService(n, state));
 }
 
 /** Stage rail label for a single tent's Want chips. */
@@ -255,7 +255,7 @@ export function tentStageRailLabel(rail: TentWantRail, tent?: "main" | "clone"):
     return `${rail.stages[0]} · ${h}`;
   }
   if (rail.stages.length > 1) return `Mixed stages · ${rail.stages.join(", ")}`;
-  if (tent === "clone") return "2×4 empty · assign pots or set clone mode";
-  if (tent === "main") return "4×8 empty · assign pots or grow stage";
+  if (tent === "clone") return "2×4 empty · assign probes or set clone mode";
+  if (tent === "main") return "4×8 empty · assign probes or grow stage";
   return rail.emptyLabel ?? "no plant/stage rail";
 }

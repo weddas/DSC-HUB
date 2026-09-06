@@ -16,7 +16,7 @@ import {
   parseLogsScopeFromSearchParams,
 } from "../lib/journalApi";
 import { probeAssignedPlantId, shortPlantId } from "../lib/probeAssignment";
-import { rosterSlots } from "../lib/seatModel";
+import { rosterSlots } from "../lib/probeModel";
 import type { JournalEntry, JournalScope, JournalScopeKind } from "../types/journal";
 
 type ScopeNavItem = {
@@ -47,10 +47,10 @@ function plantIdForSlot(
 ): string {
   const fromUuid = String(slot.plant_uuid ?? "").trim();
   if (fromUuid) return fromUuid;
-  const potRaw = String(slot.pot ?? "");
-  const pot = Number(potRaw.replace(/^pot/, ""));
-  if (Number.isFinite(pot) && pot >= 1) {
-    const fromProbe = probeAssignedPlantId(pot, fleet, state);
+  const probeRaw = String(slot.pot ?? "");
+  const probe = Number(probeRaw.replace(/^pot/, ""));
+  if (Number.isFinite(probe) && probe >= 1) {
+    const fromProbe = probeAssignedPlantId(probe, fleet, state);
     if (fromProbe) return fromProbe;
   }
   const slotNum = Number(slot.slot ?? 0);

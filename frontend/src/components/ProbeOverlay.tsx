@@ -1,48 +1,48 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { DecisionLayer } from "./DecisionLayer";
-import { PlantSeatPanel } from "../pages/GrowPages";
+import { PlantProbePanel } from "../pages/GrowPages";
 import { Button } from "./ui";
 
 /**
- * I-15 / U-09: Twin pot pick opens a seat layer on the CURRENT page.
+ * I-15 / U-09: a probe pick (Overview / Crop scheduler / Mission) opens a plant layer on the CURRENT page.
  * Optional "Open Root" — not a forced /live/root hop.
  */
-export function SeatOverlayHost() {
-  const [pot, setPot] = useState<number | null>(null);
+export function ProbeOverlayHost() {
+  const [probe, setProbe] = useState<number | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     const onSelect = (ev: Event) => {
-      const detail = (ev as CustomEvent<{ pot?: number | string }>).detail;
-      const n = Number(detail?.pot);
-      if (n >= 1 && n <= 4) setPot(n);
+      const detail = (ev as CustomEvent<{ probe?: number | string }>).detail;
+      const n = Number(detail?.probe);
+      if (n >= 1 && n <= 4) setProbe(n);
     };
-    window.addEventListener("dsc-dash-select-pot", onSelect);
-    return () => window.removeEventListener("dsc-dash-select-pot", onSelect);
+    window.addEventListener("dsc-dash-select-probe", onSelect);
+    return () => window.removeEventListener("dsc-dash-select-probe", onSelect);
   }, []);
 
-  const close = useCallback(() => setPot(null), []);
+  const close = useCallback(() => setProbe(null), []);
 
   const help: ReactNode = null;
 
   return (
     <DecisionLayer
-      open={pot != null}
+      open={probe != null}
       onDismiss={close}
-      title={pot != null ? `Plant · Probe ${pot}` : "Plant"}
+      title={probe != null ? `Plant · Probe ${probe}` : "Plant"}
       help={help}
     >
-      {pot != null ? (
+      {probe != null ? (
         <>
-          <PlantSeatPanel pot={pot} onSelectPot={setPot} onRetired={close} />
+          <PlantProbePanel probe={probe} onSelectProbe={setProbe} onRetired={close} />
           {location.pathname !== "/live/root" ? (
             <div className="dsc-row-actions" style={{ marginTop: 12 }}>
               <Button
                 teal
                 onClick={() => {
-                  const n = pot;
+                  const n = probe;
                   close();
                   navigate(`/live/root?pot=${n}`);
                 }}

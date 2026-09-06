@@ -11,7 +11,7 @@ import {
   type ProbeStation,
   type SoilTestPoll,
 } from "../lib/fleetApi";
-import { rosterSlots, KIT_PROBE_NUMBERS } from "../lib/seatModel";
+import { rosterSlots, KIT_PROBE_NUMBERS, probeLabel } from "../lib/probeModel";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleet } from "../hooks/useFleet";
 import { ASSIGNED_PROBE_BANNER, probeAssignedPlantId, probeAssignmentDisplay } from "../lib/probeAssignment";
@@ -24,7 +24,7 @@ const TIMING_OPTIONS = [
   { id: "adhoc", label: "Ad hoc" },
 ] as const;
 
-const POT_IDS = KIT_PROBE_NUMBERS.map((n) => `pot${n}` as const);
+const PROBE_IDS = KIT_PROBE_NUMBERS.map((n) => `pot${n}` as const);
 
 type WizardStep =
   | "station"
@@ -75,7 +75,7 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
   const [stations, setStations] = useState<ProbeStation[]>([]);
   const [stationId, setStationId] = useState(initialStationId ?? "");
   const [mode, setMode] = useState<"roster" | "adhoc">("roster");
-  const [targetPotId, setTargetPotId] = useState("pot1");
+  const [targetProbeId, setTargetProbeId] = useState("pot1");
   const [rosterSeatId, setRosterSeatId] = useState<string>("");
   const [plantLabel, setPlantLabel] = useState("");
   const [timingNote, setTimingNote] = useState<string>("adhoc");
@@ -84,7 +84,7 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
   const [poll, setPoll] = useState<SoilTestPoll | null>(null);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
-  const [returnHomePotId, setReturnHomePotId] = useState<string | null>(null);
+  const [returnHomeProbeId, setReturnHomeProbeId] = useState<string | null>(null);
   const [confirmAbort, setConfirmAbort] = useState(false);
 
   const roster = useMemo(() => rosterSlots(entity), [entity]);
@@ -113,28 +113,28 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
   const rosterOptions = useMemo(
     () =>
       roster.filter((slot) => {
-        const pot = String(slot.pot ?? "");
-        return pot && pot !== "none" && POT_IDS.includes(pot as (typeof POT_IDS)[number]);
+        const probeId = String(slot.pot ?? "");
+        return probeId && probeId !== "none" && PROBE_IDS.includes(probeId as (typeof PROBE_IDS)[number]);
       }),
     [roster],
   );
 
   useEffect(() => {
     if (mode !== "roster" || !rosterOptions.length) return;
-    const match = rosterOptions.find((s) => String(s.pot) === targetPotId) ?? rosterOptions[0];
+    const match = rosterOptions.find((s) => String(s.pot) === targetProbeId) ?? rosterOptions[0];
     setRosterSeatId(String(match.slot));
     setPlantLabel(String(match.nickname || match.strain || ""));
-    setTargetPotId(String(match.pot));
-  }, [mode, rosterOptions, targetPotId]);
+    setTargetProbeId(String(match.pot));
+  }, [mode, rosterOptions, targetProbeId]);
 
   const beginCapture = async () => {
-    if (!stationId || !targetPotId) return;
+    if (!stationId || !targetProbeId) return;
     setBusy(true);
     setStatus("Starting capture session…");
     try {
       const res = await startSoilTest({
         probe_seat_id: stationId,
-        target_pot_id: targetPotId,
+        target_pot_id: targetProbeId,
         roster_seat_id: mode === "roster" && rosterSeatId ? rosterSeatId : null,
         plant_label: plantLabel,
         mode,
@@ -144,7 +144,7 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
       });
       setTestId(res.id);
       setStep("capture");
-      setStatus("Hold probe steady in the target pot.");
+      setStatus("Hold probe steady at the target probe slot.");
     } catch (exc) {
       setStatus(exc instanceof Error ? exc.message : "Start failed");
     } finally {
@@ -165,7 +165,7 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
           setStatus("Readings stable — confirm to save snapshot.");
         }
       } catch {
-        if (!cancelled) setStatus("Poll failed — check probe is on target pot.");
+        if (!cancelled) setStatus("Poll failed — check probe is at the target probe slot.");
       }
     };
     void tick();
@@ -182,7 +182,7 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
     setStatus("Confirming snapshot…");
     try {
       const res = await confirmSoilTest(testId);
-      setReturnHomePotId(res.return_home_pot_id ?? selectedStation?.idle_home_pot_id ?? null);
+      setReturnHomeProbeId(res.return_home_pot_id ?? selectedStation?.idle_home_pot_id ?? null);
       setPoll({ id: testId, status: "confirmed", test: res.test });
       setStep("done");
       setStatus(res.message ?? "Snapshot saved.");
@@ -220,37 +220,37 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
     <span className={`dsc-stage-pill${step === s ? " is-on" : ""}`}>{label}</span>
   );
 
-  const targetPotN = Number(String(targetPotId).replace(/^pot/, ""));
-  const stationPotN = Number(String(stationId).replace(/^pot/, ""));
-  const bannerPotN =
-    Number.isFinite(targetPotN) && targetPotN > 0
-      ? targetPotN
-      : Number.isFinite(stationPotN) && stationPotN > 0
-        ? stationPotN
+  const targetProbeN = Number(String(targetProbeId).replace(/^pot/, ""));
+  const stationProbeN = Number(String(stationId).replace(/^pot/, ""));
+  const bannerProbeN =
+    Number.isFinite(targetProbeN) && targetProbeN > 0
+      ? targetProbeN
+      : Number.isFinite(stationProbeN) && stationProbeN > 0
+        ? stationProbeN
         : 0;
-  const assignedId = bannerPotN ? probeAssignedPlantId(bannerPotN, fleet, state) : "";
-  const assignedLabel = assignedId ? probeAssignmentDisplay(bannerPotN, fleet, state, entity) : "";
+  const assignedId = bannerProbeN ? probeAssignedPlantId(bannerProbeN, fleet, state) : "";
+  const assignedLabel = assignedId ? probeAssignmentDisplay(bannerProbeN, fleet, state, entity) : "";
 
   return (
     <div className={compact ? "" : "dsc-soil-wizard"}>
       {!compact ? (
         <Card className="dsc-glass" title="Soil test wizard" icon="root">
           <p className="dsc-muted">
-            Mobile probe stations capture a confirmed soil snapshot at a target pot. Return the probe to its idle home
-            pot when finished.
+            Mobile probe stations capture a confirmed soil snapshot at a target probe slot. Return the probe to its idle home
+            slot when finished.
           </p>
         </Card>
       ) : null}
 
       <CalOutcomeStrip
-        what="Hold a confirmed soil reading at station timing for a target plant / pot."
+        what="Hold a confirmed soil reading at station timing for a target plant / probe."
         process="Station → plant → timing → move → capture → confirm → return home."
         expected="Confirmed soil-test row in brain history (not SoftCal offsets)."
       />
       {assignedId ? (
         <p className="dsc-honesty" role="status" style={{ marginBottom: 8 }}>
           {ASSIGNED_PROBE_BANNER}
-          {assignedLabel ? ` · Probe ${bannerPotN}: ${assignedLabel}` : ""}
+          {assignedLabel ? ` · Probe ${bannerProbeN}: ${assignedLabel}` : ""}
         </p>
       ) : null}
 
@@ -323,7 +323,7 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
               className={`dsc-chip${mode === "adhoc" ? " dsc-chip--ok" : ""}`}
               onClick={() => setMode("adhoc")}
             >
-              Ad hoc pot
+              Ad hoc probe
             </button>
           </div>
           {mode === "roster" ? (
@@ -336,7 +336,7 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
                     const slot = rosterOptions.find((r) => String(r.slot) === e.target.value);
                     if (slot) {
                       setRosterSeatId(String(slot.slot));
-                      setTargetPotId(String(slot.pot));
+                      setTargetProbeId(String(slot.pot));
                       setPlantLabel(String(slot.nickname || slot.strain || ""));
                     }
                   }}
@@ -349,14 +349,14 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
                 </select>
               </label>
             ) : (
-              <p className="dsc-honesty">No roster plants on pots — use ad hoc or commit from Compose.</p>
+              <p className="dsc-honesty">No roster plants on probes — use ad hoc or commit from Compose.</p>
             )
           ) : (
             <>
               <label>
-                Target pot
-                <select value={targetPotId} onChange={(e) => setTargetPotId(e.target.value)}>
-                  {POT_IDS.map((p) => (
+                Target probe
+                <select value={targetProbeId} onChange={(e) => setTargetProbeId(e.target.value)}>
+                  {PROBE_IDS.map((p) => (
                     <option key={p} value={p}>
                       {p.toUpperCase()}
                     </option>
@@ -413,7 +413,7 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
         <Card className="dsc-glass" title="4 · Move probe" icon="root">
           <p className="dsc-honesty">
             Move the probe from <strong>{selectedStation?.idle_home_pot_id || stationId}</strong> to{" "}
-            <strong>{targetPotId.toUpperCase()}</strong>
+            <strong>{targetProbeN > 0 ? probeLabel(targetProbeN) : targetProbeId}</strong>
             {plantLabel ? ` (${plantLabel})` : ""}. Seat it at the same depth you use for routine checks.
           </p>
           <div className="dsc-row-actions" style={{ marginTop: 12 }}>
@@ -471,7 +471,7 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
           <p className="dsc-honesty">{status}</p>
           {poll?.test ? <ReadingsTable readings={poll.test.readings} /> : null}
           <p className="dsc-muted">
-            Return the probe to <strong>{returnHomePotId ?? selectedStation?.idle_home_pot_id ?? "idle home"}</strong>{" "}
+            Return the probe to <strong>{returnHomeProbeId ?? selectedStation?.idle_home_pot_id ?? "idle home"}</strong>{" "}
             for safety before the next reading.
           </p>
           <div className="dsc-row-actions" style={{ marginTop: 12 }}>

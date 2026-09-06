@@ -243,50 +243,6 @@ body {
   border-color: var(--dsc-blue-dim);
 }
 
-.dsc-twin-slot {
-  min-height: min(68vh, 720px);
-  margin-bottom: 12px;
-}
-
-.dsc-twin-keepalive {
-  /* Keep the Twin custom element mounted; do not display:none (kills WebGL size).
-     When idle: out of flow, not visible, no pointer hit-testing. */
-  position: fixed;
-  inset: 0;
-  visibility: hidden;
-  pointer-events: none;
-  z-index: -1;
-  overflow: hidden;
-  margin: 0;
-  min-height: 0;
-}
-
-.dsc-twin-keepalive.is-active {
-  position: relative;
-  inset: auto;
-  visibility: visible;
-  pointer-events: auto;
-  z-index: auto;
-  overflow: visible;
-  margin-bottom: 12px;
-  min-height: min(70vh, 720px);
-}
-
-.dsc-twin-keepalive:not(.is-active),
-.dsc-twin-keepalive:not(.is-active) * {
-  pointer-events: none !important;
-}
-
-.dsc-twin-keepalive-host {
-  min-height: min(68vh, 700px);
-}
-
-.dsc-twin-keepalive.is-active .dsc-twin-keepalive-host,
-.dsc-twin-keepalive.is-active .dsc-twin-keepalive-host > * {
-  min-height: min(68vh, 700px);
-  pointer-events: auto;
-}
-
 /* Scoped to .dsc-primary-tabs so these beat the later, equal-specificity
    .dsc-tab.active fallback (dsc.css below) instead of losing to source order —
    previously every primary tab rendered white+neon regardless of section
@@ -3624,18 +3580,6 @@ input[type="checkbox"]:disabled {
   display: block;
   width: 100% !important;
   height: 320px !important;
-}
-.dsc-twin-canvas-wrap {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  min-height: min(68vh, 700px);
-}
-.dsc-twin-canvas-wrap canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
-  min-height: min(68vh, 700px);
 }
 .dsc-airflow-legend {
   display: flex;

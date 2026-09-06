@@ -8,7 +8,7 @@ export const ZONE_LABELS: Record<ClimateZone, string> = {
   clone: "2×4",
   main: "4×8",
 };
-export const IDLE_POT_OPTIONS = ["", "pot1", "pot2"] as const;
+export const IDLE_PROBE_OPTIONS = ["", "pot1", "pot2"] as const;
 export const TENT_OPTIONS = ["2x4", "4x8"] as const;
 
 export const SECTION_SUBTITLE: Record<SettingsSectionId, string> = {

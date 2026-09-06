@@ -4,8 +4,7 @@ import { Button, Icon, PageHeader, Spinner } from "./components/ui";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { HonestyRail } from "./components/Honesty";
 import { DemoBanner } from "./components/DemoBanner";
-import { TwinKeepAlive } from "./components/TwinKeepAlive";
-import { SeatOverlayHost } from "./components/SeatOverlay";
+import { ProbeOverlayHost } from "./components/ProbeOverlay";
 import { InspectorProvider } from "./components/InspectorHost";
 import { BandChartProvider } from "./components/BandChartHost";
 import { useFleetSelector } from "./hooks/useFleet";
@@ -151,7 +150,7 @@ function Shell({ surfaceVersion = "8.0.0" }: { surfaceVersion?: string }) {
         </nav>
       ) : null}
 
-      <SeatOverlayHost />
+      <ProbeOverlayHost />
 
       <ErrorBoundary>
         <Suspense fallback={<RouteFallback />}>
@@ -198,7 +197,6 @@ function Shell({ surfaceVersion = "8.0.0" }: { surfaceVersion?: string }) {
           </Routes>
         </Suspense>
       </ErrorBoundary>
-      <TwinKeepAlive />
     </div>
   );
 }

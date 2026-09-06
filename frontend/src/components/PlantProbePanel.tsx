@@ -9,24 +9,24 @@ import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
-import { patchPotPlant, detachPlantFromProbe, movePlantBetweenProbes } from "../lib/fleetApi";
+import { patchProbePlant, detachPlantFromProbe, movePlantBetweenProbes } from "../lib/fleetApi";
 import { GROWTH_STAGE_FALLBACK } from "../lib/growthStages";
 import { ArcGauge, GotWantBars, MultiLineChart } from "../viz/charts";
 import {
-  activePotNumbers,
-  buildPlantSeat,
+  activeProbeNumbers,
+  buildPlantProbe,
   fmtReading,
-  potGotEntity,
+  probeGotEntity,
   probeLabel,
   tentLabel,
   type TentId,
-} from "../lib/seatModel";
-import { readPotVessel } from "../lib/vesselSpec";
+} from "../lib/probeModel";
+import { readProbeVessel } from "../lib/vesselSpec";
 import { PlantExtra } from "./PlantExtra";
 import { VesselGlyph } from "./VesselGlyph";
 import { useBrainRefresh } from "../hooks/useBrain";
 import { useFleet } from "../hooks/useFleet";
-import { phaseLabel, potSteering, type RootSteeringSnapshot } from "../lib/rootSteering";
+import { phaseLabel, probeSteering, type RootSteeringSnapshot } from "../lib/rootSteering";
 import { probeAssignedPlantId } from "../lib/probeAssignment";
 import { JournalScopePanel } from "./journal/JournalScopePanel";
 
@@ -39,14 +39,14 @@ type FieldBaseline = {
   notes: string;
 };
 
-function seatToBaseline(seat: ReturnType<typeof buildPlantSeat>): FieldBaseline {
+function plantToBaseline(plant: ReturnType<typeof buildPlantProbe>): FieldBaseline {
   return {
-    name: seat.plantName === "—" ? "" : seat.plantName,
-    strain: seat.strainDisplay === "—" ? "" : seat.strainDisplay,
-    blend: seat.blend || "",
-    sprout: seat.sprout === "—" ? "" : seat.sprout.slice(0, 10),
-    stage: seat.growthStage === "—" ? "" : seat.growthStage,
-    notes: seat.notes === "—" ? "" : seat.notes,
+    name: plant.plantName === "—" ? "" : plant.plantName,
+    strain: plant.strainDisplay === "—" ? "" : plant.strainDisplay,
+    blend: plant.blend || "",
+    sprout: plant.sprout === "—" ? "" : plant.sprout.slice(0, 10),
+    stage: plant.growthStage === "—" ? "" : plant.growthStage,
+    notes: plant.notes === "—" ? "" : plant.notes,
   };
 }
 
@@ -65,14 +65,14 @@ function recipeGrowthStage(result: Record<string, unknown>): string | undefined 
   return undefined;
 }
 
-/** Shared seat body for Root / Roster drawers (Surface 7.1). */
-export function PlantSeatPanel({
-  pot,
-  onSelectPot,
+/** Shared plant body for Root / Roster drawers (Surface 7.1). */
+export function PlantProbePanel({
+  probe,
+  onSelectProbe,
   onRetired,
 }: {
-  pot: number;
-  onSelectPot?: (n: number) => void;
+  probe: number;
+  onSelectProbe?: (n: number) => void;
   /** Called after successful retire so parents can close drawers/overlays */
   onRetired?: () => void;
 }) {
@@ -80,14 +80,14 @@ export function PlantSeatPanel({
   const { callService } = useFleetActions();
   const refreshBrain = useBrainRefresh();
   const fleet = useFleet();
-  const steering = potSteering(
+  const steering = probeSteering(
     fleet.root_steering as RootSteeringSnapshot | undefined,
-    `pot${pot}`,
+    `pot${probe}`,
   );
   const navigate = useNavigate();
   void tick;
-  const seat = buildPlantSeat(pot, { state, entity });
-  const baselineRef = useRef<FieldBaseline>(seatToBaseline(seat));
+  const plant = buildPlantProbe(probe, { state, entity });
+  const baselineRef = useRef<FieldBaseline>(plantToBaseline(plant));
   const [nameDraft, setNameDraft] = useState(baselineRef.current.name);
   const [strainDraft, setStrainDraft] = useState(baselineRef.current.strain);
   const [sproutDraft, setSproutDraft] = useState(baselineRef.current.sprout);
@@ -107,7 +107,7 @@ export function PlantSeatPanel({
   const [hist, setHist] = useState<{ id: string; label: string; unit: string } | null>(null);
 
   useEffect(() => {
-    const baseline = seatToBaseline(seat);
+    const baseline = plantToBaseline(plant);
     baselineRef.current = baseline;
     setNameDraft(baseline.name);
     setStrainDraft(baseline.strain);
@@ -119,7 +119,7 @@ export function PlantSeatPanel({
     setEditErr(null);
     setRetireErr(null);
     setEditStatus(null);
-  }, [pot]);
+  }, [probe]);
 
   useEffect(() => {
     if (!editStatus) return;
@@ -127,53 +127,53 @@ export function PlantSeatPanel({
     return () => window.clearTimeout(t);
   }, [editStatus]);
 
-  const moistId = potGotEntity(pot, "moisture", state);
-  const ecId = potGotEntity(pot, "ec", state);
-  const phId = potGotEntity(pot, "ph", state);
-  const drybackId = `sensor.dsc_probe${pot}_dryback_pct`;
+  const moistId = probeGotEntity(probe, "moisture", state);
+  const ecId = probeGotEntity(probe, "ec", state);
+  const phId = probeGotEntity(probe, "ph", state);
+  const drybackId = `sensor.dsc_probe${probe}_dryback_pct`;
   const moistHeld = useHeldReading(moistId);
   const drybackHeld = useHeldReading(drybackId);
   const ecHeld = useHeldReading(ecId);
   const phHeld = useHeldReading(phId);
   const moistSeries = useEntitySeries(moistId, { hours: 6, maxPoints: 72 });
   const ecSeries = useEntitySeries(ecId, { hours: 6, maxPoints: 72 });
-  const learnedEcRaw = num(`input_number.dsc_probe${pot}_learned_ec_per_moisture`);
+  const learnedEcRaw = num(`input_number.dsc_probe${probe}_learned_ec_per_moisture`);
   const learnedEc =
-    available(`input_number.dsc_probe${pot}_learned_ec_per_moisture`) &&
+    available(`input_number.dsc_probe${probe}_learned_ec_per_moisture`) &&
     Number.isFinite(learnedEcRaw) &&
     learnedEcRaw !== 0
       ? learnedEcRaw
       : NaN;
 
-  const wantMoistMin = available(`sensor.dsc_probe${pot}_want_moisture_min`)
-    ? num(`sensor.dsc_probe${pot}_want_moisture_min`)
-    : num(`number.dsc_probe${pot}_want_moisture_min`);
-  const wantMoistMax = available(`sensor.dsc_probe${pot}_want_moisture_max`)
-    ? num(`sensor.dsc_probe${pot}_want_moisture_max`)
-    : num(`number.dsc_probe${pot}_want_moisture_max`);
-  const wantEcMin = num(`sensor.dsc_probe${pot}_want_ec_min`);
-  const wantEcMax = num(`sensor.dsc_probe${pot}_want_ec_max`);
-  const wantPhMin = num(`sensor.dsc_probe${pot}_want_ph_min`);
-  const wantPhMax = num(`sensor.dsc_probe${pot}_want_ph_max`);
+  const wantMoistMin = available(`sensor.dsc_probe${probe}_want_moisture_min`)
+    ? num(`sensor.dsc_probe${probe}_want_moisture_min`)
+    : num(`number.dsc_probe${probe}_want_moisture_min`);
+  const wantMoistMax = available(`sensor.dsc_probe${probe}_want_moisture_max`)
+    ? num(`sensor.dsc_probe${probe}_want_moisture_max`)
+    : num(`number.dsc_probe${probe}_want_moisture_max`);
+  const wantEcMin = num(`sensor.dsc_probe${probe}_want_ec_min`);
+  const wantEcMax = num(`sensor.dsc_probe${probe}_want_ec_max`);
+  const wantPhMin = num(`sensor.dsc_probe${probe}_want_ph_min`);
+  const wantPhMax = num(`sensor.dsc_probe${probe}_want_ph_max`);
   const hasWant =
     Number.isFinite(wantMoistMin) &&
     Number.isFinite(wantMoistMax) &&
-    (available(`sensor.dsc_probe${pot}_want_moisture_min`) ||
-      available(`number.dsc_probe${pot}_want_moisture_min`));
+    (available(`sensor.dsc_probe${probe}_want_moisture_min`) ||
+      available(`number.dsc_probe${probe}_want_moisture_min`));
   const hasWantEc = Number.isFinite(wantEcMin) && Number.isFinite(wantEcMax);
   const hasWantPh = Number.isFinite(wantPhMin) && Number.isFinite(wantPhMax);
   const genericStrain =
-    !seat.strainDisplay ||
-    seat.strainDisplay === "—" ||
-    /generic/i.test(seat.strainDisplay);
-  const hasRosterSlot = seat.rosterSlot != null;
-  const plantId = probeAssignedPlantId(pot, fleet, state);
+    !plant.strainDisplay ||
+    plant.strainDisplay === "—" ||
+    /generic/i.test(plant.strainDisplay);
+  const hasRosterSlot = plant.rosterSlot != null;
+  const plantId = probeAssignedPlantId(probe, fleet, state);
 
   const applyTent = async (tent: TentId, photoTemplate?: boolean) => {
     setApplyErr(null);
     try {
       await callService("input_select", "select_option", {
-        entity_id: `input_select.dsc_probe${pot}_tent`,
+        entity_id: `input_select.dsc_probe${probe}_tent`,
         option: tent,
       });
       if (photoTemplate && tent !== "unassigned") {
@@ -194,7 +194,7 @@ export function PlantSeatPanel({
         }
       }
       window.setTimeout(() => {
-        const now = state(`input_select.dsc_probe${pot}_tent`, "");
+        const now = state(`input_select.dsc_probe${probe}_tent`, "");
         if (now !== tent) {
           setApplyErr("Tent change did not stick — the hub rejected it. Try again.");
         }
@@ -204,11 +204,11 @@ export function PlantSeatPanel({
     }
   };
 
-  const persistPlant = async (patch: Parameters<typeof patchPotPlant>[1]) => {
+  const persistPlant = async (patch: Parameters<typeof patchProbePlant>[1]) => {
     setEditStatus(null);
     setEditErr(null);
     try {
-      const result = await patchPotPlant(pot, patch);
+      const result = await patchProbePlant(probe, patch);
       setEditStatus("Saved");
       return result;
     } catch (exc) {
@@ -276,8 +276,8 @@ export function PlantSeatPanel({
     try {
       await callService("script", "turn_on", {
         entity_id: "script.dsc_plant_retire",
-        pot: String(pot),
-        variables: { pot: String(pot) },
+        pot: String(probe),
+        variables: { pot: String(probe) },
       });
       setRetireConfirm(false);
       clearDraftsAfterRetire();
@@ -291,7 +291,7 @@ export function PlantSeatPanel({
   const detachPlant = async () => {
     setLifecycleErr(null);
     try {
-      await detachPlantFromProbe(pot);
+      await detachPlantFromProbe(probe);
       setDetachConfirm(false);
       clearDraftsAfterRetire();
       await refreshBrain();
@@ -305,22 +305,22 @@ export function PlantSeatPanel({
     if (moveTo == null) return;
     setLifecycleErr(null);
     try {
-      await movePlantBetweenProbes(pot, moveTo);
+      await movePlantBetweenProbes(probe, moveTo);
       setMoveTo(null);
       await refreshBrain();
-      onSelectPot?.(moveTo);
+      onSelectProbe?.(moveTo);
     } catch (exc) {
       setLifecycleErr(exc instanceof Error ? exc.message : "Move failed");
     }
   };
 
-  const vacantTargets = activePotNumbers(state).filter((n) => {
-    if (n === pot) return false;
+  const vacantTargets = activeProbeNumbers(state).filter((n) => {
+    if (n === probe) return false;
     return !state(`text.dsc_probe${n}_plant_name`, "").trim();
   });
 
   const stageOpts =
-    (entity(`select.dsc_probe${pot}_growth_stage`)?.attributes?.options as string[] | undefined) ||
+    (entity(`select.dsc_probe${probe}_growth_stage`)?.attributes?.options as string[] | undefined) ||
     [...GROWTH_STAGE_FALLBACK];
 
   const setStage = (v: string) => {
@@ -333,26 +333,26 @@ export function PlantSeatPanel({
 
   const liveGotMoist = moistHeld.stale
     ? `${fmtReading(moistHeld.value, 0)}*`
-    : seat.moisture;
-  const liveGotEc = ecHeld.stale ? `${fmtReading(ecHeld.value, 0)}*` : seat.ec;
-  const liveGotPh = phHeld.stale ? `${fmtReading(phHeld.value, 0)}*` : seat.ph;
+    : plant.moisture;
+  const liveGotEc = ecHeld.stale ? `${fmtReading(ecHeld.value, 0)}*` : plant.ec;
+  const liveGotPh = phHeld.stale ? `${fmtReading(phHeld.value, 0)}*` : plant.ph;
 
   return (
     <div className="dsc-seat-panel">
       <div className="dsc-chip-row" style={{ marginBottom: 14 }}>
-        {activePotNumbers(state).map((n) => (
+        {activeProbeNumbers(state).map((n) => (
           <button
             key={n}
             type="button"
-            className={`dsc-chip${n === pot ? " dsc-chip--ok" : ""}`}
-            onClick={() => onSelectPot?.(n)}
+            className={`dsc-chip${n === probe ? " dsc-chip--ok" : ""}`}
+            onClick={() => onSelectProbe?.(n)}
           >
-            <VesselGlyph spec={readPotVessel(n, state, entity)} size={16} /> P{n}
+            <VesselGlyph spec={readProbeVessel(n, state, entity)} size={16} /> P{n}
           </button>
         ))}
-        <StatusChip label={tentLabel(seat.tent)} tone={seat.tent === "unassigned" ? "muted" : "ok"} />
-        {seat.rosterSlot != null ? (
-          <StatusChip label={`Roster #${seat.rosterSlot}`} tone="muted" />
+        <StatusChip label={tentLabel(plant.tent)} tone={plant.tent === "unassigned" ? "muted" : "ok"} />
+        {plant.rosterSlot != null ? (
+          <StatusChip label={`Roster #${plant.rosterSlot}`} tone="muted" />
         ) : (
           <StatusChip label="Not on roster" tone="warn" />
         )}
@@ -362,14 +362,14 @@ export function PlantSeatPanel({
       <div className="dsc-seat-layout">
         <Card className="dsc-glass dsc-glass--glow" title="Medium">
           <SoilCrossSection
-            layers={seat.layers}
-            spec={readPotVessel(pot, state, entity)}
-            emptyLabel="No blend on this seat yet"
+            layers={plant.layers}
+            spec={readProbeVessel(probe, state, entity)}
+            emptyLabel="No blend on this plant yet"
           />
-          <PlantExtra pot={pot} />
-          {seat.blend ? (
+          <PlantExtra probe={probe} />
+          {plant.blend ? (
             <p className="dsc-muted" style={{ marginTop: 10, fontSize: "var(--dsc-fs-sm)" }}>
-              {seat.blend}
+              {plant.blend}
             </p>
           ) : null}
         </Card>
@@ -385,6 +385,7 @@ export function PlantSeatPanel({
                     onChange={(e) => setNameDraft(e.target.value)}
                     onBlur={saveName}
                     placeholder="Plant nickname"
+                    autoComplete="off"
                   />
                 </label>
                 <label>
@@ -394,6 +395,7 @@ export function PlantSeatPanel({
                     onChange={(e) => setStrainDraft(e.target.value)}
                     onBlur={saveStrain}
                     placeholder="e.g. Gelato 33"
+                    autoComplete="off"
                   />
                 </label>
                 <label>
@@ -403,6 +405,7 @@ export function PlantSeatPanel({
                     onChange={(e) => setBlendDraft(e.target.value)}
                     onBlur={saveBlend}
                     placeholder="e.g. living soil / coco"
+                    autoComplete="off"
                   />
                 </label>
                 <label>
@@ -426,13 +429,13 @@ export function PlantSeatPanel({
                   </select>
                 </label>
                 <div className="dsc-chip-row">
-                  <StatusChip label={`Day ${seat.days || "—"}`} tone="muted" />
+                  <StatusChip label={`Day ${plant.days || "—"}`} tone="muted" />
                   <StatusChip
                     label={
-                      seat.stage && seat.stage !== "—"
-                        ? `Expected · ${seat.stage}`
-                        : seat.days && seat.days !== "—"
-                          ? `Expected (day ${seat.days})`
+                      plant.stage && plant.stage !== "—"
+                        ? `Expected · ${plant.stage}`
+                        : plant.days && plant.days !== "—"
+                          ? `Expected (day ${plant.days})`
                           : "No expected stage"
                     }
                     tone="muted"
@@ -474,15 +477,15 @@ export function PlantSeatPanel({
                   label={`Got M ${
                     moistHeld.stale
                       ? `${fmtReading(moistHeld.value, 0)}*`
-                      : seat.moisture
+                      : plant.moisture
                   }`}
                   tone={moistHeld.stale ? "warn" : "ok"}
                 />
-                <StatusChip label={`EC ${seat.ec}`} tone="muted" />
-                <StatusChip label={`pH ${seat.ph}`} tone="muted" />
+                <StatusChip label={`EC ${plant.ec}`} tone="muted" />
+                <StatusChip label={`pH ${plant.ph}`} tone="muted" />
                 <StatusChip
-                  label={seat.need}
-                  tone={seat.need !== "—" && seat.need !== "OK" ? "warn" : "ok"}
+                  label={plant.need}
+                  tone={plant.need !== "—" && plant.need !== "OK" ? "warn" : "ok"}
                 />
               </div>
               {hasWant && !genericStrain ? (
@@ -575,8 +578,8 @@ export function PlantSeatPanel({
               />
               <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: "var(--dsc-fs-sm)" }}>
                 {Number.isFinite(learnedEc)
-                  ? `Learned nutrient use: ${learnedEc.toFixed(3)} EC per moisture point, from this pot's own history.`
-                  : "EC over time shown — not enough history yet to learn this pot's nutrient use."}
+                  ? `Learned nutrient use: ${learnedEc.toFixed(3)} EC per moisture point, from this probe's own history.`
+                  : "EC over time shown — not enough history yet to learn this probe's nutrient use."}
               </p>
               <div className="dsc-chip-row" style={{ marginTop: 8 }}>
                 <Button onClick={() => setHist({ id: moistId, label: "Moisture", unit: "%" })}>
@@ -591,7 +594,7 @@ export function PlantSeatPanel({
           <div className="dsc-col-6">
             <Card className="dsc-glass" title="Nutrition">
               <p style={{ margin: "0 0 6px" }}>
-                {seat.recipe || "No recipe recorded for this plant — catalog doses shown only."}
+                {plant.recipe || "No recipe recorded for this plant — catalog doses shown only."}
               </p>
               <label className="dsc-seat-editors">
                 Notes
@@ -631,7 +634,7 @@ export function PlantSeatPanel({
                   label={`M ${liveGotMoist}`}
                   tone={moistHeld.stale ? "warn" : "muted"}
                 />
-                <StatusChip label={`T ${seat.soilTemp}`} tone="muted" />
+                <StatusChip label={`T ${plant.soilTemp}`} tone="muted" />
                 <StatusChip
                   label={`EC ${liveGotEc}`}
                   tone={ecHeld.stale ? "warn" : "muted"}
@@ -640,9 +643,9 @@ export function PlantSeatPanel({
                   label={`pH ${liveGotPh}`}
                   tone={phHeld.stale ? "warn" : "muted"}
                 />
-                <StatusChip label={`N ${seat.n}`} tone="muted" />
-                <StatusChip label={`P ${seat.p}`} tone="muted" />
-                <StatusChip label={`K ${seat.k}`} tone="muted" />
+                <StatusChip label={`N ${plant.n}`} tone="muted" />
+                <StatusChip label={`P ${plant.p}`} tone="muted" />
+                <StatusChip label={`K ${plant.k}`} tone="muted" />
               </div>
               <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: "var(--dsc-fs-sm)" }}>
                 NPK = trend indicators. Unavailable stays —. Held shows last good on blip.
@@ -653,13 +656,13 @@ export function PlantSeatPanel({
           <div className="dsc-col-12">
             <Card className="dsc-glass" title="Apply to tent">
               <p className="dsc-muted" style={{ marginTop: 0 }}>
-                Tent placement. Moves the plant seat; does not rewrite climate Want.
+                Tent placement. Moves this plant's probe between tents; does not rewrite climate Want.
               </p>
               <div className="dsc-seat-actions">
-                <Button primary={seat.tent === "clone"} onClick={() => setPendingTent("clone")}>
+                <Button primary={plant.tent === "clone"} onClick={() => setPendingTent("clone")}>
                   2×4
                 </Button>
-                <Button primary={seat.tent === "main"} onClick={() => setPendingTent("main")}>
+                <Button primary={plant.tent === "main"} onClick={() => setPendingTent("main")}>
                   4×8
                 </Button>
                 <Button onClick={() => setPendingTent("unassigned")}>Unassigned</Button>
@@ -686,10 +689,10 @@ export function PlantSeatPanel({
                 help={null}
               >
                 {pendingTent && pendingTent !== "unassigned" ? (
-                  <RehomeChecklist from={seat.tent} to={pendingTent} />
+                  <RehomeChecklist from={plant.tent} to={pendingTent} />
                 ) : null}
                 <p>
-                  Updates pot {pot} placement on the Twin. Climate Want is unchanged — use Climate or Compose for
+                  Updates {probeLabel(probe)} tent placement on Overview and Root. Climate Want is unchanged — use Climate or Compose for
                   targets.
                 </p>
                 {pendingTent === "clone" || pendingTent === "main" ? (
@@ -731,7 +734,7 @@ export function PlantSeatPanel({
                 onConfirm={() => {
                   void detachPlant();
                 }}
-                title={`Detach plant from ${probeLabel(pot)}?`}
+                title={`Detach plant from ${probeLabel(probe)}?`}
                 confirmLabel="Detach"
                 help={null}
               >
@@ -751,7 +754,7 @@ export function PlantSeatPanel({
                 help={null}
               >
                 <p>
-                  Leaves {probeLabel(pot)} vacant and places this plant on{" "}
+                  Leaves {probeLabel(probe)} vacant and places this plant on{" "}
                   {moveTo != null ? probeLabel(moveTo) : "the target probe"}.
                 </p>
               </DecisionLayer>
@@ -769,7 +772,7 @@ export function PlantSeatPanel({
                 Destroys this plant and empties its roster slot. Prefer Detach if you only need to free the probe.
               </p>
               <Button variant="danger" onClick={() => setRetireConfirm(true)}>
-                Delete plant from pot {pot}
+                Delete plant from {probeLabel(probe)}
               </Button>
               <DecisionLayer
                 open={retireConfirm}
@@ -777,13 +780,13 @@ export function PlantSeatPanel({
                 onConfirm={() => {
                   void retirePlant();
                 }}
-                title={`Delete plant on pot ${pot}?`}
+                title={`Delete plant on ${probeLabel(probe)}?`}
                 confirmLabel="Delete plant"
                 help={null}
               >
                 <p>
-                  Removes the plant from pot {pot} and its roster slot. Soil readings and probe stations stay; you can
-                  compose a new plant into this pot afterward.
+                  Removes the plant from {probeLabel(probe)} and its roster slot. Soil readings and probe stations stay; you can
+                  compose a new plant onto this probe afterward.
                 </p>
               </DecisionLayer>
               {retireErr ? (

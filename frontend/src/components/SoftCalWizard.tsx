@@ -7,7 +7,7 @@ import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleet } from "../hooks/useFleet";
 import { useFleetActions } from "../hooks/useFleetActions";
 import {
-  SOFT_CAL_POTS,
+  SOFT_CAL_PROBES,
   SAMPLE_COUNT,
   WATER_MOISTURE_TARGET,
   attachWaterOffsets,
@@ -18,7 +18,7 @@ import {
   softCalEntityIds,
   type SoftCalCaptureResult,
   type SoftCalPhase,
-  type SoftCalPot,
+  type SoftCalProbe,
 } from "../lib/softCalibrate";
 import { getSoftCalAdvice } from "../lib/fleetApi";
 import { softCalAssignmentChipLabel } from "../lib/probeAssignment";
@@ -31,8 +31,8 @@ function CaptureTable({ rows }: { rows: SoftCalCaptureResult[] }) {
   return (
     <div className="dsc-soft-cal-table">
       {rows.map((row) => (
-        <div key={row.pot} className="dsc-soft-cal-row">
-          <strong>P{row.pot}</strong>
+        <div key={row.probe} className="dsc-soft-cal-row">
+          <strong>P{row.probe}</strong>
           <span>M {fmt(row.average.moisture)}%</span>
           <span>T {fmt(row.average.soilTemp)}°C</span>
           <span>EC {fmt(row.average.ec, 0)}</span>
@@ -64,7 +64,7 @@ export function SoftCalWizard() {
   const { num, entity, state, available } = useEntityBus();
   const fleet = useFleet();
   const { callService } = useFleetActions();
-  const [selected, setSelected] = useState<SoftCalPot[]>([1, 2]);
+  const [selected, setSelected] = useState<SoftCalProbe[]>([1, 2]);
   const [phase, setPhase] = useState<SoftCalPhase>("water");
   const [knownPh, setKnownPh] = useState("7.0");
   const [knownEc, setKnownEc] = useState("");
@@ -84,10 +84,10 @@ export function SoftCalWizard() {
     setAiNote("");
     setAiBusy(true);
     try {
-      const pot = selected[0] ?? 1;
-      const ch = readSoftCalChannels(pot, num);
+      const probe = selected[0] ?? 1;
+      const ch = readSoftCalChannels(probe, num);
       const advice = await getSoftCalAdvice({
-        seat: `pot${pot}`,
+        seat: `pot${probe}`,
         got: {
           moisture_pct: ch.moisture,
           ph: ch.ph,
@@ -107,19 +107,19 @@ export function SoftCalWizard() {
     }
   };
 
-  const togglePot = (pot: SoftCalPot) => {
+  const toggleProbe = (probe: SoftCalProbe) => {
     setSelected((prev) => {
-      if (prev.includes(pot)) {
-        const next = prev.filter((p) => p !== pot);
+      if (prev.includes(probe)) {
+        const next = prev.filter((p) => p !== probe);
         return next.length ? next : prev;
       }
-      return [...prev, pot].sort((a, b) => a - b) as SoftCalPot[];
+      return [...prev, probe].sort((a, b) => a - b) as SoftCalProbe[];
     });
   };
 
-  const livePreview = selected.map((pot) => ({
-    pot,
-    channels: readSoftCalChannels(pot, num),
+  const livePreview = selected.map((probe) => ({
+    probe,
+    channels: readSoftCalChannels(probe, num),
   }));
 
   const runCapture = useCallback(async () => {
@@ -192,17 +192,17 @@ export function SoftCalWizard() {
 
   const applyOffsets = async () => {
     if (!pendingApply) return;
-    const blocked = pendingApply.filter((row) => softCalBlockedByDualStack(row.pot, state, available));
+    const blocked = pendingApply.filter((row) => softCalBlockedByDualStack(row.probe, state, available));
     if (blocked.length) {
-      const unknown = blocked.filter((b) => !available(softCalEntityIds(b.pot).dualCalStack));
-      const confirmed = blocked.filter((b) => available(softCalEntityIds(b.pot).dualCalStack));
+      const unknown = blocked.filter((b) => !available(softCalEntityIds(b.probe).dualCalStack));
+      const confirmed = blocked.filter((b) => available(softCalEntityIds(b.probe).dualCalStack));
       setStatus(
         [
           confirmed.length
-            ? `Blocked: dual_cal_stack on probe ${confirmed.map((b) => b.pot).join(", ")} — push SoftCal to ESP NVS and zero HA offsets first.`
+            ? `Blocked: dual_cal_stack on probe ${confirmed.map((b) => b.probe).join(", ")} — push SoftCal to ESP NVS and zero HA offsets first.`
             : null,
           unknown.length
-            ? `Blocked: dual_cal_stack unknown on probe ${unknown.map((b) => b.pot).join(", ")} — sensor not on the bus yet, cannot confirm it's safe to stack.`
+            ? `Blocked: dual_cal_stack unknown on probe ${unknown.map((b) => b.probe).join(", ")} — sensor not on the bus yet, cannot confirm it's safe to stack.`
             : null,
         ]
           .filter(Boolean)
@@ -218,23 +218,23 @@ export function SoftCalWizard() {
     try {
       for (const row of pendingApply) {
         if (!row.offsets) continue;
-        const ids = softCalEntityIds(row.pot);
+        const ids = softCalEntityIds(row.probe);
         await callService("input_number", "set_value", {
           entity_id: ids.offsetPh,
           value: roundOffset("ph", row.offsets.ph),
         });
-        written.push(`P${row.pot} pH`);
+        written.push(`P${row.probe} pH`);
         await callService("input_number", "set_value", {
           entity_id: ids.offsetMoisture,
           value: roundOffset("moisture", row.offsets.moisture),
         });
-        written.push(`P${row.pot} moisture`);
+        written.push(`P${row.probe} moisture`);
         if (Math.abs(row.offsets.ec) >= 1) {
           await callService("input_number", "set_value", {
             entity_id: ids.offsetEc,
             value: roundOffset("ec", row.offsets.ec),
           });
-          written.push(`P${row.pot} EC`);
+          written.push(`P${row.probe} EC`);
         }
       }
       setPendingApply(null);
@@ -291,22 +291,22 @@ export function SoftCalWizard() {
           label={phase === "water" ? "1 · Tap water" : "2 · After water"}
           tone={phase === "water" ? "warn" : "ok"}
         />
-        {SOFT_CAL_POTS.map((pot) => (
+        {SOFT_CAL_PROBES.map((probe) => (
           <button
-            key={pot}
+            key={probe}
             type="button"
-            className={`dsc-chip${selected.includes(pot) ? " dsc-chip--ok" : ""}`}
-            onClick={() => togglePot(pot)}
+            className={`dsc-chip${selected.includes(probe) ? " dsc-chip--ok" : ""}`}
+            onClick={() => toggleProbe(probe)}
           >
-            Probe {pot}
+            Probe {probe}
           </button>
         ))}
       </div>
       <div className="dsc-chip-row" style={{ marginBottom: 10 }}>
-        {selected.map((pot) => (
+        {selected.map((probe) => (
           <StatusChip
-            key={`assign-${pot}`}
-            label={`Probe ${pot} · ${softCalAssignmentChipLabel(pot, fleet, state, entity)}`}
+            key={`assign-${probe}`}
+            label={`Probe ${probe} · ${softCalAssignmentChipLabel(probe, fleet, state, entity)}`}
             tone="ok"
           />
         ))}
@@ -345,7 +345,7 @@ export function SoftCalWizard() {
         {livePreview
           .map(
             (row) =>
-              `P${row.pot} pH ${fmt(row.channels.ph, 2)} · M ${fmt(row.channels.moisture)}% · EC ${fmt(row.channels.ec, 0)}`,
+              `P${row.probe} pH ${fmt(row.channels.ph, 2)} · M ${fmt(row.channels.moisture)}% · EC ${fmt(row.channels.ec, 0)}`,
           )
           .join(" · ")}
         {phase === "water" ? ` · moisture target ${WATER_MOISTURE_TARGET}% in water` : ""}
@@ -414,7 +414,7 @@ export function SoftCalWizard() {
         help={null}
       >
         <p>
-          Writes <code>input_number.dsc_potN_offset_*</code> so Got = raw + offset. Does not stamp ESP lab cal. Moisture
+          Writes <code>input_number.dsc_probeN_offset_*</code> so Got = raw + offset. Does not stamp ESP lab cal. Moisture
           soft target in water is {WATER_MOISTURE_TARGET}%.
         </p>
         {pendingApply ? <CaptureTable rows={pendingApply} /> : null}
