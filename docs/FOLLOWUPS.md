@@ -4318,3 +4318,58 @@ Phases 0–5, 7 (docs) and 8 (canary) are code-complete and green on the dev box
 | — | Legacy container removal, `kit-manifest.json` bump, release cut | **gated** | After the Phase 6 gate passes on both layouts |
 
 ---
+
+## 2026-09-07 — ESPHome Pi gate (remote-deploy layout) — **GREEN with fixes** · SD layout **pending**
+
+**Branch:** `feat/esphome-completion` (committed, not pushed) · **Live Pi:** `dsc-brain` 192.168.86.48, compose brain 8.0.0 + host ESPHome venv 2026.6.5 · **Fleet before:** 8 seats on firmware 7.0.0.0 / ESPHome 2025.12.4 (old container builds) · **Fleet after:** 8 seats on **8.0.0.0 / 2026.6.5**, pot3/pot4 retired as designed.
+
+### Gate steps and evidence
+
+| # | Step | Result |
+|---|---|---|
+| 1 | Deploy (`deploy-brain.ps1` from the worktree; firmware/v4 + pi/ shipped as tarballs into `/opt/dsc-hub-repo`) | brain 8.0.0 rebuilt; `dsc-esphome-venv-setup` / `dsc-esphome-dashboard` / `dsc-esphome-update.path` active+enabled; `capabilities.json` published; `GET /settings/esphome/toolchain` → `build_backend: venv-host`, `secrets_present: true`, 403 GB free, canary seat `pot2` |
+| 2 | Compile from the brain (Probe 2) | dashboard WebSocket `/compile`, **SUCCESS in 624 s** (first ESP-IDF build on the Pi 4) |
+| 3 | **Canary** (`rollout?mode=canary`) | Probe 2 OTA upload 19.9 s, rejoined in ~50 s: `running 2026.6.5`, firmware 8.0.0.0, `canary.ok = true` — first live OTA through the SPA path |
+| 4a | **Update ESPHome** via the host helper | request.json → `dsc-esphome-update.path` → pip as `dsc`: venv **2026.6.5 → 2026.8.2** (after fixing host DNS, see below) |
+| 4b | ESPHome 2026.8.2 | `dsc-esphome-dashboard` crash-looped: *"The built-in dashboard has been removed from ESPHome"* — see finding 8 |
+| 4c | **Roll back** via the brain (`toolchain/rollback {target: 2026.6.5}`) with the dashboard down | helper ran pip, restarted the dashboard, `result.json` consumed, job done in 50 s; `:6052` back on 2026.6.5 |
+| 5 | **Release the rest** (`mode=rest`, hub last) | after fixes 10–14: dehumidifier, heater, heatmat, humidifier, Probe 1, panel, **hub** all compiled + flashed via `/compile` → `/upload`; hub upload 34 s, `device_info` = esphome 2026.6.5, compiled 2026-09-07 01:41:34, project 8.0.0.0 |
+| 6 | On-device (from the brain API) | hub `clock_valid` **true** with no HA on the network (SNTP-only clock proven), `emergency_failsafe` false, `fix_active` false, live tent/room/clone temps; panel online on 8.0.0.0; Probe 2 reading (24.1 % / 18.3 °C); Sonoffs online, relays follow the hub's demand switches (all off, Full Auto on, clone 23.5 °C) |
+| 7 | Disk | 403 GB free on the SSD before and after; PlatformIO cache 3.9 GB |
+| — | SD-bake layout | **not run** — needs a Linux bake host (`bake-on-linux.sh` → `bake-sd-image.sh`). Legacy `legacy-esphome` removal + release cut stay gated on it (decision 2026-09-06). |
+
+### Fourteen defects found live and fixed (all on the branch; tracker rows exist)
+
+1. `_run_job` fell through to the local CLI on `venv-host` → routed to the dashboard.
+2. `deploy-brain-remote.sh` wrote the **sudo password** into `/etc/dsc-hub/esphome.env` (`… | run_sudo tee`) → `install` from a temp file. *Consider rotating the Pi password.*
+3. Pi host had **no DNS** (dhcpcd empties `resolv.conf`; only containers resolved via Docker's pin) → static resolver + `nohook resolv.conf` (v1 with `static domain_name_servers` was not enough — it emptied again at 00:39 mid-reflash and failed the hub/Probe 1 builds).
+4. Helper left `request.json` → the `.path` unit re-fired pip in a loop → request consumed first.
+5. Helper crashed on non-UTF-8 pip output before writing its result → brain waited 20 min → decode with `replace` + failure result from the EXIT trap.
+6. Helper dir root-only → the `dsc` dashboard wrapper could not refresh capabilities → `dsc:dsc 0775`.
+7. Per-seat "running ESPHome" compared the product train to an ESPHome release → `device_info.esphome_version` for every role.
+8. **ESPHome 2026.8 removed the built-in dashboard**; Device Builder's API is one multiplexed `/ws` with named commands, not `/version` `/devices` `/compile` `/upload` → toolchain **capped below 2026.8** (`latest_supported`, "Newer ESPHome held back"), rollback usable with the dashboard down, never offered onto a dashboard-less release.
+9. **Panel did not compile** on 2026.6.5 — LVGL 9 dropped `lv_color_to32` → `lv_color_eq`.
+10. OTA via dashboard `/upload` only ships an existing binary; `/run` compiles + uploads then **tails the device log forever** → `/compile` then `/upload`.
+11. `queue_job` refused every seat after the first during a rollout → serial worker, only exact duplicates refused; jobs left `running` by a brain restart are reaped.
+12. The deploy script restarted the dashboard mid-flash → every queued job "Connection refused" → leaves a busy dashboard alone.
+13. (see 3, v2)
+14. **Hub did not compile** — `select.current_option()` is a `StringRef` since 2026.x → `.str()` / `.c_str()`.
+
+Process lesson: `esphome config` validates YAML only; lambda C++ breaks (9, 14) only show under `esphome compile`. The re-cut checklist and `bake-firmware.sh` compile every family for real.
+
+### Residuals / parks
+
+| Severity | Item | Status | Next step |
+|---|---|---|---|
+| P1 | **Toolchain ceiling 2026.7.x** — no Device Builder adapter | **open** | Adapter for `ws://…/ws` named commands (`config/version`, `devices/list`, `firmware/compile`, `firmware/upload`, `firmware/follow_job`), venv-setup installs `esphome-device-builder[esphome]`, wrapper launches it, helper reports `device_builder: true`, then lift `DASHBOARD_REMOVED_FROM` |
+| P1 | **SD-layout gate** not run | **open** | Linux bake host: `bake-on-linux.sh` (real bins + secrets) → `bake-sd-image.sh` → boot → same checks; then remove `legacy-esphome` + cut the release |
+| P2 | Probe 1 Modbus soil probe offline (`modbus_probe_online=false`, `sensor_fault=true`, **0 history points for ≥14 h before the reflash**) | **hardware, pre-existing** | Swap/reseat the JXCT probe / RS485 on Probe 1; Probe 2 reads fine on the same build |
+| P2 | Host DNS pin is site-specific (192.168.86.1) and lives in `bring-up-eth0.sh` | **open** | Kit bake: derive from the lease or ship only public fallbacks; fold `nohook resolv.conf` into `pi-bootstrap.sh`; re-check after reboot |
+| P2 | `last_built_esphome` is stamped when the rest is *queued*, not when it succeeds; a mostly-failed release cleared the banner and the canary record | **open** | Stamp on completion (worker), keep the banner while any seat is behind |
+| P3 | Hub `uptime` in `/fleet` stays at the value cached at first poll after boot (sensor rarely publishes inside the 5 s subscribe window) — temps update fine | **cosmetic** | Read `uptime` from `device_info`/a longer window, or drop it |
+| P3 | Panel OLED plant-name line and heat-mat root-zone soak not verifiable from the brain API | **needs eyes on the tent** | Rename a plant → check the OLED; watch mat votes on a cold night |
+| P3 | Kit hub stub (`dsc-hub-kit.yaml`) still needs a bench USB flash with fleet-heal + ESP-NOW-primary + fleet-setup on one image | **open** | Bench hub |
+| P3 | Manual fallback scripts converted but not exercised live | **open** | Run `flash-fleet-remote.sh` once for one seat |
+| — | Pi sudo password sat in a 0644 file for ~1 day (finding 2) | **advice** | Rotate |
+
+---
