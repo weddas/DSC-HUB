@@ -659,3 +659,17 @@ def test_device_versions_ignore_product_firmware_train(monkeypatch: pytest.Monke
     assert by["control"]["running"] is None and by["control"]["matches_installed"] is False
     assert by["pot2"]["running"] == "2026.6.5" and by["pot2"]["matches_installed"] is True
     assert by["heater"]["running"] is None  # 7.0.0.0 is the product train, not an ESPHome release
+
+
+def test_run_job_routes_to_dashboard_on_venv_host(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The shipping topology: no local CLI, host venv dashboard + helper → WebSocket path,
+    never the subprocess path (which fails with 'esphome CLI not found' in the container)."""
+    from dsc_brain import esphome_jobs as ej
+
+    monkeypatch.setattr(ej, "_local_esphome_available", lambda: False)
+    monkeypatch.setattr(ej, "build_backend", lambda: "venv-host")
+    seen: dict[str, Any] = {}
+    monkeypatch.setattr(ej, "_run_job_via_dashboard", lambda job, db=None: seen.update(job))
+    monkeypatch.setattr(ej.subprocess, "Popen", lambda *a, **k: (_ for _ in ()).throw(AssertionError("subprocess path used")))
+    ej._run_job({"job_id": "j-vh", "seat_id": "pot2", "action": "compile", "yaml_name": "dsc-pot2.yaml"}, temp_db)
+    assert seen.get("yaml_name") == "dsc-pot2.yaml"

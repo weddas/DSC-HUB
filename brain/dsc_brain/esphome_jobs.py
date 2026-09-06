@@ -169,7 +169,9 @@ def _run_job(job: dict[str, Any], db_path: Path | None = None) -> None:
     host = _inventory_host(seat_id)
     _update_job(job_id, "running", f"Running {action} for {seat_id}…", db_path)
     eb = esphome_bin()
-    if not _local_esphome_available() and build_backend() == "dashboard":
+    # No local CLI (the brain container): the dashboard IS the build service —
+    # whether it is the host venv unit (venv-host) or the legacy container (dashboard).
+    if not _local_esphome_available() and build_backend() in {"dashboard", "venv-host"}:
         _run_job_via_dashboard(job, db_path)
         return
     if action == "compile":
