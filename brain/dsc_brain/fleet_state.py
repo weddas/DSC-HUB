@@ -56,6 +56,58 @@ class SeatState:
     last_seen: float | None = None
 
 
+# Keys on a zigbee_by_role row that describe the binding, not a device datapoint.
+ZIGBEE_ROW_META_KEYS = frozenset(
+    {"friendly_name", "updated_at", "role", "zone", "ieee", "bound_stub", "kind", "last_topic", "last_seen"}
+)
+_ZIGBEE_FALLBACK_UNITS = {
+    "temperature": "°C",
+    "humidity": "%",
+    "battery": "%",
+    "linkquality": "lqi",
+    "voltage": "mV",
+    "illuminance": "lx",
+}
+
+
+def zigbee_role_slug(role: Any) -> str:
+    return str(role).lower().replace(" ", "_").replace("/", "_")[:48]
+
+
+def _zigbee_unit_for(key: str) -> str | None:
+    try:
+        from .zigbee_catalog import datapoint_unit
+
+        unit = datapoint_unit(key)
+    except Exception:  # noqa: BLE001 - reference data only
+        unit = None
+    return unit or _ZIGBEE_FALLBACK_UNITS.get(key)
+
+
+def zigbee_row_entities(slug: str, row: dict[str, Any]) -> list[tuple[str, Any, dict[str, Any] | None]]:
+    """(entity_id, value, attributes) for every datapoint on a zigbee_by_role row."""
+    out: list[tuple[str, Any, dict[str, Any] | None]] = []
+    role = str(row.get("role") or slug)
+    for key, value in row.items():
+        k = str(key).lower()
+        if k in ZIGBEE_ROW_META_KEYS or value is None or isinstance(value, (dict, list, tuple)):
+            continue
+        base: dict[str, Any] = {"zigbee_role": role, "zigbee_key": k}
+        if row.get("friendly_name"):
+            base["friendly_name"] = row.get("friendly_name")
+        if isinstance(value, bool):
+            out.append((f"binary_sensor.dsc_zigbee_{slug}_{k}", "on" if value else "off", base))
+        elif isinstance(value, (int, float)):
+            unit = _zigbee_unit_for(k)
+            attrs = dict(base)
+            if unit:
+                attrs["unit_of_measurement"] = unit
+            out.append((f"sensor.dsc_zigbee_{slug}_{k}", value, attrs))
+        elif isinstance(value, str):
+            out.append((f"sensor.dsc_zigbee_{slug}_{k}", value, base))
+    return out
+
+
 @dataclass
 class FleetState:
     version: str = EXPECTED_FIRMWARE
@@ -231,25 +283,23 @@ class FleetState:
         if self.canopy.get("rh_pct") is not None:
             set_entity("sensor.dsc_canopy_humidity", self.canopy["rh_pct"])
 
-        by_placement = (self.system or {}).get("zigbee_by_placement") or {}
-        for placement, row in by_placement.items():
-            if not isinstance(row, dict):
+        # Every datapoint of a *bound* Zigbee device becomes an entity the SPA and
+        # the automation rule engine can read: numbers -> sensor.dsc_zigbee_<role>_<key>,
+        # booleans -> binary_sensor.dsc_zigbee_<role>_<key> (on/off), enums/strings ->
+        # sensor. Unbound devices never reach zigbee_by_role, so they are never exposed.
+        # zigbee_by_placement is the legacy alias of zigbee_by_role (same slugs), so
+        # iterating both only overwrites identical ids.
+        system = self.system or {}
+        for bucket_key in ("zigbee_by_placement", "zigbee_by_role"):
+            bucket = system.get(bucket_key) or {}
+            if not isinstance(bucket, dict):
                 continue
-            slug = str(placement).lower().replace(" ", "_").replace("/", "_")[:48]
-            if row.get("temperature") is not None:
-                set_entity(f"sensor.dsc_zigbee_{slug}_temperature", row["temperature"])
-            if row.get("humidity") is not None:
-                set_entity(f"sensor.dsc_zigbee_{slug}_humidity", row["humidity"])
-
-        by_role = (self.system or {}).get("zigbee_by_role") or {}
-        for role, row in by_role.items():
-            if not isinstance(row, dict):
-                continue
-            slug = str(role).lower().replace(" ", "_").replace("/", "_")[:48]
-            if row.get("temperature") is not None:
-                set_entity(f"sensor.dsc_zigbee_{slug}_temperature", row["temperature"])
-            if row.get("humidity") is not None:
-                set_entity(f"sensor.dsc_zigbee_{slug}_humidity", row["humidity"])
+            for role, row in bucket.items():
+                if not isinstance(row, dict):
+                    continue
+                slug = zigbee_role_slug(role)
+                for eid, value, attrs in zigbee_row_entities(slug, row):
+                    set_entity(eid, value, attributes=attrs)
 
         return states
 

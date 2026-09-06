@@ -175,27 +175,78 @@ def set_compose_esphome_tag(tag: str, path: Path | None = None) -> tuple[bool, s
     return True, f"{p}: esphome/esphome:{cur} → esphome/esphome:{tag}"
 
 
+def fetch_json_bounded(url: str, timeout: float) -> dict[str, Any]:
+    """GET + JSON-decode `url` on a worker thread, hard-bounded to ~`timeout` seconds.
+
+    `urllib`'s timeout only covers connect/read — name resolution is unbounded, and on
+    a kit with no route out (or an unresolvable dashboard host) a single lookup can
+    stall for 5–30 s. The worker is a daemon thread: if it is still running when we
+    give up, it finishes (or fails) in the background and nothing waits on it.
+    Returns {"data": ...} or {"error": Exception}. Never raises.
+    """
+    box: dict[str, Any] = {}
+
+    def _run() -> None:
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "dsc-brain"})
+            with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
+                box["data"] = json.loads(resp.read().decode("utf-8"))
+        except Exception as exc:  # noqa: BLE001
+            box["error"] = exc
+
+    worker = threading.Thread(target=_run, daemon=True, name="dsc-fetch-json")
+    worker.start()
+    worker.join(timeout + 0.5)
+    if worker.is_alive() and "data" not in box and "error" not in box:
+        box["error"] = TimeoutError(f"{url} did not answer within {timeout:.0f}s (DNS or route)")
+    return box
+
+
+# Dashboard reachability memo: one probe per `_DASH_PROBE_TTL`, so status() (which asks
+# installed() *and* build_backend()) costs at most one bounded round-trip, and a box
+# whose dashboard is down is not re-probed on every SPA poll.
+_DASH_PROBE_TTL = 10.0
+_DASH_DOWN_TTL = 30.0
+_dash_probe_cache: dict[str, Any] = {"path": None, "data": None, "at": 0.0, "ok": False}
+_dash_probe_lock = threading.Lock()
+
+
 def _dash_get_one(base: str, path: str, timeout: float) -> Any:
     url = base.rstrip("/") + path
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "dsc-brain"})
-        with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
-            return json.loads(resp.read().decode("utf-8"))
-    except Exception:  # noqa: BLE001 — status must never raise
-        return None
+    box = fetch_json_bounded(url, timeout)
+    return box.get("data")
 
 
 def _dash_get(path: str, timeout: float = 4.0) -> Any:
     """GET JSON from the dashboard; None on any failure (offline / not deployed).
 
     Tries the configured base, then the legacy container name — so a kit part-way
-    through the venv-unit cutover keeps working whichever one is up.
+    through the venv-unit cutover keeps working whichever one is up. `/version`
+    probes are memoised (see `_DASH_PROBE_TTL` / `_DASH_DOWN_TTL`).
     """
+    now = time.time()
+    if path == "/version":
+        with _dash_probe_lock:
+            age = now - float(_dash_probe_cache["at"] or 0.0)
+            if _dash_probe_cache["path"] == path and (
+                (_dash_probe_cache["ok"] and age < _DASH_PROBE_TTL)
+                or (not _dash_probe_cache["ok"] and 0 <= age < _DASH_DOWN_TTL)
+            ):
+                return _dash_probe_cache["data"]
     primary = dashboard_api()
     data = _dash_get_one(primary, path, timeout)
     if data is None and primary != _LEGACY_DASHBOARD_API:
-        return _dash_get_one(_LEGACY_DASHBOARD_API, path, min(timeout, 2.0))
+        data = _dash_get_one(_LEGACY_DASHBOARD_API, path, min(timeout, 2.0))
+    if path == "/version":
+        with _dash_probe_lock:
+            _dash_probe_cache.update(path=path, data=data, at=now, ok=data is not None)
     return data
+
+
+def reset_dashboard_probe_cache() -> None:
+    """Forget the memoised /version probe (after an update job, a settings change, or in tests)."""
+    with _dash_probe_lock:
+        _dash_probe_cache.update(path=None, data=None, at=0.0, ok=False)
 
 
 def dashboard_devices() -> list[dict[str, Any]]:
@@ -292,11 +343,11 @@ def latest(*, force: bool = False) -> dict[str, Any]:
         with _latest_lock:
             _latest_cache.update(checked_at=now, ok=False, error=result["error"])
         return result
+    box = fetch_json_bounded(_PYPI_URL, _PYPI_TIMEOUT)
     try:
-        req = urllib.request.Request(_PYPI_URL, headers={"User-Agent": "dsc-brain"})
-        with urllib.request.urlopen(req, timeout=_PYPI_TIMEOUT) as resp:  # noqa: S310
-            data = json.loads(resp.read().decode("utf-8"))
-        ver = str(data["info"]["version"])
+        if "error" in box:
+            raise box["error"]
+        ver = str(box["data"]["info"]["version"])
         result.update(version=ver, ok=True)
         with _latest_lock:
             _latest_cache.update(version=ver, checked_at=now, ok=True, error=None)

@@ -219,7 +219,11 @@ async def _tick_once() -> None:
     elif now - _last_hub_ok > STALE_SEC:
         _logger.warning("hub demand stale >%ss — Sonoff failsafe OFF", int(STALE_SEC))
         for seat_id in set(DEMAND_TO_SEAT.values()):
-            await _set_sonoff_relay(seat_id, False, inventory)
+            # force=True: an out-of-service seat whose relay is physically ON (manual
+            # flip, operator /control/service write) must still go OFF when the hub
+            # goes dark — the in_service and cached-state guards are for demand
+            # mirroring, not for the safety cut-out.
+            await _set_sonoff_relay(seat_id, False, inventory, force=True)
             relays[seat_id] = False
         _relay_commanded.clear()
 

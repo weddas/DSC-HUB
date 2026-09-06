@@ -252,6 +252,13 @@ async def _sonoff_switch(entity_id: str, on: bool) -> dict[str, Any]:
         try:
             await client.connect(login=True)
             client.switch_command(key, on)
+            # Mirror the operator flip into the appliance driver's cache so its next
+            # 2 s tick compares hub demand against the *real* relay state and
+            # re-asserts — instead of early-returning on a stale cached value and
+            # letting the manual state persist until demand next changes.
+            from . import appliance_driver as _driver
+
+            _driver._relay_commanded[seat_id] = on
             return {"entity_id": entity_id, "state": "on" if on else "off"}
         finally:
             try:
