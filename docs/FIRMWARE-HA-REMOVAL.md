@@ -3,7 +3,52 @@
 The HA lab was retired 2026-09; the SPA/brain phases landed in PRs #181/#182.
 This file tracks the firmware layer.
 
-## Done (this PR — SNTP-only time)
+## Done (phase 2 — hub glass feeds off HA)
+
+`firmware/v4/dsc-hub-v4_0.yaml` no longer imports anything from a Home
+Assistant server:
+
+| Was | Now |
+|---|---|
+| `ha_plant_1..4` `platform: homeassistant` (read `text.dsc_probe{n}_plant_name`) | `api: actions: - action: set_plant_name(idx:int, name:string)` → `plant_name_{n}` → `script.execute: tx_names`. The brain pushes on every roster edit. |
+| `rootzone_temp_1..4` `platform: homeassistant` (mat-loop fallback source) | deleted. `pick()` / `live()` in the mat source-select are ESP-NOW-only (`rz_now_*` + `rz_now_*_at`, 150 s freshness gate) — the HA arg is gone from the lambdas and all 8 call sites. |
+| `substitutions:` `rootzone_temp_entity*`, `pot*_plant_entity` | removed (only the identity/secrets stub `substitutions:` remains). |
+| commented `zigbee_canopy_temp/rh` `platform: homeassistant` example | removed. |
+| `firmware/v4/dsc-control-ha-bus.yaml` (367-line HA-sensor bus, unreferenced by any Pi `packages:`) | `git rm`. |
+| `firmware/v4/dsc-control.yaml` comments referencing the HA bus | scrubbed. |
+
+**Brain side (`brain/dsc_brain/hub_native.py` + `compose_store.py`):**
+`push_plant_name(pot_n, name)` finds the hub's `set_plant_name` `UserService`
+via `list_entities_services()` and calls `client.execute_service(...)`.
+`push_plant_name_bg()` dispatches it fire-and-forget (task on a running loop,
+else a daemon thread; no-op in demo mode). `compose_store.set_helper()` fires
+it whenever `text.dsc_probe{1-4}_plant_name` changes — the same signal the
+retired `ha_plant_*` sensors used to read — so all existing roster-edit call
+sites (`assign_to_pot`, `update_pot_recipe`, `retire_plant`, plant-probe
+attach/detach) push automatically. Fail-closed: hub offline / action missing /
+non-hub inventory ⇒ the panel keeps its last name until the next good push.
+
+`homeassistant.event:` in `dsc-control-common.yaml` (`esphome.dsc_panel_hub_cmd`,
+panel → hub command channel over the native API) is **kept** — it is the live
+command path the brain consumes; the HA-shaped dialect on the brain is
+sanctioned (AGENTS.md).
+
+**Still requires a firmware re-cut + fleet reflash** — see rollout below. Not
+compile-verified here (no ESPHome toolchain on the dev box); `esphome config`
+per seat is the gate before rollout.
+
+### Verify on device (phase 2)
+- `esphome config firmware/v4/dsc-hub.yaml` (+ `dsc-hub-kit.yaml`) → exit 0.
+- Boot with **no HA on the network** (there is none) → hub boots clean, no
+  `platform: homeassistant` "waiting for API" log spam for plant / rootzone.
+- Rename a plant in the SPA → panel OLED plant-name line updates within a few
+  seconds (brain → `set_plant_name` → `tx_names` → ESP-NOW 0xD4). Retire a
+  plant → its line clears.
+- Heat-mat rootzone soak: cold-pot (mat holds), faulted-probe (excluded by
+  Mat Vote), stale ESP-NOW link (>150 s → `rz_stale` → soft fault → clone-air
+  fallback, no false "have a live probe" from a removed HA mirror).
+
+## Done (phase 1 — SNTP-only time)
 
 `platform: homeassistant` **time** sources removed from `firmware/v4/`:
 
@@ -17,6 +62,12 @@ Every `id(sntp_time).now().is_valid() || id(<ha>_time).now().is_valid()` →
 `id(sntp_time).now().is_valid()`, and every
 `auto now = id(sntp_time).now(); if (!now.is_valid()) now = id(<ha>_time).now();`
 → `auto now = id(sntp_time).now();` (hub ×3, control ×2, pot ×3).
+
+**Phase-1 follow-up (this PR):** #190 removed the `grow_time` *definition* from
+`dsc-hub-v4_0.yaml` but missed four `now = id(grow_time).now()` fallback call
+sites in the hub's included packages — `dsc-hub-espnow-primary.yaml` ×1,
+`dsc-hub-fleet-heal.yaml` ×3 — which left `id(grow_time)` dangling. Those
+lines are dropped here (same rationale).
 
 **Why this is behaviour-identical on the Pi product:** the HA time platform only
 syncs from a connected Home Assistant. There is none. `<ha>_time.now()` was never
@@ -34,80 +85,11 @@ fleet keeps the old (functionally identical) build until reflashed.
 - Panel OLED clock line renders once SNTP lands.
 - Pot cal-timestamp buttons (`Mark Soil Cal …`) stamp a real ISO time.
 
-## Remaining (needs the ESPHome toolchain + a device — NOT done here)
+## Remaining
 
-### 1. Hub `rootzone_temp_1..4` HA mirrors → delete
-
-`dsc-hub-v4_0.yaml` ~L3216–3245: four `platform: homeassistant` sensors
-(`${rootzone_temp_entity*}`) that refresh `last_valid_rootzone_time` and act as
-the mat-loop's *fallback* source when a pot's ESP-NOW link is stale (<150 s
-freshness gate).
-
-- The ESP-NOW leg (`rz_now_1..4`, ~L3474+) already advances
-  `last_valid_rootzone_time` on every plausible reading, so the HA mirror is a
-  dead fallback on the Pi.
-- **Deleting the sensors is not a one-liner:** `id(rootzone_temp).state` … are
-  the 3rd/4th argument of `pick(...)` (L4276–4279) and `live(...)`
-  (L5442–5445) in the mat source-select. Removing the sensors means dropping
-  that argument and simplifying both helpers to ESP-NOW-only. Compile + a
-  heat-mat soak (cold-pot, faulted-probe, stale-link cases) required.
-- Also drop the now-unused substitutions `rootzone_temp_entity*` (L65–68) and
-  the commented zigbee-mirror example (L3463–3471).
-
-### 2. Hub `ha_plant_1..4` → `api:` service + brain call
-
-`dsc-hub-v4_0.yaml` ~L2828–2855: reads `text.dsc_probe{N}_plant_name` from HA →
-`plant_name_{N}` → `tx_names` (ESP-NOW to the panel OLED). **This is the one
-inbound path with no ESP-NOW equivalent** — deleting it blind loses plant names
-on the panel glass.
-
-Replacement:
-
-```yaml
-# in the hub api: block
-api:
-  encryption:
-    key: ${api_key_val}
-  actions:
-    - action: set_plant_name
-      variables:
-        idx: int
-        name: string
-      then:
-        - lambda: |-
-            std::string n = name.size() > 16 ? name.substr(0, 16) : name;
-            switch (idx) {
-              case 1: id(plant_name_1) = n; break;
-              case 2: id(plant_name_2) = n; break;
-              case 3: id(plant_name_3) = n; break;
-              case 4: id(plant_name_4) = n; break;
-            }
-        - script.execute: tx_names
-```
-
-Brain side (`brain/dsc_brain/esphome_client.py`): on roster/assignment change,
-for each in-service kit pot call the native-API user service
-`set_plant_name(idx=<pot>, name=<plant display name or "">)`. The brain already
-holds the native-API client to the hub; add an `execute_service` call keyed off
-the same signal that currently drives `text.dsc_probe{N}_plant_name`.
-
-Then delete the `ha_plant_1..4` sensor blocks + the `pot{N}_plant_entity`
-substitutions (L71–74).
-
-### 3. `dsc-control-common.yaml` `homeassistant.event:` (~L4429)
-
-Panel → hub command path (`esphome.dsc_panel_hub_cmd` event over the native
-API). The comment says "ESP-NOW TX parked", so this event **is** the live
-command channel and the brain consumes it (HA-shaped dialect on the brain is
-sanctioned — AGENTS.md). **Leave in place.** If ESP-NOW TX is later un-parked,
-revisit.
-
-### 4. `dsc-control-ha-bus.yaml`
-
-367-line file of `platform: homeassistant` sensors feeding `gv_*` for the studio
-Wi-Fi cutover. **Not referenced by any `packages:` in the Pi build**
-(`dsc-control.yaml` includes only `wifi` + `panel`). Safe to `git rm` as retired
-lab reference, or keep it clearly marked lab-only. No fleet impact either way.
+Nothing on the firmware layer. `homeassistant.event:` in `dsc-control-common.yaml`
+is intentionally retained (see phase 2 note above) as the panel → hub command
+channel. If ESP-NOW TX is later un-parked, revisit it then.
 
 ## Rollout
 

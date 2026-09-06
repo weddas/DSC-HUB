@@ -2,14 +2,25 @@
 
 ## Unreleased
 
+- **Firmware HA removal (phase 2: hub glass feeds)** — `dsc-hub-v4_0` no longer
+  imports from a Home Assistant server. `ha_plant_1..4` (panel OLED plant names)
+  is replaced by a native-API action `set_plant_name(idx, name)` that the brain
+  pushes on every roster edit (`hub_native.push_plant_name*` + a `set_helper`
+  hook on `text.dsc_probe{n}_plant_name`, fail-closed, no-op in demo).
+  `rootzone_temp_1..4` HA mirrors are deleted and the mat-loop `pick()`/`live()`
+  source-select is ESP-NOW-only (`rz_now_*`, 150 s freshness). Dropped the HA
+  substitutions, the commented zigbee-mirror example, and `dsc-control-ha-bus.yaml`
+  (unreferenced). `homeassistant.event` (panel → hub command channel) stays.
+  Not compile-verified — needs `esphome config` per seat + a re-cut/reflash;
+  see `docs/FIRMWARE-HA-REMOVAL.md`.
 - **Firmware HA removal (phase 1: time)** — dropped the `platform: homeassistant`
   backup time source (`grow_time` / `ha_time`) from `dsc-hub-v4_0`,
   `dsc-control-common`, `dsc-pot-common`. It never synced on the HA-less Pi, so
   `clock_valid` is now `sntp_time` alone and the `if (!now.is_valid()) now =
   ha_time.now()` fallbacks are gone — behaviour-identical, needs a re-cut +
-  reflash to land. Remaining firmware HA coupling (hub `ha_plant_*` →
-  `api:` service, `rootzone_temp_*` HA mirrors → ESP-NOW-only) is spec'd in
-  `docs/FIRMWARE-HA-REMOVAL.md` — it needs the ESPHome toolchain + a device.
+  reflash to land. Also mops up 4 `id(grow_time)` fallback call sites in
+  `dsc-hub-espnow-primary` / `dsc-hub-fleet-heal` that #190 left dangling
+  when it removed the `grow_time` definition.
 
 - **ESPHome toolchain** — firmware pins `esphome: min_version: "2026.6.5"` across all
   device families (`dsc-hub-v4_0`, `dsc-control-common`, `dsc-pot-common`,

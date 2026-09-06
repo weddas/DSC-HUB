@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 from typing import Any
 
@@ -112,6 +113,25 @@ def set_helper(entity_id: str, value: Any) -> None:
             value = "off"
     data[entity_id] = value
     _save_helpers(data)
+    _mirror_plant_name_to_hub(entity_id, value)
+
+
+_PROBE_PLANT_NAME_RE = re.compile(r"^text\.dsc_probe([1-4])_plant_name$")
+
+
+def _mirror_plant_name_to_hub(entity_id: str, value: Any) -> None:
+    """Replaces the retired `platform: homeassistant` ha_plant_{n} feed: when a
+    probe plant name changes, push it to the hub's `set_plant_name` native-API
+    action so the panel OLED tracks the roster. Best-effort, never raises."""
+    m = _PROBE_PLANT_NAME_RE.match(entity_id or "")
+    if not m:
+        return
+    try:
+        from .hub_native import push_plant_name_bg
+
+        push_plant_name_bg(int(m.group(1)), "" if value is None else str(value))
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def all_helpers() -> dict[str, Any]:
