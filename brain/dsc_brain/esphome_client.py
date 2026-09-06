@@ -145,14 +145,27 @@ class EsphomeIngest:
 
         for seat_id, row in seat_order:
             role = row.get("role", "")
-            if not row.get("in_service"):
-                self._mark_oos_seat(state, seat_id, role, prev)
-                continue
             host = row.get("host") or os.environ.get(f"DSC_{seat_id.upper()}_HOST")
             api_key = row.get("api_key") or os.environ.get(f"DSC_{seat_id.upper()}_API_KEY", "")
             # Panel firmware disables Noise (RAM); plaintext API only.
             if role == "panel":
                 api_key = row.get("api_key") or ""
+            if not row.get("in_service"):
+                # in_service gates WRITES, not observation. An out-of-service Sonoff
+                # whose relay is physically ON is exactly the state the failsafe exists
+                # for, so keep reading it (read-only) instead of going blind.
+                if role.startswith("sonoff") and host:
+                    try:
+                        readings = await _fetch_device(host, api_key or "", role, seat_id)
+                        self._apply_readings(state, seat_id, role, readings)
+                        seat = state.sonoffs.get(seat_id)
+                        if seat is not None:
+                            seat.values["in_service"] = False
+                        continue
+                    except Exception as exc:  # noqa: BLE001
+                        _logger.debug("ESPHome OOS %s @ %s: %s", seat_id, host, exc)
+                self._mark_oos_seat(state, seat_id, role, prev)
+                continue
             if not host:
                 continue
             polled = False
@@ -173,16 +186,25 @@ class EsphomeIngest:
             "Hub demand poll freshness; not per-Sonoff reachability"
         )
         state.system["relays"] = dict(appliance.get("relays", {}))
+        state.system["relay_demand"] = dict(appliance.get("demand", {}))
         relay_poll_ts = time.time()
-        for seat_id, relay_on in appliance.get("relays", {}).items():
-            sonoff = state.sonoffs.get(seat_id)
-            if sonoff is not None:
-                sonoff.values["relay_on"] = relay_on
-            # Every other metric is recorded on every poll (see the blanket loop above);
-            # relay_on was command-triggered only, so a manual/fault-driven state change
-            # with no matching brain command was never recorded. Record the observed
-            # state here too so relay history reflects reality, not just brain intent.
-            record_history(seat_id, "relay_on", 1.0 if relay_on else 0.0, relay_poll_ts)
+        commanded_map = appliance.get("relays", {}) or {}
+        demand_map = appliance.get("demand", {}) or {}
+        for seat_id, sonoff in state.sonoffs.items():
+            cmd = commanded_map.get(seat_id)
+            dem = demand_map.get(seat_id)
+            if cmd is not None:
+                sonoff.values["relay_commanded"] = bool(cmd)
+            if dem is not None:
+                sonoff.values["relay_demand"] = bool(dem)
+            # relay_on is the device's own polled contact state (see _fetch_device);
+            # it is never overwritten from the driver. History records the observed
+            # state when the seat was polled, else the last command as the best proxy.
+            observed = sonoff.values.get("relay_on")
+            if isinstance(observed, bool) and sonoff.online:
+                record_history(seat_id, "relay_on", 1.0 if observed else 0.0, relay_poll_ts)
+            elif cmd is not None:
+                record_history(seat_id, "relay_on", 1.0 if cmd else 0.0, relay_poll_ts)
 
         _finalize_hub_binaries(state)
         return state
@@ -464,6 +486,16 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
                         binaries[bin_field] = raw in (True, "on", "ON", 1, "1")
                 if binaries:
                     values["binaries"] = binaries
+
+            elif role.startswith("sonoff"):
+                # Physical relay state straight from the device — the only honest
+                # source (the appliance driver knows what it commanded, the hub what
+                # it demands; neither is the contact).
+                for key, st in states.items():
+                    if key_to_object.get(key, "") == "main_relay":
+                        raw = getattr(st, "state", None)
+                        values["relay_on"] = raw in (True, "on", "ON", 1, "1")
+                        break
 
             # Product firmware stamp from Firmware Version text sensor (all roles).
             for key, st in states.items():

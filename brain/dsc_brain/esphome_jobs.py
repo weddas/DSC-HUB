@@ -31,10 +31,12 @@ CREATE TABLE IF NOT EXISTS esphome_jobs (
 SEAT_YAML: dict[str, str] = {
     "hub": "dsc-hub.yaml",
     "control": "dsc-control.yaml",
-    "pot1": "DSC-Probe1.yaml",
-    "pot2": "DSC-Probe2.yaml",
-    "pot3": "DSC-Probe3.yaml",
-    "pot4": "DSC-Probe4.yaml",
+    # Probe devices renamed to dsc_probeN but the YAML files stay dsc-potN.yaml
+    # (same map as services/dsc-hub/pi/flash-fleet-remote.sh).
+    "pot1": "dsc-pot1.yaml",
+    "pot2": "dsc-pot2.yaml",
+    "pot3": "dsc-pot3.yaml",
+    "pot4": "dsc-pot4.yaml",
     "heater": "dsc-heater.yaml",
     "heatmat": "dsc-heatmat.yaml",
     "humidifier": "dsc-humidifier.yaml",
@@ -281,6 +283,13 @@ def queue_job(seat_id: str, action: str, db_path: Path | None = None) -> dict[st
     yaml_name = SEAT_YAML.get(seat_id)
     if not yaml_name:
         raise KeyError(seat_id)
+    # Fail at the button, not 20 s later in the worker: when the firmware tree is
+    # visible from here, the mapped file must exist. (The dashboard backend builds
+    # from the host's tree, which the brain container may not see - then skip.)
+    pd = project_dir()
+    if pd.is_dir() and not (pd / yaml_name).is_file():
+        have = sorted(f.name for f in pd.glob("dsc-*.yaml"))[:12]
+        raise ValueError(f"{yaml_name} not found in {pd} (have: {', '.join(have)} ...)")
     conn = connect(db_path)
     _ensure_jobs(conn)
     running = conn.execute(

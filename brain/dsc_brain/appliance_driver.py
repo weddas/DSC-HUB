@@ -204,9 +204,10 @@ async def _tick_once() -> None:
     hub_row = inventory.get("hub")
     now = time.time()
     relays: dict[str, bool] = dict(_relay_commanded)
+    demand_map: dict[str, bool] = {}
 
     if not hub_row or not hub_row.get("in_service"):
-        _publish_status(False, relays, now)
+        _publish_status(False, relays, now, demand_map)
         return
 
     demands = await _read_hub_demands(hub_row)
@@ -214,8 +215,16 @@ async def _tick_once() -> None:
         _last_hub_ok = now
         for object_id, on in demands.items():
             seat_id = DEMAND_TO_SEAT[object_id]
+            demand_map[seat_id] = on
             await _set_sonoff_relay(seat_id, on, inventory)
-            relays[seat_id] = on
+            # Publish what was actually COMMANDED, never the demand: an out-of-service
+            # seat (or a cache hit) is skipped above, and reporting the demand for it
+            # painted "ON" on relays the driver never touched.
+            cmd = _relay_commanded.get(seat_id)
+            if cmd is None:
+                relays.pop(seat_id, None)
+            else:
+                relays[seat_id] = cmd
     elif now - _last_hub_ok > STALE_SEC:
         _logger.warning("hub demand stale >%ss — Sonoff failsafe OFF", int(STALE_SEC))
         for seat_id in set(DEMAND_TO_SEAT.values()):
@@ -228,14 +237,23 @@ async def _tick_once() -> None:
         _relay_commanded.clear()
 
     hub_fresh = demands is not None or (now - _last_hub_ok <= STALE_SEC)
-    _publish_status(hub_fresh and _last_hub_ok > 0, relays, now)
+    _publish_status(hub_fresh and _last_hub_ok > 0, relays, now, demand_map)
 
 
-def _publish_status(hub_ok: bool, relays: dict[str, bool], now: float) -> None:
+def _publish_status(
+    hub_ok: bool,
+    relays: dict[str, bool],
+    now: float,
+    demand: dict[str, bool] | None = None,
+) -> None:
+    """`relays` = last state the driver COMMANDED per seat; `demand` = the hub's demand
+    this tick. Neither is the physical relay — esphome_client polls that into
+    ``SeatState.values["relay_on"]``."""
     global _status
     _status = {
         "hub_ok": hub_ok,
         "relays": relays,
+        "demand": dict(demand or {}),
         "last_hub_seen": _last_hub_ok if _last_hub_ok > 0 else None,
         "updated_at": now,
     }
