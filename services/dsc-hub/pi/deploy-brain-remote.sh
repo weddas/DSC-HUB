@@ -78,7 +78,13 @@ DSC_ESPHOME_OPS_DIR=%s/ops
   run_sudo systemctl daemon-reload
   run_sudo systemctl enable --now dsc-esphome-venv-setup.service dsc-esphome-dashboard.service || true
   run_sudo systemctl enable --now dsc-esphome-update.path || true
-  run_sudo systemctl restart dsc-esphome-dashboard.service || true
+  # Restarting the dashboard mid-compile/OTA kills that job and makes every queued
+  # job fail "Connection refused" (live 2026-09-07). Only bounce it when idle.
+  if pgrep -f 'esphome (run|compile|upload)' >/dev/null 2>&1; then
+    echo "  esphome job in progress — leaving dsc-esphome-dashboard alone (restart it later if the unit changed)"
+  else
+    run_sudo systemctl restart dsc-esphome-dashboard.service || true
+  fi
   # Publish capabilities now (venv version / secrets / disk) so the brain's first
   # /settings/esphome/toolchain after this deploy already reads venv-host.
   run_sudo env DSC_ESPHOME_PROJECT_DIR="${REPO}/firmware/v4" DSC_ESPHOME_OPS_DIR="${DSC_DATA_ROOT}/ops"     /opt/dsc-hub/pi/dsc-esphome-host.sh capabilities || true
