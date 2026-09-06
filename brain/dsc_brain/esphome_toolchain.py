@@ -46,7 +46,7 @@ _PYPI_TIMEOUT = 4.0
 
 _VERSION_RE = re.compile(r"(\d+\.\d+\.\d+)")
 # An ESPHome release string (2026.6.5), as opposed to the product train (8.0.0.0).
-_ESPHOME_RELEASE_RE = re.compile(r"^20\d{2}\.\d{1,2}\.\d{1,3}(?:[-.].*)?$")
+_ESPHOME_RELEASE_RE = re.compile(r"^20\d{2}\.\d{1,2}\.\d{1,3}(?![\d.])")  # allows the " (build stamp)" suffix
 
 _latest_cache: dict[str, Any] = {"version": None, "checked_at": 0.0, "ok": False}
 _latest_lock = threading.Lock()
