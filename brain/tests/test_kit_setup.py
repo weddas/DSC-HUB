@@ -1,5 +1,6 @@
 """Kit SD installer / setup health tests (8.0.0)."""
 
+import time
 from pathlib import Path
 
 import pytest
@@ -129,9 +130,48 @@ def test_full_update_rejected_without_ethernet() -> None:
         start_full_update(eth_up=False)
 
 
-def test_full_update_accepted_with_ethernet() -> None:
+def test_full_update_manual_when_no_command_configured(
+    temp_db, monkeypatch
+) -> None:
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
     from dsc_brain.kit_update import start_full_update
 
     out = start_full_update(eth_up=True)
-    assert out["status"] == "accepted"
+    # No brain_update_cmd set -> tell the operator to deploy manually, don't guess.
+    assert out["status"] == "manual"
     assert out["can_full_pull"] is True
+    assert "deploy" in out["detail"].lower()
+
+
+def test_full_update_runs_configured_command(temp_db, monkeypatch) -> None:
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain import kit_update
+    from dsc_brain.settings import set_setting
+
+    set_setting("brain_update_cmd", "python -c \"print('deployed ok')\"")
+    out = kit_update.start_full_update(eth_up=True)
+    assert out["status"] == "accepted"
+    for _ in range(50):
+        if kit_update.full_update_job()["status"] in ("done", "failed"):
+            break
+        time.sleep(0.1)
+    job = kit_update.full_update_job()
+    assert job["status"] == "done"
+    assert "deployed ok" in job["detail"]
+
+
+def test_update_status_offline_safe_and_fleet_diff(temp_db, monkeypatch) -> None:
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain import kit_update
+
+    # Deterministic offline: no GitHub lookup, no raise.
+    monkeypatch.setattr(kit_update, "eth_carrier_up", lambda: False)
+    kit_update._gh_cache.update(tag=None, checked_at=0.0, ok=False, error=None)
+
+    s = kit_update.update_status()
+    assert s["brain"]["ok"] is False
+    assert s["brain"]["update_available"] is False
+    assert "offline" in str(s["brain"]["error"]).lower()
+    assert "expected_firmware" in s["fleet"]
+    assert isinstance(s["fleet"]["devices"], list)
+    assert isinstance(s["fleet"]["behind_count"], int)
