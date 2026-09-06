@@ -22,6 +22,7 @@ import { inventoryGroup, pickSettings, resolveSeat, taskParamDefaults } from "..
 import { ZigbeeBindRow } from "../components/settings/ZigbeeBindRow";
 import { SettingsTable, SettingsRow } from "../components/settings/SettingsTable";
 import { ZigbeeCatalogCard } from "../components/settings/ZigbeeCatalogCard";
+import { AutomationRulesCard } from "../components/settings/AutomationRulesCard";
 import { SpaceEnergySettingsCard } from "../components/settings/SpaceEnergySettingsCard";
 import {
   apply_network,
@@ -1048,6 +1049,10 @@ export function SettingsPage() {
       <section hidden={section !== "brain"}>
         <SpaceEnergySettingsCard />
       </section>
+
+      {section === "brain" ? (
+        <AutomationRulesCard seats={inventory.map((r) => String(r.seat_id)).filter(Boolean)} />
+      ) : null}
 
       <section className="dsc-card" hidden={section !== "device" && section !== "server"}>
         <h3>ESPHome</h3>
