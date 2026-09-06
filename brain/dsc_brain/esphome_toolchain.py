@@ -45,6 +45,13 @@ _PYPI_FAIL_TTL = 15 * 60.0  # after a failed lookup, don't re-hit PyPI for 15 mi
 _PYPI_TIMEOUT = 4.0
 
 _VERSION_RE = re.compile(r"(\d+\.\d+\.\d+)")
+# ESPHome 2026.8 removed the built-in `esphome dashboard` (the build service the
+# brain drives over :6052) in favour of the separate `esphome-device-builder`
+# package, whose API is a single multiplexed WebSocket with named commands — not
+# the /version, /devices, /compile, /upload routes esphome_jobs speaks. Until a
+# Device Builder adapter exists and is verified, the toolchain must not move past
+# this boundary: a bump to 2026.8.2 took the live dashboard down (2026-09-06).
+DASHBOARD_REMOVED_FROM = "2026.8.0"
 # An ESPHome release string (2026.6.5), as opposed to the product train (8.0.0.0).
 _ESPHOME_RELEASE_RE = re.compile(r"^20\d{2}\.\d{1,2}\.\d{1,3}(?![\d.])")  # allows the " (build stamp)" suffix
 
@@ -364,7 +371,13 @@ def latest(*, force: bool = False) -> dict[str, Any]:
                 }
 
     eth = eth_carrier_up()
-    result = {"version": _latest_cache.get("version"), "checked_at": now, "ok": False, "eth_up": eth}
+    result = {
+        "version": _latest_cache.get("version"),
+        "supported": _latest_cache.get("supported"),
+        "checked_at": now,
+        "ok": False,
+        "eth_up": eth,
+    }
     if not eth:
         result["error"] = "offline (no ethernet carrier)"
         with _latest_lock:
@@ -375,14 +388,54 @@ def latest(*, force: bool = False) -> dict[str, Any]:
         with urllib.request.urlopen(req, timeout=_PYPI_TIMEOUT) as resp:  # noqa: S310
             data = json.loads(resp.read().decode("utf-8"))
         ver = str(data["info"]["version"])
-        result.update(version=ver, ok=True)
+        supported = _latest_supported_from_releases(data.get("releases") or {}, ver)
+        result.update(version=ver, ok=True, supported=supported)
         with _latest_lock:
-            _latest_cache.update(version=ver, checked_at=now, ok=True, error=None)
+            _latest_cache.update(version=ver, supported=supported, checked_at=now, ok=True, error=None)
     except Exception as exc:  # noqa: BLE001 — network/JSON, must not break the endpoint
         result["error"] = f"pypi lookup failed: {exc}"
         with _latest_lock:
             _latest_cache.update(checked_at=now, ok=False, error=result["error"])
     return result
+
+
+def _supported_from(lat: dict[str, Any]) -> str | None:
+    """The update target a `latest()` answer allows: its `supported` release, else
+    its plain `version` when that is still below the dashboard-removal boundary."""
+    if not lat.get("ok"):
+        return None
+    sup = lat.get("supported")
+    if sup:
+        return str(sup)
+    ver = lat.get("version")
+    if ver and (device_builder_supported() or _vtuple(str(ver)) < _vtuple(DASHBOARD_REMOVED_FROM)):
+        return str(ver)
+    return None
+
+
+def device_builder_supported() -> bool:
+    """True once the host helper reports an installed, verified Device Builder."""
+    caps = host_capabilities() or {}
+    return bool(caps.get("device_builder"))
+
+
+def _latest_supported_from_releases(releases: dict[str, Any], latest: str) -> str | None:
+    """Newest PyPI release the current build service can run: everything below the
+    dashboard-removal boundary, or simply `latest` once Device Builder is supported."""
+    if device_builder_supported():
+        return latest
+    bound = _vtuple(DASHBOARD_REMOVED_FROM)
+    best: tuple[int, ...] | None = None
+    best_s: str | None = None
+    for ver, files in releases.items():
+        if not _ESPHOME_RELEASE_RE.match(ver) or not files:
+            continue
+        if any(f.get("yanked") for f in files if isinstance(f, dict)):
+            continue
+        t = _vtuple(ver)
+        if t < bound and (best is None or t > best):
+            best, best_s = t, ver
+    return best_s
 
 
 def _vtuple(v: str | None) -> tuple[int, ...]:
@@ -479,7 +532,12 @@ def status(*, force_latest: bool = False) -> dict[str, Any]:
     lat = latest(force=force_latest)
     mn = min_version()
     last_built = get_setting("last_built_esphome", "").strip()
-    update_available = bool(lat.get("ok") and inst and _vtuple(lat["version"]) > _vtuple(inst))
+    latest_supported = _supported_from(lat)
+    update_available = bool(latest_supported and inst and _vtuple(latest_supported) > _vtuple(inst))
+    latest_blocked = bool(
+        lat.get("ok") and lat.get("version") and latest_supported
+        and _vtuple(lat["version"]) > _vtuple(latest_supported)
+    )
     devices = device_versions()
     behind = [d for d in devices if d["running"] and not d["matches_installed"]]
     backend = build_backend()
@@ -488,6 +546,14 @@ def status(*, force_latest: bool = False) -> dict[str, Any]:
     return {
         "installed": inst,
         "latest": lat.get("version"),
+        "latest_supported": latest_supported,
+        "latest_blocked_reason": (
+            f"ESPHome {lat.get('version')} removed the built-in dashboard (from {DASHBOARD_REMOVED_FROM}); "
+            "the build service needs ESPHome Device Builder, which this kit does not run yet"
+            if latest_blocked else None
+        ),
+        "dashboard_removed_from": DASHBOARD_REMOVED_FROM,
+        "device_builder": device_builder_supported(),
         "latest_ok": bool(lat.get("ok")),
         "latest_error": lat.get("error"),
         "min_version": mn,
@@ -648,16 +714,24 @@ def rollback_target(db_path: Path | None = None, inst: str | None = None) -> str
     "Roll back to X" when it is still >= the pinned min and != what is installed."""
     conn = connect(db_path)
     _ensure_jobs(conn)
-    row = conn.execute(
-        "SELECT from_version FROM esphome_toolchain_jobs WHERE status='done' "
-        "AND from_version<>'' AND to_version<>'' AND from_version<>to_version "
-        "ORDER BY created_at DESC LIMIT 1"
-    ).fetchone()
+    inst = inst if inst is not None else installed()
+    rows = conn.execute(
+        "SELECT status, from_version, to_version FROM esphome_toolchain_jobs "
+        "WHERE from_version<>'' AND to_version<>'' AND from_version<>to_version "
+        "ORDER BY created_at DESC LIMIT 10"
+    ).fetchall()
     conn.close()
+    row = None
+    for r in rows:
+        # A 'done' change, or any job whose target the venv actually reached — the
+        # live 2026-09-06 update moved the venv and then failed on the dashboard
+        # restart, which must still be roll-back-able from the card.
+        if r[0] == "done" or (inst and _vtuple(str(r[2])) == _vtuple(inst)):
+            row = (r[1],)
+            break
     if not row:
         return None
     prev = str(row[0])
-    inst = inst if inst is not None else installed()
     if inst and _vtuple(prev) == _vtuple(inst):
         return None
     if _vtuple(prev) < _vtuple(min_version()):
@@ -933,13 +1007,18 @@ def update_to_latest(
         tgt = target.strip()
     else:
         lat = latest(force=True)
-        tgt = lat.get("version") if lat.get("ok") else None
+        tgt = _supported_from(lat)
     if not tgt:
-        raise ValueError("could not determine latest esphome from PyPI")
+        raise ValueError("could not determine the latest supported esphome from PyPI")
     if _vtuple(tgt) < _vtuple(min_version()):
         raise RuntimeError(f"refusing: {tgt} is below the pinned min_version {min_version()}")
     if inst and _vtuple(tgt) == _vtuple(inst):
         raise RuntimeError(f"ESPHome {inst} is already installed")
+    if _vtuple(tgt) >= _vtuple(DASHBOARD_REMOVED_FROM) and not device_builder_supported():
+        raise RuntimeError(
+            f"refusing: ESPHome {tgt} has no built-in dashboard (removed in {DASHBOARD_REMOVED_FROM}); "
+            "the Pi build service would go down. Device Builder support is not installed on this kit yet."
+        )
     if inst and not allow_downgrade and _vtuple(tgt) < _vtuple(inst):
         raise RuntimeError(
             f"refusing: {tgt} is older than the installed {inst} — use the rollback action"
