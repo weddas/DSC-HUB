@@ -739,13 +739,47 @@ def test_esphome_toolchain_update_refuses_offline(
         tc.update_to_latest(db_path=temp_db)
 
 
-def test_esphome_toolchain_update_refuses_on_container_backend(
-    temp_db: Path, monkeypatch: pytest.MonkeyPatch
+def test_esphome_toolchain_update_container_backend_bumps_compose(
+    tmp_path: Path, temp_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Container backend + no `docker` here: bump the compose image tag and hand
+    back the redeploy steps (no exception, no thread)."""
+    from dsc_brain import esphome_toolchain as tc
+
+    compose = tmp_path / "docker-compose.yml"
+    compose.write_text(
+        "services:\n  esphome:\n    image: esphome/esphome:2026.6.5\n    ports:\n      - 6052\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("DSC_ESPHOME_COMPOSE_FILE", str(compose))
+    monkeypatch.setattr(tc, "build_backend", lambda: "dashboard")
+    monkeypatch.setattr(tc, "eth_carrier_up", lambda: True)
+    monkeypatch.setattr(tc, "installed", lambda: "2026.6.5")
+    monkeypatch.setattr(
+        tc, "latest", lambda *, force=False: {"version": "2026.8.2", "ok": True, "eth_up": True}
+    )
+    monkeypatch.setattr(tc.shutil, "which", lambda _name: None)  # no docker on the test host
+
+    out = tc.update_to_latest(db_path=temp_db)
+    assert out["status"] == "manual"
+    assert out["mode"] == "compose"
+    assert out["compose_bumped"] is True
+    assert "image: esphome/esphome:2026.8.2" in compose.read_text(encoding="utf-8")
+    assert tc._update_running is False  # lock released on the sync path
+
+
+def test_esphome_toolchain_update_still_refuses_below_min_on_container(
+    tmp_path: Path, temp_db: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     from dsc_brain import esphome_toolchain as tc
 
     monkeypatch.setattr(tc, "build_backend", lambda: "dashboard")
-    with pytest.raises(RuntimeError, match="dashboard container"):
+    monkeypatch.setattr(tc, "eth_carrier_up", lambda: True)
+    monkeypatch.setattr(tc, "installed", lambda: "2026.6.5")
+    monkeypatch.setattr(
+        tc, "latest", lambda *, force=False: {"version": "2026.5.0", "ok": True, "eth_up": True}
+    )
+    with pytest.raises(RuntimeError, match="below the pinned min_version"):
         tc.update_to_latest(db_path=temp_db)
 
 

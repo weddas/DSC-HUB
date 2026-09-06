@@ -1365,7 +1365,9 @@ def settings_esphome_toolchain(refresh: bool = Query(False)) -> dict[str, Any]:
 
 @app.post("/settings/esphome/toolchain/update")
 def settings_esphome_toolchain_update(body: EsphomeToolchainUpdateBody) -> dict[str, Any]:
-    """`pip install -U esphome` in the Pi venv. Ethernet-gated, one at a time."""
+    """Move the ESPHome toolchain to latest — `pip install -U esphome` (venv) or a
+    compose image-tag bump + `docker compose up -d esphome` (dashboard container).
+    Ethernet-gated, one at a time, never below the pinned min_version."""
     if _demo_mode():
         _demo_forbidden()
     try:

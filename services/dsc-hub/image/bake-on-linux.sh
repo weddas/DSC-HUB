@@ -54,10 +54,16 @@ install -m 0755 "${COMPOSE}/pi/dsc-hub-ap-run.sh" "${STAGE}/etc/dsc-hub/ap-run.s
 install -m 0644 "${COMPOSE}/pi/dsc-hub-ap.service" "${STAGE}/systemd/dsc-hub-ap.service"
 install -m 0644 "${COMPOSE}/pi/dsc-hub-net-policy.service" "${STAGE}/systemd/dsc-hub-net-policy.service"
 install -m 0644 "${COMPOSE}/pi/dsc-hub-compose.service" "${STAGE}/systemd/dsc-hub-compose.service"
-# ESPHome toolchain: dedicated venv (replaces the dsc-hub-esphome container).
+# ESPHome toolchain: dedicated venv dashboard unit (default backend; replaces the
+# dsc-hub-esphome container, now behind `--profile legacy-esphome`).
 install -m 0755 "${COMPOSE}/pi/dsc-esphome-venv-setup.sh" "${STAGE}/opt/dsc-hub/pi/dsc-esphome-venv-setup.sh"
+install -m 0755 "${COMPOSE}/pi/dsc-esphome-dashboard-run.sh" "${STAGE}/opt/dsc-hub/pi/dsc-esphome-dashboard-run.sh"
 install -m 0644 "${COMPOSE}/pi/dsc-esphome-venv-setup.service" "${STAGE}/systemd/dsc-esphome-venv-setup.service"
 install -m 0644 "${COMPOSE}/pi/dsc-esphome-dashboard.service" "${STAGE}/systemd/dsc-esphome-dashboard.service"
+# ESPHome dashboard project dir for an SD-bake layout (remote-deploy overrides via
+# its own esphome.env). The dashboard unit no-ops cleanly until firmware/v4 lands.
+install -d "${STAGE}/etc/dsc-hub"
+echo "DSC_ESPHOME_PROJECT_DIR=/opt/dsc-hub/firmware/v4" > "${STAGE}/etc/dsc-hub/esphome.env"
 
 # Install helper for first boot / SD inject
 cat > "${STAGE}/opt/dsc-hub/install-from-payload.sh" <<'INST'

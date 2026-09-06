@@ -1219,10 +1219,20 @@ export function SettingsPage() {
           onDismiss={() => setPendingToolchain(false)}
           onConfirm={async () => {
             setPendingToolchain(false);
-            setToolchainMsg("Updating ESPHome venv…");
+            setToolchainMsg(
+              toolchain?.build_backend === "dashboard"
+                ? "Bumping the ESPHome container image…"
+                : "Updating ESPHome venv…",
+            );
             try {
               const r = await update_esphome_toolchain();
-              setToolchainMsg(`Update started → ${String(r.target ?? "latest")}. Watch the log below.`);
+              if (r && r.status === "manual") {
+                setToolchainMsg(String(r.detail ?? "Redeploy the ESPHome container on the Pi."));
+              } else {
+                setToolchainMsg(
+                  `Update started → ${String(r.target ?? "latest")}. Watch the log below.`,
+                );
+              }
             } catch (e) {
               setToolchainMsg(String((e as Error).message || e));
             }
@@ -1232,10 +1242,20 @@ export function SettingsPage() {
           confirmLabel="Update ESPHome"
           help={null}
         >
-          <p>
-            Runs <code>pip install -U esphome</code> in the Pi venv, then restarts the dashboard service.
-            No devices are touched. After it finishes you&apos;ll be offered a fleet reflash.
-          </p>
+          {toolchain?.build_backend === "dashboard" ? (
+            <p>
+              Bumps <code>image: esphome/esphome</code> to <b>{String(toolchain?.latest ?? "latest")}</b>{" "}
+              in <code>{String(toolchain?.compose_file ?? "docker-compose.yml")}</code> and redeploys the{" "}
+              <code>esphome</code> service (<code>docker compose up -d esphome</code>). If this host can&apos;t
+              run <code>docker</code>, you&apos;ll get the exact steps to run on the Pi. No devices are touched.
+              After it finishes you&apos;ll be offered a fleet reflash.
+            </p>
+          ) : (
+            <p>
+              Runs <code>pip install -U esphome</code> in the Pi venv, then restarts the dashboard service.
+              No devices are touched. After it finishes you&apos;ll be offered a fleet reflash.
+            </p>
+          )}
         </DecisionLayer>
         <DecisionLayer
           open={pendingRollout}
@@ -1329,6 +1349,32 @@ export function SettingsPage() {
             </p>
           )
         ) : null}
+      </section>
+
+      <section
+        className="dsc-card"
+        hidden={section !== "device" && section !== "server"}
+        aria-label="Host and network shortcuts"
+      >
+        <h3>Host &amp; network</h3>
+        <p className="dsc-muted">
+          Power and uplink controls live on their own tabs — quick links from here since firmware work
+          usually needs them.
+        </p>
+        <div className="dsc-chip-row">
+          <a className="dsc-chip" href="#/settings/system">
+            Power — restart Brain / network / reboot Pi ↗
+          </a>
+          <a className="dsc-chip" href="#/settings/system">
+            Logs &amp; verbosity ↗
+          </a>
+          <a className="dsc-chip" href="#/settings/network">
+            Ethernet (LAN) — DHCP / static ↗
+          </a>
+          <a className="dsc-chip" href="#/settings/network">
+            Internet reachability ↗
+          </a>
+        </div>
       </section>
 
       {section === "device" ? <ZigbeeCatalogCard onSaved={() => void refresh()} /> : null}

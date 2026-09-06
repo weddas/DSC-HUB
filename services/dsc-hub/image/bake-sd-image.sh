@@ -66,6 +66,14 @@ ln -sfn /etc/systemd/system/dsc-hub-net-policy.service \
   "${MNT}/etc/systemd/system/multi-user.target.wants/dsc-hub-net-policy.service"
 ln -sfn /etc/systemd/system/dsc-hub-compose.service \
   "${MNT}/etc/systemd/system/multi-user.target.wants/dsc-hub-compose.service"
+# ESPHome venv dashboard (default build backend; the dsc-hub-esphome container is
+# now opt-in via `--profile legacy-esphome`). Units no-op cleanly until the venv
+# and firmware/v4 are present.
+for u in dsc-esphome-venv-setup.service dsc-esphome-dashboard.service; do
+  if [[ -f "${MNT}/etc/systemd/system/${u}" ]]; then
+    ln -sfn "/etc/systemd/system/${u}" "${MNT}/etc/systemd/system/multi-user.target.wants/${u}"
+  fi
+done
 
 install -d "${MNT}/opt/dsc-hub/docker-preload"
 cp -f "${DOCKER_TAR}" "${MNT}/opt/dsc-hub/docker-preload/images.tar.gz"

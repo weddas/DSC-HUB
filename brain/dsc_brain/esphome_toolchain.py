@@ -7,7 +7,9 @@ the firmware pins — and can bump the venv to latest on operator request.
 
 Everything here is ESPHome-native: the running per-device version comes from the
 ESPHome native API ingest (``esphome_client``), "latest" comes from PyPI, and the
-update is ``pip install -U esphome`` in the venv. No HA entities involved.
+update is ``pip install -U esphome`` in the venv — or, on the older containerised
+kit, a bump of ``image: esphome/esphome:<tag>`` in the compose file plus a
+``docker compose up -d esphome``. No HA entities involved.
 """
 
 from __future__ import annotations
@@ -103,24 +105,97 @@ def dashboard_url() -> str:
     )
 
 
+# Legacy container name, tried as a fallback during the venv-unit cutover.
+_LEGACY_DASHBOARD_API = "http://dsc-hub-esphome:6052"
+
+
 def dashboard_api() -> str:
-    """brain -> ESPHome dashboard HTTP base. The dashboard is the build service."""
+    """brain -> ESPHome dashboard HTTP base. The dashboard is the build service.
+
+    Default is the host `dsc-esphome-dashboard` venv unit reached over the bridge
+    via host-gateway (compose sets DSC_ESPHOME_DASHBOARD_API); a setting or env
+    override wins for a LAN host or the legacy `legacy-esphome` container.
+    """
     return (
         get_setting("esphome_dashboard_api", "").strip()
         or os.environ.get("DSC_ESPHOME_DASHBOARD_API", "").strip()
-        or "http://dsc-hub-esphome:6052"
+        or "http://host.docker.internal:6052"
     )
 
 
-def _dash_get(path: str, timeout: float = 4.0) -> Any:
-    """GET JSON from the dashboard; None on any failure (offline / not deployed)."""
-    url = dashboard_api().rstrip("/") + path
+# --------------------------------------------------------------------------- #
+# Compose backend (the `dsc-hub-esphome` container) — image-tag bump + redeploy
+# --------------------------------------------------------------------------- #
+_COMPOSE_IMG_RE = re.compile(
+    r"^(?P<pre>[ \t]*image:[ \t]*esphome/esphome:)(?P<tag>[^\s#]+)", re.MULTILINE
+)
+
+
+def compose_file() -> Path:
+    """docker-compose.yml that defines the `esphome` service (setting → env → repo)."""
+    raw = (
+        get_setting("esphome_compose_file", "").strip()
+        or os.environ.get("DSC_ESPHOME_COMPOSE_FILE", "").strip()
+    )
+    if raw:
+        return Path(raw)
+    return REPO_ROOT / "services" / "dsc-hub" / "docker-compose.yml"
+
+
+def compose_esphome_tag(path: Path | None = None) -> str | None:
+    """The `esphome/esphome:<tag>` currently pinned in the compose file, or None."""
+    p = Path(path) if path else compose_file()
+    try:
+        m = _COMPOSE_IMG_RE.search(p.read_text(encoding="utf-8"))
+    except OSError:
+        return None
+    return m.group("tag") if m else None
+
+
+def set_compose_esphome_tag(tag: str, path: Path | None = None) -> tuple[bool, str]:
+    """Rewrite `image: esphome/esphome:<x>` → ``tag`` in place. (changed, message)."""
+    p = Path(path) if path else compose_file()
+    try:
+        text = p.read_text(encoding="utf-8")
+    except OSError as exc:
+        return False, f"compose file unreadable ({p}): {exc}"
+    m = _COMPOSE_IMG_RE.search(text)
+    if not m:
+        return False, f"no `image: esphome/esphome:<tag>` line in {p}"
+    cur = m.group("tag")
+    if cur == tag:
+        return False, f"{p} already pins esphome/esphome:{tag}"
+    try:
+        p.write_text(
+            _COMPOSE_IMG_RE.sub(lambda mm: mm.group("pre") + tag, text, count=1),
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        return False, f"compose file not writable ({p}): {exc}"
+    return True, f"{p}: esphome/esphome:{cur} → esphome/esphome:{tag}"
+
+
+def _dash_get_one(base: str, path: str, timeout: float) -> Any:
+    url = base.rstrip("/") + path
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "dsc-brain"})
         with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
             return json.loads(resp.read().decode("utf-8"))
     except Exception:  # noqa: BLE001 — status must never raise
         return None
+
+
+def _dash_get(path: str, timeout: float = 4.0) -> Any:
+    """GET JSON from the dashboard; None on any failure (offline / not deployed).
+
+    Tries the configured base, then the legacy container name — so a kit part-way
+    through the venv-unit cutover keeps working whichever one is up.
+    """
+    primary = dashboard_api()
+    data = _dash_get_one(primary, path, timeout)
+    if data is None and primary != _LEGACY_DASHBOARD_API:
+        return _dash_get_one(_LEGACY_DASHBOARD_API, path, min(timeout, 2.0))
+    return data
 
 
 def dashboard_devices() -> list[dict[str, Any]]:
@@ -318,6 +393,8 @@ def status(*, force_latest: bool = False) -> dict[str, Any]:
         "dashboard_url": dashboard_url(),
         "dashboard_api": dashboard_api(),
         "build_backend": backend,
+        "compose_file": str(compose_file()) if backend == "dashboard" else None,
+        "compose_esphome_tag": compose_esphome_tag() if backend == "dashboard" else None,
         "esphome_bin": esphome_bin(),
         "project_dir": str(project_dir()),
         "last_built_esphome": last_built or None,
@@ -341,6 +418,34 @@ def _update_job_row(job_id: str, st: str, detail: str, db_path: Path | None = No
     conn.execute(
         "UPDATE esphome_toolchain_jobs SET status=?, detail=?, updated_at=? WHERE job_id=?",
         (st, detail[-4000:], time.time(), job_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def _new_toolchain_job(kind: str, tgt: str, db_path: Path | None = None) -> str:
+    job_id = str(uuid.uuid4())
+    now = time.time()
+    conn = connect(db_path)
+    _ensure_jobs(conn)
+    conn.execute(
+        "INSERT INTO esphome_toolchain_jobs(job_id, kind, status, detail, from_version, "
+        "to_version, created_at, updated_at) VALUES(?, ?, 'queued', 'Queued…', ?, ?, ?, ?)",
+        (job_id, kind, installed() or "", tgt, now, now),
+    )
+    conn.commit()
+    conn.close()
+    return job_id
+
+
+def _set_toolchain_job_versions(
+    job_id: str, from_v: str, to_v: str, db_path: Path | None = None
+) -> None:
+    conn = connect(db_path)
+    _ensure_jobs(conn)
+    conn.execute(
+        "UPDATE esphome_toolchain_jobs SET from_version=?, to_version=? WHERE job_id=?",
+        (from_v, to_v, job_id),
     )
     conn.commit()
     conn.close()
@@ -424,18 +529,136 @@ def _run_update(job_id: str, target: str | None, db_path: Path | None = None) ->
             _update_running = False
 
 
-def update_to_latest(*, target: str | None = None, db_path: Path | None = None) -> dict[str, Any]:
-    """Kick off `pip install -U esphome` in the venv. Ethernet-gated, one at a time.
+def _compose_update_cmd() -> str:
+    """The redeploy command for the `esphome` container (setting → env → default)."""
+    tmpl = (
+        get_setting("esphome_compose_update_cmd", "").strip()
+        or os.environ.get("DSC_ESPHOME_COMPOSE_UPDATE_CMD", "").strip()
+        or (
+            "docker compose --profile legacy-esphome -f {file} pull esphome && "
+            "docker compose --profile legacy-esphome -f {file} up -d esphome"
+        )
+    )
+    return tmpl.replace("{file}", str(compose_file()))
 
-    Only for the 'venv' build backend. When ESPHome runs as the dashboard
-    container, `pip` can't touch its image — bump the tag in docker-compose.yml.
+
+def _run_compose_update(job_id: str, cmd: str, head: str, db_path: Path | None = None) -> None:
+    """Run the container redeploy, stream stdout, then re-read the dashboard version."""
+    global _update_running
+    from_v = installed() or ""
+    chunks: list[str] = [head, f"\n$ {cmd}\n"]
+    proc: subprocess.Popen[str] | None = None
+    try:
+        # `&&` in the default command needs a shell; the command is operator-owned
+        # (setting/env), same trust model as `brain_update_cmd`.
+        proc = subprocess.Popen(  # noqa: S602
+            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1
+        )
+        last = 0.0
+        if proc.stdout:
+            for line in proc.stdout:
+                chunks.append(line)
+                if time.time() - last >= 2.0:
+                    _update_job_row(job_id, "running", "".join(chunks), db_path)
+                    last = time.time()
+        proc.wait(timeout=900)
+        tail = "".join(chunks)
+        now_v = ""
+        if proc.returncode == 0:
+            # the container is bouncing on the new image — give :6052 a moment.
+            for _ in range(10):
+                now_v = installed() or ""
+                if now_v and now_v != from_v:
+                    break
+                time.sleep(2.0)
+        else:
+            now_v = installed() or ""
+        _set_toolchain_job_versions(job_id, from_v, now_v, db_path)
+        if proc.returncode == 0:
+            _update_job_row(
+                job_id,
+                "done",
+                tail + f"\n\nESPHome {from_v or '?'} → {now_v or '?'} "
+                "(dsc-hub-esphome container redeployed on the new image).",
+                db_path,
+            )
+        else:
+            _update_job_row(
+                job_id,
+                "failed",
+                tail + f"\n\ncompose redeploy exited {proc.returncode}. The container may still be "
+                f"on {from_v or '?'} — check `docker compose ps` / `docker compose logs esphome`.",
+                db_path,
+            )
+    except subprocess.TimeoutExpired:
+        if proc:
+            proc.kill()
+        _update_job_row(job_id, "failed", "".join(chunks) + "\n\nTimed out after 15 min.", db_path)
+    except Exception as exc:  # noqa: BLE001
+        _update_job_row(job_id, "failed", "".join(chunks) + f"\n\n{exc}", db_path)
+    finally:
+        with _update_lock:
+            _update_running = False
+
+
+def _start_compose_update(tgt: str, db_path: Path | None = None) -> dict[str, Any]:
+    """Container backend: bump `image: esphome/esphome:<tgt>`, redeploy if `docker` is here.
+
+    Clears the run lock itself on the no-docker path (nothing async was started).
     """
     global _update_running
-    if build_backend() != "venv":
+    cf = compose_file()
+    changed, note = set_compose_esphome_tag(tgt, cf)
+    cmd = _compose_update_cmd()
+
+    if shutil.which("docker") is None:
+        # The brain container has no docker socket — leave the bumped tag + exact
+        # steps so the operator's next `docker compose up` picks it up.
+        with _update_lock:
+            _update_running = False
+        head = note if changed else f"{note}\n(edit it by hand to `image: esphome/esphome:{tgt}`)"
+        return {
+            "status": "manual",
+            "mode": "compose",
+            "target": tgt,
+            "compose_file": str(cf),
+            "compose_bumped": changed,
+            "detail": (
+                f"{head}\n\nThen redeploy on the Pi:\n  {cmd}\n\n"
+                f"Settings → Device → ESPHome will read {tgt} once the container is back up."
+            ),
+        }
+
+    job_id = _new_toolchain_job("compose-redeploy", tgt, db_path)
+    _update_job_row(job_id, "running", f"{note}\n", db_path)
+    threading.Thread(
+        target=_run_compose_update,
+        args=(job_id, cmd, note, db_path),
+        daemon=True,
+        name="esphome-compose-update",
+    ).start()
+    return {"job_id": job_id, "target": tgt, "mode": "compose", "compose_bumped": changed}
+
+
+def update_to_latest(*, target: str | None = None, db_path: Path | None = None) -> dict[str, Any]:
+    """Move the ESPHome build toolchain to ``target`` (or PyPI latest).
+
+    Ethernet-gated, one at a time, never below the firmware-pinned ``min_version``.
+    The mechanism follows the backend:
+
+    * ``venv`` — ``pip install -U esphome`` in the Pi venv, then bounce the
+      ``dsc-esphome-dashboard`` unit.
+    * ``dashboard`` — bump ``image: esphome/esphome:<tag>`` in the compose file and
+      redeploy the ``dsc-hub-esphome`` service (or hand back the exact steps when
+      this host can't run ``docker``).
+    * ``none`` — nothing to drive; raises.
+    """
+    global _update_running
+    backend = build_backend()
+    if backend == "none":
         raise RuntimeError(
-            "this kit runs ESPHome as the dashboard container — `pip` can't update it. "
-            "Bump `image: esphome/esphome:<version>` in services/dsc-hub/docker-compose.yml, "
-            "redeploy, then `docker compose pull esphome && docker compose up -d esphome`."
+            "no ESPHome build backend reachable — neither a venv `esphome` nor the dashboard "
+            "on :6052. Update ESPHome on the host and reflash with pi/flash-*-remote.sh."
         )
     if not eth_carrier_up():
         raise ValueError("toolchain update needs an ethernet link")
@@ -461,22 +684,19 @@ def update_to_latest(*, target: str | None = None, db_path: Path | None = None) 
             raise RuntimeError("a toolchain update is already running")
         _update_running = True
 
-    job_id = str(uuid.uuid4())
-    now = time.time()
-    conn = connect(db_path)
-    _ensure_jobs(conn)
-    conn.execute(
-        "INSERT INTO esphome_toolchain_jobs(job_id, kind, status, detail, from_version, to_version, "
-        "created_at, updated_at) VALUES(?, 'pip-update', 'queued', 'Queued…', ?, ?, ?, ?)",
-        (job_id, installed() or "", tgt, now, now),
-    )
-    conn.commit()
-    conn.close()
-
-    threading.Thread(
-        target=_run_update, args=(job_id, tgt, db_path), daemon=True, name="esphome-toolchain-update"
-    ).start()
-    return {"job_id": job_id, "target": tgt}
+    try:
+        if backend == "dashboard":
+            return _start_compose_update(tgt, db_path)
+        job_id = _new_toolchain_job("pip-update", tgt, db_path)
+        threading.Thread(
+            target=_run_update, args=(job_id, tgt, db_path), daemon=True,
+            name="esphome-toolchain-update",
+        ).start()
+        return {"job_id": job_id, "target": tgt, "mode": "pip"}
+    except Exception:
+        with _update_lock:
+            _update_running = False
+        raise
 
 
 # --------------------------------------------------------------------------- #

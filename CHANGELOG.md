@@ -2,6 +2,41 @@
 
 ## Unreleased
 
+- **ESPHome build backend defaults to the host venv dashboard unit** — the
+  `esphome` service in `services/dsc-hub/docker-compose.yml` moved behind
+  `profiles: ["legacy-esphome"]` (it and the host unit both bind `:6052`), so it
+  no longer starts by default. The brain now reaches the dashboard at
+  `http://host.docker.internal:6052` (compose sets `DSC_ESPHOME_DASHBOARD_API` +
+  a `host-gateway` extra_host); `esphome_toolchain._dash_get()` falls back to the
+  legacy `dsc-hub-esphome` name during cutover. `dsc-esphome-dashboard.service`
+  runs a new `pi/dsc-esphome-dashboard-run.sh` wrapper that resolves the
+  `firmware/v4` dir per layout (`DSC_ESPHOME_PROJECT_DIR` /
+  `/etc/dsc-hub/esphome.env`), is `Restart=on-failure`, and no-ops cleanly until
+  the venv + firmware tree exist. Bakers wire it up: `bake-on-linux.sh` stages the
+  wrapper + `esphome.env`; `bake-sd-image.sh` and `stage-dsc/01-dsc-hub.sh` enable
+  both venv units; `deploy-brain-remote.sh` installs/enables them and
+  `docker rm -f dsc-hub-esphome`. Rollback: `docker compose --profile
+  legacy-esphome up -d esphome` + stop the host unit. **Not yet Pi-validated** —
+  SD kits still need `firmware/v4` shipped in the payload; smoke-test before
+  relying on it. See `docs/ops/ESPHOME-TOOLCHAIN.md`.
+- **Settings: "Host & network" quick-links** — the Device and Server tabs (where
+  firmware/ESPHome work happens) now show a small card linking to Settings →
+  System (restart Brain / network / reboot Pi, logs & verbosity) and Settings →
+  Network (Ethernet DHCP/static, internet reachability), which otherwise live only
+  on their own tabs. `frontend/src/pages/SettingsPage.tsx`.
+- **ESPHome update works on the containerised kit** — *Settings → Device →
+  ESPHome → "Update ESPHome"* no longer 409s with "`pip` can't update it" when the
+  build backend is the `dsc-hub-esphome` dashboard container. `update_to_latest()`
+  now branches on `build_backend()`: `venv` → `pip install -U esphome` (unchanged);
+  `dashboard` → rewrite `image: esphome/esphome:<tag>` in the compose file
+  (`esphome_compose_file`, default `services/dsc-hub/docker-compose.yml`) and run
+  the redeploy (`esphome_compose_update_cmd`, default
+  `docker compose -f <file> pull esphome && … up -d esphome`) as a streamed
+  toolchain job; when the host has no `docker` (brain container) it bumps the tag
+  and returns the exact Pi steps as a `manual` job instead of raising. Same
+  guard-rails as before (Ethernet, one-at-a-time, never below the pinned
+  `min_version`). New status fields: `compose_file`, `compose_esphome_tag`.
+  Settings' "Update ESPHome" confirm + result copy are now backend-aware.
 - **SPA motion pass** — one easing/duration vocabulary (`--dsc-ease` settle curve,
   `--dsc-ease-spring` for press-release, `--dsc-dur-1/2/3`, `--dsc-stagger-step`)
   replacing ad-hoc `Nms ease` transitions. Route change now settles in (page fade

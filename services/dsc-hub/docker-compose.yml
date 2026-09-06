@@ -38,6 +38,13 @@ services:
       CANNALIB_DB_PATH: /cannalib/dsc_brain.sqlite3
       MQTT_HOST: mosquitto
       MQTT_PORT: "1883"
+      # ESPHome dashboard / build service. Default backend is the host
+      # `dsc-esphome-dashboard` systemd venv unit (see pi/dsc-esphome-*.service),
+      # reached over the bridge via host-gateway. Override for a LAN host or the
+      # legacy `legacy-esphome` container (http://dsc-hub-esphome:6052).
+      DSC_ESPHOME_DASHBOARD_API: ${DSC_ESPHOME_DASHBOARD_API:-http://host.docker.internal:6052}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ${DSC_DATA:-/var/lib/dsc-hub}/ops:/data
       - ${DSC_DATA:-/var/lib/dsc-hub}/firmware:/firmware:ro
@@ -99,13 +106,21 @@ services:
     networks:
       - dsc
 
-  # DEPRECATED (v8): superseded by the `dsc-esphome-dashboard` systemd unit, which
-  # runs one Pi venv shared by the dashboard and the brain's OTA/compile runner
-  # (see services/dsc-hub/pi/dsc-esphome-*.{service,sh} and
-  # docs/ops/ESPHOME-TOOLCHAIN.md). Kept one release as a fallback; image bumped
-  # to the firmware-pinned min_version so `esphome config` still passes if used.
-  # Remove once every kit is on the systemd unit.
+  # LEGACY (v8): the default ESPHome backend is now the host `dsc-esphome-dashboard`
+  # systemd venv unit — one Pi venv shared by the dashboard and the brain's
+  # OTA/compile runner (see services/dsc-hub/pi/dsc-esphome-*.{service,sh} and
+  # docs/ops/ESPHOME-TOOLCHAIN.md). This container is kept one release as a
+  # rollback only and does NOT start by default (both would fight over :6052).
+  #   Roll back:  docker compose --profile legacy-esphome up -d esphome
+  #               (and stop the host unit: sudo systemctl stop dsc-esphome-dashboard)
+  # When this container IS the backend, *Settings → Device → ESPHome → "Update
+  # ESPHome"* rewrites the tag below and runs
+  # `docker compose --profile legacy-esphome -f <this file> pull esphome && … up -d
+  # esphome` (esphome_toolchain._start_compose_update); off-Pi hosts get the steps
+  # to run by hand. Image pinned to the firmware min_version so `esphome config`
+  # still passes if used. Remove once every kit is on the systemd unit.
   esphome:
+    profiles: ["legacy-esphome"]
     image: esphome/esphome:2026.6.5
     container_name: dsc-hub-esphome
     restart: unless-stopped
