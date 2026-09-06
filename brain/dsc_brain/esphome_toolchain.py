@@ -45,6 +45,8 @@ _PYPI_FAIL_TTL = 15 * 60.0  # after a failed lookup, don't re-hit PyPI for 15 mi
 _PYPI_TIMEOUT = 4.0
 
 _VERSION_RE = re.compile(r"(\d+\.\d+\.\d+)")
+# An ESPHome release string (2026.6.5), as opposed to the product train (8.0.0.0).
+_ESPHOME_RELEASE_RE = re.compile(r"^20\d{2}\.\d{1,2}\.\d{1,3}(?:[-.].*)?$")
 
 _latest_cache: dict[str, Any] = {"version": None, "checked_at": 0.0, "ok": False}
 _latest_lock = threading.Lock()
@@ -406,17 +408,26 @@ def device_versions() -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for seat_id, seat in seats:
         values = seat.get("values") if isinstance(seat, dict) else None
-        running = None
-        if isinstance(seat, dict):
-            running = seat.get("firmware")
-        if not running and isinstance(values, dict):
-            running = values.get("esphome_version")
+        product_fw = seat.get("firmware") if isinstance(seat, dict) else None
+        # `seat.firmware` is the PRODUCT train (7.0.0.0 / 8.0.0.0) from the generic
+        # firmware_version text sensor — never compare that to an ESPHome release.
+        # The ESPHome framework version comes from the `platform: version` text
+        # sensor (`esphome_version`); accept `firmware` only if it already looks
+        # like one (YYYY.M.P) for devices that report nothing else.
+        running: str | None = None
+        if isinstance(values, dict):
+            cand = values.get("esphome_version")
+            if cand and _ESPHOME_RELEASE_RE.match(str(cand)):
+                running = str(cand)
+        if running is None and product_fw and _ESPHOME_RELEASE_RE.match(str(product_fw)):
+            running = str(product_fw)
         deployed = deployed_by_yaml.get(SEAT_YAML.get(seat_id, ""))
         out.append(
             {
                 "seat_id": seat_id,
                 "online": bool(seat.get("online")) if isinstance(seat, dict) else False,
                 "running": running,
+                "product_firmware": product_fw,
                 "deployed": deployed,
                 "matches_installed": bool(running and inst and _vtuple(running) == _vtuple(inst)),
             }

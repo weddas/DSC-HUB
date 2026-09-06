@@ -633,3 +633,29 @@ def test_status_reports_host_helper_fields(temp_db: Path, monkeypatch: pytest.Mo
     assert st["rollback_target"] is None
     assert st["canary"] is None
     assert "compose_file" in st and st["compose_file"] is None
+
+
+# --------------------------------------------------------------------------- #
+# per-seat running ESPHome version must come from the ESPHome sensor, not the product train
+# --------------------------------------------------------------------------- #
+def test_device_versions_ignore_product_firmware_train(monkeypatch: pytest.MonkeyPatch) -> None:
+    from dsc_brain import esphome_toolchain as tc
+
+    class _F:
+        def to_dict(self) -> dict[str, Any]:
+            return {
+                "hub": {"online": True, "firmware": "8.0.0.0", "values": {"esphome_version": "2026.6.5 (Sep  6 2026, 21:00:00)"}},
+                "panel": {"online": True, "firmware": "8.0.0.0", "values": {}},
+                "pots": {"pot2": {"online": True, "firmware": "2026.6.5", "values": {}}},
+                "sonoffs": {"heater": {"online": False, "firmware": "7.0.0.0", "values": {}}},
+            }
+
+    monkeypatch.setattr(tc, "get_fleet_state", lambda: _F())
+    monkeypatch.setattr(tc, "installed", lambda: "2026.6.5")
+    monkeypatch.setattr(tc, "dashboard_devices", lambda: [])
+    by = {d["seat_id"]: d for d in tc.device_versions()}
+    assert by["hub"]["running"] == "2026.6.5 (Sep  6 2026, 21:00:00)" and by["hub"]["matches_installed"] is True
+    assert by["hub"]["product_firmware"] == "8.0.0.0"
+    assert by["control"]["running"] is None and by["control"]["matches_installed"] is False
+    assert by["pot2"]["running"] == "2026.6.5" and by["pot2"]["matches_installed"] is True
+    assert by["heater"]["running"] is None  # 7.0.0.0 is the product train, not an ESPHome release
