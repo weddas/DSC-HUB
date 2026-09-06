@@ -86,7 +86,12 @@
   refused") — it now leaves a busy dashboard alone; (13) `static
   domain_name_servers` was not enough — dhcpcd's hook emptied the resolver again
   on the next renewal mid-reflash; the host resolver is now static with `nohook
-  resolv.conf`. Gate evidence in `docs/FOLLOWUPS.md`.
+  resolv.conf`; (14) **the hub did not compile either** — `select.current_option()`
+  returns a `StringRef` since ESPHome 2026.x; four `const char *` sites take
+  `.str()`, ten `ESP_LOG` `%s` sites take `.c_str()`. **Fleet result:** all eight
+  live seats (hub, panel, Probe 1–2, four Sonoffs) rebooted onto firmware
+  8.0.0.0 / ESPHome 2026.6.5 through the SPA path (canary → rest, hub last).
+  Gate evidence in `docs/FOLLOWUPS.md`.
 - **Tests** — new `brain/tests/test_esphome_toolchain.py` (venv runner argv / cwd /
   env / timeout / hostless, dashboard WebSocket runner incl. the "too old" hint,
   backend detection, host-helper handshake success + failure, disk guard,
