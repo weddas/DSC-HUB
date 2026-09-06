@@ -76,7 +76,7 @@ export function PlantSeatPanel({
   /** Called after successful retire so parents can close drawers/overlays */
   onRetired?: () => void;
 }) {
-  const { hass, state, entity, available, tick, num } = useEntityBus();
+  const { state, entity, available, tick, num } = useEntityBus();
   const { callService } = useFleetActions();
   const refreshBrain = useBrainRefresh();
   const fleet = useFleet();
@@ -194,7 +194,7 @@ export function PlantSeatPanel({
         }
       }
       window.setTimeout(() => {
-        const now = hass?.states?.[`input_select.dsc_probe${pot}_tent`]?.state || "";
+        const now = state(`input_select.dsc_probe${pot}_tent`, "");
         if (now !== tent) {
           setApplyErr("Tent change did not stick — the hub rejected it. Try again.");
         }

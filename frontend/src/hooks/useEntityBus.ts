@@ -11,7 +11,7 @@ import { fleetControlAttributes, fleetControlAvailable, fleetControlState } from
 import { fleetEntityAvailable, fleetLiveNumber, fleetLiveState } from "../lib/entityFleetMap";
 import { fleetToHassCompat } from "../lib/fleetFromHass";
 import { call_service } from "../lib/fleetApi";
-import type { HassEntity, HomeAssistant } from "../vite-env";
+import type { HassEntity } from "../vite-env";
 
 function entityFingerprint(entityId: string, ctx: FleetContextValue): string {
   const { fleet, hassStates } = ctx;
@@ -56,8 +56,6 @@ function resolveEntity(entityId: string, ctx: FleetContextValue): HassEntity | u
   if (fromHass) return fromHass;
   return fleetToHassCompat(fleet)[entityId];
 }
-
-const noopCallWS = (async () => null) as HomeAssistant["callWS"];
 
 export function useEntityBus() {
   const store = useFleetStore();
@@ -158,28 +156,6 @@ export function useEntityBus() {
     const callService = (domain: string, service: string, data?: Record<string, unknown>) =>
       call_service(domain, service, data ?? {});
 
-    /** HA-shaped synthetic bus for the few consumers (Twin web component) that
-     *  want a `hass`-like object with a `.states` map. */
-    const hassCompat = (): HomeAssistant => {
-      const ctx = store.getState();
-      return {
-        states: { ...fleetToHassCompat(ctx.fleet), ...(ctx.hassStates ?? {}) },
-        callService: (domain, service, d) => call_service(domain, service, d ?? {}),
-        callWS: noopCallWS,
-      };
-    };
-
-    return {
-      entity,
-      available,
-      state,
-      num,
-      callService,
-      callWS: noopCallWS,
-      tick,
-      get hass(): HomeAssistant {
-        return hassCompat();
-      },
-    };
+    return { entity, available, state, num, callService, tick };
   }, [store, tick]);
 }

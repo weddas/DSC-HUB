@@ -1,9 +1,8 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
 import { useEntityBus } from "../hooks/useEntityBus";
-import { ensureLocalCard } from "../lib/ensureLocalCards";
-import type { TwinCardEl, TwinFocusTent, VesselLive } from "../lib/dsc-twin-api";
+import type { TwinFocusTent, VesselLive } from "../lib/dsc-twin-api";
 import { KIT_PROBE_NUMBERS, buildPlantSeat, isPotInService, readTent } from "../lib/seatModel";
 import { readPotVessel } from "../lib/vesselSpec";
 import { readPotTrust } from "../lib/potTrust";
@@ -13,25 +12,10 @@ const DscTwinCanvas = lazy(() =>
   import("../twin/DscTwinCanvas").then((m) => ({ default: m.DscTwinCanvas })),
 );
 
-const USE_R3F_TWIN = import.meta.env.VITE_DSC_PI === "1";
-/** Pass B gate lifted on Pi SPA — R3F Twin owns resize; HA IIFE stays gated. */
-const TWIN_SURFACE_GATED = import.meta.env.VITE_DSC_PI !== "1";
-
 function focusTentFromPath(pathname: string): TwinFocusTent {
   if (pathname === "/live/main" || pathname === "/live/4x8") return "main";
   if (pathname === "/live/clone" || pathname === "/live/2x4") return "clone";
   return null;
-}
-
-function cockpitHidesHud(pathname: string): boolean {
-  return (
-    pathname === "/live/twin" ||
-    pathname === "/ops/dash" ||
-    pathname === "/live/main" ||
-    pathname === "/live/clone" ||
-    pathname === "/live/4x8" ||
-    pathname === "/live/2x4"
-  );
 }
 
 function buildPots(
@@ -71,31 +55,21 @@ function buildPots(
   });
 }
 
-/** Persist Twin across routes — R3F on Pi SPA, legacy IIFE elsewhere. */
+/** Persist the R3F Twin across routes so WebGL context / camera survive navigation. */
 export function TwinKeepAlive() {
   const location = useLocation();
-  const { hass, available, num, state, entity, tick } = useEntityBus();
+  const { available, num, state, entity, tick } = useEntityBus();
   const ref = useRef<HTMLDivElement>(null);
-  const elRef = useRef<TwinCardEl | null>(null);
-  const [status, setStatus] = useState<"loading" | "ready" | "missing">("loading");
   const [slotEl, setSlotEl] = useState<HTMLElement | null>(null);
   const focusTent = focusTentFromPath(location.pathname);
-  const twinVisible =
-    !TWIN_SURFACE_GATED &&
-    (location.pathname === "/live/twin" || location.pathname === "/ops/dash");
-  const twinDataActive =
-    !TWIN_SURFACE_GATED &&
-    (twinVisible ||
-      location.pathname === "/live/main" ||
-      location.pathname === "/live/clone" ||
-      location.pathname === "/live/4x8" ||
-      location.pathname === "/live/2x4");
+  const twinVisible = location.pathname === "/live/twin" || location.pathname === "/ops/dash";
+
   const hubHeld = available("binary_sensor.dsc_hub_link")
     ? state("binary_sensor.dsc_hub_link") !== "on"
     : !available("sensor.dsc_hub_uptime");
 
   const pots = useMemo(
-    () => (TWIN_SURFACE_GATED ? [] : buildPots(state, entity, num, hubHeld)),
+    () => buildPots(state, entity, num, hubHeld),
     [state, entity, num, hubHeld, tick],
   );
 
@@ -107,86 +81,13 @@ export function TwinKeepAlive() {
     setSlotEl(document.getElementById(TWIN_SLOT_ID));
   }, [twinVisible, location.pathname]);
 
-  useEffect(() => {
-    if (TWIN_SURFACE_GATED || USE_R3F_TWIN) {
-      if (!TWIN_SURFACE_GATED && USE_R3F_TWIN) setStatus("ready");
-      return;
-    }
-    const host = ref.current;
-    if (!host || elRef.current) return;
-    let cancelled = false;
-
-    (async () => {
-      setStatus("loading");
-      const ok = await ensureLocalCard("dsc-the-dash-card");
-      if (cancelled || !ref.current) return;
-      if (!ok) {
-        setStatus("missing");
-        return;
-      }
-      const el = document.createElement("dsc-the-dash-card") as TwinCardEl;
-      if (typeof el.setConfig === "function") {
-        el.setConfig({ type: "custom:dsc-the-dash-card" });
-      }
-      if (hass) el.hass = hass;
-      host.appendChild(el);
-      elRef.current = el;
-      setStatus("ready");
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (TWIN_SURFACE_GATED || USE_R3F_TWIN) return;
-    if (elRef.current && hass) elRef.current.hass = hass;
-  }, [hass, tick]);
-
-  useEffect(() => {
-    if (TWIN_SURFACE_GATED || USE_R3F_TWIN) return;
-    const el = elRef.current;
-    if (!el) return;
-    el.setFocusTent?.(focusTent);
-    el.setUiChrome?.({ hideHud: cockpitHidesHud(location.pathname) });
-  }, [focusTent, location.pathname, status]);
-
-  useEffect(() => {
-    if (TWIN_SURFACE_GATED || USE_R3F_TWIN) return;
-    const el = elRef.current;
-    const sync = () => {
-      const pause = !twinDataActive || document.hidden;
-      el?.pause?.(pause);
-    };
-    sync();
-    document.addEventListener("visibilitychange", sync);
-    return () => document.removeEventListener("visibilitychange", sync);
-  }, [twinDataActive, status]);
-
-  useEffect(() => {
-    if (TWIN_SURFACE_GATED || USE_R3F_TWIN) return;
-    elRef.current?.setHeld?.(hubHeld);
-  }, [hubHeld, status]);
-
-  useEffect(() => {
-    if (TWIN_SURFACE_GATED || USE_R3F_TWIN) return;
-    const el = elRef.current;
-    if (!el?.setPots) return;
-    el.setPots(pots);
-  }, [pots, status]);
-
-  if (TWIN_SURFACE_GATED) return null;
-
   const twinBody = (
     <div
       className={`dsc-twin-keepalive${twinVisible ? " is-active" : ""}`}
       aria-hidden={!twinVisible}
       inert={!twinVisible ? true : undefined}
-      data-status={status}
       data-focus-tent={focusTent || "both"}
-      data-engine={USE_R3F_TWIN ? "r3f" : "iife"}
+      data-engine="r3f"
       style={
         twinVisible && slotEl
           ? undefined
@@ -203,18 +104,10 @@ export function TwinKeepAlive() {
       }
     >
       <div className="dsc-twin-keepalive-host" ref={ref} style={{ width: "100%", height: "100%" }}>
-        {USE_R3F_TWIN ? (
-          <Suspense fallback={<div className="dsc-empty">Loading twin…</div>}>
-            <DscTwinCanvas pots={pots} focusTent={focusTent} held={hubHeld} visible={twinVisible} />
-          </Suspense>
-        ) : null}
+        <Suspense fallback={<div className="dsc-empty">Loading twin…</div>}>
+          <DscTwinCanvas pots={pots} focusTent={focusTent} held={hubHeld} visible={twinVisible} />
+        </Suspense>
       </div>
-      {!USE_R3F_TWIN && status === "missing" ? (
-        <div className="dsc-empty">
-          <strong>dsc-the-dash-card</strong> did not register. Deploy{" "}
-          <code>/local/dsc-the-dash-card.js</code> and hard-refresh.
-        </div>
-      ) : null}
     </div>
   );
 
