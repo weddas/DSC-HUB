@@ -42,4 +42,10 @@ Notion (canonical Wiki): [Product layers](https://app.notion.com/p/3b52b4cda3708
 - **automation rules** (Sonoff cut-outs, operator-owned hub switches, ESP-clamped setpoints), and
 - the Sonoff **appliance driver**, which mirrors hub demand every 2 s and forces every relay OFF when the hub goes dark (also for out-of-service seats).
 
-Flipping proposals from "logged" to real `*_demand` writes is an explicit product decision (tracker row *hub_native.emit_proposal only logs demand*). Until it is made, no SPA surface may describe the brain as driving demand outputs — the honest wording is "brain proposes, hub applies".
+**Decision 2026-09-06 — shadow mode stays.** Proposals do not become `*_demand` writes, because:
+
+1. The `*_demand` switches are owned by the hub's Full Auto ladder; a brain write is re-asserted by the hub on its next tick (the Climate page already says so). Writing them would be a fight, not control.
+2. `emit_proposal` only ever proposes `demand_on` (`temp_c_low` → heater, `rh_pct_high` → dehumidifier, …); there is no `demand_off` proposal, so "real writes" would latch appliances on with nothing to release them.
+3. The brain already acts where it owns the surface: setpoints and modes via `/control/service` (clamped by the ESP), Zigbee tasks, automation rules (cut-outs, operator-owned switches, clamped setpoints), and the Sonoff appliance driver.
+
+The path to brain-driven demand is a firmware change, not a flag: a hub *brain-owned demand* mode in which the ladder yields the `*_demand` switches while the brain is fresh (and takes them back on staleness), plus symmetric on/off proposals with hysteresis. Tracked as a Suggested Feature. Until then the honest wording is "brain proposes, hub applies".

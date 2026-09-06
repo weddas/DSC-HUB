@@ -269,12 +269,27 @@ class FleetState:
         for seat_id, seat in self.sonoffs.items():
             relay = _SONOFF_RELAY.get(seat_id)
             fw_entity = _SONOFF_FW.get(seat_id)
-            relay_on = appliance.get("relays", {}).get(seat_id)
+            commanded = (appliance.get("relays") or {}).get(seat_id)
+            demand = (appliance.get("demand") or {}).get(seat_id)
+            observed = seat.values.get("relay_on")
             if relay:
-                if relay_on is not None:
-                    set_entity(relay, "on" if relay_on else "off", seat.online or appliance.get("hub_ok", False))
+                attrs: dict[str, Any] = {
+                    "commanded": commanded,
+                    "demand": demand,
+                    "in_service": seat.values.get("in_service", True),
+                }
+                if isinstance(observed, bool) and seat.online:
+                    # The device's own contact state, polled by esphome_client.
+                    set_entity(relay, "on" if observed else "off", True, {**attrs, "source": "device"})
+                elif commanded is not None:
+                    set_entity(
+                        relay,
+                        "on" if commanded else "off",
+                        seat.online or appliance.get("hub_ok", False),
+                        {**attrs, "source": "commanded"},
+                    )
                 else:
-                    set_entity(relay, "off", seat.online)
+                    set_entity(relay, "off", seat.online, {**attrs, "source": "none"})
             if fw_entity and seat.firmware:
                 set_entity(fw_entity, seat.firmware, seat.online)
 
