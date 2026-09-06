@@ -18,6 +18,7 @@ export const SECTION_SUBTITLE: Record<SettingsSectionId, string> = {
   api: "Ollama and CannaLib integrations",
   network: "SoftAP and DHCP — Apply restarts hub Wi‑Fi",
   server: "ESPHome job queue and host ops",
+  system: "Logs, log verbosity, and power actions",
   general: "Kit language and operator notes",
 };
 

@@ -170,6 +170,48 @@ export async function check_internet(): Promise<InternetStatus> {
   return resp.json();
 }
 
+export type SystemLogResult = {
+  source: string;
+  cmd: string;
+  ok: boolean;
+  lines: string[];
+  exit: number;
+  hint: string | null;
+  verbosity: { level: string; options: string[] };
+};
+
+export async function get_system_logs(source: string, lines = 200): Promise<SystemLogResult> {
+  const resp = await fetch(`/settings/system/logs?source=${encodeURIComponent(source)}&lines=${lines}`);
+  if (!resp.ok) throw new Error("system logs failed");
+  return resp.json();
+}
+
+export function system_log_download_url(source: string): string {
+  return `/settings/system/logs/download?source=${encodeURIComponent(source)}`;
+}
+
+export async function set_log_verbosity(level: string): Promise<{ level: string; options: string[] }> {
+  const resp = await fetch("/settings/system/verbosity", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ level }),
+  });
+  if (!resp.ok) throw new Error((await resp.text()) || "verbosity failed");
+  return resp.json();
+}
+
+export async function power_action(
+  action: "restart-brain" | "restart-network" | "reboot",
+): Promise<Record<string, unknown>> {
+  const resp = await fetch("/settings/system/power", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action }),
+  });
+  if (!resp.ok) throw new Error((await resp.text()) || "power action failed");
+  return resp.json();
+}
+
 export type EthConfigBody = { mode: "auto" | "static"; static_ip?: string; gateway?: string; dns?: string };
 
 export async function set_ethernet(body: EthConfigBody): Promise<Record<string, unknown>> {

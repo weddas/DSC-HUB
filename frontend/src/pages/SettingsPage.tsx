@@ -25,6 +25,7 @@ import { ZigbeeCatalogCard } from "../components/settings/ZigbeeCatalogCard";
 import { AutomationRulesCard } from "../components/settings/AutomationRulesCard";
 import { KitUpdateCard } from "../components/settings/KitUpdateCard";
 import { NetworkExtrasCard } from "../components/settings/NetworkExtrasCard";
+import { SystemDiagnosticsCard } from "../components/settings/SystemDiagnosticsCard";
 import { SpaceEnergySettingsCard } from "../components/settings/SpaceEnergySettingsCard";
 import {
   apply_network,
@@ -960,6 +961,8 @@ export function SettingsPage() {
 
       {section === "network" ? <NetworkExtrasCard /> : null}
 
+      {section === "system" ? <SystemDiagnosticsCard /> : null}
+
       <section className="dsc-card" hidden={section !== "api"}>
         <h3>Integrations</h3>
         <label>
@@ -1172,6 +1175,19 @@ export function SettingsPage() {
                     <Button onClick={() => setPendingOta({ seatId: String(row.seat_id), action: "compile" })}>
                       Queue compile
                     </Button>
+                    {row.yaml ? (
+                      <a
+                        className="dsc-chip"
+                        href={`${String(
+                          toolchain?.dashboard_url ?? "http://dsc-brain.local:6052",
+                        ).replace(/\/$/, "")}/?configuration=${encodeURIComponent(String(row.yaml))}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Open this device in the ESPHome dashboard (Logs button there streams serial/OTA logs)"
+                      >
+                        Logs ↗
+                      </a>
+                    ) : null}
                   </td>
                 </tr>
               ))}
