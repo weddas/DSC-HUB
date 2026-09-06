@@ -66,6 +66,31 @@ sleep 2
 ip -4 addr show "$IFACE" || true
 ip route | head -5 || true
 
+# Host DNS: dhcpcd on this Pi writes an EMPTY /etc/resolv.conf on eth0 renewals
+# (no resolvconf, lease carries no DNS) — containers still resolved through the
+# Docker pin below, but host pip/apt/PlatformIO could not (seen live 2026-09-06:
+# "Update ESPHome" failed on 'pypi.org' name resolution). Pin the same servers
+# for the host via dhcpcd so a renewal keeps them.
+if ! grep -q 'DSC-HUB: host DNS' /etc/dhcpcd.conf 2>/dev/null; then
+  printf '
+# DSC-HUB: host DNS for the ESPHome toolchain update (matches /etc/docker/daemon.json).
+interface %s
+static domain_name_servers=192.168.86.1 8.8.8.8 1.1.1.1
+' "$IFACE" > /tmp/dsc-dhcpcd-dns.conf
+  run_sudo bash -c "cat /tmp/dsc-dhcpcd-dns.conf >> /etc/dhcpcd.conf"
+  rm -f /tmp/dsc-dhcpcd-dns.conf
+  run_sudo dhcpcd -n "$IFACE" 2>/dev/null || true
+fi
+if ! getent hosts pypi.org >/dev/null 2>&1; then
+  # Belt and braces for this boot: dhcpcd may not rewrite resolv.conf until the next lease event.
+  printf 'nameserver 192.168.86.1
+nameserver 8.8.8.8
+nameserver 1.1.1.1
+' > /tmp/dsc-resolv.conf
+  run_sudo install -m 0644 /tmp/dsc-resolv.conf /etc/resolv.conf
+  rm -f /tmp/dsc-resolv.conf
+fi
+
 # Docker: prefer IPv4 DNS (AP-only Pi had broken IPv6 resolver). Only meaningful
 # now that eth0 actually has an uplink.
 if [ ! -f /etc/docker/daemon.json ] || ! grep -q '"dns"' /etc/docker/daemon.json 2>/dev/null; then
