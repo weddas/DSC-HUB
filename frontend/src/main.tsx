@@ -7,7 +7,6 @@ import { DscRoot } from "./components/ParallaxStars";
 import { Button } from "./components/ui";
 import { BrainProvider, useBrainRefresh, useBrainSelector } from "./hooks/useBrain";
 import { FleetProvider } from "./hooks/useFleet";
-import { piHassBridge } from "./lib/piHassBridge";
 import type { HassEntity } from "./vite-env";
 import "./styles/dsc.css";
 
@@ -57,7 +56,6 @@ function PiFleetShell({ children }: { children: ReactNode }) {
   const loading = useBrainSelector((v) => v.loading);
   const error = useBrainSelector((v) => v.error);
   const lastUpdatedAt = useBrainSelector((v) => v.lastUpdatedAt);
-  const hass = useBrainSelector((v) => v.hass);
   const refresh = useBrainRefresh();
   const surface = useBrainSelector((v) => (v.fleet?.surface as string | undefined) || "—");
 
@@ -73,15 +71,10 @@ function PiFleetShell({ children }: { children: ReactNode }) {
     document.title = `DSC-HUB ${surface}`;
   }, [surface]);
 
-  useEffect(() => {
-    piHassBridge.current = hass;
-  }, [hass]);
-
   return (
     <FleetProvider
       fleetRaw={fleetRaw}
       tick={tick}
-      source="pi"
       loading={loading}
       error={error}
       lastUpdatedAt={lastUpdatedAt}
@@ -99,7 +92,7 @@ function PiRoot() {
   const appTree = useMemo(
     () => (
       <HashRouter>
-        <App hass={null} surfaceVersion="pi" hassRevision={1} fleetSource="pi" revisionDrivesTick={false} />
+        <App surfaceVersion="pi" />
       </HashRouter>
     ),
     [],

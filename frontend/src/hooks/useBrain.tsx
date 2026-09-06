@@ -10,47 +10,10 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import type { HassEntity, HomeAssistant } from "../vite-env";
-import { get_fleet_state, get_fleet_computed, call_service } from "../lib/fleetApi";
-import { parseFleetSnapshot } from "../lib/fleetModel";
-import { fleetToHassCompat } from "../lib/fleetFromHass";
+import { get_fleet_state, get_fleet_computed } from "../lib/fleetApi";
 import { createStore, useStoreSelector, type Store } from "../lib/selectorStore";
 
-function mergeHassExtras(
-  states: Record<string, HassEntity>,
-  extras: Record<string, HassEntity> | undefined,
-): void {
-  if (!extras) return;
-  for (const [id, ent] of Object.entries(extras)) {
-    states[id] = {
-      entity_id: id,
-      state: ent.state ?? "unavailable",
-      attributes: ent.attributes ?? {},
-      last_changed: ent.last_changed ?? new Date().toISOString(),
-    };
-  }
-}
-
-/** Pi synthetic HA bus — native fleet SoT + computed extras from /fleet/computed. */
-export function fleetToHass(
-  fleet: Record<string, unknown>,
-  computed?: Record<string, unknown> | null,
-): HomeAssistant {
-  const parsed = parseFleetSnapshot(fleet);
-  const states: Record<string, HassEntity> = { ...fleetToHassCompat(parsed) };
-  const extras = computed?.hass_extras as Record<string, HassEntity> | undefined;
-  mergeHassExtras(states, extras);
-
-  return {
-    states,
-    callService: async (domain: string, service: string, data?: Record<string, unknown>) =>
-      call_service(domain, service, data ?? {}),
-    callWS: async <T,>(_msg?: Record<string, unknown>) => null as T,
-  };
-}
-
 interface BrainContextValue {
-  hass: HomeAssistant | null;
   tick: number;
   fleet: Record<string, unknown> | null;
   computed: Record<string, unknown> | null;
@@ -176,14 +139,8 @@ export function BrainProvider({ children }: { children: ReactNode }) {
     };
   }, [applyFleet, refresh, refreshComputed]);
 
-  const hass = useMemo(
-    () => (fleet ? fleetToHass(fleet, computed) : null),
-    [fleet, computed],
-  );
-
   const value = useMemo<BrainContextValue>(
     () => ({
-      hass,
       tick,
       fleet,
       computed,
@@ -192,7 +149,7 @@ export function BrainProvider({ children }: { children: ReactNode }) {
       refresh,
       lastUpdatedAt,
     }),
-    [hass, tick, fleet, computed, loading, error, refresh, lastUpdatedAt],
+    [tick, fleet, computed, loading, error, refresh, lastUpdatedAt],
   );
 
   const storeRef = useRef<Store<BrainContextValue> | null>(null);

@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Button,
@@ -38,17 +37,15 @@ function fmt(n: number, digits = 1): string {
 }
 
 function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
-  const { state, entity, num, tick, callWS, available } = useEntityBus();
+  const { state, entity, num, tick, available } = useEntityBus();
   const tentVitals = useTentVitals(tent);
   const navigate = useNavigate();
   const inspector = useInspector();
   const [params, setParams] = useSearchParams();
-  const [log, setLog] = useState<string[]>([]);
   const { hours, setHours, maxPoints } = useChartHours(6);
   void tick;
 
   const seats = potsInTent(tent, state, entity);
-  const seatKey = seats.map((s) => s.pot).join(",");
   const raw = Number(params.get("pot") || 0);
   const pot =
     raw >= 1 &&
@@ -119,65 +116,6 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
     tent === "main"
       ? "Only the 4×8 house in Twin. Cascade-in is a port stub from 2×4, not a second tent."
       : "Only the 2×4 house in Twin. Cascade-out is a port stub to 4×8.";
-
-  useEffect(() => {
-    let cancelled = false;
-    async function loadLog() {
-      const pots = seatKey
-        ? seatKey
-            .split(",")
-            .map((p) => Number(p))
-            .filter((n) => Number.isFinite(n) && n > 0)
-        : [];
-      if (!callWS || pots.length === 0) {
-        setLog([]);
-        return;
-      }
-      const ids = pots.flatMap((n) => [
-        `text.dsc_probe${n}_plant_name`,
-        `input_select.dsc_probe${n}_tent`,
-        `select.dsc_probe${n}_growth_stage`,
-      ]);
-      const end = new Date();
-      const start = new Date(end.getTime() - 48 * 3600 * 1000);
-      try {
-        const rawHist = await callWS<
-          Record<string, { s?: string; state?: string; lu?: number; last_changed?: string }[]>
-        >({
-          type: "history/history_during_period",
-          start_time: start.toISOString(),
-          end_time: end.toISOString(),
-          significant_changes_only: true,
-          minimal_response: true,
-          no_attributes: true,
-          entity_ids: ids,
-        });
-        if (cancelled || !rawHist) return;
-        const lines: { t: number; text: string }[] = [];
-        for (const [eid, rows] of Object.entries(rawHist)) {
-          for (const row of rows || []) {
-            const t =
-              typeof row.lu === "number"
-                ? row.lu * 1000
-                : row.last_changed
-                  ? Date.parse(row.last_changed)
-                  : NaN;
-            const v = String(row.s ?? row.state ?? "");
-            if (!Number.isFinite(t) || !v || v === "unavailable") continue;
-            lines.push({ t, text: `${new Date(t).toLocaleString()} · ${eid.split(".").pop()} → ${v}` });
-          }
-        }
-        lines.sort((a, b) => b.t - a.t);
-        setLog(lines.map((l) => l.text));
-      } catch {
-        if (!cancelled) setLog([]);
-      }
-    }
-    void loadLog();
-    return () => {
-      cancelled = true;
-    };
-  }, [callWS, seatKey, tent]);
 
   const wantT = tent === "main" ? num("number.dsc_hub_target_temp") : num("number.dsc_hub_clone_target_temp");
   const rhMin = tent === "main" ? num("number.dsc_hub_rh_target_min") : num("number.dsc_hub_clone_rh_min");
@@ -410,32 +348,6 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
           </Card>
         </div>
 
-        <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Plant log (48h)" icon="roster">
-            {log.length === 0 ? (
-              <p className="dsc-muted" style={{ margin: 0 }}>
-                Nothing logged in the last 48 hours.
-              </p>
-            ) : (
-              <ul className="dsc-fault-list">
-                {log.slice(0, 40).map((line) => (
-                  <li key={line}>
-                    <span className="dsc-muted" style={{ fontFamily: "var(--dsc-mono)", fontSize: 12 }}>
-                      {line}
-                    </span>
-                  </li>
-                ))}
-                {log.length > 40 ? (
-                  <li>
-                    <span className="dsc-muted" style={{ fontFamily: "var(--dsc-mono)", fontSize: 12 }}>
-                      +{log.length - 40} more
-                    </span>
-                  </li>
-                ) : null}
-              </ul>
-            )}
-          </Card>
-        </div>
       </div>
 
       <SlideDrawer

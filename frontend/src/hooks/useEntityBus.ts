@@ -1,17 +1,17 @@
 /**
- * Unified entity reads — Pi uses fleet snapshot + compat shim; HA uses live bus.
- * Drop-in replacement for useHass() on operational pages.
+ * Unified entity reads for operational pages — fleet snapshot + HA-shaped compat
+ * shim (the dialect the brain speaks; there is no live Home Assistant).
  *
- * On Pi, re-renders only when a tracked entity (one this render called state/num/
- * entity/available for) actually changed — not on every WS fleet tick.
+ * Re-renders only when a tracked entity (one this render called state/num/entity/
+ * available for) actually changed — not on every WS fleet tick.
  */
 import { useCallback, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from "react";
-import { useHass } from "./useHass";
-import { useFleetSource, useFleetStore, type FleetContextValue } from "./useFleet";
+import { useFleetStore, useFleetTick, type FleetContextValue } from "./useFleet";
 import { fleetControlAttributes, fleetControlAvailable, fleetControlState } from "../lib/fleetControlMap";
 import { fleetEntityAvailable, fleetLiveNumber, fleetLiveState } from "../lib/entityFleetMap";
 import { fleetToHassCompat } from "../lib/fleetFromHass";
-import type { HassEntity } from "../vite-env";
+import { call_service } from "../lib/fleetApi";
+import type { HassEntity, HomeAssistant } from "../vite-env";
 
 function entityFingerprint(entityId: string, ctx: FleetContextValue): string {
   const { fleet, hassStates } = ctx;
@@ -57,10 +57,11 @@ function resolveEntity(entityId: string, ctx: FleetContextValue): HassEntity | u
   return fleetToHassCompat(fleet)[entityId];
 }
 
+const noopCallWS = (async () => null) as HomeAssistant["callWS"];
+
 export function useEntityBus() {
-  const hass = useHass();
-  const source = useFleetSource();
   const store = useFleetStore();
+  const tick = useFleetTick();
 
   /** Entity ids touched during the current render — committed after paint. */
   const renderTracked = useRef(new Set<string>());
@@ -73,9 +74,8 @@ export function useEntityBus() {
   });
 
   const subscribe = useCallback(
-    (onStoreChange: () => void) => {
-      if (source !== "pi") return () => undefined;
-      return store.subscribe(() => {
+    (onStoreChange: () => void) =>
+      store.subscribe(() => {
         const ctx = store.getState();
         const ids = trackedRef.current;
         if (!ids.size) return;
@@ -86,13 +86,11 @@ export function useEntityBus() {
         if (sig === sigRef.current) return;
         sigRef.current = sig;
         onStoreChange();
-      });
-    },
-    [source, store],
+      }),
+    [store],
   );
 
   const getSnapshot = useCallback(() => {
-    if (source !== "pi") return hass.tick;
     const ctx = store.getState();
     const ids = trackedRef.current.size ? trackedRef.current : renderTracked.current;
     let sig = "";
@@ -102,20 +100,18 @@ export function useEntityBus() {
     if (sig === sigRef.current) return sigRef.current;
     sigRef.current = sig;
     return sig;
-  }, [source, store, hass.tick]);
+  }, [store]);
 
   useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
   return useMemo(() => {
-    if (source !== "pi") return hass;
-
     const track = (entityId: string) => {
       renderTracked.current.add(entityId);
     };
 
     const entity = (entityId: string): HassEntity | undefined => {
       track(entityId);
-      return resolveEntity(entityId, store.getState()) ?? hass.entity(entityId);
+      return resolveEntity(entityId, store.getState());
     };
 
     const available = (entityId: string) => {
@@ -124,8 +120,7 @@ export function useEntityBus() {
       if (fleetControlAvailable(entityId, ctx.fleet)) return true;
       if (fleetEntityAvailable(entityId, ctx.fleet)) return true;
       const st = resolveEntity(entityId, ctx)?.state;
-      if (st != null && st !== "unavailable" && st !== "unknown") return true;
-      return hass.available(entityId);
+      return st != null && st !== "unavailable" && st !== "unknown";
     };
 
     const state = (entityId: string, fallback = "—") => {
@@ -139,7 +134,7 @@ export function useEntityBus() {
       if (resolved?.state != null && resolved.state !== "unavailable" && resolved.state !== "unknown") {
         return resolved.state;
       }
-      return hass.state(entityId, fallback);
+      return fallback;
     };
 
     const num = (entityId: string, fallback = NaN) => {
@@ -157,9 +152,34 @@ export function useEntityBus() {
         const n = Number(resolved.state);
         if (Number.isFinite(n)) return n;
       }
-      return hass.num(entityId, fallback);
+      return fallback;
     };
 
-    return { ...hass, entity, available, state, num };
-  }, [hass, source, store]);
+    const callService = (domain: string, service: string, data?: Record<string, unknown>) =>
+      call_service(domain, service, data ?? {});
+
+    /** HA-shaped synthetic bus for the few consumers (Twin web component) that
+     *  want a `hass`-like object with a `.states` map. */
+    const hassCompat = (): HomeAssistant => {
+      const ctx = store.getState();
+      return {
+        states: { ...fleetToHassCompat(ctx.fleet), ...(ctx.hassStates ?? {}) },
+        callService: (domain, service, d) => call_service(domain, service, d ?? {}),
+        callWS: noopCallWS,
+      };
+    };
+
+    return {
+      entity,
+      available,
+      state,
+      num,
+      callService,
+      callWS: noopCallWS,
+      tick,
+      get hass(): HomeAssistant {
+        return hassCompat();
+      },
+    };
+  }, [store, tick]);
 }

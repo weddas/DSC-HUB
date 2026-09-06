@@ -1,15 +1,15 @@
-import { useHass } from "./useHass";
-import { useFleetControlSlice, useFleetSelector, useFleetSource } from "./useFleet";
+import { useFleetControlSlice, useFleetSelector } from "./useFleet";
 import { deepEqual } from "../lib/selectorStore";
 
-/** Pi-native control read with HA fallback (panel mode + unmigrated entities). */
+/**
+ * Pi-native control read. Prefers the fleet control slice; falls back to the
+ * brain's synthetic hass_states for entities not yet on a control mapping.
+ */
 export function useFleetEntity(entityId: string) {
-  const { state, available, entity } = useHass();
-  const source = useFleetSource();
   const control = useFleetControlSlice(entityId);
-  const hassFallback = useFleetSelector(
+  const statesFallback = useFleetSelector(
     (v) => {
-      if (source === "pi" && control != null) return null;
+      if (control != null) return null;
       const fromStates = v.hassStates?.[entityId];
       if (!fromStates) return null;
       return {
@@ -21,7 +21,7 @@ export function useFleetEntity(entityId: string) {
     deepEqual,
   );
 
-  if (source === "pi" && control != null) {
+  if (control != null) {
     return {
       state: control.state,
       available: control.online,
@@ -29,13 +29,7 @@ export function useFleetEntity(entityId: string) {
     };
   }
 
-  if (source === "pi" && hassFallback) {
-    return hassFallback;
-  }
+  if (statesFallback) return statesFallback;
 
-  return {
-    state: state(entityId, "unavailable"),
-    available: available(entityId),
-    attributes: (entity(entityId)?.attributes as Record<string, unknown> | undefined) ?? {},
-  };
+  return { state: "unavailable", available: false, attributes: {} as Record<string, unknown> };
 }

@@ -9,12 +9,13 @@ import {
 } from "react";
 import type { FleetSnapshot, InventoryRow, SeatSnapshot } from "../lib/fleetModel";
 import { EMPTY_FLEET, hubVitals, inventoryInService, parseFleetSnapshot, tentVitals } from "../lib/fleetModel";
-import { fleetFromHass, enrichFleetFromHassStates } from "../lib/fleetFromHass";
-import type { HassEntity, HomeAssistant } from "../vite-env";
+import { enrichFleetFromHassStates } from "../lib/fleetFromHass";
+import type { HassEntity } from "../vite-env";
 import { createStore, deepEqual, useStoreSelector, type Store } from "../lib/selectorStore";
 import { fleetControlAttributes, fleetControlState } from "../lib/fleetControlMap";
 
-export type FleetSource = "pi" | "ha";
+/** Retained for call-site compatibility; the SPA is Pi-only (no live Home Assistant). */
+export type FleetSource = "pi";
 
 export interface FleetContextValue {
   fleet: FleetSnapshot;
@@ -36,9 +37,7 @@ const EMPTY_HASS_STATES: Record<string, HassEntity> = {};
 export function FleetProvider({
   children,
   fleetRaw,
-  hass,
   tick = 0,
-  source,
   loading = false,
   error = null,
   refresh,
@@ -47,37 +46,34 @@ export function FleetProvider({
 }: {
   children: ReactNode;
   fleetRaw?: Record<string, unknown> | null;
-  hass?: HomeAssistant | null;
   tick?: number;
-  source: FleetSource;
   loading?: boolean;
   error?: string | null;
   refresh?: () => Promise<void>;
   inventory?: InventoryRow[];
   lastUpdatedAt?: number | null;
 }) {
+  const source: FleetSource = "pi";
   const fleet = useMemo(() => {
-    if (source === "pi" && fleetRaw) {
-      let parsed = parseFleetSnapshot(fleetRaw);
-      const apiHass = fleetRaw.hass_states as Record<string, HassEntity> | undefined;
-      parsed = enrichFleetFromHassStates(parsed, apiHass);
-      if (Array.isArray(fleetRaw?.inventory)) {
-        return { ...parsed, inventory: fleetRaw.inventory as InventoryRow[] };
-      }
-      if (inventory?.length) {
-        return { ...parsed, inventory };
-      }
-      return parsed;
+    if (!fleetRaw) return inventory?.length ? { ...EMPTY_FLEET, inventory } : EMPTY_FLEET;
+    let parsed = parseFleetSnapshot(fleetRaw);
+    const apiHass = fleetRaw.hass_states as Record<string, HassEntity> | undefined;
+    parsed = enrichFleetFromHassStates(parsed, apiHass);
+    if (Array.isArray(fleetRaw?.inventory)) {
+      return { ...parsed, inventory: fleetRaw.inventory as InventoryRow[] };
     }
-    return fleetFromHass(hass ?? null, inventory);
-  }, [source, fleetRaw, hass, inventory, tick]);
+    if (inventory?.length) {
+      return { ...parsed, inventory };
+    }
+    return parsed;
+  }, [fleetRaw, inventory, tick]);
 
   const hassStates = useMemo(() => {
-    if (source === "pi" && fleetRaw?.hass_states && typeof fleetRaw.hass_states === "object") {
+    if (fleetRaw?.hass_states && typeof fleetRaw.hass_states === "object") {
       return fleetRaw.hass_states as Record<string, HassEntity>;
     }
-    return hass?.states ?? EMPTY_HASS_STATES;
-  }, [source, fleetRaw, hass]);
+    return EMPTY_HASS_STATES;
+  }, [fleetRaw]);
 
   const value = useMemo<FleetContextValue>(
     () => ({ fleet, tick, source, loading, error, refresh, lastUpdatedAt, hassStates }),
