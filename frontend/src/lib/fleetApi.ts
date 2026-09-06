@@ -60,6 +60,18 @@ export async function post_demand(seat: DemandSeat, on: boolean): Promise<unknow
   return resp.json();
 }
 
+/** Toggle automatic phase-based root steering. `true` = operator takes manual
+ *  irrigation timing; the brain stops emitting P1–P3 act windows. */
+export async function set_root_steering_override(enabled: boolean): Promise<Record<string, unknown>> {
+  const resp = await fetch("/control/root-steering/override", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enabled }),
+  });
+  if (!resp.ok) throw new Error((await resp.text()) || "root steering override failed");
+  return resp.json();
+}
+
 export async function get_fleet_state(): Promise<Record<string, unknown>> {
   const resp = await fetch("/fleet");
   if (!resp.ok) throw new Error("fleet fetch failed");
