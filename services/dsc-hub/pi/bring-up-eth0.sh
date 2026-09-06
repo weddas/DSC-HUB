@@ -71,19 +71,20 @@ ip route | head -5 || true
 # Docker pin below, but host pip/apt/PlatformIO could not (seen live 2026-09-06:
 # "Update ESPHome" failed on 'pypi.org' name resolution). Pin the same servers
 # for the host via dhcpcd so a renewal keeps them.
-if ! grep -q 'DSC-HUB: host DNS' /etc/dhcpcd.conf 2>/dev/null; then
+# `static domain_name_servers` was NOT enough: dhcpcd still emptied resolv.conf on the
+# next renewal (00:39, mid fleet-reflash — hub + probe builds failed resolving
+# github.com). Take dhcpcd out of resolver management and keep a static file.
+if ! grep -q '^nohook resolv.conf' /etc/dhcpcd.conf 2>/dev/null; then
   printf '
-# DSC-HUB: host DNS for the ESPHome toolchain update (matches /etc/docker/daemon.json).
-interface %s
-static domain_name_servers=192.168.86.1 8.8.8.8 1.1.1.1
-' "$IFACE" > /tmp/dsc-dhcpcd-dns.conf
+# DSC-HUB: dhcpcd rewrote an empty resolv.conf on renewals; the resolver is static (bring-up-eth0.sh).
+nohook resolv.conf
+' > /tmp/dsc-dhcpcd-dns.conf
   run_sudo bash -c "cat /tmp/dsc-dhcpcd-dns.conf >> /etc/dhcpcd.conf"
   rm -f /tmp/dsc-dhcpcd-dns.conf
-  run_sudo dhcpcd -n "$IFACE" 2>/dev/null || true
 fi
-if ! getent hosts pypi.org >/dev/null 2>&1; then
-  # Belt and braces for this boot: dhcpcd may not rewrite resolv.conf until the next lease event.
-  printf 'nameserver 192.168.86.1
+if ! grep -q 'DSC-HUB static resolver' /etc/resolv.conf 2>/dev/null || ! getent hosts pypi.org >/dev/null 2>&1; then
+  printf '# DSC-HUB static resolver (dhcpcd nohook resolv.conf). Same servers as /etc/docker/daemon.json.
+nameserver 192.168.86.1
 nameserver 8.8.8.8
 nameserver 1.1.1.1
 ' > /tmp/dsc-resolv.conf
