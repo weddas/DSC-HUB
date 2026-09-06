@@ -104,6 +104,9 @@ DEFAULT_SETTINGS: dict[str, str] = {
     "esphome_dashboard_api": "http://dsc-hub-esphome:6052",
     "esphome_fleet_ota_prompt": "true",
     "last_built_esphome": "",
+    # fleet_history grows ~1 row per numeric metric per seat per poll (~2s).
+    # Rows older than this are pruned (best-effort, throttled). 0 disables.
+    "fleet_history_retention_days": "45",
 }
 
 
@@ -306,6 +309,51 @@ def upsert_inventory(
     return data
 
 
+_HISTORY_PRUNE_INTERVAL_S = 3600.0
+_last_history_prune: float = 0.0
+
+
+def history_retention_days(db_path: Path | None = None) -> int:
+    try:
+        return int(float(get_setting("fleet_history_retention_days", "45", db_path)))
+    except (TypeError, ValueError):
+        return 45
+
+
+def prune_fleet_history(
+    db_path: Path | None = None,
+    *,
+    now: float | None = None,
+    retention_days: int | None = None,
+) -> int:
+    """Delete fleet_history rows older than the retention window. Returns the
+    row count removed. retention_days <= 0 disables pruning (returns 0)."""
+    days = history_retention_days(db_path) if retention_days is None else retention_days
+    if days <= 0:
+        return 0
+    cutoff = (now or time.time()) - days * 86400.0
+    conn = connect(db_path)
+    cur = conn.execute("DELETE FROM fleet_history WHERE ts < ?", (cutoff,))
+    conn.commit()
+    removed = cur.rowcount if cur.rowcount is not None else 0
+    conn.close()
+    return removed
+
+
+def fleet_history_stats(db_path: Path | None = None) -> dict[str, Any]:
+    conn = connect(db_path)
+    row = conn.execute(
+        "SELECT COUNT(*) AS rows, MIN(ts) AS oldest_ts, MAX(ts) AS newest_ts FROM fleet_history"
+    ).fetchone()
+    conn.close()
+    return {
+        "rows": int(row["rows"] or 0),
+        "oldest_ts": float(row["oldest_ts"]) if row["oldest_ts"] is not None else None,
+        "newest_ts": float(row["newest_ts"]) if row["newest_ts"] is not None else None,
+        "retention_days": history_retention_days(db_path),
+    }
+
+
 def record_history(
     seat_id: str,
     metric: str,
@@ -320,6 +368,15 @@ def record_history(
     )
     conn.commit()
     conn.close()
+
+    global _last_history_prune
+    nowt = time.time()
+    if nowt - _last_history_prune >= _HISTORY_PRUNE_INTERVAL_S:
+        _last_history_prune = nowt
+        try:
+            prune_fleet_history(db_path, now=nowt)
+        except Exception:  # noqa: BLE001 — history pruning must never break a write
+            pass
 
 
 def list_history(

@@ -518,9 +518,40 @@ export function ArcGauge({
       pointers.push({ value: extrema.max, name: "max", itemStyle: { color: HEX.gray5 } });
     }
 
+    const fmtVal = (v: number) => v.toFixed(v >= 100 ? 0 : Math.abs(v) < 10 ? 2 : 1);
+
     return {
       backgroundColor: "transparent",
       animationDuration: 280,
+      tooltip: {
+        show: hasData,
+        trigger: "item",
+        confine: true,
+        enterable: false,
+        backgroundColor: "rgba(17, 19, 24, 0.94)",
+        borderColor: HEX.gray3,
+        borderWidth: 1,
+        padding: [6, 9],
+        textStyle: { color: HEX.white, fontSize: 11 },
+        // Hovering the arc/needle surfaces the exact value + Want/band/session
+        // range — the readout the click-through history drawer otherwise hides.
+        formatter: () => {
+          const rows: string[] = [
+            `<b>${label}</b>`,
+            `${holding ? "Held · " : ""}${hasData ? fmtVal(display) : "—"}${unit ? ` ${unit}` : ""}`,
+          ];
+          if (target != null && Number.isFinite(target)) {
+            rows.push(`Want ${fmtVal(target)}${unit ? ` ${unit}` : ""}`);
+          }
+          if (validBand) {
+            rows.push(`Band ${fmtVal(validBand.min)}–${fmtVal(validBand.max)}${unit ? ` ${unit}` : ""}`);
+          }
+          if (extrema?.min != null && extrema?.max != null) {
+            rows.push(`Session ${fmtVal(extrema.min)}–${fmtVal(extrema.max)}`);
+          }
+          return rows.join("<br/>");
+        },
+      },
       series: [
         {
           type: "gauge",
@@ -584,7 +615,7 @@ export function ArcGauge({
         },
       ],
     };
-  }, [display, hasData, holding, max, min, stroke, unit, validBand, segments, extrema, target]);
+  }, [display, hasData, holding, label, max, min, stroke, unit, validBand, segments, extrema, target]);
 
   const gauge = (
     <div

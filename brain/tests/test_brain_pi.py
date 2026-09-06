@@ -1018,6 +1018,37 @@ def test_list_history_newest_first(temp_db: Path) -> None:
     assert [r["value"] for r in rows] == [22.0, 21.0, 20.0]
 
 
+def test_prune_fleet_history_drops_old_rows(temp_db: Path) -> None:
+    from dsc_brain.settings import (
+        fleet_history_stats,
+        prune_fleet_history,
+        record_history,
+        set_setting,
+    )
+
+    now = time.time()
+    set_setting("fleet_history_retention_days", "30", temp_db)
+    record_history("hub", "temp_c", 1.0, now - 40 * 86400, temp_db)  # stale
+    record_history("hub", "temp_c", 2.0, now - 10 * 86400, temp_db)  # keep
+    record_history("hub", "temp_c", 3.0, now, temp_db)  # keep
+
+    removed = prune_fleet_history(temp_db, now=now)
+    assert removed == 1
+    stats = fleet_history_stats(temp_db)
+    assert stats["rows"] == 2
+    assert stats["retention_days"] == 30
+    assert stats["oldest_ts"] == pytest.approx(now - 10 * 86400)
+
+
+def test_prune_fleet_history_disabled_when_zero(temp_db: Path) -> None:
+    from dsc_brain.settings import prune_fleet_history, record_history, set_setting
+
+    now = time.time()
+    set_setting("fleet_history_retention_days", "0", temp_db)
+    record_history("hub", "temp_c", 1.0, now - 999 * 86400, temp_db)
+    assert prune_fleet_history(temp_db, now=now) == 0
+
+
 def test_retire_clears_build_draft(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
     from dsc_brain.compose_ops import retire_plant

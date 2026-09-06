@@ -3,10 +3,13 @@ import { Button, StatusChip } from "../ui";
 import { HelpTip } from "../HelpTip";
 import { DecisionLayer } from "../DecisionLayer";
 import {
+  get_history_stats,
   get_system_logs,
   power_action,
+  set_history_retention,
   set_log_verbosity,
   system_log_download_url,
+  type FleetHistoryStats,
   type SystemLogResult,
 } from "../../lib/fleetApi";
 
@@ -50,6 +53,18 @@ export function SystemDiagnosticsCard() {
   const [msg, setMsg] = useState("");
   const [pendingPower, setPendingPower] = useState<(typeof POWER)[number] | null>(null);
   const [powerBusy, setPowerBusy] = useState(false);
+  const [hist, setHist] = useState<FleetHistoryStats | null>(null);
+  const [histDays, setHistDays] = useState("");
+  const [histBusy, setHistBusy] = useState(false);
+
+  useEffect(() => {
+    void get_history_stats()
+      .then((s) => {
+        setHist(s);
+        setHistDays(String(s.retention_days));
+      })
+      .catch(() => {});
+  }, []);
 
   const load = (src = source, n = lines) => {
     setLoading(true);
@@ -149,6 +164,58 @@ export function SystemDiagnosticsCard() {
         >
           {log?.lines.length ? log.lines.join("\n") : loading ? "loading…" : "— no output —"}
         </pre>
+      </div>
+
+      <div className="dsc-honesty" style={{ marginBottom: 12 }}>
+        <b>Fleet history</b>
+        <p className="dsc-muted" style={{ fontSize: 12, margin: "4px 0 8px" }}>
+          {hist
+            ? `${hist.rows.toLocaleString()} rows${
+                hist.oldest_ts && hist.newest_ts
+                  ? ` · spans ${Math.max(
+                      1,
+                      Math.round((hist.newest_ts - hist.oldest_ts) / 86400),
+                    )} d`
+                  : ""
+              }. Rows past the retention window are pruned hourly (and on boot).`
+            : "…"}
+        </p>
+        <div className="dsc-mode-selects">
+          <label className="dsc-entity-select">
+            <span className="dsc-entity-select-label">Retention (days, 0 = keep forever)</span>
+            <input
+              type="number"
+              min={0}
+              max={3650}
+              value={histDays}
+              onChange={(e) => setHistDays(e.target.value)}
+              style={{ width: 90 }}
+            />
+          </label>
+          <Button
+            variant="secondary"
+            disabled={histBusy || histDays === "" || Number(histDays) === hist?.retention_days}
+            onClick={async () => {
+              setHistBusy(true);
+              try {
+                const s = await set_history_retention(Math.max(0, Math.trunc(Number(histDays))));
+                setHist(s);
+                setHistDays(String(s.retention_days));
+                setMsg(
+                  s.pruned != null
+                    ? `Retention ${s.retention_days} d — pruned ${s.pruned.toLocaleString()} rows.`
+                    : `Retention set to ${s.retention_days} d.`,
+                );
+              } catch (e) {
+                setMsg(String((e as Error).message || e));
+              } finally {
+                setHistBusy(false);
+              }
+            }}
+          >
+            {histBusy ? "…" : "Apply & prune"}
+          </Button>
+        </div>
       </div>
 
       <div className="dsc-honesty">
