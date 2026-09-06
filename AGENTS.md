@@ -3,6 +3,7 @@
 - Prefer one coherent end-to-end pass over narrow phasing; keep kit spaces (4x8 and 2x4) at the same development point in a pass — do not leave one tent behind; polish and operator UX stay first-class, not a later polish pass.
 - Demand behavioral honesty: gauges, chips, and labels must match real Light/Climate/Root Want→Got state — no blank WebGL/Sankey theater or status collages that look live when they are not; strain catalog images only when upstream media exists.
 - Calibrate surfaces each expose What→Process→Expected; live calibration must state that Start holds live actuators until finish.
+- Split shared busy flags per action: every independent async action in a component owns its own in-flight state (`saving` / `aborting` / `aiBusy` …); a single `busy` may gate only steps that are genuinely sequential in the same flow. A control must never be disabled by an unrelated request, and Abort/Cancel stays enabled while the thing it aborts is in flight (reference: FanCalibrateWizard, SoftCalWizard `aiBusy`, LabWetCalPanel in CalibratePage.tsx).
 - Entity-bus round-trip must not gate wizard Next or primary actions — use local strain/assign/text drafts until the bus catches up.
 - Operator SPA charting consolidates on ECharts (arc gauges, Sankey, charts); do not stack additional chart libraries without exhausting alternatives first.
 - Operator chrome uses Probe/Plant language only (not Seat/POT); Expected/calendar stage must not read as live plant state.

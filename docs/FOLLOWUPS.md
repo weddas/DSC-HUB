@@ -10,6 +10,28 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-09-06 — Zigbee track: state re-derivation + completion plan (no code changes)
+
+**Source:** `CLAUDE - DSC-HUB/plan-zigbee-completion-2026-09-06.md` (supersedes `plan-zigbee-ux-rollout-and-esphome.md`). Tracker rows updated in Notion.
+
+| Item | Status |
+|------|--------|
+| Original Zigbee UX rollout Part A (phases 0–4) + Part B (ESPHome pin / dashboard / toolchain) | **done** — landed in PRs #180 / #183 / #189 / #179 / #195; 9 of 9 Part A tracker rows Fixed & Verified |
+| Automation rule engine v2 + Seat/POT rename + Twin retirement | **done (working tree, uncommitted)** — `tsc` exit 0; `test_automation_rules*.py` 34 passed; `test_zigbee_*.py` 33 passed this pass |
+| Live Pi (`dsc-brain.local`, brain 8.0.0) | **pre-v2** — `/settings/automations/targets` falls through to SPA HTML; 0 rules; `canopy_2x4` live, `canopy_4x8` + 3 leak sensors bound stubs since restart |
+
+**red-flag (logged to tracker, not fixed):**
+- Non-climate Zigbee datapoints (CO₂, lux, contact, occupancy, power) never become fleet entities — `fleet_state.py:234-252` only exposes temperature/humidity; automation v2 cannot trigger on them; 8 of 21 catalog roles are dead ends after binding — **Medium** (plan Phase 4).
+- `GET /settings/esphome/toolchain` blocks > 30 s on the live Pi when PyPI and `:6052` are unreachable (Ethernet up, no route out) — **Medium** (plan Phase 5).
+- `api.py` `spa_fallback` returns `index.html` 200 for unknown `/settings/*` paths — a new SPA against an older brain fails as a JSON parse error, not a 404 — **Low** (plan Phase 6).
+
+**soak:** `canopy_4x8` ZY-ZTH02 silent since last brain restart (~40 min at check) while `canopy_2x4` reports — check battery/range before the v2 live soak.
+
+**next-plan:** Phase 1 commit/PR + Pi deploy (user's call) → Phase 2 live soak → Phases 3 (safety) ∥ 5 (ESPHome closure) ∥ 6 (housekeeping) → Phase 4 (datapoint exposure, one device type at a time).
+
+---
+
+
 ## 2026-09-06 — DSC-HUB 8.0.0 kit SD installer (Tasks 1–6 landed; 7–8 open)
 
 **Spec/plan:** `docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md`, `docs/superpowers/plans/2026-09-06-dsc-kit-sd-installer.md`
@@ -4272,5 +4294,29 @@ Teaser row-height CSS (52pxâ†’78px), journal system-row collapse (`Ã—N`,
 
 ---
 
+---
 
+## 2026-09-06 — Four larger tracker items: Twin fate, busy-flag rule, Seat/POT rename, automation v2 (+ findings fix pass)
 
+All in the working tree, **not committed**. Tracker rows updated in Notion (DSC-HUB Issue & Recommendation Tracker).
+
+| Item | Status |
+|------|--------|
+| Twin 3D scene — decide fate | **done** — RETIRED. Both host routes already redirected, so `DscTwinCanvas` never rendered, yet `TwinKeepAlive` was mounted on every page lazy-loading the R3F chunk. Removed App mount; deleted `twin/DscTwinCanvas.tsx`, `TwinKeepAlive.tsx`, `TwinViewport.tsx`, `lib/dsc-twin-api.ts`; dropped `.dsc-twin-*` CSS. `three`/`@react-three` deps stay (AirflowParticleScene). Twin SF1000 lamp untouched. |
+| "Split shared busy flags per action" house rule | **done** — added to AGENTS.md Learned User Preferences (drafted on the user's instruction to fix this item; commit is still the user's call). |
+| Seat/POT → Probe/Plant identifier rename | **done** — dedicated pass, ~75 identifier families / 44 files; `seatModel.ts→probeModel.ts`, `potReading.ts→probeReading.ts`, `potTrust.ts→probeTrust.ts`, `PlantSeatPanel→PlantProbePanel`, `SeatOverlay→ProbeOverlay`. Wire keys (`seat_id`, `pot1..4`, `pots` map, script params, `?pot=`), inventory-seat types (`SeatSnapshot` etc.), CSS classes kept byte-identical. Surfaced and fixed ~35 real operator-visible POT/seat leaks (SoilTestWizard rendered literal "POT1", alertPlaybook "Pot N stuck", Mission "Plant seats", …). |
+| Automation rule engine v2 | **done (needs live soak)** — compound all/any, window, debounce/release, hysteresis, max_age_s, computed-entity triggers, relay + setpoint actions with restore-on-clear, `GET /settings/automations/targets`, SPA editor. Safety boundary: Sonoffs are cut-out only (appliance_driver owns them), hub relays limited to operator-owned switches, setpoints ESP-clamped, `clone_*` skipped under Follow Plants. Tests 7→34; full brain suite 306 passed. |
+| Findings fix pass (6 rows from the rename agent) | **done** — KitPulse "Probe " shortener; Root probe card keyboard-accessible; root-steering error surfaced; identity inputs `autoComplete=off`; **alertRoute bug**: `dsc_probeN_sensor_stuck` alerts fell through to Overview, now route to Root; Calibrate lab-wet copy uses `probeLabel`. |
+
+**Verify:** `cd frontend && npx tsc --noEmit` → exit 0; `npm run build` → ok; `cd brain && python -m pytest -q` → 306 passed (paho flake did not surface).
+
+**red-flag (logged to tracker, not fixed):**
+- `appliance_driver.py:224-231` stale-hub failsafe skips `force`, so an OOS seat's physically-ON relay stays ON when the hub goes dark — **High**.
+- `control_ops.py:232` operator Sonoff flips bypass `_relay_commanded`; persist until demand changes.
+- `hub_native.py:209-212` `emit_proposal` only logs — brain never writes demand switches; confirm shadow-mode intent vs "brain is control SoT".
+- `fleet_state.py:96` raw view hardcodes `sensor.dsc_active_alert_count = 0`.
+- `call_service_sync` + `api_lock.py` asyncio.Lock/loop-binding hazard under contention (needs repro).
+
+**deferred:** automation ws-loop writes are fire-and-forget (log only, no `last_error`); `oos_seat` unconditional restore; per-condition truth values in rule summary; `SeatSnapshot→DeviceSeatSnapshot` only if brain adopts it; `BandChartKind "pot1".."pot4"`; `seatApi.smoke.ts` filename; Settings `seats` prop offers hub/panel/probe to the OOS picker (tracker Low).
+
+**soak:** v2 relay/setpoint rules and the Sonoff cut-out restore path are unit-tested only — exercise on the live Pi (arm one cut-out rule, trip it, confirm driver re-asserts on clear) before trusting.
