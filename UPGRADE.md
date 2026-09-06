@@ -1,80 +1,100 @@
-# DSC-HUB — Upgrade
+# DSC-HUB — Upgrade (8.x, Pi-only)
 
-**New installs:** [`INSTALL.md`](INSTALL.md) for **v5.1.0**.
+**New installs:** [`INSTALL.md`](INSTALL.md). **Unboxing a kit:** [`SETUP.md`](SETUP.md).
 
-Repo: https://github.com/weddas/DSC-HUB · tag **`v5.1.0`** · branch **`master`**
+Repo: https://github.com/weddas/DSC-HUB · branch **`master`** · releases are tagged (`v8.0.0-AlphaPi`, …).
 
----
-
-## 5.0.0 → 5.1.0 (all Sync HAOS)
-
-1. Push / pull tag **`v5.1.0`** (or `master` containing it).
-2. On **each** HAOS: Supervisor → **Update DSC-HUB Sync** to **5.1.0** → Start/restart.
-3. Confirm log “Synced to …” and `/config/dsc-hub-sync.version` shows `version=5.1.0`.
-4. If options still have `sync_esphome: false`, set **true** (5.1 default for new installs).
-5. **Restart HA Core once** — new `input_*` / Phase B / version helpers need restart.
-6. Confirm `/dsc-hub-pro/home`, fleet chip HA surface **5.1.0**, Learning Phase B **off**.
-7. Disable leftover storage dashboards named DSC-HUB / `dsc-hub-v4` (Pro YAML only).
-8. ESPHome: Update All / Install every device to firmware **5.1.0** (lab + field kits).
-9. Fleet chip → **ok**.
-
-### Behavioral notes
-
-- Phase B writes **only** `number.dsc_hub_ladder_wait_*` — never failsafe / min-off / fans.
-- Hub reconnect: safe-off + follower resync only (**no** snapshot restore).
-- Notify: set `input_text.dsc_notify_service` (replaces hardcoded mobile_app targets).
-- Orphan automations: remove any leftover UI ids matching old `dsc_v24_*` / duplicate followers.
-- Lab door magnet entity `lock.4x8_humidifier_photo_lab_lock` is a **room door release**
-  (label fixed on dashboard; entity id unchanged).
+There is no Home Assistant in the upgrade path. Everything below happens in the
+Pi SPA (`http://dsc-brain.local:8787`, or `http://10.42.0.1:8787` on the kit
+hotspot) or, as a fallback, over SSH on the Pi.
 
 ---
 
-## Legacy v2.4 / early v4 → Sync workflow
+## What gets upgraded
 
-Use this section only when migrating an **already-running** old site onto git-pull
-ESPHome + Sync add-on.
+| Layer | Where it lives | How it moves |
+|---|---|---|
+| DSC-Brain + SPA | `dsc-hub-brain` container (compose) | **Settings → Server → Kit update** (Ethernet-gated pull + restart), or `pi/deploy-brain-remote.sh` from a dev box |
+| ESPHome build toolchain | host venv `/opt/dsc-esphome-venv` (`dsc-esphome-dashboard.service` on `:6052`) | **Settings → Device → ESPHome → Update ESPHome** (host helper runs `pip`, restarts the dashboard); **Roll back to X** if a bump misbehaves |
+| Device firmware (hub, panel, probes, Sonoffs) | compiled from `firmware/v4/` on the Pi, flashed OTA | **Settings → Device → ESPHome → Canary … first → Release the rest** (or **Reflash whole fleet**), one job at a time, **hub last** |
 
-### A. Delete old HA packages
-
-Remove duplicates before adding `dsc_v4_*` (same `unique_id`s create silent `*_2` entities):
-
-- `dsc_dashboard_v3.yaml`, `dsc_v24_*`, old `dsc_tank` / `dsc_pots_*` / `dsc_alert_count`
-- Any older core helpers that redefine `dsc_hub_link`, fan %, tank EC
-
-### B. Install the v5.1 HA pack
-
-1. Prefer Sync add-on **5.1.0** over hand-copy.
-2. Merge [`configuration.snippet.yaml`](homeassistant/configuration.snippet.yaml) —
-   dashboard key **`dsc-hub-pro`** only (remove `dsc-hub-v4:`).
-3. Restart HA; remove duplicate DSC automations from UI storage.
-4. Cut over storage Pro → YAML Pro (delete storage dashboard, restart once).
-
-### C. ESPHome stubs + flash
-
-1. Stubs from [`homeassistant/esphome/`](homeassistant/esphome/) with `ref: v5.1.0`
-2. Keep `secrets.yaml`; match `hub_mac` / `panel_mac` / `espnow_cmd_tag` **54727**
-3. Flash hub → panel → pots → bridge → Sonoffs when firmware packages change
-
-### Post-flash checks
-
-- [ ] Firmware entities = **5.1.0**
-- [ ] Fleet status **ok**
-- [ ] Panel ESP-NOW UP; Sonoff followers OK
-- [ ] No `*_2` twin entities
-- [ ] Tank EC scale via `input_number.dsc_tank_ec_multiplier`
-
-### Rollback
-
-Restore last-good packages/dashboard (Sync keeps a snapshot) or prior firmware builds.
-Hub and panel must share a matching `espnow_cmd_tag`.
+Firmware train **8.0.0.0** pins ESPHome `min_version: "2026.6.5"`; a toolchain
+below that refuses to build. Details: [`docs/ops/ESPHOME-TOOLCHAIN.md`](docs/ops/ESPHOME-TOOLCHAIN.md).
 
 ---
 
-## Day-to-day
+## Routine upgrade (brain first, then firmware)
 
-```
-push master → Sync (~60s) → optional Core restart for new helpers
-           → ESPHome Install (manual, per device)
-```
+1. **Brain / SPA.** Settings → Server → Kit update → **Check** → **Update** (needs
+   the Pi on Ethernet). The brain restarts; the page reloads on the new bundle.
+   The Settings → System card shows the running version.
+2. **ESPHome toolchain** (only when the card says *Update available*). Settings →
+   Device → ESPHome → **Update ESPHome → x.y.z**. Watch the log; the card flips to
+   the new *Installed* and offers the rollout.
+3. **Firmware.** Same card → **Canary Probe 2 first**. Wait for *Canary OK*
+   (the probe reports the new ESPHome version), then **Release the rest (N, hub
+   last)**. Each device is compiled and flashed in turn through the build worker.
+   Live/Overview keep serving the last-known values while a device reboots.
+4. **Verify.** Settings → Device: every row shows the expected firmware
+   (`8.0.0.0`) and *online*; Overview fleet chip **ok**.
 
-See [`RELEASE.md`](RELEASE.md) · [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md).
+Nothing flashes without a confirm click. A failed job stops the queue at that
+device — fix it (job log on the card, or **Logs ↗** into the ESPHome dashboard)
+and re-queue just that seat.
+
+---
+
+## Bumping the pinned ESPHome (`min_version`)
+
+Do this deliberately, not on every ESPHome release. Steps live in
+[`docs/ops/ESPHOME-TOOLCHAIN.md`](docs/ops/ESPHOME-TOOLCHAIN.md#bump-the-pinned-min_version):
+update the venv, `esphome config` every entry point, run `scripts/run_sim_gates`,
+bump the four `esphome:` blocks + `PIN=` in `dsc-esphome-venv-setup.sh` +
+`PINNED_MIN_VERSION` in `esphome_toolchain.py`, changelog line, reflash.
+
+---
+
+## Fallbacks (SSH on the Pi)
+
+| Situation | Command |
+|---|---|
+| SPA rollout unavailable | `sudo bash /opt/dsc-hub/pi/flash-fleet-remote.sh <sudo-pass> [seats…]` — host venv, hosts from the brain inventory, canary first / hub last |
+| Hub stuck on its fallback hotspot | `flash-hub-fallback-remote.sh` |
+| Sonoffs on the AP island | `flash-sonoff-lan-remote.sh`; on their fallback AP: `flash-sonoff-fallback-remote.sh` |
+| Toolchain by hand | `sudo -u dsc /opt/dsc-esphome-venv/bin/pip install esphome==<ver>` then `sudo systemctl restart dsc-esphome-dashboard` |
+| Brain by hand | `docker compose -f /opt/dsc-hub/docker-compose.yml pull brain && … up -d brain` (prefer `docker stop -t 20` + `start` over `restart`) |
+
+All of these need `firmware/v4/secrets.yaml` on the Pi (baked kits ship it at
+`/opt/dsc-hub/firmware/v4/secrets.yaml`, `0600 dsc:dsc`).
+
+---
+
+## Rollback
+
+- **Toolchain:** Settings → Device → ESPHome → **Roll back to X** (the version the
+  last successful change came from), or the pip command above.
+- **Firmware:** re-queue the affected seats after rolling the toolchain back; the
+  YAML is the same, so a rebuild on the previous ESPHome reproduces the previous
+  binary. Hub and panel must keep a matching `espnow_cmd_tag` (**54727**).
+- **Brain:** `docker compose … up -d brain` on the previous image tag, or
+  Settings → Backup → import the last export.
+
+---
+
+## From 7.x (Home Assistant lab) to 8.x
+
+The HA lab (packages, HACS, Sync add-on, Lovelace) was retired in 2026-09 and
+nothing in 8.x reads from or writes to a Home Assistant. Devices flashed from
+the old HA ESPHome add-on keep working — they are just behind:
+
+1. Bring the Pi up on 8.x ([`INSTALL.md`](INSTALL.md) / factory image).
+2. Copy your `firmware/v4/secrets.yaml` to the Pi (keys are compiled in; keep the
+   same set or plan to reflash everything over USB).
+3. Settings → Device → ESPHome → **Reflash whole fleet** (hub last). The 8.0.0.0
+   build drops every `platform: homeassistant` entity (SNTP-only clock, native-API
+   plant names, ESP-NOW-only root-zone), so the fleet no longer waits on an HA
+   that is not there.
+4. Decommission the HA integrations at your leisure — they are not consulted.
+
+See [`docs/FIRMWARE-HA-REMOVAL.md`](docs/FIRMWARE-HA-REMOVAL.md) and
+[`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md).

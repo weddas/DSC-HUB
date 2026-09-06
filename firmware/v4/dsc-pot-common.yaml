@@ -7,8 +7,8 @@
 #  !include this file — never put logic in a stub.
 #
 #  Remote-git safe: no !secret in this file — stubs pass wifi_ssid,
-#  wifi_password, and espnow_key as substitutions (HA stubs under
-#  homeassistant/esphome/ pull this package from GitHub).
+#  wifi_password, and espnow_key as substitutions. (The HA git-pull stubs
+#  under homeassistant/esphome/ were retired with the HA lab, 2026-09.)
 # ==================================================================
 #
 #  ⚠ ENTITY IDs ARE A CONTRACT (sensor.dsc_probe1_soil_*). Renamed from
@@ -134,7 +134,8 @@ esphome:
   min_version: "2026.6.5"
   project:
     name: digital_emotions.dsc-probe
-    version: "7.1.0.0"
+    # 8.0.0.0 — ESPHome-only train (SNTP-only clock, min_version pin).
+    version: "8.0.0.0"
 
 esp32:
   board: esp32dev
@@ -678,7 +679,7 @@ text_sensor:
   - platform: template
     name: "Firmware Version"
     icon: mdi:tag-check
-    lambda: 'return {"7.0.0.0"};'
+    lambda: 'return {"8.0.0.0"};'
     update_interval: 60s
   # Diagnostic only — see 0xD7 RX note in globals/espnow below. This node
   # cannot set its own clock from the packet, so this is the only trace

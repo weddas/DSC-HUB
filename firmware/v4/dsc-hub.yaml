@@ -6,7 +6,7 @@
 #
 #  Local:  esphome run dsc-hub.yaml
 #  Kit SoftAP setup: esphome run dsc-hub-kit.yaml
-#  HA:     homeassistant/esphome/dsc-hub.yaml (git-pulls both bodies)
+#  Pi:     Settings → Device → ESPHome (Queue OTA / Reflash fleet)
 # ==================================================================
 
 substitutions:

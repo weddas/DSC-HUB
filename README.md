@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | **Release** | [8.0.0 AlphaPi](https://github.com/weddas/DSC-HUB/releases/tag/v8.0.0-AlphaPi) |
-| **Surface** | Brain / SPA **8.0.0** · kit firmware train **7.0.0.0** |
+| **Surface** | Brain / SPA **8.0.0** · kit firmware train **8.0.0.0** (ESPHome-only; fleet reflash via Settings → Device → ESPHome) |
 | **Product path** | Flash SD → Pi boots → SPA Setup (`#/setup`) → USB flash fleet → SoftAP/LAN join → Zigbee bind |
 
 Home Assistant lab, HACS, and Lovelace delivery were **retired** (2026-09). The SPA still speaks an HA-shaped entity / `call_service` dialect that **DSC-Brain implements natively** — there is no HA runtime.
@@ -66,7 +66,7 @@ Operator **Update** in Settings pulls a full kit version bundle **only when Ethe
 
 ### Alpha caveats
 
-- Kit firmware **`.bin` placeholders** may still need real ESPHome kit builds before production USB flash.
+- Kit firmware `.bin` files are real builds only when the bake host has an ESPHome CLI and `firmware/v4/secrets.yaml` (`image/bake-firmware.sh`; `DSC_RELEASE=1` refuses placeholders).
 - Stock Lite inject paths may still expect Docker present for first-boot image preload — prefer the released factory `.img.xz`.
 - Live kit probes are **1–2** (`KIT_PROBE_NUMBERS`); pot3/4 and F-001/F-002 stay Advanced / honest OOS, not kit defaults.
 

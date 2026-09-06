@@ -1,19 +1,29 @@
 #!/bin/bash
 # Recover the hub off its fallback SoftAP from the Pi (stops DSC-Brain AP briefly).
-# Assumes dsc-hub.yaml is already compiled in the dsc-hub-esphome container
-# (run `esphome compile dsc-hub.yaml` first so AP downtime is upload-only).
+# Assumes dsc-hub.yaml is already compiled in the host ESPHome venv
+# (run `esphome compile dsc-hub.yaml` in firmware/v4 first so AP downtime is upload-only).
 # Usage: flash-hub-fallback-remote.sh [sudo_password] [ap_wait_seconds]
 set -eu
 
 PASS="${1:-Digital}"
 AP_WAIT="${2:-120}"
 SSID="DSC-HUB Fallback Hotspot"
-SECRETS="/opt/dsc-hub-repo/firmware/v4/secrets.yaml"
+SECRETS="${DSC_ESPHOME_PROJECT_DIR:-/opt/dsc-hub-repo/firmware/v4}/secrets.yaml"
 BRAIN_MDNS="${BRAIN_MDNS:-dsc-brain.local}"
 BRAIN_ETH_IP="${BRAIN_ETH_IP:-192.168.86.48}"
 IW_SCAN_TIMEOUT="${IW_SCAN_TIMEOUT:-30}"
 
 run_sudo() { echo "$PASS" | sudo -S "$@"; }
+
+# --- ESPHome from the host venv (the dsc-hub-esphome container is retired) ---
+[ -f /etc/dsc-hub/esphome.env ] && . /etc/dsc-hub/esphome.env
+ESPHOME="${DSC_ESPHOME_BIN:-/opt/dsc-esphome-venv/bin/esphome}"
+[ -x "$ESPHOME" ] || ESPHOME="$(command -v esphome || true)"
+[ -n "$ESPHOME" ] || { echo "FAIL: no esphome CLI — sudo systemctl start dsc-esphome-venv-setup" >&2; exit 1; }
+export PLATFORMIO_CORE_DIR="${PLATFORMIO_CORE_DIR:-/var/lib/dsc-hub/platformio}"
+PROJECT_DIR="${DSC_ESPHOME_PROJECT_DIR:-/opt/dsc-hub-repo/firmware/v4}"
+[ -d "$PROJECT_DIR" ] || PROJECT_DIR=/opt/dsc-hub/firmware/v4
+run_esphome() { (cd "$PROJECT_DIR" && "$ESPHOME" "$@"); }
 
 get_secret() {
   grep "^dsc_hub_ap_password:" "$SECRETS" | sed -n 's/^[^:]*: "\(.*\)"/\1/p' | head -1
@@ -106,7 +116,7 @@ HUB_PI_IP="10.42.0.10"
 if ping -c1 -W2 "$HUB_PI_IP" >/dev/null 2>&1; then
   if (echo >/dev/tcp/"$HUB_PI_IP"/8266) 2>/dev/null || (echo >/dev/tcp/"$HUB_PI_IP"/6053) 2>/dev/null; then
     echo "Hub reachable on Pi AP ($HUB_PI_IP) — trying OTA without stopping Brain AP..."
-    if run_sudo docker exec -w /config dsc-hub-esphome esphome upload dsc-hub.yaml --device "$HUB_PI_IP"; then
+    if run_esphome upload dsc-hub.yaml --device "$HUB_PI_IP"; then
       echo "OK via Pi AP: hub"
       echo "=== done — hub reboots and should rejoin DSC-Brain within ~2 min ==="
       exit 0
@@ -137,7 +147,7 @@ fi
 # NOTE: keep inside `if` — a bare call under `set -e` aborts via the EXIT trap.
 if connect_fallback_ap "$AP_PSK"; then
   echo "Connected — uploading pre-built dsc-hub firmware over fallback AP..."
-  if run_sudo docker exec -w /config dsc-hub-esphome esphome upload dsc-hub.yaml --device 192.168.4.1; then
+  if run_esphome upload dsc-hub.yaml --device 192.168.4.1; then
     echo "OK via fallback AP: hub"
   else
     echo "FAIL OTA via fallback AP: hub"

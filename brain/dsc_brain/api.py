@@ -32,6 +32,7 @@ from .esphome_client import start_esphome_ingest, stop_esphome_ingest
 from .esphome_jobs import list_esphome_devices, list_jobs, queue_job, start_esphome_worker, stop_esphome_worker
 from .esphome_toolchain import (
     pending_fleet_rollout,
+    rollback_toolchain as esphome_toolchain_rollback,
     start_fleet_rollout,
     status as esphome_toolchain_status,
     update_to_latest as esphome_toolchain_update,
@@ -1384,18 +1385,40 @@ def settings_esphome_toolchain_update(body: EsphomeToolchainUpdateBody) -> dict[
         raise HTTPException(409, str(exc)) from exc
 
 
+@app.post("/settings/esphome/toolchain/rollback")
+def settings_esphome_toolchain_rollback(body: EsphomeToolchainUpdateBody) -> dict[str, Any]:
+    """Put the toolchain back on the version the last successful change came from
+    (or an explicit `target`). Same guard rails as an update; downgrade allowed."""
+    if _demo_mode():
+        _demo_forbidden()
+    try:
+        return esphome_toolchain_rollback(target=body.target)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(409, str(exc)) from exc
+
+
 @app.get("/settings/esphome/rollout")
 def settings_esphome_rollout() -> dict[str, Any]:
-    """Seats that would be reflashed if the operator confirms a post-upgrade rollout."""
+    """Seats that would be reflashed if the operator confirms a post-upgrade rollout,
+    plus the canary probe and the state of an in-flight canary."""
     return pending_fleet_rollout()
 
 
 @app.post("/settings/esphome/rollout")
-def settings_esphome_rollout_start() -> dict[str, Any]:
-    """One confirm click: enqueue an OTA per in-service seat, hub last."""
+def settings_esphome_rollout_start(mode: str = Query("all")) -> dict[str, Any]:
+    """One confirm click. `mode=all` → every in-service seat (hub last);
+    `mode=canary` → just the canary probe; `mode=rest` → everyone else after the
+    canary rejoined."""
     if _demo_mode():
         _demo_forbidden()
-    return start_fleet_rollout()
+    try:
+        return start_fleet_rollout(mode=mode)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(409, str(exc)) from exc
 
 
 @app.get("/settings/backup/export")

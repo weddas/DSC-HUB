@@ -19,7 +19,7 @@
 - pot3/4 and F-001/F-002 are not kit defaults
 - Pi SoftAP ≠ hub `DSC-Setup-*` ≠ bridge `DSC-Anchor`
 - Full update pulls only when Ethernet is up; offline Update is honest no-link
-- Existing OTA/compile path (`esphome_jobs.py` docker exec) stays for advanced/server; kit Setup uses new USB flash path
+- Existing OTA/compile path (`esphome_jobs.py` — host ESPHome venv / dashboard WebSocket since 8.0.x; the docker-exec note here is superseded, see `docs/ops/ESPHOME-TOOLCHAIN.md`) stays for advanced/server; kit Setup uses new USB flash path
 - Commit only when asked; kit AP credentials live in Notion, never in git
 - Hotpatch prefers `docker stop -t 20` + `start`; PuTTY plink/pscp on Windows
 
@@ -356,6 +356,6 @@ def test_full_update_rejected_without_ethernet():
 
 ## Self-review notes
 
-- Existing `esphome_jobs.py` is **OTA/compile via docker** — USB path is intentionally separate (`usb_flash.py`) to match the approved “baked binary + host esptool” design.
+- Existing `esphome_jobs.py` is OTA/compile via the host ESPHome venv / dashboard (*superseded note: it was docker-exec when this plan was written*) — USB path is intentionally separate (`usb_flash.py`) to match the approved “baked binary + host esptool” design. Baked binaries are compiled from the same `firmware/v4/secrets.yaml` the image ships (`bake-firmware.sh`).
 - `dsc-hub-compose.service` currently `Wants=dsc-hub-ap.service` — Task 2 must change that for Ethernet-first.
 - No placeholders left for critical behaviors; Update pull orchestrator may start as compose pull against a documented registry, then grow to offline bundle load without changing the HTTP contract.

@@ -1,96 +1,106 @@
 # DSC-HUB firmware v4
 
-Working directory for ESPHome configs. Current fleet release string:
-**Live train:** hub / Control / bridge / pots / Sonoffs **6.0.0.0** (SoftAP cutover;
-HA surface **7.2.0**). Tagged marketing cut may still say `v5.1.0`. See CHANGELOG / FOLLOWUPS.
+ESPHome configs for the whole kit. **Train 8.0.0.0** — ESPHome-only (no
+`platform: homeassistant` anywhere), pinned `esphome: min_version: "2026.6.5"`.
+The Pi brain is the control source of truth; devices talk to it over the ESPHome
+native API and to each other over ESP-NOW.
 
-Firmware QA: [docs/qa/FIRMWARE-QA-5.1.0.md](../../docs/qa/FIRMWARE-QA-5.1.0.md).
-Repo [README](../../README.md) and [INSTALL.md](../../INSTALL.md) for from-scratch HA setup.
-Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
+| Device | Stub (lab / Pi LAN) | Stub (kit SoftAP setup) | Package body |
+|---|---|---|---|
+| Hub | `dsc-hub.yaml` | `dsc-hub-kit.yaml` | `dsc-hub-v4_0.yaml` + `dsc-hub-fleet-heal.yaml` + `dsc-hub-espnow-{parked,primary}.yaml` |
+| DSC-CONTROL panel (CYD) | `dsc-control.yaml` | `dsc-control-kit.yaml` | `dsc-control-common.yaml` (+ `cyd_glyphs.yaml`) |
+| Probes 1–4 | `dsc-pot{1..4}.yaml` | `dsc-pot{1..4}-kit.yaml` | `dsc-pot-common.yaml` |
+| Sonoffs | `dsc-heater.yaml` `dsc-heatmat.yaml` `dsc-humidifier.yaml` `dsc-de-humidifier.yaml` | — (LAN WiFi) | `dsc-sonoff-common.yaml` |
 
-## Local vs HA
+Probe devices are named `dsc_probeN` on the wire; their YAML files stayed
+`dsc-potN.yaml` (the brain's job map and every script use those names).
+The WT32-ETH01 appliance bridge is retired to [`../_history/v4/`](../_history/v4/)
+— the Pi drives the Sonoffs directly.
 
-| Where | What |
-|---|---|
-| Here (`firmware/v4/`) | Stubs `!include` package bodies for Cursor edits + local flash. |
-| [`homeassistant/esphome/`](../../homeassistant/esphome/) | Same stubs with **git-pull** packages from GitHub. |
+Wi‑Fi is split into `dsc-*-wifi-pi.yaml` / `-lab.yaml` / `-kit.yaml` so kit builds
+carry no compile-time SSID. Package bodies are `!secret`-free; stubs pass
+credentials, `espnow_key`, hub/panel MACs and `espnow_cmd_tag` (**54727**) as
+substitutions. Custom components: [`components/`](components/) (`dsc_fleet_setup`
+phone portal, `dsc_anchor_ap`, `dsc_api_client`).
 
-Entry points (local lab): `dsc-hub.yaml`, `dsc-control.yaml`, `dsc-bridge.yaml`, `DSC-Probe1.yaml`, …
-Kit SoftAP setup: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `DSC-Probe{1..4}-kit.yaml`, `dsc-bridge-kit.yaml`
+## Build & flash
 
-WiFi is split into `dsc-*-wifi-lab.yaml` / `dsc-*-wifi-kit.yaml` so kit builds omit compile-time SSIDs.
-Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pots/bridge join `DSC-Setup-*`).
-Bridge also hosts SoftAP `DSC-Anchor` (F-012 channel pin) + `components/dsc_api_client/` (F-010).
+Day to day this happens on the Pi: **Settings → Device → ESPHome** (compile, OTA,
+canary → fleet rollout, toolchain update). The Pi keeps a copy of this folder
+(`/opt/dsc-hub/firmware/v4` on a baked kit, `/opt/dsc-hub-repo/firmware/v4` on a
+remote deploy) and serves it from the ESPHome dashboard on `:6052`.
+[`../../docs/ops/ESPHOME-TOOLCHAIN.md`](../../docs/ops/ESPHOME-TOOLCHAIN.md).
 
-Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and hub/panel MACs + `espnow_cmd_tag`) as substitutions.
-
-Pots (`DSC-Probe-common` **5.1.6+**): each soil channel has **Cal … Offset** / **Cal … Scale**
-config numbers (NVS). Formula `raw * scale + offset` applies before range/median and feeds
-HA + ESP-NOW. **Soil * Raw** diagnostic templates reverse cal for lab wet measured points.
-**Reset Sensor Calibration** restores defaults and clears provenance. **Mark Soil Cal Peer Median**
-(5.1.5+) and **Mark Soil Cal Lab Buffer** (5.1.6+) stamp method after HA push / lab wet.
-
-## Panel (DSC-CONTROL **6.0.0.0**)
-
-Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml).
-
-| Feature | Notes |
-|---|---|
-| Soil cards + detail | 0xD3 vitals / 0xD4 names; tap pot → NPK drill-down |
-| Hold-to-lock | Hold ~3 s on primary tabs; hold lock screen to unlock |
-| Demand / takeover gate | Confirm → Engage (not one stray tap) |
-| Connections | Wi‑Fi channel; ESP-NOW RX age + TX seq; silent → ping/WiFi bounce |
-| AP pin | Runtime only: hub **Lock WiFi AP** learns preferred BSSID into NVS; 0xD0 fleet-beats it; Control/pots `adopt_hub_wifi_ap`. Stubs stay `00:00:00:00:00:00` — never bake a site MAC into YAML. |
-| Pulse VPD trend | 12×5 min ring → one label (no canvas charts) |
-| HA API | **Plaintext** (no Noise); **mDNS off** — add by IP only |
-| Stability | **4.0.10** page-gated `refresh_ui` @ 5 s |
-| Snappiness | **4.0.11** `refresh_ui` reads `gv_*` live (template mirrors parked); 30 s Wi‑Fi channel poll |
-
-After UI flashes: watch serial `boot` / `heap` lines. If the panel boot-loops, use **USB** not OTA until `DSC-CONTROL 4.0.11 up — free_heap=…` prints cleanly. See [`../_history/v4/crash-logs/`](../_history/v4/crash-logs/).
-
-### Panel HA API reconnect
-
-The `api:` block lives in [`dsc-control-common.yaml`](dsc-control-common.yaml). **v4.0.9+ has no Noise encryption** — LVGL RAM left the Noise handshake failing (`HANDSHAKESTATE_SETUP_FAILED`) and the teardown path double-freed the heap (reboot whenever HA probed). mDNS is **disabled** (setup OOM left it FAILED forever). ESPHome’s “Unable to connect… includes an `api` section” toast is **generic** — it does **not** mean the YAML is missing `api:`.
-
-| Check | What to do |
-|---|---|
-| Panel boot-looping / no Wi‑Fi | USB flash; serial must show `DSC-CONTROL 4.0.11 up — free_heap=…`. OTA will not recover a looping board. |
-| Host / mDNS | **IP only** — lab Nest reservation **`192.168.86.177`** (`use_address` in `dsc-control-wifi-lab.yaml`). Do not use `dsc-control.local`. |
-| Encryption | Leave the key **blank** when adding/reconfiguring. If HA still has an old encrypted entry, **delete it** and re-add. |
-| Stale `dsc-cyd1` | Delete old **dsc-cyd1** ESPHome device in HA Integrations if present. |
-| Secrets on HA | Still need `dsc_control_ota_password` / `_ap_password` for Install/fallback AP (`dsc_control_api_key` unused by panel firmware). |
-| Stub on HA | `/config/esphome/dsc-control.yaml` should match [`homeassistant/esphome/dsc-control.yaml`](../../homeassistant/esphome/dsc-control.yaml); Validate before Install. |
-| Bundle fails: `… is not a valid YAML file` / `expected '<document start>'` | Almost always a **header comment** in the package body that lost its `#` (looks like `v4.0.x:` at column 2). ESPHome then treats the changelog line as YAML and dies before `substitutions:`. Fix on git, push, set stub `refresh: 0d`, Validate again. |
-
-ESP-NOW (glass ↔ hub) does **not** need the HA API. Fix API only for OTA, diagnostics, and HA time backup.
-
-**Package header rule:** changelog lines in `dsc-control-common.yaml` (and other bodies) must stay `#` comments. An uncommented `v4.0.11:`-style line breaks HA git-pull Install with `not a valid YAML file` at the first root key.
-
-### Phase 1 fleet notes (stability + snappiness)
-
-| Device | Change | Flash |
-|---|---|---|
-| Pots + Sonoffs | `power_save_mode: none` + `logger: INFO` | OTA fine |
-| Hub | 30 s Wi‑Fi channel poll (silent Nest hops) | OTA fine |
-| Panel 4.0.11 | Live `gv_*` UI + channel poll | **USB** if heap-sensitive / still looping |
-| HA packages / automations / dashboard | Push sync (or copy) + reload | See [`../../RELEASE.md`](../../RELEASE.md) · [`../../scripts/HA-SYNC-BOOTSTRAP.md`](../../scripts/HA-SYNC-BOOTSTRAP.md) |
-
-## Hub mat votes
-
-In [`dsc-hub-v4_0.yaml`](dsc-hub-v4_0.yaml): `Mat Vote Pot 1`–`4` (`switch.dsc_hub_mat_vote_pot_N`). OFF pots are skipped by coldest/hottest root-zone voting (5–45 °C filter still applies). POT3 defaults OFF.
-
-## Quick validate
+Locally (bench, USB):
 
 ```bash
-esphome config dsc-hub.yaml
-esphome config dsc-control.yaml
-esphome config dsc-heater.yaml
-esphome config DSC-Probe1.yaml
+cd firmware/v4            # needs secrets.yaml here (gitignored)
+esphome run dsc-hub-kit.yaml
+esphome run dsc-control-kit.yaml
+esphome run dsc-pot1-kit.yaml
+```
+
+Kit binaries for the USB flash wizard are produced by
+[`../../services/dsc-hub/image/bake-firmware.sh`](../../services/dsc-hub/image/bake-firmware.sh)
+from the `-kit` stubs (factory image for ESP32, plain image for ESP8266) — the
+bake owns `secrets.yaml` and ships the same file in the SD image.
+
+## Validate before a re-cut
+
+```bash
+cd firmware/v4
+for y in dsc-hub.yaml dsc-hub-kit.yaml dsc-control.yaml dsc-control-kit.yaml \
+         dsc-pot1.yaml dsc-pot1-kit.yaml dsc-heater.yaml dsc-heatmat.yaml \
+         dsc-humidifier.yaml dsc-de-humidifier.yaml; do esphome config "$y" >/dev/null && echo "ok $y"; done
+python ../../scripts/cyd_glyph_audit.py && python ../../scripts/cyd_layout_check.py && python ../../scripts/fleet_fix_sim.py
 g++ -std=c++17 -Wall -Wextra -O2 -o verify_v4 verify_v4.cpp && ./verify_v4
 ```
 
-Requires `secrets.yaml` in this folder (gitignored). Start from `secrets.yaml.template` if needed.
+`verify_v4.cpp` checks the ESP-NOW wire contract (0xD1–0xD4, 0xDC pack/unpack
+sizes, shared tag). On Windows, compile from a local (non-UNC) copy of this
+folder — PlatformIO cannot build from a network path.
 
-`espnow_cmd_tag` is **54727** (`0xD5C7`) on hub + panel — flash both after changing it.
+Bumping the train: `project: version` in the four package bodies **and** the
+`firmware_version` text-sensor lambdas (hub, panel, probe, Sonoff) **and** the
+panel boot-log / about-screen strings, then `EXPECTED_FIRMWARE` in
+`brain/dsc_brain/paths.py` and the compose default. Add a `CHANGELOG.md` line.
 
-Fleet bring-up / cutover: [`../../INSTALL.md`](../../INSTALL.md) · [`../../UPGRADE.md`](../../UPGRADE.md).
+## Panel (DSC-CONTROL)
+
+Package body [`dsc-control-common.yaml`](dsc-control-common.yaml). ESP-NOW-fed
+glass: vitals/config/soil/names (0xD1–0xD4) in, commands (0xDC) out via
+`homeassistant.event` → brain (the panel → hub command channel; an ESPHome
+dialect, not a Home Assistant). Runs with the API peer down. Native API is
+**plaintext** (no Noise — LVGL RAM) and **mDNS off** — add by IP.
+
+| Feature | Notes |
+|---|---|
+| Soil cards + detail | 0xD3 vitals / 0xD4 names; tap a probe → NPK drill-down |
+| Hold-to-lock | Hold ~3 s on primary tabs; hold lock screen to unlock |
+| Demand / takeover gate | Confirm → Engage (not one stray tap) |
+| Connections | Wi‑Fi channel; ESP-NOW RX age + TX seq; silent → ping/WiFi bounce |
+| AP pin | Runtime only: hub **Lock WiFi AP** learns the preferred BSSID into NVS. Stubs stay `00:00:00:00:00:00` — never bake a site MAC into YAML. |
+| Boot | Page-gated `refresh_ui`; serial shows `DSC-CONTROL 8.0.0.0 … free_heap=…`. A boot-looping panel needs **USB**, not OTA. |
+
+Crash archaeology: [`../_history/v4/crash-logs/`](../_history/v4/crash-logs/).
+
+**Package header rule:** changelog lines in the package bodies must stay `#`
+comments — an uncommented `v4.0.11:`-style line is parsed as YAML and the build
+dies before `substitutions:`.
+
+## Probes
+
+`dsc-pot-common.yaml`: RS485 Modbus 7-in-1 NPK soil probe. Each soil channel has
+**Cal … Offset** / **Cal … Scale** config numbers (NVS); `raw * scale + offset`
+applies before range/median and feeds the brain + ESP-NOW. **Reset Sensor
+Calibration** restores defaults; **Mark Soil Cal …** buttons stamp provenance.
+Entity ids `sensor.dsc_probeN_soil_*` are a contract with the brain.
+
+## Hub mat votes
+
+`Mat Vote Pot 1`–`4` (`switch.dsc_hub_mat_vote_pot_N`): OFF pots are skipped by
+coldest/hottest root-zone voting (5–45 °C filter still applies). Root-zone input
+is ESP-NOW-only (150 s freshness gate).
+
+Fleet bring-up: [`../../SETUP.md`](../../SETUP.md) · upgrades:
+[`../../UPGRADE.md`](../../UPGRADE.md).

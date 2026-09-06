@@ -24,7 +24,7 @@ Lab/bench stubs (`dsc-hub.yaml`, etc.) keep compile-time WiFi and MACs and do **
 - **Optional:** home 2.4 GHz Wi‑Fi (fixed channel strongly recommended — mesh/Nest hops break ESP-NOW)
 - Internet is optional (SNTP clock when available; local-only mode works with Control alone)
 
-Sonoffs need their own flash + home LAN WiFi. After the ETH01 bridge is paired and Ethernet is up, appliances follow hub demand without HA (F-010). Local-only SoftAP without Ethernet cannot reach Sonoffs on a separate LAN.
+Sonoffs need their own flash + the Pi's network. The Pi brain drives them directly over the ESPHome native API (the WT32-ETH01 bridge is retired). Local-only SoftAP without the Pi cannot reach Sonoffs on a separate LAN.
 
 ## Flash order (factory / first kit)
 
@@ -32,9 +32,12 @@ From `firmware/v4/` with a filled `secrets.yaml`:
 
 1. `esphome run dsc-hub-kit.yaml` (USB)
 2. `esphome run dsc-control-kit.yaml` (USB)
-3. `esphome run dsc-pot1-kit.yaml` … `dsc-pot4-kit.yaml` (USB; POT2 canary first if preferred)
-4. `esphome run dsc-bridge-kit.yaml` (USB · WT32-ETH01 · `flash_mode: dio`)
-5. Sonoffs (heater / heatmat / humidifier / dehumidifier) — home LAN WiFi; flash after bridge
+3. `esphome run dsc-pot1-kit.yaml` … `dsc-pot2-kit.yaml` (USB; pot3/4 are not kit defaults)
+4. Sonoffs (heater / heatmat / humidifier / dehumidifier) — `esphome run dsc-heater.yaml` … on the Pi's network
+
+Baked kits skip all of this: the SD image carries the compiled `.bin` files and the
+SPA **Setup** wizard flashes them over USB. Later updates go through
+Settings → Device → ESPHome (see [`UPGRADE.md`](UPGRADE.md)).
 
 ## Unboxing (end user)
 

@@ -2,6 +2,59 @@
 
 ## Unreleased
 
+- **ESPHome toolchain — update works on the shipping topology** — the brain runs
+  in `dsc-hub-brain` and could not `pip` the host venv, so "Update ESPHome"
+  silently rewrote a profile-disabled compose service. New host helper
+  `pi/dsc-esphome-host.sh` + `dsc-esphome-update.path/.service`: the brain drops
+  `<ops>/esphome-host/request.json`, the host runs `pip install esphome==<target>`
+  as `dsc` (1.5 GiB free-space guard), restarts `dsc-esphome-dashboard`, and
+  answers with `result.json`; the brain streams `progress.log` into the job row.
+  `build_backend()` now reports `venv` / **`venv-host`** / `dashboard`
+  (+ `dashboard_legacy`) / `none`; the "Deprecated backend" chip only fires on the
+  real legacy container, a host unit without the helper gets a "Helper missing"
+  chip with the enable command. The helper publishes `capabilities.json`
+  (venv version, `secrets_present`, disk free) so the card is honest from inside
+  the container. `esphome_dashboard_api` default is now empty → env →
+  `host.docker.internal:6052`. All bakers + `deploy-brain-remote.sh` install and
+  enable the new units. `docs/ops/ESPHOME-TOOLCHAIN.md`.
+- **ESPHome toolchain — roll back + disk guard** — `POST
+  /settings/esphome/toolchain/rollback` (Settings → **Roll back to X**) reinstalls
+  the `from_version` of the last successful change; updates refuse downgrades
+  otherwise, refuse when the target is already installed, and refuse under 1.5 GiB
+  free (`disk_free_gb` / `disk_free_ok` in status).
+- **Fleet rollout — canary first** — `POST /settings/esphome/rollout?mode=canary`
+  flashes one probe (`pot2`, else the first in-service probe); the card tracks the
+  job and the probe's reported ESPHome version, then **Release the rest (N, hub
+  last)** → `?mode=rest`. `mode=all` keeps the one-click whole-fleet path.
+- **Fix: probe OTAs targeted `DSC-Probe{n}.yaml`, which never existed** — the job
+  map now points at `dsc-pot{n}.yaml`; a test pins every `SEAT_YAML` entry to a
+  real file in `firmware/v4`.
+- **Manual fallbacks off Docker** — `pi/flash-fleet-remote.sh` (hosts from the
+  brain inventory, canary-first / hub-last order, secrets check),
+  `flash-hub-fallback-remote.sh`, `flash-sonoff-fallback-remote.sh`,
+  `flash-sonoff-lan-remote.sh` and `image/bake-firmware.sh` all use the host venv
+  (`/etc/dsc-hub/esphome.env`, `PLATFORMIO_CORE_DIR`); the `dsc-hub-esphome`
+  container is gone from every script. `bake-firmware.sh` now really compiles the
+  kit YAMLs (factory image for ESP32, plain for ESP8266), writes `kit-build.json`,
+  and refuses placeholders under `DSC_RELEASE=1`.
+- **Kit secrets ship with the bake** — `image/bake-on-linux.sh` requires (or
+  generates) `firmware/v4/secrets.yaml`, compiles the kit binaries from it and
+  installs the same file into the image at `0600 dsc:dsc`; without it every
+  `!secret` compile on an SD kit failed. The Settings card shows **No firmware
+  secrets** when the helper reports it missing.
+- **Firmware 8.0.0.0** — `project: version` bumped in `dsc-hub-v4_0`,
+  `dsc-control-common`, `dsc-pot-common`, `dsc-sonoff-common` (ESPHome-only train:
+  SNTP-only clock, native-API `set_plant_name`, ESP-NOW-only rootzone,
+  `min_version` pin); brain `EXPECTED_FIRMWARE` and the compose default follow.
+  HA-era `homeassistant/esphome/ (git-pull)` header comments scrubbed. Validated
+  with an `esphome config` sweep over every `firmware/v4` entry point on ESPHome
+  2026.8.0 and `scripts/run_sim_gates` (20/20) — see the fleet-reflash gate in
+  `docs/FOLLOWUPS.md`.
+- **Tests** — new `brain/tests/test_esphome_toolchain.py` (venv runner argv / cwd /
+  env / timeout / hostless, dashboard WebSocket runner incl. the "too old" hint,
+  backend detection, host-helper handshake success + failure, disk guard,
+  downgrade / rollback, PyPI-offline safety, default-fleet order, canary → rest).
+
 - **ESPHome build backend defaults to the host venv dashboard unit** — the
   `esphome` service in `services/dsc-hub/docker-compose.yml` moved behind
   `profiles: ["legacy-esphome"]` (it and the host unit both bind `:6052`), so it

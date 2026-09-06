@@ -1,6 +1,6 @@
 # DSC offline brain — architecture memo
 
-**In one line:** Local fleet + Pi brain is the product; a local webserver presents and controls; Home Assistant is a lab scaffold.
+**In one line:** Local fleet + Pi brain is the product; a local webserver presents and controls. (The Home Assistant lab scaffold was retired 2026-09 — see [`HA-SCAFFOLD.md`](HA-SCAFFOLD.md).)
 
 Notion (canonical Wiki): [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c)
 

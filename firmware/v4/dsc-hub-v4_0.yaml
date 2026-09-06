@@ -1,9 +1,10 @@
 # Board: Generic ESP32 Board (Generic)
 # Definition: definitions/boards/generic-esp32/manifest.yaml
 #
-# PACKAGE BODY — flash via stub dsc-hub.yaml (local) or
-# homeassistant/esphome/dsc-hub.yaml (git-pull). Do not flash this
-# file alone; it expects wifi/api/ota/ap/espnow_key substitutions.
+# PACKAGE BODY — flash via stub dsc-hub.yaml (lab) or dsc-hub-kit.yaml
+# (kit SoftAP). Do not flash this file alone; it expects
+# wifi/api/ota/ap/espnow_key substitutions. (The homeassistant/esphome/
+# git-pull stubs were retired with the HA lab in 2026-09.)
 # ESP-NOW panel layer is loaded by the stub (dsc-hub-espnow-primary.yaml),
 # not !include'd here — keeps local and git-pull paths identical.
 
@@ -68,7 +69,10 @@ esphome:
   min_version: "2026.6.5"
   project:
     name: "digital_emotions.dsc-hub"
-    version: "7.0.0.0"
+    # 8.0.0.0 — ESPHome-only train: no `platform: homeassistant` anywhere
+    # (SNTP-only clock, native-API set_plant_name, ESP-NOW-only rootzone),
+    # min_version pin. Keep in step with brain EXPECTED_FIRMWARE.
+    version: "8.0.0.0"
   on_boot:
     - priority: -100
       then:
@@ -2818,7 +2822,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"7.0.0.0"};'
+    lambda: 'return {"8.0.0.0"};'
     update_interval: 60s
 
   # F-006: last recovery action reason (bounce / reboot / none)

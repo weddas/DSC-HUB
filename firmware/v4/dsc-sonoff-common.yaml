@@ -8,7 +8,8 @@
 #  NEVER put logic in a stub.
 #
 #  Remote-git safe: no !secret in this file — stubs pass wifi + keys
-#  as substitutions (required for homeassistant/esphome/ HA stubs).
+#  as substitutions. (The homeassistant/esphome/ HA stubs were retired
+#  with the HA lab, 2026-09.)
 # ==================================================================
 #
 #  v2.4 — THE SONOFF BATCH (July 2026)
@@ -66,7 +67,8 @@ esphome:
   # device's project version — "which nodes are behind?" at a glance.
   project:
     name: digital_emotions.dsc-sonoff
-    version: "7.0.0.0"
+    # 8.0.0.0 — ESPHome-only train (min_version pin).
+    version: "8.0.0.0"
 
 esp8266:
   board: esp8285
@@ -273,7 +275,7 @@ text_sensor:
   - platform: template
     name: "Firmware Version"
     icon: mdi:tag-check
-    lambda: 'return {"7.0.0.0"};'
+    lambda: 'return {"8.0.0.0"};'
     update_interval: 60s
 
 button:

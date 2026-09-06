@@ -31,10 +31,13 @@ CREATE TABLE IF NOT EXISTS esphome_jobs (
 SEAT_YAML: dict[str, str] = {
     "hub": "dsc-hub.yaml",
     "control": "dsc-control.yaml",
-    "pot1": "DSC-Probe1.yaml",
-    "pot2": "DSC-Probe2.yaml",
-    "pot3": "DSC-Probe3.yaml",
-    "pot4": "DSC-Probe4.yaml",
+    # Probe devices renamed to dsc_probeN on the wire; the YAML filenames stayed
+    # dsc-potN.yaml (firmware/v4). DSC-ProbeN.yaml never existed — every pot OTA
+    # 404'd inside the dashboard until this was corrected.
+    "pot1": "dsc-pot1.yaml",
+    "pot2": "dsc-pot2.yaml",
+    "pot3": "dsc-pot3.yaml",
+    "pot4": "dsc-pot4.yaml",
     "heater": "dsc-heater.yaml",
     "heatmat": "dsc-heatmat.yaml",
     "humidifier": "dsc-humidifier.yaml",

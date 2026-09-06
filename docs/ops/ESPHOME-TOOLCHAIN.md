@@ -10,36 +10,30 @@ venv.
 | Piece | Where |
 |---|---|
 | Version pin | `esphome: min_version: "2026.6.5"` in `dsc-hub-v4_0.yaml`, `dsc-control-common.yaml`, `dsc-pot-common.yaml`, `dsc-sonoff-common.yaml`. Builds on older ESPHome fail fast. |
-| Toolchain venv | `/opt/dsc-esphome-venv` — provisioned by `dsc-esphome-venv-setup.service` (→ `services/dsc-hub/pi/dsc-esphome-venv-setup.sh`), floored to `2026.6.5`. Separate from the brain venv. |
+| Toolchain venv | `/opt/dsc-esphome-venv` — provisioned by `dsc-esphome-venv-setup.service` (→ `services/dsc-hub/pi/dsc-esphome-venv-setup.sh`), floored to `2026.6.5`. Separate from the brain venv. Updated from the container via `dsc-esphome-update.path` → `pi/dsc-esphome-host.sh`. |
 | Dashboard | `dsc-esphome-dashboard.service` runs `esphome dashboard` on `0.0.0.0:6052`. Reachable at `http://dsc-brain.local:6052` (hostname `dsc-brain` + avahi). |
-| Job runner | `brain/dsc_brain/esphome_jobs.py` — `build_backend()` picks: local `<esphome_bin> compile|run` (`cwd=firmware/v4`, `PLATFORMIO_CORE_DIR`), or `POST` to the dashboard. Serialised, one at a time. |
-| Status / update API | `GET /settings/esphome/toolchain`, `POST /settings/esphome/toolchain/update`, `GET|POST /settings/esphome/rollout` (`brain/dsc_brain/esphome_toolchain.py`). |
-| Settings UI | Settings → Device → **ESPHome** card: installed / latest / pinned-min, build backend, **Update ESPHome**, per-seat drift, **Open ESPHome Dashboard**, fleet-reflash prompt. |
+| Job runner | `brain/dsc_brain/esphome_jobs.py` — `build_backend()` picks: local `<esphome_bin> compile|run` (`cwd=firmware/v4`, `PLATFORMIO_CORE_DIR`), or the dashboard WebSocket. Serialised, one at a time. Probe seats map to `dsc-potN.yaml`. |
+| Status / update API | `GET /settings/esphome/toolchain`, `POST /settings/esphome/toolchain/update`, `POST /settings/esphome/toolchain/rollback`, `GET|POST /settings/esphome/rollout?mode=all|canary|rest` (`brain/dsc_brain/esphome_toolchain.py`). |
+| Settings UI | Settings → Device → **ESPHome** card: installed / latest / pinned-min, build backend + disk free, **Update ESPHome**, **Roll back**, secrets / helper / disk chips, per-seat drift, **Open ESPHome Dashboard**, canary → release-the-rest rollout. |
 
 Settings keys (`brain/dsc_brain/settings.py`): `esphome_bin`, `esphome_project_dir`,
 `esphome_dashboard_url` (browser link), `esphome_dashboard_api` (brain→dashboard),
-`esphome_fleet_ota_prompt`, `last_built_esphome`, `esphome_compose_file` +
-`esphome_compose_update_cmd` (container-backend self-update, `{file}` placeholder).
+`esphome_fleet_ota_prompt`, `last_built_esphome`, `esphome_rollout_canary`,
+`esphome_compose_file` + `esphome_compose_update_cmd` (legacy container self-update,
+`{file}` placeholder — removed with that backend).
 
 ## Update ESPHome to latest
 
 1. Settings → Device → ESPHome. The card shows **installed** vs **latest** (PyPI,
    only when Ethernet is up) vs the **pinned min**.
-2. **Update ESPHome →** the mechanism follows `build_backend()`:
-   - `venv` — `pip install -U esphome` in the venv, then
-     `systemctl restart dsc-esphome-dashboard`.
-   - `dashboard` (containerised kit) — rewrite `image: esphome/esphome:<tag>` in
-     the compose file (`esphome_compose_file`, default
-     `services/dsc-hub/docker-compose.yml`) and run the redeploy
-     (`esphome_compose_update_cmd`, default `docker compose -f <file> pull esphome
-     && docker compose -f <file> up -d esphome`). A host without `docker` (the
-     brain container) bumps the tag and returns the exact Pi steps as a `manual`
-     job — it never errors.
-   Refused in all cases if a compile/OTA job is queued/running, if offline, or if
-   latest is below the pinned `min_version`.
-3. When the venv version moves, the card offers **Reflash fleet** — one click
-   enqueues an OTA per in-service seat, serialised, **hub last**. Nothing flashes
-   until you confirm (`esphome_fleet_ota_prompt`).
+2. **Update ESPHome →** the mechanism follows `build_backend()` (table below):
+   host helper on the shipping kit, `pip` on a bare-venv brain, compose bump on
+   the legacy container. Refused if a compile/OTA job is queued/running, if
+   offline, if the target is below the pinned `min_version`, or under 1.5 GiB free.
+   **Roll back to X** appears once a change is on record.
+3. When the venv version moves, the card offers **Canary <probe> first** or
+   **Reflash whole fleet**; after the canary rejoins, **Release the rest (hub last)**.
+   Nothing flashes until you confirm (`esphome_fleet_ota_prompt`).
 
 ## Bump the pinned `min_version`
 
@@ -55,81 +49,102 @@ Do this deliberately, not on every ESPHome release:
 5. Reflash the fleet (Settings → **Reflash fleet**, or the `pi/flash-fleet-remote.sh`
    fallback).
 
-## Build backend — resolved: the dashboard IS the build service
+## Build backend — how the brain reaches ESPHome
 
 `services/dsc-hub/docker-compose.yml` runs the brain in `dsc-hub-brain`
-(`python:3.12-slim`), which has no `esphome` binary, no `firmware/v4`, and no
-Docker socket. So the brain does not shell `esphome` on the containerised kit —
-it talks to the **ESPHome dashboard over HTTP**, which already has `firmware/v4`
-mounted at `/config` and is reachable on the `dsc` compose network.
+(`python:3.12-slim`): no `esphome` binary, no `firmware/v4`, no Docker socket, no
+systemd. So on the shipping kit the brain **never shells `esphome`** — it drives the
+host **ESPHome dashboard** (`dsc-esphome-dashboard.service`, venv at
+`/opt/dsc-esphome-venv`, port 6052) over HTTP/WebSocket for compile + OTA, and
+hands **toolchain updates** to a host helper through files in the ops dir the
+container already bind-mounts.
 
 `esphome_toolchain.build_backend()` picks automatically:
 
-| Result | When | compile/OTA path |
+| Result | When | compile / OTA | Update ESPHome |
+|---|---|---|---|
+| `venv` | `esphome_bin` resolves to a real file / PATH entry (host or bare-venv brain) | `subprocess` in `firmware/v4`, streamed, real exit code | `pip install -U esphome` in that venv, restart the dashboard unit |
+| `venv-host` | no local CLI; `GET {esphome_dashboard_api}/version` answers **and** `<ops>/esphome-host/capabilities.json` exists (written by `pi/dsc-esphome-host.sh`) — **the shipping topology** | dashboard WebSocket `/compile` or `/upload`: `{"type":"spawn","configuration":<yaml>}`, stream `{"event":"line"}`, finish on `{"event":"exit","code":N}` | write `<ops>/esphome-host/request.json`; `dsc-esphome-update.path` fires `dsc-esphome-update.service` → `dsc-esphome-host.sh update` (disk guard, `pip install esphome==<target>` as `dsc`, `systemctl restart dsc-esphome-dashboard`, `result.json`); the brain tails `progress.log` into the job row |
+| `dashboard` | a dashboard answers but no helper file: the legacy `dsc-hub-esphome` container (`dashboard_legacy: true`), or a host unit deployed before the helper | same WebSocket path | legacy: compose image-tag bump + redeploy (or the exact steps when no `docker`); host-without-helper: refused with `sudo systemctl enable --now dsc-esphome-update.path` |
+| `none` | nothing reachable | job fails clean; `pi/flash-fleet-remote.sh` is the manual path | refused |
+
+### Host helper protocol (`<ops>/esphome-host/`, default `/var/lib/dsc-hub/ops/esphome-host/`)
+
+| File | Direction | Content |
 |---|---|---|
-| `venv` | `esphome_bin` resolves to a real file / PATH entry (host or bind-mounted venv) | `subprocess` — streamed, real exit code |
-| `dashboard` | no local CLI, but `GET {esphome_dashboard_api}/version` answers | drive the dashboard's **WebSocket** command endpoint (`ws://…/compile` \| `/upload`): send `{"type":"spawn","configuration":<yaml>}`, stream `{"event":"line"}`, finish on `{"event":"exit","code":N}` (real exit code). Uses `websockets` (already a brain dep). |
-| `none` | neither | job fails clean; `pi/flash-*-remote.sh` is the manual path |
+| `capabilities.json` | host → brain | `{"helper":true,"esphome_version","project_dir","secrets_present","disk_free_bytes","min_free_bytes","written_at"}` — written by `dsc-esphome-venv-setup.sh`, by the dashboard wrapper on every start, and after every update |
+| `request.json` | brain → host | `{"job_id","action":"update" or "rollback","target":"x.y.z"}` (atomic rename) |
+| `progress.log` | host → brain | streamed pip output |
+| `result.json` | host → brain | `{"job_id","ok","from","to","exit_code","message","log_tail"}`; the brain deletes it after consuming |
 
-Settings keys: `esphome_dashboard_api` (brain→dashboard, default
-`http://host.docker.internal:6052` — the **host** `dsc-esphome-dashboard` venv
-unit, reached over the bridge; compose sets it explicitly and adds the
-`host-gateway` extra_host) is separate from `esphome_dashboard_url` (the browser
-link, default `http://dsc-brain.local:6052`). `_dash_get()` falls back to the
-legacy container name `http://dsc-hub-esphome:6052` when the primary is down, so a
-kit mid-cutover keeps working.
+Status fields the Settings card reads: `build_backend`, `dashboard_legacy`,
+`host_helper`, `secrets_present`, `disk_free_gb` / `disk_free_ok` (update refused
+under 1.5 GiB), `rollback_target`, `canary`.
 
-`installed()` and per-device `deployed` version come from `{api}/version` and
-`{api}/devices` — no binary needed for the Settings card to be accurate.
+Settings keys: `esphome_dashboard_api` (brain→dashboard; empty = the
+`DSC_ESPHOME_DASHBOARD_API` env compose sets = `http://host.docker.internal:6052`,
+the host unit over the bridge with a `host-gateway` extra_host) is separate from
+`esphome_dashboard_url` (the browser link, default `http://dsc-brain.local:6052`).
+`_dash_get()` still falls back to the legacy container name during a cutover.
+`DSC_ESPHOME_HOST_DIR` overrides the handshake dir on the brain side;
+`DSC_ESPHOME_OPS_DIR` / `DSC_ESPHOME_PROJECT_DIR` in `/etc/dsc-hub/esphome.env` on
+the host side.
 
-### Default backend: the host venv dashboard unit (2026-09-06)
+### Roll back
 
-The `esphome` service in `docker-compose.yml` is now behind
-`profiles: ["legacy-esphome"]` — it does **not** start by default (it and the host
-unit would both bind `:6052`). The default backend is the host
-`dsc-esphome-dashboard.service` (venv at `/opt/dsc-esphome-venv`, provisioned by
-`dsc-esphome-venv-setup.service`), served by
-`pi/dsc-esphome-dashboard-run.sh` which resolves the `firmware/v4` project dir per
-layout (`/opt/dsc-hub-repo/firmware/v4` for remote-deploy, `/opt/dsc-hub/firmware/v4`
-for SD; pin it with `DSC_ESPHOME_PROJECT_DIR` in `/etc/dsc-hub/esphome.env`). The
-unit is `Restart=on-failure` and the wrapper exits 0 when the venv or firmware
-tree isn't present yet, so it never crash-loops.
+`POST /settings/esphome/toolchain/rollback` (Settings → **Roll back to X**) reinstalls
+the version the last successful change came from (`from_version` of the newest
+`done` row in `esphome_toolchain_jobs`), same guard rails, downgrade allowed. Never
+offered below the pinned `min_version`.
 
-* Bakers: `image/bake-on-linux.sh` stages the wrapper + `esphome.env`;
-  `image/bake-sd-image.sh` and `image/stage-dsc/01-dsc-hub.sh` enable both units;
-  `pi/deploy-brain-remote.sh` installs/enables them, writes `esphome.env`, and
-  `docker rm -f dsc-hub-esphome`.
-* **Roll back:** `docker compose --profile legacy-esphome up -d esphome` and
-  `sudo systemctl stop dsc-esphome-dashboard` (then set `esphome_dashboard_api`
-  back to `http://dsc-hub-esphome:6052`, or leave it — the fallback finds it).
-* **Not yet Pi-validated:** SD-bake kits need `firmware/v4` shipped in the payload
-  (only `firmware/kit/` binaries ship today) for the dashboard to serve configs;
-  smoke-test venv provisioning + `:6052` up + a brain compile route before relying
-  on it.
-* Self-update from a containerised brain still can't `pip` the host venv — that
-  path stays the guided/`manual` one (or run `Update ESPHome` from a host-venv
-  brain deploy where `build_backend()` is `venv`).
+### Fleet rollout — canary first
 
-### Validated 2026-09-06 against the live Pi dashboard
+After a toolchain change the card offers **Canary <probe> first** (default `pot2`,
+else the first in-service probe) and **Reflash whole fleet**. `POST
+/settings/esphome/rollout?mode=canary` flashes only the canary; the card then shows
+its job state and, once the probe reports the new ESPHome version, **Release the
+rest (N, hub last)** → `?mode=rest`. `last_built_esphome` is only stamped when the
+rest (or the whole fleet) is queued, so the prompt persists through the canary
+phase. The canary record is discarded if the toolchain moves again.
 
-`GET http://dsc-brain.local:6052/version` → `{"version":"2025.12.4"}`;
-`/devices` → 47 configs with `current_version` / `deployed_version`.
-`installed()` returned `2025.12.4`, `min_version()` `2026.6.5`, `meets_min` **False**
-(the running `esphome/esphome:2025.12.4` container is below the new pin — bump it,
-or move to the venv unit). `build_backend()` → `dashboard`.
+### Secrets on kits
 
-`esphome config firmware/v4/dsc-hub.yaml` with the pin → **"Configuration is
-valid!"** (esphome 2026.8.2, i.e. ≥ pin). Raising the pin to `2099.1.0` →
-`esphome config` fails *"Your ESPHome version is too old. Please update to at
-least 2099.1.0."* — the gate works.
+The bake owns the keys: `image/bake-on-linux.sh` requires (or generates)
+`firmware/v4/secrets.yaml` on the bake host, `bake-firmware.sh` compiles the kit
+`.bin` files from it, and the same file ships in the image at
+`/opt/dsc-hub/firmware/v4/secrets.yaml` (`0600 dsc:dsc`, never git). One bake =
+one kit = one key set, so later on-Pi OTA builds agree with the baked binaries.
+The card shows **No firmware secrets** when the helper reports it missing.
 
-`/compile` and `/upload` on the dashboard are **WebSocket** endpoints
-(`HTTP 101` on upgrade; plain POST → `405`). `_run_job_via_dashboard()` drives
-them via `websockets.sync.client`. The `/upload` (live OTA) path has **not** been
-fired at a device.
+### Units on the Pi
 
-~~The `dsc-hub-esphome` compose service is kept … as the current build backend~~
-**Superseded 2026-09-06** — see "Default backend: the host venv dashboard unit"
-above. The container is now `--profile legacy-esphome` (rollback only); the host
-`dsc-esphome-dashboard` unit is the default. Remove the container service once
-every kit is baked/deployed on the unit and SD `firmware/v4` shipping is sorted.
+| Unit | Role |
+|---|---|
+| `dsc-esphome-venv-setup.service` | one-shot: create `/opt/dsc-esphome-venv`, install `esphome==<pin>`, publish capabilities |
+| `dsc-esphome-dashboard.service` | `esphome dashboard <firmware/v4>` on `0.0.0.0:6052` via `pi/dsc-esphome-dashboard-run.sh` (refreshes capabilities on every start) |
+| `dsc-esphome-update.path` + `.service` | watch `request.json` → `pi/dsc-esphome-host.sh update` |
+
+All three are installed/enabled by `pi/deploy-brain-remote.sh` (remote layout,
+`/opt/dsc-hub-repo/firmware/v4`), `image/bake-on-linux.sh` + `install-from-payload.sh`,
+`image/bake-sd-image.sh` and `image/stage-dsc/01-dsc-hub.sh` (SD layout,
+`/opt/dsc-hub/firmware/v4`). The `esphome` compose service is behind
+`profiles: ["legacy-esphome"]` (rollback only) and is removed once the Pi gate
+passes on both layouts (decided 2026-09-06).
+
+### Manual fallbacks (no Docker)
+
+`pi/flash-fleet-remote.sh [pass] [seats…]` — host venv, hosts from the brain
+inventory, default order `pot2 pot1 heater heatmat humidifier dehumidifier control hub`
+(canary first, hub last). `flash-hub-fallback-remote.sh`,
+`flash-sonoff-fallback-remote.sh`, `flash-sonoff-lan-remote.sh` use the same venv.
+
+### Validated
+
+* 2026-09-06 against the live Pi dashboard (pre-helper): `GET :6052/version`,
+  `/devices` (47 configs), `esphome config dsc-hub.yaml` valid on 2026.8.x, a
+  `2099.1.0` pin correctly rejected, `/compile` and `/upload` confirmed as WebSocket
+  endpoints. The live `/upload` OTA had not yet been fired at a device.
+* 2026-09-06 dev box: `esphome config` sweep over every `firmware/v4` entry point
+  on ESPHome 2026.8.0 with the 8.0.0.0 project version — see `CHANGELOG.md`.
+* **Pi gate (both layouts) still pending** — see `docs/FOLLOWUPS.md` for the gate
+  write-up once it runs.

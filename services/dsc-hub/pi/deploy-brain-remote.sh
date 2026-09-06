@@ -57,10 +57,24 @@ if [ -f "${ESPHOME_UNIT_DIR}/dsc-esphome-dashboard.service" ]; then
   run_sudo install -m 0755 "${ESPHOME_UNIT_DIR}/dsc-esphome-dashboard-run.sh" /opt/dsc-hub/pi/dsc-esphome-dashboard-run.sh
   run_sudo install -m 0644 "${ESPHOME_UNIT_DIR}/dsc-esphome-venv-setup.service" /etc/systemd/system/dsc-esphome-venv-setup.service
   run_sudo install -m 0644 "${ESPHOME_UNIT_DIR}/dsc-esphome-dashboard.service" /etc/systemd/system/dsc-esphome-dashboard.service
-  echo "DSC_ESPHOME_PROJECT_DIR=${REPO}/firmware/v4" | run_sudo tee /etc/dsc-hub/esphome.env >/dev/null
+  # Host update helper: the containerised brain drops esphome-host/request.json in
+  # the ops dir; the .path unit runs dsc-esphome-host.sh update (pip + dashboard restart).
+  run_sudo install -m 0755 "${ESPHOME_UNIT_DIR}/dsc-esphome-host.sh" /opt/dsc-hub/pi/dsc-esphome-host.sh
+  run_sudo install -m 0644 "${ESPHOME_UNIT_DIR}/dsc-esphome-update.service" /etc/systemd/system/dsc-esphome-update.service
+  run_sudo install -m 0644 "${ESPHOME_UNIT_DIR}/dsc-esphome-update.path" /etc/systemd/system/dsc-esphome-update.path
+  DSC_DATA_ROOT="$(grep -E '^DSC_DATA=' /opt/dsc-hub/.env 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '"' || true)"
+  DSC_DATA_ROOT="${DSC_DATA_ROOT:-/var/lib/dsc-hub}"
+  {
+    echo "DSC_ESPHOME_PROJECT_DIR=${REPO}/firmware/v4"
+    echo "DSC_ESPHOME_OPS_DIR=${DSC_DATA_ROOT}/ops"
+  } | run_sudo tee /etc/dsc-hub/esphome.env >/dev/null
   run_sudo systemctl daemon-reload
   run_sudo systemctl enable --now dsc-esphome-venv-setup.service dsc-esphome-dashboard.service || true
+  run_sudo systemctl enable --now dsc-esphome-update.path || true
   run_sudo systemctl restart dsc-esphome-dashboard.service || true
+  # Publish capabilities now (venv version / secrets / disk) so the brain's first
+  # /settings/esphome/toolchain after this deploy already reads venv-host.
+  run_sudo env DSC_ESPHOME_PROJECT_DIR="${REPO}/firmware/v4" DSC_ESPHOME_OPS_DIR="${DSC_DATA_ROOT}/ops"     /opt/dsc-hub/pi/dsc-esphome-host.sh capabilities || true
 else
   echo "  (unit files not in this checkout — skipping; SD-bake install covers it)"
 fi

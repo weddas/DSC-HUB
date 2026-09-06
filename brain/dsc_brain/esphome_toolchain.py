@@ -7,9 +7,13 @@ the firmware pins — and can bump the venv to latest on operator request.
 
 Everything here is ESPHome-native: the running per-device version comes from the
 ESPHome native API ingest (``esphome_client``), "latest" comes from PyPI, and the
-update is ``pip install -U esphome`` in the venv — or, on the older containerised
-kit, a bump of ``image: esphome/esphome:<tag>`` in the compose file plus a
-``docker compose up -d esphome``. No HA entities involved.
+update is ``pip install -U esphome`` in the venv. When the brain itself runs in
+the ``dsc-hub-brain`` container it cannot reach that venv, so it hands the job to
+the host through ``<ops>/esphome-host/request.json`` and the
+``dsc-esphome-update.path`` unit (``pi/dsc-esphome-host.sh``) — see
+``_run_host_update``. The older containerised kit (``dsc-hub-esphome``) is
+handled by a compose image-tag bump until that backend is removed.
+No HA entities involved.
 """
 
 from __future__ import annotations
@@ -28,7 +32,7 @@ from typing import Any
 
 from .fleet_state import get_fleet_state
 from .network_apply import eth_carrier_up
-from .paths import REPO_ROOT
+from .paths import BRAIN_DATA, REPO_ROOT
 from .settings import connect, get_setting, list_inventory, set_setting
 
 # Last QA-validated ESPHome; kept in lock-step with the firmware `min_version:`
@@ -124,6 +128,62 @@ def dashboard_api() -> str:
 
 
 # --------------------------------------------------------------------------- #
+# Host helper (pi/dsc-esphome-host.sh) — files in the ops dir the container mounts
+# --------------------------------------------------------------------------- #
+_last_dash_base: str | None = None
+
+
+def host_dir() -> Path:
+    """``<ops>/esphome-host`` — shared with ``dsc-esphome-host.sh`` on the Pi."""
+    raw = os.environ.get("DSC_ESPHOME_HOST_DIR", "").strip()
+    if raw:
+        return Path(raw)
+    data = os.environ.get("DSC_DATA", "").strip()
+    return (Path(data) if data else BRAIN_DATA) / "esphome-host"
+
+
+def host_capabilities() -> dict[str, Any] | None:
+    """What the host helper last reported (venv version, secrets, disk); None if absent."""
+    try:
+        data = json.loads((host_dir() / "capabilities.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) and data.get("helper") else None
+
+
+def dashboard_is_legacy() -> bool:
+    """True when the last dashboard answer came from the retired container name."""
+    return _last_dash_base == _LEGACY_DASHBOARD_API
+
+
+MIN_FREE_BYTES = 1_610_612_736  # 1.5 GiB — pip + PlatformIO cache headroom on the SD
+
+
+def disk_free_bytes() -> int | None:
+    caps = host_capabilities()
+    if caps and isinstance(caps.get("disk_free_bytes"), (int, float)):
+        return int(caps["disk_free_bytes"])
+    try:
+        return shutil.disk_usage(str(host_dir().parent)).free
+    except OSError:
+        return None
+
+
+def secrets_present() -> bool | None:
+    """Does the firmware tree the toolchain builds from have a ``secrets.yaml``?
+
+    From the container the tree is not visible, so trust the host helper; on a
+    host/venv brain look at the project dir directly. None = unknown."""
+    caps = host_capabilities()
+    if caps is not None and "secrets_present" in caps:
+        return bool(caps["secrets_present"])
+    pd = project_dir()
+    if pd.is_dir():
+        return (pd / "secrets.yaml").is_file()
+    return None
+
+
+# --------------------------------------------------------------------------- #
 # Compose backend (the `dsc-hub-esphome` container) — image-tag bump + redeploy
 # --------------------------------------------------------------------------- #
 _COMPOSE_IMG_RE = re.compile(
@@ -191,10 +251,16 @@ def _dash_get(path: str, timeout: float = 4.0) -> Any:
     Tries the configured base, then the legacy container name — so a kit part-way
     through the venv-unit cutover keeps working whichever one is up.
     """
+    global _last_dash_base
     primary = dashboard_api()
     data = _dash_get_one(primary, path, timeout)
-    if data is None and primary != _LEGACY_DASHBOARD_API:
-        return _dash_get_one(_LEGACY_DASHBOARD_API, path, min(timeout, 2.0))
+    if data is not None:
+        _last_dash_base = primary
+        return data
+    if primary != _LEGACY_DASHBOARD_API:
+        data = _dash_get_one(_LEGACY_DASHBOARD_API, path, min(timeout, 2.0))
+        if data is not None:
+            _last_dash_base = _LEGACY_DASHBOARD_API
     return data
 
 
@@ -362,13 +428,26 @@ def device_versions() -> list[dict[str, Any]]:
 # Status snapshot
 # --------------------------------------------------------------------------- #
 def build_backend() -> str:
-    """Where compile/OTA actually runs: 'venv' (local CLI), 'dashboard' (HTTP), or 'none'."""
+    """Where compile/OTA and the toolchain update actually run.
+
+    * ``venv``      — a local ``esphome`` CLI (host/venv brain): subprocess.
+    * ``venv-host`` — no local CLI, but the host ``dsc-esphome-dashboard`` unit
+      answers on :6052 **and** ``dsc-esphome-host.sh`` has published
+      ``capabilities.json``: compile/OTA over the dashboard WebSocket, toolchain
+      update via the host helper. This is the shipping (compose brain) topology.
+    * ``dashboard`` — a dashboard answers but no host helper: the legacy
+      ``dsc-hub-esphome`` container, or a host unit deployed before the helper.
+      Compile/OTA work; the update is a compose bump (legacy) or manual.
+    * ``none``      — nothing reachable.
+    """
     eb = esphome_bin()
     if eb and (Path(eb).exists() or shutil.which(eb)):
         return "venv"
-    if _dash_get("/version", timeout=3.0) is not None:
-        return "dashboard"
-    return "none"
+    if _dash_get("/version", timeout=3.0) is None:
+        return "none"
+    if host_capabilities() is not None and not dashboard_is_legacy():
+        return "venv-host"
+    return "dashboard"
 
 
 def status(*, force_latest: bool = False) -> dict[str, Any]:
@@ -380,6 +459,8 @@ def status(*, force_latest: bool = False) -> dict[str, Any]:
     devices = device_versions()
     behind = [d for d in devices if d["running"] and not d["matches_installed"]]
     backend = build_backend()
+    caps = host_capabilities()
+    free = disk_free_bytes()
     return {
         "installed": inst,
         "latest": lat.get("version"),
@@ -393,15 +474,23 @@ def status(*, force_latest: bool = False) -> dict[str, Any]:
         "dashboard_url": dashboard_url(),
         "dashboard_api": dashboard_api(),
         "build_backend": backend,
+        "dashboard_legacy": dashboard_is_legacy(),
+        "host_helper": bool(caps),
+        "host_helper_written_at": (caps or {}).get("written_at"),
         "compose_file": str(compose_file()) if backend == "dashboard" else None,
         "compose_esphome_tag": compose_esphome_tag() if backend == "dashboard" else None,
         "esphome_bin": esphome_bin(),
-        "project_dir": str(project_dir()),
+        "project_dir": str((caps or {}).get("project_dir") or project_dir()),
+        "secrets_present": secrets_present(),
+        "disk_free_gb": round(free / 1_073_741_824, 2) if free is not None else None,
+        "disk_free_ok": (free >= MIN_FREE_BYTES) if free is not None else None,
         "last_built_esphome": last_built or None,
         "fleet_rollout_pending": bool(inst and last_built and _vtuple(inst) != _vtuple(last_built)),
+        "rollback_target": rollback_target(inst=inst),
         "devices": devices,
         "devices_behind": [d["seat_id"] for d in behind],
         "update_job": latest_update_job(),
+        "canary": canary_status(inst=inst, devices=devices),
     }
 
 
@@ -529,6 +618,136 @@ def _run_update(job_id: str, target: str | None, db_path: Path | None = None) ->
             _update_running = False
 
 
+def rollback_target(db_path: Path | None = None, inst: str | None = None) -> str | None:
+    """The version the last successful toolchain change came *from* — offered as
+    "Roll back to X" when it is still >= the pinned min and != what is installed."""
+    conn = connect(db_path)
+    _ensure_jobs(conn)
+    row = conn.execute(
+        "SELECT from_version FROM esphome_toolchain_jobs WHERE status='done' "
+        "AND from_version<>'' AND to_version<>'' AND from_version<>to_version "
+        "ORDER BY created_at DESC LIMIT 1"
+    ).fetchone()
+    conn.close()
+    if not row:
+        return None
+    prev = str(row[0])
+    inst = inst if inst is not None else installed()
+    if inst and _vtuple(prev) == _vtuple(inst):
+        return None
+    if _vtuple(prev) < _vtuple(min_version()):
+        return None
+    return prev
+
+
+_HOST_UPDATE_TIMEOUT = 20 * 60.0
+
+
+def _write_host_request(job_id: str, action: str, target: str | None) -> Path:
+    hd = host_dir()
+    hd.mkdir(parents=True, exist_ok=True)
+    # Clear stale artefacts from an earlier run so we never read an old result.
+    for name in ("result.json", "progress.log"):
+        try:
+            (hd / name).unlink()
+        except OSError:
+            pass
+    tmp = hd / ".request.json.tmp"
+    tmp.write_text(
+        json.dumps(
+            {"job_id": job_id, "action": action, "target": target or "", "requested_at": time.time()}
+        ),
+        encoding="utf-8",
+    )
+    req = hd / "request.json"
+    tmp.replace(req)  # atomic: the .path unit must never see a half-written file
+    return req
+
+
+def _run_host_update(
+    job_id: str, action: str, target: str | None, db_path: Path | None = None
+) -> None:
+    """Containerised brain: hand the pip to ``dsc-esphome-host.sh`` via request.json,
+    stream its progress.log into the job row, finish on result.json."""
+    global _update_running
+    from_v = installed() or ""
+    hd = host_dir()
+    try:
+        req = _write_host_request(job_id, action, target)
+        head = (
+            f"$ request -> {req}  ({action} esphome{'==' + target if target else ''})\n"
+            "waiting for the host helper (dsc-esphome-update.path)...\n"
+        )
+        _update_job_row(job_id, "running", head, db_path)
+        started = time.time()
+        last_len = -1
+        result: dict[str, Any] | None = None
+        while time.time() - started < _HOST_UPDATE_TIMEOUT:
+            try:
+                data = json.loads((hd / "result.json").read_text(encoding="utf-8"))
+                if isinstance(data, dict) and str(data.get("job_id")) == job_id:
+                    result = data
+                    break
+            except (OSError, ValueError):
+                pass
+            try:
+                prog = (hd / "progress.log").read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                prog = ""
+            if len(prog) != last_len:
+                last_len = len(prog)
+                _update_job_row(job_id, "running", head + prog[-3000:], db_path)
+            elif time.time() - started > 45 and not prog and req.exists():
+                _update_job_row(
+                    job_id,
+                    "running",
+                    head + "\n(no helper activity after 45 s - is dsc-esphome-update.path "
+                    "enabled on the Pi? `sudo systemctl enable --now dsc-esphome-update.path`)\n",
+                    db_path,
+                )
+            time.sleep(_host_poll_interval())
+        if result is None:
+            _update_job_row(
+                job_id,
+                "failed",
+                head + "\nTimed out after 20 min waiting for the host helper. The request file "
+                f"is at {hd / 'request.json'}; check `journalctl -u dsc-esphome-update` on the Pi.",
+                db_path,
+            )
+            return
+        now_v = str(result.get("to") or "") or (installed() or "")
+        from_v = str(result.get("from") or "") or from_v
+        _set_toolchain_job_versions(job_id, from_v, now_v, db_path)
+        tail = str(result.get("log_tail") or "")
+        msg = str(result.get("message") or "")
+        try:
+            (hd / "result.json").unlink()
+        except OSError:
+            pass
+        if result.get("ok"):
+            _update_job_row(job_id, "done", f"{tail}\n\n{msg}\n", db_path)
+        else:
+            _update_job_row(
+                job_id,
+                "failed",
+                f"{tail}\n\n{msg} (exit {result.get('exit_code')})\n",
+                db_path,
+            )
+    except Exception as exc:  # noqa: BLE001
+        _update_job_row(job_id, "failed", f"host update failed: {exc}", db_path)
+    finally:
+        with _update_lock:
+            _update_running = False
+
+
+def _host_poll_interval() -> float:
+    """Seconds between progress polls (tests shrink it)."""
+    try:
+        return float(os.environ.get("DSC_ESPHOME_HOST_POLL", "2.0"))
+    except ValueError:
+        return 2.0
+
+
 def _compose_update_cmd() -> str:
     """The redeploy command for the `esphome` container (setting → env → default)."""
     tmpl = (
@@ -640,25 +859,37 @@ def _start_compose_update(tgt: str, db_path: Path | None = None) -> dict[str, An
     return {"job_id": job_id, "target": tgt, "mode": "compose", "compose_bumped": changed}
 
 
-def update_to_latest(*, target: str | None = None, db_path: Path | None = None) -> dict[str, Any]:
+def update_to_latest(
+    *,
+    target: str | None = None,
+    db_path: Path | None = None,
+    allow_downgrade: bool = False,
+) -> dict[str, Any]:
     """Move the ESPHome build toolchain to ``target`` (or PyPI latest).
 
-    Ethernet-gated, one at a time, never below the firmware-pinned ``min_version``.
-    The mechanism follows the backend:
+    Ethernet-gated, one at a time, never below the firmware-pinned ``min_version``,
+    never *down* unless ``allow_downgrade`` (the rollback path). Mechanism per backend:
 
-    * ``venv`` — ``pip install -U esphome`` in the Pi venv, then bounce the
-      ``dsc-esphome-dashboard`` unit.
-    * ``dashboard`` — bump ``image: esphome/esphome:<tag>`` in the compose file and
-      redeploy the ``dsc-hub-esphome`` service (or hand back the exact steps when
-      this host can't run ``docker``).
-    * ``none`` — nothing to drive; raises.
+    * ``venv``      — ``pip install -U esphome`` here, then bounce the dashboard unit.
+    * ``venv-host`` — request.json → ``dsc-esphome-host.sh`` on the Pi (the brain is
+      in a container and cannot pip the host venv itself).
+    * ``dashboard`` — legacy ``dsc-hub-esphome`` container: compose tag bump +
+      redeploy (or the exact steps when this host can't run ``docker``); a host
+      unit without the helper gets told how to install it.
+    * ``none``      — nothing to drive; raises.
     """
     global _update_running
     backend = build_backend()
     if backend == "none":
         raise RuntimeError(
             "no ESPHome build backend reachable — neither a venv `esphome` nor the dashboard "
-            "on :6052. Update ESPHome on the host and reflash with pi/flash-*-remote.sh."
+            "on :6052. Update ESPHome on the host and reflash with pi/flash-fleet-remote.sh."
+        )
+    if backend == "dashboard" and not dashboard_is_legacy():
+        raise RuntimeError(
+            "the host ESPHome dashboard is up but its update helper is not installed — on the Pi: "
+            "`sudo systemctl enable --now dsc-esphome-update.path` (or re-run the deploy/bake), "
+            "then try again."
         )
     if not eth_carrier_up():
         raise ValueError("toolchain update needs an ethernet link")
@@ -672,37 +903,120 @@ def update_to_latest(*, target: str | None = None, db_path: Path | None = None) 
     except ImportError:
         pass
 
-    lat = latest(force=True)
-    tgt = target or (lat.get("version") if lat.get("ok") else None)
+    inst = installed()
+    if target:
+        tgt = target.strip()
+    else:
+        lat = latest(force=True)
+        tgt = lat.get("version") if lat.get("ok") else None
     if not tgt:
         raise ValueError("could not determine latest esphome from PyPI")
     if _vtuple(tgt) < _vtuple(min_version()):
         raise RuntimeError(f"refusing: {tgt} is below the pinned min_version {min_version()}")
+    if inst and _vtuple(tgt) == _vtuple(inst):
+        raise RuntimeError(f"ESPHome {inst} is already installed")
+    if inst and not allow_downgrade and _vtuple(tgt) < _vtuple(inst):
+        raise RuntimeError(
+            f"refusing: {tgt} is older than the installed {inst} — use the rollback action"
+        )
+    free = disk_free_bytes()
+    if free is not None and free < MIN_FREE_BYTES:
+        raise RuntimeError(
+            f"refusing: only {free // 1_048_576} MiB free, need "
+            f"{MIN_FREE_BYTES // 1_048_576} MiB for pip + the PlatformIO cache"
+        )
 
     with _update_lock:
         if _update_running:
             raise RuntimeError("a toolchain update is already running")
         _update_running = True
 
+    action = "rollback" if allow_downgrade else "update"
     try:
         if backend == "dashboard":
             return _start_compose_update(tgt, db_path)
-        job_id = _new_toolchain_job("pip-update", tgt, db_path)
+        if backend == "venv-host":
+            job_id = _new_toolchain_job(f"host-{action}", tgt, db_path)
+            threading.Thread(
+                target=_run_host_update, args=(job_id, action, tgt, db_path), daemon=True,
+                name="esphome-host-update",
+            ).start()
+            return {"job_id": job_id, "target": tgt, "mode": "host", "action": action}
+        job_id = _new_toolchain_job(f"pip-{action}", tgt, db_path)
         threading.Thread(
             target=_run_update, args=(job_id, tgt, db_path), daemon=True,
             name="esphome-toolchain-update",
         ).start()
-        return {"job_id": job_id, "target": tgt, "mode": "pip"}
+        return {"job_id": job_id, "target": tgt, "mode": "pip", "action": action}
     except Exception:
         with _update_lock:
             _update_running = False
         raise
 
 
+def rollback_toolchain(*, target: str | None = None, db_path: Path | None = None) -> dict[str, Any]:
+    """Put the toolchain back on the version the last successful change came from."""
+    tgt = (target or "").strip() or rollback_target(db_path)
+    if not tgt:
+        raise ValueError("nothing to roll back to — no completed toolchain change on record")
+    return update_to_latest(target=tgt, db_path=db_path, allow_downgrade=True)
+
+
 # --------------------------------------------------------------------------- #
 # Fleet OTA rollout after a toolchain change (queue + one confirm click)
 # --------------------------------------------------------------------------- #
 _ROLLOUT_ORDER_TAIL = ("hub",)  # hub flashed LAST
+_CANARY_KEY = "esphome_rollout_canary"
+_CANARY_PREFERENCE = ("pot2", "pot1", "pot3", "pot4")
+
+
+def _canary_state(db_path: Path | None = None) -> dict[str, Any] | None:
+    raw = get_setting(_CANARY_KEY, "", db_path).strip()
+    if not raw:
+        return None
+    try:
+        data = json.loads(raw)
+    except ValueError:
+        return None
+    return data if isinstance(data, dict) and data.get("seat") else None
+
+
+def _clear_canary(db_path: Path | None = None) -> None:
+    set_setting(_CANARY_KEY, "", db_path)
+
+
+def canary_status(
+    db_path: Path | None = None,
+    inst: str | None = None,
+    devices: list[dict[str, Any]] | None = None,
+) -> dict[str, Any] | None:
+    """State of an in-flight canary (one probe flashed ahead of the fleet), or None."""
+    st = _canary_state(db_path)
+    if not st:
+        return None
+    inst = inst if inst is not None else installed()
+    if not inst or _vtuple(str(st.get("built") or "")) != _vtuple(inst):
+        return None  # the toolchain moved again since the canary — start over
+    from .esphome_jobs import get_job
+
+    try:
+        job = get_job(str(st.get("job_id")), db_path)
+    except KeyError:
+        job = None
+    devices = devices if devices is not None else device_versions()
+    dev = next((d for d in devices if d.get("seat_id") == st["seat"]), None)
+    running = dev.get("running") if dev else None
+    job_status = str(job.get("status")) if job else "unknown"
+    return {
+        "seat": st["seat"],
+        "job_id": st.get("job_id"),
+        "job_status": job_status,
+        "job_detail": str((job or {}).get("detail") or "")[-600:],
+        "running": running,
+        "online": bool(dev.get("online")) if dev else False,
+        "ok": job_status == "done" and bool(running) and _vtuple(str(running)) == _vtuple(inst),
+        "queued_at": st.get("queued_at"),
+    }
 
 
 def pending_fleet_rollout(db_path: Path | None = None) -> dict[str, Any]:
@@ -710,7 +1024,7 @@ def pending_fleet_rollout(db_path: Path | None = None) -> dict[str, Any]:
     from .esphome_jobs import SEAT_YAML
 
     inst = installed()
-    last_built = get_setting("last_built_esphome", "").strip()
+    last_built = get_setting("last_built_esphome", "", db_path).strip()
     seats: list[dict[str, Any]] = []
     for row in list_inventory(db_path):
         seat_id = str(row.get("seat_id"))
@@ -722,29 +1036,61 @@ def pending_fleet_rollout(db_path: Path | None = None) -> dict[str, Any]:
             continue
         seats.append({"seat_id": seat_id, "host": row.get("host"), "yaml": SEAT_YAML[seat_id]})
     seats.sort(key=lambda s: (s["seat_id"] in _ROLLOUT_ORDER_TAIL, s["seat_id"]))
+    ids = [s["seat_id"] for s in seats]
+    canary_seat = next((c for c in _CANARY_PREFERENCE if c in ids), None)
+    if canary_seat is None:
+        canary_seat = next((i for i in ids if i not in _ROLLOUT_ORDER_TAIL), None)
+    canary = canary_status(db_path, inst=inst)
+    if canary and canary["seat"] in ids:
+        canary_seat = canary["seat"]
     return {
         "installed": inst,
         "last_built_esphome": last_built or None,
         "needed": bool(inst and (not last_built or _vtuple(inst) != _vtuple(last_built))),
-        "prompt_enabled": get_setting("esphome_fleet_ota_prompt", "true").strip().lower() == "true",
+        "prompt_enabled": get_setting("esphome_fleet_ota_prompt", "true", db_path).strip().lower() == "true",
         "seats": seats,
+        "canary_seat": canary_seat,
+        "canary": canary,
+        "rest": [s for s in seats if s["seat_id"] != canary_seat],
     }
 
 
-def start_fleet_rollout(db_path: Path | None = None) -> dict[str, Any]:
-    """Enqueue one OTA per in-service seat, hub last. Serialised by the jobs worker."""
+def start_fleet_rollout(db_path: Path | None = None, mode: str = "all") -> dict[str, Any]:
+    """Enqueue OTAs through the jobs worker (serialised, hub last).
+
+    * ``all``    — every in-service seat.
+    * ``canary`` — only the canary probe; ``last_built_esphome`` is left alone so the
+      rollout prompt stays up until the rest is released.
+    * ``rest``   — everything except the canary seat; marks the rollout done.
+    """
     from .esphome_jobs import queue_job
 
+    if mode not in {"all", "canary", "rest"}:
+        raise ValueError(f"unknown rollout mode {mode!r}")
     plan = pending_fleet_rollout(db_path)
+    inst = installed()
+    if mode == "canary":
+        seat = plan.get("canary_seat")
+        if not seat:
+            raise ValueError("no in-service probe available as a canary")
+        job = queue_job(seat, "ota", db_path=db_path)
+        set_setting(
+            _CANARY_KEY,
+            json.dumps({"seat": seat, "job_id": job["job_id"], "built": inst or "", "queued_at": time.time()}),
+            db_path,
+        )
+        return {"queued": [seat], "errors": [], "built_against": inst, "mode": mode}
+
+    targets = plan["seats"] if mode == "all" else plan["rest"]
     queued: list[str] = []
     errors: list[dict[str, str]] = []
-    for seat in plan["seats"]:
+    for seat in targets:
         try:
             queue_job(seat["seat_id"], "ota", db_path=db_path)
             queued.append(seat["seat_id"])
         except Exception as exc:  # noqa: BLE001 — surface per-seat, keep going
             errors.append({"seat_id": seat["seat_id"], "error": str(exc)})
-    inst = installed()
     if inst and queued:
         set_setting("last_built_esphome", inst, db_path)
-    return {"queued": queued, "errors": errors, "built_against": inst}
+    _clear_canary(db_path)
+    return {"queued": queued, "errors": errors, "built_against": inst, "mode": mode}

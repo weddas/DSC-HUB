@@ -355,9 +355,24 @@ export async function get_esphome_rollout(): Promise<Record<string, unknown>> {
   return resp.json();
 }
 
-export async function start_esphome_rollout(): Promise<Record<string, unknown>> {
-  const resp = await fetch("/settings/esphome/rollout", { method: "POST" });
+export type EsphomeRolloutMode = "all" | "canary" | "rest";
+
+/** `all` = every in-service seat (hub last); `canary` = just the canary probe;
+ *  `rest` = everyone else once the canary rejoined. */
+export async function start_esphome_rollout(mode: EsphomeRolloutMode = "all"): Promise<Record<string, unknown>> {
+  const resp = await fetch(`/settings/esphome/rollout?mode=${mode}`, { method: "POST" });
   if (!resp.ok) throw new Error((await resp.text()) || "esphome rollout failed");
+  return resp.json();
+}
+
+/** Put the ESPHome toolchain back on the version the last successful change came from. */
+export async function rollback_esphome_toolchain(target?: string): Promise<Record<string, unknown>> {
+  const resp = await fetch("/settings/esphome/toolchain/rollback", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ target: target ?? null }),
+  });
+  if (!resp.ok) throw new Error((await resp.text()) || "esphome toolchain rollback failed");
   return resp.json();
 }
 

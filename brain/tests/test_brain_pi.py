@@ -462,7 +462,7 @@ def test_health_endpoint() -> None:
     assert body["status"] == "ok"
     assert body["version"] == "8.0.0"
     assert body["surface"] == "8.0.0"
-    assert body["expected_firmware"] == "7.0.0.0"
+    assert body["expected_firmware"] == "8.0.0.0"  # ESPHome-only firmware train
 
 
 def test_pot3_default_out_of_service(temp_db: Path) -> None:
@@ -753,11 +753,13 @@ def test_esphome_toolchain_update_container_backend_bumps_compose(
     )
     monkeypatch.setenv("DSC_ESPHOME_COMPOSE_FILE", str(compose))
     monkeypatch.setattr(tc, "build_backend", lambda: "dashboard")
+    monkeypatch.setattr(tc, "dashboard_is_legacy", lambda: True)  # the dsc-hub-esphome container
     monkeypatch.setattr(tc, "eth_carrier_up", lambda: True)
     monkeypatch.setattr(tc, "installed", lambda: "2026.6.5")
     monkeypatch.setattr(
         tc, "latest", lambda *, force=False: {"version": "2026.8.2", "ok": True, "eth_up": True}
     )
+    monkeypatch.setattr(tc, "disk_free_bytes", lambda: 8_000_000_000)
     monkeypatch.setattr(tc.shutil, "which", lambda _name: None)  # no docker on the test host
 
     out = tc.update_to_latest(db_path=temp_db)
@@ -774,6 +776,7 @@ def test_esphome_toolchain_update_still_refuses_below_min_on_container(
     from dsc_brain import esphome_toolchain as tc
 
     monkeypatch.setattr(tc, "build_backend", lambda: "dashboard")
+    monkeypatch.setattr(tc, "dashboard_is_legacy", lambda: True)
     monkeypatch.setattr(tc, "eth_carrier_up", lambda: True)
     monkeypatch.setattr(tc, "installed", lambda: "2026.6.5")
     monkeypatch.setattr(

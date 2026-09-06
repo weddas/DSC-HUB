@@ -29,7 +29,17 @@ else
   echo "WARN: no frontend/spa-dist — brain image may lack SPA"
 fi
 
-# --- 2) Firmware kit layout ---
+# --- 2) Firmware secrets + kit binaries ---
+# The bake owns the keys (decided 2026-09-06): one bake = one kit = one key set.
+# The kit .bin files are compiled from firmware/v4/secrets.yaml and the SAME file
+# is shipped into the image (0600 dsc:dsc, never git) so later on-Pi OTA builds
+# from the ESPHome dashboard agree with the baked binaries.
+SECRETS="${ROOT}/firmware/v4/secrets.yaml"
+if [[ ! -f "${SECRETS}" ]]; then
+  echo "No ${SECRETS} — generating a fresh key set for this kit"
+  (cd "${ROOT}/firmware/v4" && bash ./generate-secrets.sh)
+fi
+[[ -f "${SECRETS}" ]] || { echo "ERROR: ${SECRETS} still missing" >&2; exit 1; }
 bash "${IMAGE_DIR}/bake-firmware.sh"
 
 # --- 3) Stage /opt/dsc-hub payload ---
@@ -57,6 +67,9 @@ if [[ -d "${ROOT}/firmware/v4" ]]; then
     "${ROOT}/firmware/v4/" "${STAGE}/opt/dsc-hub/firmware/v4/" \
     || cp -a "${ROOT}/firmware/v4/." "${STAGE}/opt/dsc-hub/firmware/v4/"
   echo "staged firmware/v4 source ($(find "${STAGE}/opt/dsc-hub/firmware/v4" -name '*.yaml' | wc -l) yaml)"
+  # …and this kit's secrets, owner-only. install-from-payload / stage-dsc chown it to dsc.
+  install -m 0600 "${SECRETS}" "${STAGE}/opt/dsc-hub/firmware/v4/secrets.yaml"
+  echo "staged firmware/v4/secrets.yaml (0600) — this image is bound to one key set"
 fi
 if [[ -d "${ROOT}/data" ]]; then
   rm -rf "${STAGE}/opt/dsc-hub/data"
@@ -75,10 +88,17 @@ install -m 0755 "${COMPOSE}/pi/dsc-esphome-venv-setup.sh" "${STAGE}/opt/dsc-hub/
 install -m 0755 "${COMPOSE}/pi/dsc-esphome-dashboard-run.sh" "${STAGE}/opt/dsc-hub/pi/dsc-esphome-dashboard-run.sh"
 install -m 0644 "${COMPOSE}/pi/dsc-esphome-venv-setup.service" "${STAGE}/systemd/dsc-esphome-venv-setup.service"
 install -m 0644 "${COMPOSE}/pi/dsc-esphome-dashboard.service" "${STAGE}/systemd/dsc-esphome-dashboard.service"
+# Host update helper (brain-in-container → pip on the host venv via request.json).
+install -m 0755 "${COMPOSE}/pi/dsc-esphome-host.sh" "${STAGE}/opt/dsc-hub/pi/dsc-esphome-host.sh"
+install -m 0644 "${COMPOSE}/pi/dsc-esphome-update.service" "${STAGE}/systemd/dsc-esphome-update.service"
+install -m 0644 "${COMPOSE}/pi/dsc-esphome-update.path" "${STAGE}/systemd/dsc-esphome-update.path"
 # ESPHome dashboard project dir for an SD-bake layout (remote-deploy overrides via
 # its own esphome.env). The dashboard unit no-ops cleanly until firmware/v4 lands.
 install -d "${STAGE}/etc/dsc-hub"
-echo "DSC_ESPHOME_PROJECT_DIR=/opt/dsc-hub/firmware/v4" > "${STAGE}/etc/dsc-hub/esphome.env"
+{
+  echo "DSC_ESPHOME_PROJECT_DIR=/opt/dsc-hub/firmware/v4"
+  echo "DSC_ESPHOME_OPS_DIR=/var/lib/dsc-hub/ops"
+} > "${STAGE}/etc/dsc-hub/esphome.env"
 
 # Install helper for first boot / SD inject
 cat > "${STAGE}/opt/dsc-hub/install-from-payload.sh" <<'INST'
@@ -87,19 +107,24 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 install -d /opt/dsc-hub /var/lib/dsc-hub/{ops,z2m,mosquitto,firmware,backups,cannalib} /etc/dsc-hub
 cp -a "${ROOT}/." /opt/dsc-hub/
+if [[ -f /opt/dsc-hub/firmware/v4/secrets.yaml ]]; then
+  chmod 0600 /opt/dsc-hub/firmware/v4/secrets.yaml
+  chown dsc:dsc /opt/dsc-hub/firmware/v4/secrets.yaml 2>/dev/null || true
+fi
 # Prefer staged etc/systemd if present beside payload extract
 if [[ -d /tmp/dsc-hub-stage/etc/dsc-hub ]]; then
   cp -a /tmp/dsc-hub-stage/etc/dsc-hub/. /etc/dsc-hub/
 fi
 if [[ -d /tmp/dsc-hub-stage/systemd ]]; then
   install -m 0644 /tmp/dsc-hub-stage/systemd/*.service /etc/systemd/system/
+  install -m 0644 /tmp/dsc-hub-stage/systemd/*.path /etc/systemd/system/ 2>/dev/null || true
 fi
 install -m 0755 /opt/dsc-hub/pi/dsc-hub-net-policy.sh /etc/dsc-hub/net-policy.sh
 install -m 0755 /opt/dsc-hub/pi/dsc-hub-ap-run.sh /etc/dsc-hub/ap-run.sh
-chmod 0755 /opt/dsc-hub/pi/dsc-esphome-venv-setup.sh || true
+chmod 0755 /opt/dsc-hub/pi/dsc-esphome-venv-setup.sh /opt/dsc-hub/pi/dsc-esphome-host.sh || true
 systemctl daemon-reload
 systemctl enable dsc-hub-net-policy.service dsc-hub-compose.service dsc-hub-ap.service || true
-systemctl enable dsc-esphome-venv-setup.service dsc-esphome-dashboard.service || true
+systemctl enable dsc-esphome-venv-setup.service dsc-esphome-dashboard.service dsc-esphome-update.path || true
 hostnamectl set-hostname dsc-brain || true
 echo "install-from-payload: enabled units. Start: systemctl start dsc-hub-net-policy dsc-hub-compose"
 INST
