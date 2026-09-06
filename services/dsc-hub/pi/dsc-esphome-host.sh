@@ -128,9 +128,12 @@ do_update() {
   chmod 0644 "${HOST_DIR}/progress.log"
   exec > >(tee -a "${HOST_DIR}/progress.log") 2>&1
 
-  # The request is consumed now, whatever happens next — the .path unit must
-  # not re-fire on a stale file after we exit.
-  finish() { rm -f "${req}"; write_capabilities; }
+  # Consume the request NOW (rename, not delete-later): the EXIT trap runs after
+  # this function's locals are gone, and a request.json left behind makes the
+  # .path unit re-fire the service in a loop (seen live 2026-09-06).
+  mv -f "${req}" "${HOST_DIR}/.request.done" 2>/dev/null || rm -f "${req}"
+  REQ_DONE="${HOST_DIR}/.request.done"
+  finish() { rm -f "${REQ_DONE}" "${HOST_DIR}/request.json"; write_capabilities; }
   trap finish EXIT
 
   echo "dsc-esphome-host: job ${job_id} action=${action} target=${target:-latest} (installed ${from:-none})"
@@ -158,6 +161,10 @@ do_update() {
 
   local pkg="esphome"
   [[ -n "${target}" ]] && pkg="esphome==${target}"
+  if ! getent hosts pypi.org >/dev/null 2>&1; then
+    write_result "${job_id}" 0 "${from}" "${from}" 5       "refusing: this host cannot resolve pypi.org (check /etc/resolv.conf — the brain container resolves via Docker's DNS, the host does not)"
+    return 0
+  fi
   echo "$ ${VENV}/bin/pip install -U ${pkg}"
   set +e
   if id "${RUN_AS}" >/dev/null 2>&1 && [[ "$(stat -c %U "${VENV}")" == "${RUN_AS}" ]]; then
