@@ -181,18 +181,23 @@ class _FakeWs:
         return json.dumps(self._events.pop(0))
 
 
-seen_url: dict[str, str] = {}
+seen_urls: list[str] = []
 
 
-def _install_fake_ws(monkeypatch: pytest.MonkeyPatch, ws: _FakeWs) -> None:
+def _install_fake_ws(monkeypatch: pytest.MonkeyPatch, *sessions: _FakeWs) -> None:
+    """One fake socket per dashboard command, handed out in order of connect()."""
     import sys
     import types
 
+    seen_urls.clear()
+    queue = list(sessions)
     client = types.ModuleType("websockets.sync.client")
 
     def _connect(url: str, **kw: Any) -> _FakeWs:
-        seen_url["url"] = url
-        return ws
+        seen_urls.append(url)
+        if not queue:
+            raise AssertionError(f"unexpected extra dashboard connect: {url}")
+        return queue.pop(0)
 
     client.connect = _connect  # type: ignore[attr-defined]
     sync = types.ModuleType("websockets.sync")
@@ -207,8 +212,9 @@ def _install_fake_ws(monkeypatch: pytest.MonkeyPatch, ws: _FakeWs) -> None:
 def test_dashboard_ws_upload_streams_and_succeeds(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     from dsc_brain import esphome_jobs as ej
 
+    compile_ws = _FakeWs([{"event": "line", "data": "Compiling...\n"}, {"event": "exit", "code": 0}])
     ws = _FakeWs([{"event": "line", "data": "Uploading...\n"}, {"event": "exit", "code": 0}])
-    _install_fake_ws(monkeypatch, ws)
+    _install_fake_ws(monkeypatch, compile_ws, ws)
     monkeypatch.setattr(ej, "dashboard_api", lambda: "http://host.docker.internal:6052")
     job = {"job_id": "j-ws", "seat_id": "pot2", "action": "ota", "yaml_name": "dsc-pot2.yaml"}
     conn = ej.connect(temp_db)
@@ -222,12 +228,13 @@ def test_dashboard_ws_upload_streams_and_succeeds(temp_db: Path, monkeypatch: py
 
     ej._run_job_via_dashboard(job, temp_db)
 
-    spawn = json.loads(ws.sent[0])
-    assert spawn == {"type": "spawn", "configuration": "dsc-pot2.yaml", "port": "OTA"}
-    assert seen_url["url"].endswith("/run")  # compile + upload, never bare /upload
+    assert json.loads(compile_ws.sent[0]) == {"type": "spawn", "configuration": "dsc-pot2.yaml"}
+    assert json.loads(ws.sent[0]) == {"type": "spawn", "configuration": "dsc-pot2.yaml", "port": "OTA"}
+    # compile first, then upload — never /run (tails device logs forever), never upload alone
+    assert [u.rsplit("/", 1)[-1] for u in seen_urls] == ["compile", "upload"]
     row = ej.get_job("j-ws", temp_db)
     assert row["status"] == "done"
-    assert "Uploading" in row["detail"]
+    assert "Compiling" in row["detail"] and "Uploading" in row["detail"]
 
 
 def test_dashboard_ws_too_old_hint(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -250,6 +257,37 @@ def test_dashboard_ws_too_old_hint(temp_db: Path, monkeypatch: pytest.MonkeyPatc
     row = ej.get_job("j-old", temp_db)
     assert row["status"] == "failed"
     assert "below the pinned min_version" in row["detail"]
+    assert [u.rsplit("/", 1)[-1] for u in seen_urls] == ["compile"]  # upload never attempted
+
+
+def test_dashboard_ota_stops_after_failed_compile(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from dsc_brain import esphome_jobs as ej
+
+    _install_fake_ws(monkeypatch, _FakeWs([{"event": "line", "data": "error: boom\n"}, {"event": "exit", "code": 1}]))
+    monkeypatch.setattr(ej, "dashboard_api", lambda: "http://host.docker.internal:6052")
+    conn = ej.connect(temp_db)
+    ej._ensure_jobs(conn)
+    conn.execute(
+        "INSERT INTO esphome_jobs(job_id, seat_id, action, yaml_name, status, detail, created_at, updated_at) "
+        "VALUES('j-cf','control','ota','dsc-control.yaml','queued','',0,0)"
+    )
+    conn.commit()
+    conn.close()
+    ej._run_job_via_dashboard({"job_id": "j-cf", "seat_id": "control", "action": "ota", "yaml_name": "dsc-control.yaml"}, temp_db)
+    row = ej.get_job("j-cf", temp_db)
+    assert row["status"] == "failed" and "compile via dashboard exited 1" in row["detail"]
+    assert [u.rsplit("/", 1)[-1] for u in seen_urls] == ["compile"]
+
+
+def test_worker_start_reaps_jobs_left_running_by_a_restart(temp_db: Path) -> None:
+    from dsc_brain import esphome_jobs as ej
+
+    job = ej.queue_job("heater", "ota", temp_db)
+    ej._update_job(job["job_id"], "running", "Uploading 40%", temp_db)
+    assert ej._reap_stale_running(temp_db) == 1
+    row = ej.get_job(job["job_id"], temp_db)
+    assert row["status"] == "failed" and "brain restarted" in row["detail"]
+    ej.queue_job("heater", "ota", temp_db)  # the seat is free to re-queue
 
 
 # --------------------------------------------------------------------------- #
