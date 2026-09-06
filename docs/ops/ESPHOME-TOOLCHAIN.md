@@ -77,9 +77,20 @@ container already bind-mounts.
 | `progress.log` | host → brain | streamed pip output |
 | `result.json` | host → brain | `{"job_id","ok","from","to","exit_code","message","log_tail"}`; the brain deletes it after consuming |
 
+Helper hardening (from the live gate): the request is renamed to `.request.done` as
+the first step (a leftover `request.json` makes the `.path` unit re-fire the oneshot
+in a loop); pip's log tail is decoded with `errors=replace` (progress bars are not
+UTF-8); the EXIT trap writes a failure `result.json` if the script dies before its
+own; the helper dir is `dsc:dsc 0775` so the dashboard wrapper (runs as `dsc`) can
+refresh capabilities; and pip is refused up front when `pypi.org` does not resolve
+on the **host** — the Pi's `dhcpcd` wrote an empty `/etc/resolv.conf` while Docker
+containers resolved through their own pinned servers. `pi/bring-up-eth0.sh` now
+pins `static domain_name_servers` for eth0 in `dhcpcd.conf`.
+
 Status fields the Settings card reads: `build_backend`, `dashboard_legacy`,
-`host_helper`, `secrets_present`, `disk_free_gb` / `disk_free_ok` (update refused
-under 1.5 GiB), `rollback_target`, `canary`.
+`dashboard_up`, `host_helper`, `secrets_present`, `disk_free_gb` / `disk_free_ok` (update
+refused under 1.5 GiB), `latest` / `latest_supported` / `latest_blocked_reason`,
+`rollback_target`, `canary`.
 
 Settings keys: `esphome_dashboard_api` (brain→dashboard; empty = the
 `DSC_ESPHOME_DASHBOARD_API` env compose sets = `http://host.docker.internal:6052`,
@@ -89,6 +100,27 @@ the host unit over the bridge with a `host-gateway` extra_host) is separate from
 `DSC_ESPHOME_HOST_DIR` overrides the handshake dir on the brain side;
 `DSC_ESPHOME_OPS_DIR` / `DSC_ESPHOME_PROJECT_DIR` in `/etc/dsc-hub/esphome.env` on
 the host side.
+
+### Ceiling: ESPHome 2026.8 removed the built-in dashboard
+
+ESPHome **2026.8** dropped `esphome dashboard` — the very process the brain drives
+on `:6052` — in favour of the separate `esphome-device-builder` package. Its API is
+**not** drop-in: one multiplexed WebSocket at `/ws` with named commands
+(`config/version`, `devices/list`, `firmware/compile`, `firmware/upload`,
+`firmware/follow_job`), no `/version`, `/devices`, `/compile`, `/upload`. On
+2026-09-06 a live bump to 2026.8.2 took the dashboard down (crash-loop:
+*"The built-in dashboard has been removed from ESPHome"*); the brain rolled the
+venv back to 2026.6.5 through the host helper.
+
+So until a Device Builder adapter exists (tracked), the toolchain is capped:
+`esphome_toolchain.DASHBOARD_REMOVED_FROM = "2026.8.0"`. `latest()` reports both
+PyPI's newest (`latest`) and the newest non-yanked release below the boundary
+(`latest_supported`, e.g. 2026.7.4); **Update ESPHome** targets the latter and
+refuses any explicit target at or past the boundary unless the host helper
+reports `device_builder: true`. The card shows *Newer ESPHome held back* with the
+reason. When the dashboard is down but the helper is present the backend stays
+`venv-host` (`dashboard_up: false`) so **Roll back** still works — which is exactly
+when it is needed.
 
 ### Roll back
 

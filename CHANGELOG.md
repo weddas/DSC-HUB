@@ -50,6 +50,29 @@
   with an `esphome config` sweep over every `firmware/v4` entry point on ESPHome
   2026.8.0 and `scripts/run_sim_gates` (20/20) — see the fleet-reflash gate in
   `docs/FOLLOWUPS.md`.
+- **Pi gate findings (2026-09-06, live grow)** — the first real pass through the
+  new path surfaced and fixed: (1) probe/compile jobs fell through to the local
+  CLI on the `venv-host` backend (`esphome CLI not found`) — routed to the
+  dashboard WebSocket; (2) `deploy-brain-remote.sh` wrote the sudo **password**
+  into `/etc/dsc-hub/esphome.env` (`… | run_sudo tee`) — now `install`ed from a
+  temp file; (3) the Pi host had an empty `/etc/resolv.conf` (dhcpcd, no
+  resolvconf) so host `pip` could not reach PyPI while containers could —
+  `bring-up-eth0.sh` pins eth0 DNS in `dhcpcd.conf`, the helper refuses up front
+  when `pypi.org` does not resolve; (4) the helper left `request.json` behind and
+  the `.path` unit re-fired pip in a loop — request consumed first; (5) the
+  helper crashed on non-UTF-8 pip output before writing its result — decoded
+  with `replace`, plus a failure result from the EXIT trap so the brain never
+  waits 20 min; (6) the helper dir was root-only so the `dsc` dashboard wrapper
+  could not refresh capabilities — `dsc:dsc 0775`; (7) per-seat "running ESPHome"
+  compared the product train (7.0.0.0) to an ESPHome release — now from
+  `device_info.esphome_version` for every role, product firmware exposed
+  separately; (8) **ESPHome 2026.8 removed the built-in dashboard** — a live bump
+  to 2026.8.2 crash-looped `dsc-esphome-dashboard`; rolled back via the brain, and
+  the toolchain is now capped below `DASHBOARD_REMOVED_FROM = 2026.8.0`
+  (`latest_supported`, *Newer ESPHome held back* on the card) until a Device
+  Builder adapter lands; rollback stays available with the dashboard down
+  (`venv-host` + `dashboard_up: false`) and is offered for a failed update that
+  still moved the venv. Gate evidence in `docs/FOLLOWUPS.md`.
 - **Tests** — new `brain/tests/test_esphome_toolchain.py` (venv runner argv / cwd /
   env / timeout / hostless, dashboard WebSocket runner incl. the "too old" hint,
   backend detection, host-helper handshake success + failure, disk guard,

@@ -1128,12 +1128,20 @@ export function SettingsPage() {
               <p className="dsc-muted" style={{ margin: "4px 0" }}>
                 Installed <b>{String(toolchain.installed ?? "—")}</b>
                 {" · "}Latest{" "}
-                <b>{toolchain.latest_ok ? String(toolchain.latest ?? "—") : "offline"}</b>
+                <b>{toolchain.latest_ok ? String(toolchain.latest_supported ?? toolchain.latest ?? "—") : "offline"}</b>
+                {toolchain.latest_ok && toolchain.latest_blocked_reason
+                  ? ` (PyPI has ${String(toolchain.latest)})`
+                  : ""}
                 {" · "}Pinned min <b>{String(toolchain.min_version ?? "—")}</b>{" "}
                 {toolchain.meets_min === false ? (
                   <StatusChip label="BELOW PINNED MIN" tone="bad" />
                 ) : null}
               </p>
+              {toolchain.latest_blocked_reason ? (
+                <p className="dsc-muted" style={{ margin: "4px 0", fontSize: "var(--dsc-fs-sm)" }}>
+                  <StatusChip label="Newer ESPHome held back" tone="muted" /> {String(toolchain.latest_blocked_reason)}.
+                </p>
+              ) : null}
               {toolchain.latest_ok === false ? (
                 <p
                   className="dsc-muted"
@@ -1155,7 +1163,7 @@ export function SettingsPage() {
                   }
                 >
                   {toolchain.update_available === true
-                    ? `Update ESPHome → ${String(toolchain.latest)}`
+                    ? `Update ESPHome → ${String(toolchain.latest_supported ?? toolchain.latest)}`
                     : toolchain.installed == null
                       ? "ESPHome not installed"
                       : toolchain.meets_min === false
@@ -1178,7 +1186,9 @@ export function SettingsPage() {
               <p className="dsc-muted" style={{ margin: "4px 0", fontSize: "var(--dsc-fs-sm)" }}>
                 Build backend:{" "}
                 {toolchain.build_backend === "venv-host"
-                  ? `host ESPHome venv via dsc-esphome-dashboard (${String(toolchain.dashboard_api ?? "")})`
+                  ? toolchain.dashboard_up === false
+                    ? `host ESPHome venv — dashboard DOWN on ${String(toolchain.dashboard_api ?? "")} (compile/OTA unavailable; update / roll back still work)`
+                    : `host ESPHome venv via dsc-esphome-dashboard (${String(toolchain.dashboard_api ?? "")})`
                   : toolchain.build_backend === "dashboard"
                     ? toolchain.dashboard_legacy === true
                       ? `legacy dsc-hub-esphome container (${String(toolchain.dashboard_api ?? "")})`
@@ -1193,6 +1203,13 @@ export function SettingsPage() {
                   <StatusChip label="Deprecated backend" tone="warn" /> The{" "}
                   <code>dsc-hub-esphome</code> container backend is being retired in 8.x — the host
                   ESPHome venv is the supported path. Re-run the deploy or bake to switch.
+                </p>
+              ) : null}
+              {toolchain.build_backend === "venv-host" && toolchain.dashboard_up === false ? (
+                <p style={{ margin: "4px 0", fontSize: "var(--dsc-fs-sm)" }}>
+                  <StatusChip label="Dashboard down" tone="bad" /> The build service is not answering on :6052. If this
+                  followed an ESPHome update, <b>Roll back</b>; otherwise check{" "}
+                  <code>journalctl -u dsc-esphome-dashboard</code> on the Pi.
                 </p>
               ) : null}
               {toolchain.build_backend === "dashboard" && toolchain.dashboard_legacy !== true ? (
@@ -1404,7 +1421,7 @@ export function SettingsPage() {
             </p>
           ) : toolchain?.build_backend === "venv-host" ? (
             <p>
-              Asks the Pi host helper to run <code>pip install esphome=={String(toolchain?.latest ?? "latest")}</code>{" "}
+              Asks the Pi host helper to run <code>pip install esphome=={String(toolchain?.latest_supported ?? toolchain?.latest ?? "latest")}</code>{" "}
               in <code>/opt/dsc-esphome-venv</code> and restart the dashboard service; the log streams below.
               No devices are touched. After it finishes you&apos;ll be offered a canary, then a fleet reflash.
             </p>
