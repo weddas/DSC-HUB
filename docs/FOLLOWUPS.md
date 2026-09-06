@@ -10,6 +10,59 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-09-06 — Zigbee track: state re-derivation + completion plan (no code changes)
+
+**Source:** `CLAUDE - DSC-HUB/plan-zigbee-completion-2026-09-06.md` (supersedes `plan-zigbee-ux-rollout-and-esphome.md`). Tracker rows updated in Notion.
+
+| Item | Status |
+|------|--------|
+| Original Zigbee UX rollout Part A (phases 0–4) + Part B (ESPHome pin / dashboard / toolchain) | **done** — landed in PRs #180 / #183 / #189 / #179 / #195; 9 of 9 Part A tracker rows Fixed & Verified |
+| Automation rule engine v2 + Seat/POT rename + Twin retirement | **done (working tree, uncommitted)** — `tsc` exit 0; `test_automation_rules*.py` 34 passed; `test_zigbee_*.py` 33 passed this pass |
+| Live Pi (`dsc-brain.local`, brain 8.0.0) | **pre-v2** — `/settings/automations/targets` falls through to SPA HTML; 0 rules; `canopy_2x4` live, `canopy_4x8` + 3 leak sensors bound stubs since restart |
+
+**red-flag (logged to tracker, not fixed):**
+- Non-climate Zigbee datapoints (CO₂, lux, contact, occupancy, power) never become fleet entities — `fleet_state.py:234-252` only exposes temperature/humidity; automation v2 cannot trigger on them; 8 of 21 catalog roles are dead ends after binding — **Medium** (plan Phase 4).
+- `GET /settings/esphome/toolchain` blocks > 30 s on the live Pi when PyPI and `:6052` are unreachable (Ethernet up, no route out) — **Medium** (plan Phase 5).
+- `api.py` `spa_fallback` returns `index.html` 200 for unknown `/settings/*` paths — a new SPA against an older brain fails as a JSON parse error, not a 404 — **Low** (plan Phase 6).
+
+**soak:** `canopy_4x8` ZY-ZTH02 silent since last brain restart (~40 min at check) while `canopy_2x4` reports — check battery/range before the v2 live soak.
+
+**Executed later the same day (PR #197, branch `feat/zigbee-completion-automation-v2`, commits 7bb203f · 15c7513 · 3d35a2b):**
+
+| Phase | Status |
+|------|--------|
+| 1 Land the working tree | **done** — 3 logical commits (rename + Twin retirement · automation v2 · zigbee/safety/toolchain), pushed, PR #197 open |
+| 3 Safety fixes | **done (code)** — failsafe `force=True` for every driven seat; operator Sonoff flip writes `_relay_commanded`; `emit_proposal` shadow-mode documented in `DSC-BRAIN.md` (decision still the operator's) — `test_appliance_failsafe.py` |
+| 4 Datapoint exposure | **done (code)** — every bound role lands in `zigbee_by_role` with `kind`; `fleet_state` exports every datapoint (`sensor.`/`binary_sensor.dsc_zigbee_<role>_<key>`, catalog units); rule engine age/targets cover them; Climate "Other sensors" table; 8 dead-end roles now `consume: True` — `test_zigbee_datapoints.py` (8) |
+| 5 Toolchain hang | **done (code)** — `fetch_json_bounded` worker-thread GETs (DNS-safe) + memoised `/version` probe — `test_esphome_toolchain_bounded.py` (4). Pi venv-dashboard smoke still pending |
+| 6 Housekeeping | **done (code)** — OOS picker filter; `spa_fallback` JSON 404 for brain-API segments — `test_api_route_fallback.py` |
+| 2 Live soak | **pending deploy** — Pi still on the pre-v2 brain (`/settings/automations/targets` → SPA HTML) |
+
+**Verify:** `cd brain && python -m pytest -q` → 322 passed; `cd frontend && npx tsc --noEmit` exit 0; `npm run build` ok. Rams quick_review on ClimatePage flagged only inline margin / flex-wrap styles — same pattern as the surrounding safety block, left consistent.
+
+**Live gate 2026-09-06 (PR #197 hotpatched to `dsc-brain.local` via `.audit/zigbee-completion-pi-hotpatch.ps1` — whole `dsc_brain` package + `spa-dist`, `docker stop -t 20` + `start`, brain healthy after 10 s, bundle `index-BVWH9jgR.js`):**
+
+| Check | Result |
+|------|--------|
+| `/settings/automations/targets` | **passed** — JSON (9 relays, 13 setpoints, `binary_sensor.dsc_zigbee_` in age prefixes); Pi is on v2 |
+| `/settings/esphome/toolchain` | **passed** — HTTP 200 in **0.3 s** (was >30 s / HTTP 000 on the same box) |
+| `/settings/no-such-route` | **passed** — 404 `application/json` |
+| Datapoint exposure (`.audit/zbc-soak-a.sh`) | **passed** — QA `0xqa00000000c02 → co2_tent`, `mosquitto_pub {co2:812,voc:30}` → `zigbee_by_role.co2_tent {co2, voc, kind:gas}`; `sensor.dsc_zigbee_co2_tent_co2 = 812 ppm`, `_voc = 30 ppb`, `_linkquality = 100 lqi`; targets lists all three; Climate "Other sensors" row rendered (screenshot) |
+| v2 rule on a Zigbee entity | **passed** — banner rule `co2 > 800` fired on the next evaluation tick (`critical_banners` `auto-qa_co2_high`, `firing:true`), cleared at `co2=400` (`.audit/zbc-soak-b.sh`) |
+| Cleanup | **passed** — rule list back to `[]`, original 5 bindings restored, no `co2_tent` row / entity / banner left |
+
+**flakes:** soak A's first `/fleet` read after the rule PUT showed `firing:false` — the edge lands on the next broadcast tick (known ~1-poll lag, `dsc-pi-hotpatch.mdc`); the next read had it firing. Not a gate failure.
+
+**residuals / still open:**
+- v2 **relay cut-out / setpoint** rules and the failsafe / operator-flip fixes are unit-tested only — the physical Sonoff trip on the live grow needs the operator's OK (tracker rows stay Needs Verification).
+- **ESPHome venv dashboard Pi smoke (plan Phase 5)** blocked: the Pi has no route out, so `dsc-esphome-venv-setup.sh` cannot pip-install; live `build_backend=none`, `dashboard_api` still the legacy container name.
+- `canopy_4x8` and `canopy_2x4` show `—` right after the brain restart until the ZY-ZTH02s next report; `canopy_4x8` was already silent before the deploy (battery/range check).
+- `emit_proposal` shadow-mode is documented; flipping it to real demand writes is the operator's product decision.
+- StatusChip uppercases the reading units in the Other-sensors row (`CO₂ 812 PPM`) — cosmetic.
+
+---
+
+
 ## 2026-09-06 — DSC-HUB 8.0.0 kit SD installer (Tasks 1–6 landed; 7–8 open)
 
 **Spec/plan:** `docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md`, `docs/superpowers/plans/2026-09-06-dsc-kit-sd-installer.md`
@@ -4272,5 +4325,29 @@ Teaser row-height CSS (52pxâ†’78px), journal system-row collapse (`Ã—N`,
 
 ---
 
+---
 
+## 2026-09-06 — Four larger tracker items: Twin fate, busy-flag rule, Seat/POT rename, automation v2 (+ findings fix pass)
 
+All in the working tree, **not committed**. Tracker rows updated in Notion (DSC-HUB Issue & Recommendation Tracker).
+
+| Item | Status |
+|------|--------|
+| Twin 3D scene — decide fate | **done** — RETIRED. Both host routes already redirected, so `DscTwinCanvas` never rendered, yet `TwinKeepAlive` was mounted on every page lazy-loading the R3F chunk. Removed App mount; deleted `twin/DscTwinCanvas.tsx`, `TwinKeepAlive.tsx`, `TwinViewport.tsx`, `lib/dsc-twin-api.ts`; dropped `.dsc-twin-*` CSS. `three`/`@react-three` deps stay (AirflowParticleScene). Twin SF1000 lamp untouched. |
+| "Split shared busy flags per action" house rule | **done** — added to AGENTS.md Learned User Preferences (drafted on the user's instruction to fix this item; commit is still the user's call). |
+| Seat/POT → Probe/Plant identifier rename | **done** — dedicated pass, ~75 identifier families / 44 files; `seatModel.ts→probeModel.ts`, `potReading.ts→probeReading.ts`, `potTrust.ts→probeTrust.ts`, `PlantSeatPanel→PlantProbePanel`, `SeatOverlay→ProbeOverlay`. Wire keys (`seat_id`, `pot1..4`, `pots` map, script params, `?pot=`), inventory-seat types (`SeatSnapshot` etc.), CSS classes kept byte-identical. Surfaced and fixed ~35 real operator-visible POT/seat leaks (SoilTestWizard rendered literal "POT1", alertPlaybook "Pot N stuck", Mission "Plant seats", …). |
+| Automation rule engine v2 | **done (needs live soak)** — compound all/any, window, debounce/release, hysteresis, max_age_s, computed-entity triggers, relay + setpoint actions with restore-on-clear, `GET /settings/automations/targets`, SPA editor. Safety boundary: Sonoffs are cut-out only (appliance_driver owns them), hub relays limited to operator-owned switches, setpoints ESP-clamped, `clone_*` skipped under Follow Plants. Tests 7→34; full brain suite 306 passed. |
+| Findings fix pass (6 rows from the rename agent) | **done** — KitPulse "Probe " shortener; Root probe card keyboard-accessible; root-steering error surfaced; identity inputs `autoComplete=off`; **alertRoute bug**: `dsc_probeN_sensor_stuck` alerts fell through to Overview, now route to Root; Calibrate lab-wet copy uses `probeLabel`. |
+
+**Verify:** `cd frontend && npx tsc --noEmit` → exit 0; `npm run build` → ok; `cd brain && python -m pytest -q` → 306 passed (paho flake did not surface).
+
+**red-flag (logged to tracker, not fixed):**
+- `appliance_driver.py:224-231` stale-hub failsafe skips `force`, so an OOS seat's physically-ON relay stays ON when the hub goes dark — **High**.
+- `control_ops.py:232` operator Sonoff flips bypass `_relay_commanded`; persist until demand changes.
+- `hub_native.py:209-212` `emit_proposal` only logs — brain never writes demand switches; confirm shadow-mode intent vs "brain is control SoT".
+- `fleet_state.py:96` raw view hardcodes `sensor.dsc_active_alert_count = 0`.
+- `call_service_sync` + `api_lock.py` asyncio.Lock/loop-binding hazard under contention (needs repro).
+
+**deferred:** automation ws-loop writes are fire-and-forget (log only, no `last_error`); `oos_seat` unconditional restore; per-condition truth values in rule summary; `SeatSnapshot→DeviceSeatSnapshot` only if brain adopts it; `BandChartKind "pot1".."pot4"`; `seatApi.smoke.ts` filename; Settings `seats` prop offers hub/panel/probe to the OOS picker (tracker Low).
+
+**soak:** v2 relay/setpoint rules and the Sonoff cut-out restore path are unit-tested only — exercise on the live Pi (arm one cut-out rule, trip it, confirm driver re-asserts on clear) before trusting.

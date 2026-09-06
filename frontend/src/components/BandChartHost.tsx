@@ -45,7 +45,7 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
   }, [target, defaultHours, setHours]);
   const fetchPoints = Math.min(Math.max(maxPoints, 96), 288);
 
-  // Pot-moisture "dry" line — operator-tunable via Settings → Brain (global modifiers),
+  // Probe-moisture "dry" line — operator-tunable via Settings → Brain (global modifiers),
   // not a hardcoded 30.
   const [dryPct, setDryPct] = useState(30);
   useEffect(() => {
@@ -75,14 +75,14 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
   const cloneLeafVpd = useEntitySeries("sensor.dsc_clone_leaf_vpd_kpa", { hours, maxPoints: fetchPoints, withGhost: true });
   const rootT = useEntitySeries("sensor.dsc_coldest_root_zone_temp", { hours, maxPoints: fetchPoints, withGhost: true });
 
-  const potMoist1 = useEntitySeries("sensor.dsc_probe1_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
-  const potMoist2 = useEntitySeries("sensor.dsc_probe2_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
-  const potMoist3 = useEntitySeries("sensor.dsc_probe3_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
-  const potMoist4 = useEntitySeries("sensor.dsc_probe4_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
-  const potTemp1 = useEntitySeries("sensor.dsc_probe1_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
-  const potTemp2 = useEntitySeries("sensor.dsc_probe2_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
-  const potTemp3 = useEntitySeries("sensor.dsc_probe3_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
-  const potTemp4 = useEntitySeries("sensor.dsc_probe4_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
+  const probeMoist1 = useEntitySeries("sensor.dsc_probe1_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
+  const probeMoist2 = useEntitySeries("sensor.dsc_probe2_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
+  const probeMoist3 = useEntitySeries("sensor.dsc_probe3_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
+  const probeMoist4 = useEntitySeries("sensor.dsc_probe4_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
+  const probeTemp1 = useEntitySeries("sensor.dsc_probe1_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
+  const probeTemp2 = useEntitySeries("sensor.dsc_probe2_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
+  const probeTemp3 = useEntitySeries("sensor.dsc_probe3_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
+  const probeTemp4 = useEntitySeries("sensor.dsc_probe4_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
 
   const targetTemp = num("number.dsc_hub_target_temp", 25);
   const cloneTargetTemp = num("number.dsc_hub_clone_target_temp", 24);
@@ -156,8 +156,8 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
         };
       default: {
         const n = Number(target.kind.replace("pot", ""));
-        const moist = [potMoist1, potMoist2, potMoist3, potMoist4][n - 1];
-        const temp = [potTemp1, potTemp2, potTemp3, potTemp4][n - 1];
+        const moist = [probeMoist1, probeMoist2, probeMoist3, probeMoist4][n - 1];
+        const temp = [probeTemp1, probeTemp2, probeTemp3, probeTemp4][n - 1];
         return {
           unit: "%",
           height: 320,
@@ -186,14 +186,14 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
     leafVpd,
     cloneLeafVpd,
     rootT,
-    potMoist1,
-    potMoist2,
-    potMoist3,
-    potMoist4,
-    potTemp1,
-    potTemp2,
-    potTemp3,
-    potTemp4,
+    probeMoist1,
+    probeMoist2,
+    probeMoist3,
+    probeMoist4,
+    probeTemp1,
+    probeTemp2,
+    probeTemp3,
+    probeTemp4,
     targetTemp,
     cloneTargetTemp,
     rhMin,

@@ -10,14 +10,14 @@ import { prepareGrowLog, filterGrowLog, type GrowLogFilter } from "../lib/growLo
 import { GrowLogList } from "./journal/GrowLogList";
 import { useEffect, useState, type ReactNode } from "react";
 import { ALERT_ENTITY_IDS } from "../lib/alertPlaybook";
-import { potMoistureNum } from "../lib/potReading";
-import type { RosterSlot } from "../lib/seatModel";
-import { KIT_PROBE_NUMBERS, isPotInServiceWithFleet, probeLabel } from "../lib/seatModel";
+import { probeMoistureNum } from "../lib/probeReading";
+import type { RosterSlot } from "../lib/probeModel";
+import { KIT_PROBE_NUMBERS, isProbeInServiceWithFleet, probeLabel } from "../lib/probeModel";
 import type { CfmReading } from "../lib/cfmProvenance";
 import { TentLightClockStrip } from "./TentLightClock";
 import { buildCloneLightDesk, headerSfLabel } from "../lib/lightViewModel";
 import { useFleet } from "../hooks/useFleet";
-import { potWantBand } from "../lib/tentWant";
+import { probeWantBand } from "../lib/tentWant";
 
 type Bus = {
   state: (id: string, fb?: string) => string;
@@ -225,7 +225,7 @@ export function DashActiveAlerts({ activeIds, onAlert }: { bus: Bus; activeIds: 
 
 export function DashEspLinkChips({ bus, onNavigate }: { bus: Bus; onNavigate: (path: string) => void }) {
   return (
-    <div className="dsc-chip-row" role="group" aria-label="Pot radio vs Modbus probe">
+    <div className="dsc-chip-row" role="group" aria-label="Probe radio link vs Modbus link">
       {[...KIT_PROBE_NUMBERS].map((n) => {
         const espOn = bus.state(`binary_sensor.dsc_hub_pot${n}_esp_now_link`) === "on";
         const modbusId = `binary_sensor.dsc_probe${n}_modbus_probe_online`;
@@ -277,7 +277,7 @@ export function DashEspLinkChips({ bus, onNavigate }: { bus: Bus; onNavigate: (p
 export function DashRunningChips({ bus }: { bus: Bus }) {
   const { state, num } = bus;
   const matT = num("sensor.dsc_coldest_root_zone_temp", NaN);
-  const matPot = String(bus.entity("sensor.dsc_coldest_root_zone_temp")?.attributes?.pot || "");
+  const matProbe = String(bus.entity("sensor.dsc_coldest_root_zone_temp")?.attributes?.pot || "");
   const cloneDesk = buildCloneLightDesk(bus);
   const sfOn = cloneDesk.sfOn && (cloneDesk.sfBrightness == null || cloneDesk.sfBrightness > 0);
   const sfLabel = headerSfLabel({ sfOn: cloneDesk.sfOn, sfBrightness: cloneDesk.sfBrightness });
@@ -300,7 +300,7 @@ export function DashRunningChips({ bus }: { bus: Bus }) {
     { label: "Hum", icon: "tank" as const, on: state("switch.dsc_hub_humidifier_demand") === "on", tone: state("switch.dsc_hub_humidifier_demand") === "on" ? "ok" : "muted" },
     { label: dehumOffline ? "Dehum offline" : "Dehum", icon: "tank" as const, on: state("switch.dsc_hub_dehumidifier_demand") === "on", tone: dehumOffline ? "bad" : state("switch.dsc_hub_dehumidifier_demand") === "on" ? "ok" : "muted" },
     {
-      label: Number.isFinite(matT) ? `Mat ${matT.toFixed(1)}°C${matPot && matPot !== "none" ? ` P${matPot}` : ""}` : "Mat",
+      label: Number.isFinite(matT) ? `Mat ${matT.toFixed(1)}°C${matProbe && matProbe !== "none" ? ` P${matProbe}` : ""}` : "Mat",
       icon: "root" as const,
       on: state("switch.dsc_hub_grow_mat_demand") === "on",
       tone: rootFault ? "bad" : state("switch.dsc_hub_grow_mat_demand") === "on" ? "ok" : "muted",
@@ -764,14 +764,14 @@ export function DashRootTankSection({
   bus,
   rosterSlots,
   onNavigate,
-  onPot,
-  onPotChart,
+  onProbe,
+  onProbeChart,
 }: {
   bus: Bus;
   rosterSlots: RosterSlot[];
   onNavigate: (path: string) => void;
-  onPot: (n: number) => void;
-  onPotChart: (kind: BandChartKind) => void;
+  onProbe: (n: number) => void;
+  onProbeChart: (kind: BandChartKind) => void;
 }) {
   const { state, num } = bus;
   const fleet = useFleet();
@@ -779,11 +779,11 @@ export function DashRootTankSection({
     <Card className="dsc-glass" title="Root & tank" icon="root">
       <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", margin: "0 0 8px" }}>
         Grey gauges mean no moisture Got or probe out of service — never a fake reading.
-        Band is Root Want (`potWantBand`); missing Want stays unbanded.
+        Band is Root Want (`probeWantBand`); missing Want stays unbanded.
       </p>
       <div className="dsc-chip-row">
         {[...KIT_PROBE_NUMBERS].map((n) => {
-          const oos = !isPotInServiceWithFleet(n, state, fleet);
+          const oos = !isProbeInServiceWithFleet(n, state, fleet);
           const name = state(`text.dsc_probe${n}_plant_name`, "—");
           const clean = !name || name === "unknown" || name === "unavailable" ? "—" : name;
           return (
@@ -791,7 +791,7 @@ export function DashRootTankSection({
               key={n}
               label={oos ? `${probeLabel(n)} OOS` : `${probeLabel(n)} ${clean}`}
               tone={oos || clean === "—" ? "muted" : "ok"}
-              onClick={() => onPot(n)}
+              onClick={() => onProbe(n)}
             />
           );
         })}
@@ -812,9 +812,9 @@ export function DashRootTankSection({
       ) : null}
       <div className="dsc-gauge-matrix dsc-gauge-matrix--pots">
         {[...KIT_PROBE_NUMBERS].map((n) => {
-          const oos = !isPotInServiceWithFleet(n, state, fleet);
-          const moist = oos ? NaN : potMoistureNum(num, state, n);
-          const moistBand = oos ? undefined : potWantBand(n, "moisture", state);
+          const oos = !isProbeInServiceWithFleet(n, state, fleet);
+          const moist = oos ? NaN : probeMoistureNum(num, state, n);
+          const moistBand = oos ? undefined : probeWantBand(n, "moisture", state);
           return (
             <ArcGauge
               key={n}
@@ -827,7 +827,7 @@ export function DashRootTankSection({
               segments={
                 moistBand ? moistureSegments(moistBand.min, moistBand.max) : undefined
               }
-              onClick={() => onPotChart(`pot${n}` as BandChartKind)}
+              onClick={() => onProbeChart(`pot${n}` as BandChartKind)}
             />
           );
         })}

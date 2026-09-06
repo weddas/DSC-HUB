@@ -14,9 +14,9 @@ import { CropScheduler } from "../components/CropScheduler";
 import { TentLightClock } from "../components/TentLightClock";
 import { TentTargetPanel } from "../components/TentTargets";
 import { resolveCfm } from "../lib/cfmProvenance";
-import { readPotTrust } from "../lib/potTrust";
+import { readProbeTrust } from "../lib/probeTrust";
 import { VesselGlyph } from "../components/VesselGlyph";
-import { readPotVessel } from "../lib/vesselSpec";
+import { readProbeVessel } from "../lib/vesselSpec";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useTentVitals } from "../hooks/useFleet";
 import { useEntitySeries } from "../hooks/useEntitySeries";
@@ -24,10 +24,10 @@ import { useHeldReading } from "../hooks/useHeldReading";
 import { useChartHours } from "../hooks/useChartHours";
 import { useInspector } from "../components/InspectorHost";
 import { MultiLineChart } from "../viz/charts";
-import { potsInTent, isPotInServiceWithFleet, probeLabel, type TentId } from "../lib/seatModel";
+import { probesInTent, isProbeInServiceWithFleet, probeLabel, type TentId } from "../lib/probeModel";
 import { HelpTip } from "../components/HelpTip";
 import { JournalScopePanel } from "../components/journal/JournalScopePanel";
-import { PlantSeatPanel } from "./GrowPages";
+import { PlantProbePanel } from "./GrowPages";
 
 export { LiveClimatePage } from "./ClimatePage";
 export { LiveRootPage } from "./RootPage";
@@ -46,13 +46,13 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
   const { hours, setHours, maxPoints } = useChartHours(6);
   void tick;
 
-  const seats = potsInTent(tent, state, entity);
+  const probes = probesInTent(tent, state, entity);
   const raw = Number(params.get("pot") || 0);
-  const pot =
+  const probe =
     raw >= 1 &&
     raw <= 4 &&
-    isPotInServiceWithFleet(raw, state) &&
-    seats.some((s) => s.pot === raw)
+    isProbeInServiceWithFleet(raw, state) &&
+    probes.some((s) => s.probe === raw)
       ? raw
       : null;
 
@@ -115,8 +115,8 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
   const title = tent === "main" ? "4×8 tent" : "2×4 tent";
   const pathNote =
     tent === "main"
-      ? "Only the 4×8 house in Twin. Cascade-in is a port stub from 2×4, not a second tent."
-      : "Only the 2×4 house in Twin. Cascade-out is a port stub to 4×8.";
+      ? "Only the 4×8 house on this desk. Cascade-in is a port stub from 2×4, not a second tent."
+      : "Only the 2×4 house on this desk. Cascade-out is a port stub to 4×8.";
 
   const wantT = tent === "main" ? num("number.dsc_hub_target_temp") : num("number.dsc_hub_clone_target_temp");
   const rhMin = tent === "main" ? num("number.dsc_hub_rh_target_min") : num("number.dsc_hub_clone_rh_min");
@@ -127,7 +127,7 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
       <PageHeader
         icon={tent === "main" ? "tent" : "clone"}
         title={title}
-        subtitle={`Tent cockpit — ${seats.length} seat(s). ${pathNote}`}
+        subtitle={`Tent cockpit — ${probes.length} probe(s). ${pathNote}`}
         primaryAction={
           <Button teal onClick={() => navigate("/live/overview")}>
             Both tents
@@ -137,7 +137,7 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
           <>
             <HelpTip title="Tent cockpit">
               <p>
-                This desk is one tent: seats, Want editors, and air path. <b>IN cfm</b> may be Learning-allocated or still
+                This desk is one tent: probes, Want editors, and air path. <b>IN cfm</b> may be Learning-allocated or still
                 nameplate (fan % × rating) — dashed paths need Learning.
               </p>
               <p>
@@ -153,7 +153,7 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
       />
 
       <div className="dsc-tent-cockpit-strip">
-        <StatusChip label={`${seats.length} plants`} tone="ok" icon="roster" />
+        <StatusChip label={`${probes.length} plants`} tone="ok" icon="roster" />
         <StatusChip
           icon="climate"
           label={`T ${fmt(tDisplay ?? NaN)}°C`}
@@ -245,26 +245,26 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Probe strip" icon="root">
             <div className="dsc-chip-row">
-              {seats.length === 0 ? (
-                <div className="dsc-empty">No pots assigned — Apply to tent from a seat.</div>
+              {probes.length === 0 ? (
+                <div className="dsc-empty">No probes assigned — Apply to tent from a plant.</div>
               ) : (
-                seats.map((s) => {
-                  const db = Number(state(`sensor.dsc_probe${s.pot}_dryback_pct`));
+                probes.map((s) => {
+                  const db = Number(state(`sensor.dsc_probe${s.probe}_dryback_pct`));
                   const drybackWarn = Number.isFinite(db) && db > 45;
-                  const trust = readPotTrust(s.pot, state);
+                  const trust = readProbeTrust(s.probe, state);
                   const glow = !trust.blockNeedAct && drybackWarn;
                   return (
                     <button
-                      key={s.pot}
+                      key={s.probe}
                       type="button"
                       className={`dsc-chip dsc-chip--ok${glow ? " dsc-chip--pulse" : ""}`}
                       onClick={() => {
                         const next = new URLSearchParams(params);
-                        next.set("pot", String(s.pot));
+                        next.set("pot", String(s.probe));
                         setParams(next, { replace: true });
                       }}
                     >
-                      <VesselGlyph spec={readPotVessel(s.pot, state, entity)} size={16} /> P{s.pot}{" "}
+                      <VesselGlyph spec={readProbeVessel(s.probe, state, entity)} size={16} /> P{s.probe}{" "}
                       {s.plantName} · M {s.moisture} · Need{" "}
                       {trust.blockNeedAct ? `${s.need} (no act)` : s.need}
                       {drybackWarn ? " · dryback warn" : ""}
@@ -366,19 +366,19 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
       </div>
 
       <SlideDrawer
-        open={pot != null}
+        open={probe != null}
         onClose={() => {
           const next = new URLSearchParams(params);
           next.delete("pot");
           setParams(next, { replace: true });
         }}
-        title={pot != null ? `${probeLabel(pot)} · plant` : "Plant"}
+        title={probe != null ? `${probeLabel(probe)} · plant` : "Plant"}
         wide
       >
-        {pot != null ? (
-          <PlantSeatPanel
-            pot={pot}
-            onSelectPot={(n) => {
+        {probe != null ? (
+          <PlantProbePanel
+            probe={probe}
+            onSelectProbe={(n) => {
               const next = new URLSearchParams(params);
               next.set("pot", String(n));
               setParams(next, { replace: true });

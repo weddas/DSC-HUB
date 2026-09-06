@@ -10,7 +10,7 @@ import { save_calibration } from "../lib/fleetApi";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleet } from "../hooks/useFleet";
 import { useFleetActions } from "../hooks/useFleetActions";
-import { KIT_PROBE_NUMBERS } from "../lib/seatModel";
+import { KIT_PROBE_NUMBERS, probeLabel } from "../lib/probeModel";
 import { ASSIGNED_PROBE_BANNER, probeAssignedPlantId, probeAssignmentDisplay } from "../lib/probeAssignment";
 
 const CAL_TARGETS = [
@@ -497,7 +497,7 @@ function LabWetCalPanel() {
   const { callService } = useFleetActions();
   const { state, entity } = useEntityBus();
   const fleet = useFleet();
-  const [pot, setPot] = useState("1");
+  const [probe, setProbe] = useState("1");
   const [bufferPct, setBufferPct] = useState("50");
   const [status, setStatus] = useState("");
   const [confirm, setConfirm] = useState(false);
@@ -505,23 +505,23 @@ function LabWetCalPanel() {
   // capture on this same page, so it must not be gated by that panel's busy flag.
   const [busy, setBusy] = useState(false);
 
-  const potN = Number(pot);
-  const assignedId = probeAssignedPlantId(potN, fleet, state);
-  const assignedLabel = assignedId ? probeAssignmentDisplay(potN, fleet, state, entity) : "";
+  const probeN = Number(probe);
+  const assignedId = probeAssignedPlantId(probeN, fleet, state);
+  const assignedLabel = assignedId ? probeAssignmentDisplay(probeN, fleet, state, entity) : "";
 
   const runLabWet = async () => {
     setBusy(true);
-    setStatus(`Stamping probe${pot} via dsc_pots_apply_lab_wet_to_esp…`);
+    setStatus(`Stamping ${probeLabel(probeN)} via dsc_pots_apply_lab_wet_to_esp…`);
     try {
       await callService("input_number", "set_value", {
         entity_id: "input_number.dsc_lab_wet_pot",
-        value: Number(pot),
+        value: Number(probe),
       });
       await callService("script", "turn_on", {
         entity_id: "script.dsc_pots_apply_lab_wet_to_esp",
       });
       setStatus(
-        `Lab wet → ESP script triggered for probe${pot} (buffer ${bufferPct}% noted in helpers). Verify on Root Zone.`,
+        `Lab wet → ESP script triggered for ${probeLabel(probeN)} (buffer ${bufferPct}% noted in helpers). Verify on Root Zone.`,
       );
     } catch (exc) {
       setStatus(exc instanceof Error ? exc.message : "Lab wet failed — see docs/ops/LAB-WET-CAL.md");
@@ -553,7 +553,7 @@ function LabWetCalPanel() {
       <div className="dsc-row-actions">
         <label>
           Probe
-          <select className="dsc-input" value={pot} onChange={(e) => setPot(e.target.value)}>
+          <select className="dsc-input" value={probe} onChange={(e) => setProbe(e.target.value)}>
             {KIT_PROBE_NUMBERS.map((n) => (
               <option key={n} value={String(n)}>
                 Probe {n}
@@ -585,7 +585,7 @@ function LabWetCalPanel() {
           if (busy) return;
           void runLabWet();
         }}
-        title={`Lab wet probe${pot}`}
+        title={`Lab wet probe${probe}`}
         confirmLabel="Stamp buffer"
         busy={busy}
         help={null}

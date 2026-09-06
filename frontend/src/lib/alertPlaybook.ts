@@ -6,7 +6,7 @@ export type PlaybookEntry = {
 
 const FLEET: PlaybookEntry = {
   title: "Fleet version",
-  what: "A device is missing firmware or running a different version than expected. Devices deliberately out of service (AC, clone mister, pot 3–4, tank) are not counted here.",
+  what: "A device is missing firmware or running a different version than expected. Devices deliberately out of service (AC, clone mister, Probe 3–4, tank) are not counted here.",
   fix: "Open Fleet and update the outdated device. If the device is not built yet, leave it out of service — that is not a failure.",
 };
 
@@ -58,8 +58,8 @@ const ALERTS: Record<string, PlaybookEntry> = {
   },
   "binary_sensor.dsc_hub_root_zone_sensor_fault": {
     title: "Root-zone probes",
-    what: "A pot probe that heat-mat control relies on is missing or untrusted.",
-    fix: "Open Root. If the probe hardware failed, take that pot out of service so it stops influencing control.",
+    what: "A probe that heat-mat control relies on is missing or untrusted.",
+    fix: "Open Root. If the probe hardware failed, take that probe out of service so it stops influencing control.",
   },
   "binary_sensor.dsc_clone_dark_period_violation": {
     title: "2×4 dark violation",
@@ -103,8 +103,8 @@ const ALERTS: Record<string, PlaybookEntry> = {
   },
   "binary_sensor.dsc_grow_mat_ineffective_suspect": {
     title: "Heat mat ineffective",
-    what: "The mat ran but root temperature did not climb on active pots.",
-    fix: "Open Root. Confirm the mat is actually switching, and that the right pots are in service.",
+    what: "The mat ran but root temperature did not climb on active probes.",
+    fix: "Open Root. Confirm the mat is actually switching, and that the right probes are in service.",
   },
   "binary_sensor.dsc_plant_specs_incomplete": {
     title: "Plant specs incomplete",
@@ -153,8 +153,8 @@ const ALERTS: Record<string, PlaybookEntry> = {
   },
   "binary_sensor.dsc_peer_mad_alert": {
     title: "Peer probe divergence",
-    what: "In-service pot probes disagree beyond the MAD threshold — one may be stuck or outlier.",
-    fix: "Open Root. Check stuck/untrusted pots before trusting mat vote.",
+    what: "In-service probes disagree beyond the MAD threshold — one may be stuck or outlier.",
+    fix: "Open Root. Check stuck/untrusted probes before trusting mat vote.",
   },
   "binary_sensor.dsc_dht_disagreement": {
     title: "DHT disagreement",
@@ -162,23 +162,23 @@ const ALERTS: Record<string, PlaybookEntry> = {
     fix: "Climate cue only — check DHT placement and ventilation. Not a failsafe trip.",
   },
   "binary_sensor.dsc_probe1_sensor_stuck": {
-    title: "Pot 1 stuck",
-    what: "Pot 1 soil moisture has not moved for the stuck window.",
+    title: "Probe 1 stuck",
+    what: "Probe 1 soil moisture has not moved for the stuck window.",
     fix: "Probe may be wedged or offline. Exclude from mat vote if untrusted.",
   },
   "binary_sensor.dsc_probe2_sensor_stuck": {
-    title: "Pot 2 stuck",
-    what: "Pot 2 soil moisture has not moved for the stuck window.",
+    title: "Probe 2 stuck",
+    what: "Probe 2 soil moisture has not moved for the stuck window.",
     fix: "Probe may be wedged or offline. Exclude from mat vote if untrusted.",
   },
   "binary_sensor.dsc_probe3_sensor_stuck": {
-    title: "Pot 3 stuck",
-    what: "Pot 3 soil moisture has not moved for the stuck window.",
+    title: "Probe 3 stuck",
+    what: "Probe 3 soil moisture has not moved for the stuck window.",
     fix: "Probe may be wedged or offline. Exclude from mat vote if untrusted.",
   },
   "binary_sensor.dsc_probe4_sensor_stuck": {
-    title: "Pot 4 stuck",
-    what: "Pot 4 soil moisture has not moved for the stuck window.",
+    title: "Probe 4 stuck",
+    what: "Probe 4 soil moisture has not moved for the stuck window.",
     fix: "Probe may be wedged or offline. Exclude from mat vote if untrusted.",
   },
   "binary_sensor.dsc_hub_light_catchup_active": {
@@ -193,47 +193,47 @@ const ALERTS: Record<string, PlaybookEntry> = {
   },
 };
 
-function potAlerts(n: number): Record<string, PlaybookEntry> {
+function probeAlerts(n: number): Record<string, PlaybookEntry> {
   return {
     [`binary_sensor.dsc_probe${n}_moisture_out_of_range`]: {
-      title: `Pot ${n} moisture`,
-      what: `Pot ${n} moisture has left its target band.`,
-      fix: "Open Root and check that pot. Pots out of service never show made-up readings.",
+      title: `Probe ${n} moisture`,
+      what: `Probe ${n} moisture has left its target band.`,
+      fix: "Open Root and check that probe. Probes out of service never show made-up readings.",
     },
     [`binary_sensor.dsc_probe${n}_ph_out_of_range`]: {
-      title: `Pot ${n} pH`,
-      what: `Pot ${n} pH has left its target band.`,
-      fix: "Check the pot on Root. Confirm the probe before dosing.",
+      title: `Probe ${n} pH`,
+      what: `Probe ${n} pH has left its target band.`,
+      fix: "Check the probe on Root. Confirm the reading before dosing.",
     },
     [`binary_sensor.dsc_probe${n}_root_zone_temp_out_of_range`]: {
-      title: `Pot ${n} root T`,
-      what: `Pot ${n} soil temperature has left its trusted band.`,
-      fix: "Check the heat mat and airflow first. The mat should not run for a pot that is out of service.",
+      title: `Probe ${n} root T`,
+      what: `Probe ${n} soil temperature has left its trusted band.`,
+      fix: "Check the heat mat and airflow first. The mat should not run for a probe that is out of service.",
     },
     [`binary_sensor.dsc_probe${n}_ec_salt_build_up`]: {
-      title: `Pot ${n} salt build-up`,
-      what: `Pot ${n} nutrient strength is high compared with its baseline.`,
-      fix: "Check the pot on Root. Decide flush vs feed from the pot's Need reading, not just this alert.",
+      title: `Probe ${n} salt build-up`,
+      what: `Probe ${n} nutrient strength is high compared with its baseline.`,
+      fix: "Check the probe on Root. Decide flush vs feed from the probe's Need reading, not just this alert.",
     },
     [`binary_sensor.dsc_probe${n}_ec_depleted_vs_baseline`]: {
-      title: `Pot ${n} EC depleted`,
-      what: `Pot ${n} nutrient strength is low compared with its baseline.`,
-      fix: "Feed based on the pot's Need reading. Confirm the probe is trusted.",
+      title: `Probe ${n} EC depleted`,
+      what: `Probe ${n} nutrient strength is low compared with its baseline.`,
+      fix: "Feed based on the probe's Need reading. Confirm the probe is trusted.",
     },
     [`binary_sensor.dsc_probe${n}_nitrogen_below_baseline`]: {
-      title: `Pot ${n} N below baseline`,
-      what: `Pot ${n} nitrogen is below its rolling baseline.`,
+      title: `Probe ${n} N below baseline`,
+      what: `Probe ${n} nitrogen is below its rolling baseline.`,
       fix: "Check the NPK readings on Root. Do not act on an untrusted probe.",
     },
     [`binary_sensor.dsc_probe${n}_nitrogen_depleting_fast`]: {
-      title: `Pot ${n} N depleting`,
-      what: `Pot ${n} nitrogen is falling faster than expected.`,
-      fix: "Check the trend on Root and compare irrigation against the pot's Need.",
+      title: `Probe ${n} N depleting`,
+      what: `Probe ${n} nitrogen is falling faster than expected.`,
+      fix: "Check the trend on Root and compare irrigation against the probe's Need.",
     },
   };
 }
 
-Object.assign(ALERTS, potAlerts(1), potAlerts(2), potAlerts(3), potAlerts(4));
+Object.assign(ALERTS, probeAlerts(1), probeAlerts(2), probeAlerts(3), probeAlerts(4));
 
 /** Route an active alert chip to the cockpit that can fix it. */
 export function alertRoute(entityId: string): { href: string; cta: string } {
@@ -250,6 +250,7 @@ export function alertRoute(entityId: string): { href: string; cta: string } {
   }
   if (
     entityId.includes("root") ||
+    entityId.includes("probe") ||
     entityId.includes("pot") ||
     entityId.includes("grow_mat") ||
     entityId.includes("tank_")

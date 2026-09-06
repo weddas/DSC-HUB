@@ -19,7 +19,7 @@ import { CropScheduler } from "../components/CropScheduler";
 import { TentTargetPanel } from "../components/TentTargets";
 import { resolveCfm } from "../lib/cfmProvenance";
 import { inventoryInService } from "../lib/fleetModel";
-import { absoluteHumidity } from "../lib/potTrust";
+import { absoluteHumidity } from "../lib/probeTrust";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleet, useHubVitals } from "../hooks/useFleet";
 import { useFleetEntity } from "../hooks/useFleetEntity";
@@ -61,6 +61,54 @@ const FOCUS_OPTIONS: { id: ZoneFocus; label: string }[] = [
   { id: "clone", label: "2×4" },
   { id: "room", label: "Room" },
 ];
+
+// Binding metadata + device-health keys (health lives on Settings -> Device) are not readings.
+const ZIGBEE_ROW_META_KEYS = new Set([
+  "friendly_name",
+  "updated_at",
+  "role",
+  "zone",
+  "ieee",
+  "bound_stub",
+  "kind",
+  "last_topic",
+  "last_seen",
+  "battery",
+  "linkquality",
+  "voltage",
+]);
+const ZIGBEE_UNITS: Record<string, string> = {
+  co2: "ppm",
+  voc: "ppb",
+  pm25: "µg/m³",
+  illuminance_lux: "lx",
+  illuminance: "lx",
+  power: "W",
+  energy: "kWh",
+  temperature: "°C",
+  humidity: "%",
+};
+function zigbeeKeyLabel(key: string): string {
+  if (key === "co2") return "CO₂";
+  if (key === "pm25") return "PM2.5";
+  if (key === "illuminance_lux" || key === "illuminance") return "Lux";
+  return key.replace(/_/g, " ");
+}
+function zigbeeReadingText(key: string, value: number | boolean | string): string {
+  if (typeof value === "boolean") {
+    // Z2M semantics: contact=true is closed, occupancy=true is presence, state=true is on.
+    if (key === "contact") return value ? "Closed" : "Open";
+    if (key === "occupancy") return value ? "Occupied" : "Clear";
+    if (key === "state") return value ? "On" : "Off";
+    return `${zigbeeKeyLabel(key)} ${value ? "on" : "off"}`;
+  }
+  if (typeof value === "number") {
+    const digits = Number.isInteger(value) ? 0 : 1;
+    const unit = ZIGBEE_UNITS[key];
+    return `${zigbeeKeyLabel(key)} ${value.toFixed(digits)}${unit ? ` ${unit}` : ""}`;
+  }
+  return `${zigbeeKeyLabel(key)} ${value}`;
+}
 
 export function LiveClimatePage() {
   const { num, state, entity, available } = useEntityBus();
@@ -254,7 +302,10 @@ export function LiveClimatePage() {
   const zigbeeClimateRows = useMemo(() => {
     if (!zigbeeByRole) return [];
     return Object.entries(zigbeeByRole)
-      .filter(([role]) => !isZigbeeSafetyLeakRole(role))
+      .filter(([role, row]) => {
+        const kind = String(row.kind ?? "");
+        return kind ? kind === "climate" : !isZigbeeSafetyLeakRole(role);
+      })
       .map(([role, row]) => {
         // Each value routed through the shared fail-closed gate: present value +
         // stale updated_at (or none) -> held/greyed, not a confident number.
@@ -277,6 +328,40 @@ export function LiveClimatePage() {
           rhStale: rh.stale,
           name: String(row.friendly_name ?? role),
           stale: t.stale || rh.stale,
+        };
+      });
+  }, [zigbeeByRole]);
+
+  // Non-climate, non-leak roles (CO₂, lux, contact, power, button, plugs). The brain
+  // exposes each datapoint as sensor./binary_sensor.dsc_zigbee_<role>_<key>; this
+  // table is the same data, held/greyed through the shared timestamp gate.
+  const zigbeeOtherRows = useMemo(() => {
+    if (!zigbeeByRole) return [];
+    return Object.entries(zigbeeByRole)
+      .filter(([role, row]) => {
+        const kind = String(row.kind ?? "");
+        if (!kind) return false;
+        return kind !== "climate" && !isZigbeeSafetyLeakRole(role);
+      })
+      .map(([role, row]) => {
+        const updatedAt = row.updated_at as number | string | null | undefined;
+        const stale = timestampedReading(0, updatedAt, ZIGBEE_ROLE_STALE_MS).stale;
+        const readings = Object.entries(row)
+          .filter(
+            ([k, v]) =>
+              !ZIGBEE_ROW_META_KEYS.has(k) &&
+              v != null &&
+              (typeof v === "number" || typeof v === "boolean" || typeof v === "string"),
+          )
+          .map(([k, v]) => ({ key: k, text: zigbeeReadingText(k, v as number | boolean | string) }));
+        return {
+          role,
+          kind: String(row.kind),
+          zone: String(row.zone ?? "—"),
+          name: String(row.friendly_name ?? role),
+          boundStub: Boolean(row.bound_stub),
+          stale,
+          readings,
         };
       });
   }, [zigbeeByRole]);
@@ -647,7 +732,8 @@ export function LiveClimatePage() {
 
         {canopyRole ||
         zigbeeClimateRows.length ||
-        zigbeeSafetyRows.length ? (
+        zigbeeSafetyRows.length ||
+        zigbeeOtherRows.length ? (
           <div className="dsc-col-12">
             <Card className="dsc-glass" title="Zigbee by role" icon="gauge">
               <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginBottom: 8 }}>
@@ -702,11 +788,52 @@ export function LiveClimatePage() {
                     </SettingsRow>
                   ))}
                 </SettingsTable>
-              ) : zigbeeSafetyRows.length ? null : (
+              ) : zigbeeSafetyRows.length || zigbeeOtherRows.length ? null : (
                 <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
                   No climate roles bound yet — permit join, then set Role + Zone and Save.
                 </p>
               )}
+              {zigbeeOtherRows.length ? (
+                <>
+                  <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginTop: 12, marginBottom: 8 }}>
+                    Other sensors — every datapoint the device reports. Automations can trigger on each one as{" "}
+                    <code>sensor.dsc_zigbee_&lt;role&gt;_&lt;key&gt;</code>.
+                  </p>
+                  <SettingsTable
+                    columns={[
+                      { key: "role", label: "Role" },
+                      { key: "zone", label: "Zone" },
+                      { key: "device", label: "Device" },
+                      { key: "readings", label: "Readings" },
+                    ]}
+                  >
+                    {zigbeeOtherRows.map((row) => (
+                      <SettingsRow key={row.role} tone={row.stale ? "muted" : undefined}>
+                        <td>{row.role}</td>
+                        <td>{row.zone}</td>
+                        <td>{row.name}</td>
+                        <td>
+                          {row.readings.length ? (
+                            <div className="dsc-chip-row" style={{ flexWrap: "wrap" }}>
+                              {row.readings.map((r) => (
+                                <StatusChip
+                                  key={r.key}
+                                  label={row.stale ? `${r.text} ⏸` : r.text}
+                                  tone={row.stale ? "muted" : "ok"}
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="dsc-muted">
+                              {row.boundStub ? "bound — no report yet" : "no datapoints reported"}
+                            </span>
+                          )}
+                        </td>
+                      </SettingsRow>
+                    ))}
+                  </SettingsTable>
+                </>
+              ) : null}
               {zigbeeSafetyRows.length ? (
                 <>
                   <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginTop: 12, marginBottom: 8 }}>

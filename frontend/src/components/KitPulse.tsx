@@ -72,7 +72,7 @@ export function KitPulse({
           const pos = n.id === "hub" ? HUB : layoutFor(n.id, spokes.findIndex((s) => s.id === n.id), spokes.length);
           const hole = n.status === "oos" || n.status === "missing" || n.status === "dark";
           const idle = n.status === "idle";
-          const short = n.label.replace("Pot ", "P").replace("Clone mister", "Mister").replace("Dehumidifier", "Dehum").replace("Humidifier", "Hum");
+          const short = n.label.replace("Probe ", "P").replace("Clone mister", "Mister").replace("Dehumidifier", "Dehum").replace("Humidifier", "Hum");
           return (
             <g
               key={n.id}

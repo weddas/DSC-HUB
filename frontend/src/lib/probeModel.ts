@@ -21,8 +21,8 @@ export interface RosterSlot {
   tent?: string;
 }
 
-export interface PlantSeatModel {
-  pot: number;
+export interface PlantProbeModel {
+  probe: number;
   plantName: string;
   strainDisplay: string;
   sprout: string;
@@ -77,9 +77,9 @@ export function normalizeTent(raw: string | undefined): TentId {
 
 export function readTent(
   state: (id: string, fallback?: string) => string,
-  pot: number,
+  probe: number,
 ): TentId {
-  return normalizeTent(state(`input_select.dsc_probe${pot}_tent`, "unassigned"));
+  return normalizeTent(state(`input_select.dsc_probe${probe}_tent`, "unassigned"));
 }
 
 export function tentLabel(tent: TentId): string {
@@ -97,59 +97,59 @@ export function tentLabel(tent: TentId): string {
   }
 }
 
-export function buildPlantSeat(
-  pot: number,
+export function buildPlantProbe(
+  probe: number,
   opts: {
     state: (id: string, fallback?: string) => string;
     entity: (id: string) => { attributes?: Record<string, unknown> } | undefined;
   },
-): PlantSeatModel {
+): PlantProbeModel {
   const { state, entity } = opts;
   const slots = (entity("sensor.dsc_plant_roster_summary")?.attributes?.slots ||
     []) as RosterSlot[];
   const roster = Array.isArray(slots)
-    ? slots.find((s) => String(s.pot) === String(pot))
+    ? slots.find((s) => String(s.pot) === String(probe))
     : undefined;
 
   const prefer = (primary: string, fallback: string, digits = 1) =>
     preferReading(state(primary, ""), state(fallback, ""), digits);
 
   const blend = clean(roster?.blend, "");
-  let sprout = clean(state(`datetime.dsc_probe${pot}_sprout_date`, ""), "—").slice(0, 10);
+  let sprout = clean(state(`datetime.dsc_probe${probe}_sprout_date`, ""), "—").slice(0, 10);
   if (sprout === "—" && roster?.sprout) {
     sprout = roster.sprout.slice(0, 10);
   }
-  let days = clean(state(`sensor.dsc_probe${pot}_days_since_sprout`, ""));
+  let days = clean(state(`sensor.dsc_probe${probe}_days_since_sprout`, ""));
   if (!days && sprout !== "—") {
     const derived = daysSinceSproutIso(sprout);
     if (derived != null) days = String(derived);
   }
-  let stage = clean(state(`sensor.dsc_probe${pot}_expected_stage`, ""));
-  const growthStage = clean(state(`select.dsc_probe${pot}_growth_stage`, ""));
+  let stage = clean(state(`sensor.dsc_probe${probe}_expected_stage`, ""));
+  const growthStage = clean(state(`select.dsc_probe${probe}_growth_stage`, ""));
   if (!stage && growthStage && growthStage !== "—") {
     stage = growthStage;
   }
   return {
-    pot,
-    plantName: clean(state(`text.dsc_probe${pot}_plant_name`, "")),
-    strainDisplay: clean(state(`sensor.dsc_probe${pot}_strain_display`, "")),
+    probe,
+    plantName: clean(state(`text.dsc_probe${probe}_plant_name`, "")),
+    strainDisplay: clean(state(`sensor.dsc_probe${probe}_strain_display`, "")),
     sprout,
     days,
     stage,
     growthStage,
-    tent: readTent(state, pot),
+    tent: readTent(state, probe),
     blend,
     recipe: clean(roster?.recipe, ""),
     notes: clean(roster?.notes, ""),
     layers: parseBlendLayers(blend),
-    moisture: prefer(`sensor.dsc_probe${pot}_got_moisture`, `sensor.dsc_probe${pot}_soil_moisture`, 0),
-    soilTemp: fmtReading(clean(state(`sensor.dsc_probe${pot}_soil_temperature`, "")), 1),
-    ec: prefer(`sensor.dsc_probe${pot}_got_ec`, `sensor.dsc_probe${pot}_soil_ec`, 0),
-    ph: prefer(`sensor.dsc_probe${pot}_got_ph`, `sensor.dsc_probe${pot}_soil_ph`, 2),
-    n: fmtReading(clean(state(`sensor.dsc_probe${pot}_soil_nitrogen`, "")), 0),
-    p: fmtReading(clean(state(`sensor.dsc_probe${pot}_soil_phosphorus`, "")), 0),
-    k: fmtReading(clean(state(`sensor.dsc_probe${pot}_soil_potassium`, "")), 0),
-    need: clean(state(`sensor.dsc_probe${pot}_need_summary`, "")),
+    moisture: prefer(`sensor.dsc_probe${probe}_got_moisture`, `sensor.dsc_probe${probe}_soil_moisture`, 0),
+    soilTemp: fmtReading(clean(state(`sensor.dsc_probe${probe}_soil_temperature`, "")), 1),
+    ec: prefer(`sensor.dsc_probe${probe}_got_ec`, `sensor.dsc_probe${probe}_soil_ec`, 0),
+    ph: prefer(`sensor.dsc_probe${probe}_got_ph`, `sensor.dsc_probe${probe}_soil_ph`, 2),
+    n: fmtReading(clean(state(`sensor.dsc_probe${probe}_soil_nitrogen`, "")), 0),
+    p: fmtReading(clean(state(`sensor.dsc_probe${probe}_soil_phosphorus`, "")), 0),
+    k: fmtReading(clean(state(`sensor.dsc_probe${probe}_soil_potassium`, "")), 0),
+    need: clean(state(`sensor.dsc_probe${probe}_need_summary`, "")),
     rosterSlot: roster?.slot ?? null,
   };
 }
@@ -163,35 +163,35 @@ function entityLive(
 }
 
 /** Entity id helpers for Got / dryback history. */
-export function potGotEntity(
-  pot: number,
+export function probeGotEntity(
+  probe: number,
   kind: "moisture" | "ec" | "ph",
   state: (id: string, fallback?: string) => string,
 ): string {
-  const got = `sensor.dsc_probe${pot}_got_${kind}`;
+  const got = `sensor.dsc_probe${probe}_got_${kind}`;
   if (entityLive(state, got)) return got;
-  if (kind === "moisture") return `sensor.dsc_probe${pot}_soil_moisture`;
-  if (kind === "ph") return `sensor.dsc_probe${pot}_soil_ph`;
+  if (kind === "moisture") return `sensor.dsc_probe${probe}_soil_moisture`;
+  if (kind === "ph") return `sensor.dsc_probe${probe}_soil_ph`;
   // EC: Pi fleet map keys soil_ec; conductivity/got_ec are aliases.
-  const soilEc = `sensor.dsc_probe${pot}_soil_ec`;
+  const soilEc = `sensor.dsc_probe${probe}_soil_ec`;
   if (entityLive(state, soilEc)) return soilEc;
-  const cond = `sensor.dsc_probe${pot}_soil_conductivity`;
+  const cond = `sensor.dsc_probe${probe}_soil_conductivity`;
   if (entityLive(state, cond)) return cond;
   return soilEc;
 }
 
-export function potsInTent(
+export function probesInTent(
   tent: TentId,
   state: (id: string, fallback?: string) => string,
   entity: (id: string) => { attributes?: Record<string, unknown> } | undefined,
-): PlantSeatModel[] {
-  return activePotNumbers(state)
-    .map((n) => buildPlantSeat(n, { state, entity }))
+): PlantProbeModel[] {
+  return activeProbeNumbers(state)
+    .map((n) => buildPlantProbe(n, { state, entity }))
     .filter((s) => s.tent === tent && s.plantName !== "—" && s.plantName.trim() !== "");
 }
 
 /** Full entity universe (Device restore / maps). Not the Live kit. */
-export const ALL_POT_NUMBERS = [1, 2, 3, 4] as const;
+export const ALL_PROBE_NUMBERS = [1, 2, 3, 4] as const;
 
 /** Operator kit — Live Root, honesty, Fleet pulse, idle-home defaults. */
 export const KIT_PROBE_NUMBERS = [1, 2] as const;
@@ -200,51 +200,51 @@ export function probeLabel(n: number): string {
   return `Probe ${n}`;
 }
 
-/** Pot is shown when inventory in_service is on; off = OOS hole (never fake Got). */
-export function isPotInService(
-  pot: number,
+/** Probe is shown when inventory in_service is on; off = OOS hole (never fake Got). */
+export function isProbeInService(
+  probe: number,
   state: (id: string, fallback?: string) => string,
 ): boolean {
-  const id = `input_boolean.dsc_probe${pot}_in_service`;
+  const id = `input_boolean.dsc_probe${probe}_in_service`;
   const raw = state(id, "off");
   if (raw === "unavailable" || raw === "unknown" || raw === "") return false;
   return raw === "on";
 }
 
 /** Prefer fleet inventory when present; fall back to HA helper state. */
-export function isPotInServiceWithFleet(
-  pot: number,
+export function isProbeInServiceWithFleet(
+  probe: number,
   state: (id: string, fallback?: string) => string,
   fleet?: FleetSnapshot | null,
 ): boolean {
   if (fleet?.inventory?.length) {
-    return inventoryInService(fleet, `pot${pot}`, false);
+    return inventoryInService(fleet, `pot${probe}`, false);
   }
-  return isPotInService(pot, state);
+  return isProbeInService(probe, state);
 }
 
-export function activePotNumbers(
+export function activeProbeNumbers(
   state: (id: string, fallback?: string) => string,
-  pots: number[] = [...KIT_PROBE_NUMBERS],
+  probes: number[] = [...KIT_PROBE_NUMBERS],
 ): number[] {
-  return pots.filter((n) => isPotInService(n, state));
+  return probes.filter((n) => isProbeInService(n, state));
 }
 
 export function inServiceCount(
   state: (id: string, fallback?: string) => string,
-  pots: number[] = [...KIT_PROBE_NUMBERS],
+  probes: number[] = [...KIT_PROBE_NUMBERS],
 ): { inService: number; total: number } {
-  return { inService: activePotNumbers(state, pots).length, total: pots.length };
+  return { inService: activeProbeNumbers(state, probes).length, total: probes.length };
 }
 
 export function inServiceCountWithFleet(
   state: (id: string, fallback?: string) => string,
   fleet?: FleetSnapshot | null,
-  pots: number[] = [...KIT_PROBE_NUMBERS],
+  probes: number[] = [...KIT_PROBE_NUMBERS],
 ): { inService: number; total: number } {
   return {
-    inService: pots.filter((n) => isPotInServiceWithFleet(n, state, fleet)).length,
-    total: pots.length,
+    inService: probes.filter((n) => isProbeInServiceWithFleet(n, state, fleet)).length,
+    total: probes.length,
   };
 }
 

@@ -106,6 +106,7 @@ from .zigbee_policies import (
 )
 from .automation_rules import (
     automation_rules_summary,
+    automation_targets,
     evaluate_automation_rules,
     save_automation_rules,
 )
@@ -648,6 +649,12 @@ async def fleet_ws(websocket: WebSocket) -> None:
 @app.get("/settings/automations")
 def settings_automations_get() -> dict[str, Any]:
     return automation_rules_summary()
+
+
+@app.get("/settings/automations/targets")
+def settings_automations_targets() -> dict[str, Any]:
+    """Allow-listed relay / setpoint targets (+ ESP clamps) so the SPA never hardcodes them."""
+    return automation_targets()
 
 
 @app.put("/settings/automations")
@@ -1998,10 +2005,27 @@ _ASSET_EXTS = (
 )
 
 
+# First path segments that belong to the brain API. An unknown route under one of
+# these must 404 as JSON — never serve index.html with 200, or a newer SPA talking to
+# an older brain fails as a JSON parse error inside its fetch helpers instead of a
+# clean "route missing". Hash-routed SPA paths (#/…) never reach the server.
+_API_FIRST_SEGMENTS = frozenset(
+    {
+        "api", "v1", "admin", "ai", "catalogs", "control", "decision", "energy", "fleet",
+        "grow-log", "health", "history", "journal", "learning", "rooms", "roster",
+        "settings", "setup", "soft-cal", "soil-tests", "spaces", "want", "ws",
+    }
+)
+
+
+def is_api_path(full_path: str) -> bool:
+    return full_path.split("/", 1)[0].lower() in _API_FIRST_SEGMENTS
+
+
 @app.get("/{full_path:path}")
 def spa_fallback(full_path: str) -> FileResponse:
-    if full_path.startswith("api") or full_path.startswith("v1"):
-        raise HTTPException(404)
+    if is_api_path(full_path):
+        raise HTTPException(404, f"no such brain route: /{full_path}")
     file_path = STATIC_DIR / full_path
     if file_path.is_file():
         if full_path.endswith(".html"):

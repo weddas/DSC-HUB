@@ -150,7 +150,7 @@ export function LogsTrendsPanel({
             ? "Core scope has facility rollup only — no sensor trends to chart."
             : scope.kind === "grow_log"
               ? "Grow log is operational messages only — switch scope for sensor history."
-              : "No chart entities for this scope (assign a probe or enable in-service pots)."}
+              : "No chart entities for this scope (assign a probe or enable in-service probes)."}
         </p>
       </Card>
     );

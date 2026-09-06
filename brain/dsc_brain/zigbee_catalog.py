@@ -144,3 +144,17 @@ ACTUATABLE_ROLE_KINDS = frozenset({"plug"})
 
 def get_zigbee_device_types() -> list[dict[str, Any]]:
     return [dict(t) for t in ZIGBEE_DEVICE_TYPES]
+
+
+_DATAPOINT_UNITS: dict[str, str] = {}
+for _t in ZIGBEE_DEVICE_TYPES:
+    for _dp in _t.get("datapoints", []):
+        _key = str(_dp.get("key") or "").lower()
+        _unit = str(_dp.get("unit") or "")
+        if _key and _unit and _key not in _DATAPOINT_UNITS:
+            _DATAPOINT_UNITS[_key] = _unit
+
+
+def datapoint_unit(key: str) -> str | None:
+    """Unit for a datapoint key as the device-type catalog documents it (None if unitless/unknown)."""
+    return _DATAPOINT_UNITS.get(str(key).lower())

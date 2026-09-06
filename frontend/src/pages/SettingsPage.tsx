@@ -11,7 +11,7 @@ import {
   BRAIN_KEYS,
   CLIMATE_ZONES,
   FLOOD_TASK_ID,
-  IDLE_POT_OPTIONS,
+  IDLE_PROBE_OPTIONS,
   INTEGRATION_KEYS,
   SECTION_SUBTITLE,
   TANK_TASK_ID,
@@ -67,7 +67,7 @@ import {
 } from "../lib/fleetApi";
 import { parseFleetSnapshot, type FleetSnapshot, type InventoryRow } from "../lib/fleetModel";
 import { parseSettingsSection } from "../routes";
-import { probeLabel } from "../lib/seatModel";
+import { probeLabel } from "../lib/probeModel";
 
 /** Connectivity-test result as a readable status line + collapsible raw payload,
  *  instead of a single-line JSON blob that scrolls the whole settings page sideways. */
@@ -651,7 +651,7 @@ export function SettingsPage() {
                 <span className="dsc-muted">{globalModifiers.light_brightness_scale.toFixed(2)}</span>
               </label>
               <label>
-                Pot “dry” line %
+                Probe “dry” line %
                 <input
                   type="number"
                   min="5"
@@ -668,7 +668,7 @@ export function SettingsPage() {
                 />
               </label>
               <p className="dsc-muted" style={{ marginTop: -6, fontSize: "var(--dsc-fs-sm)" }}>
-                The red reference line on Root pot-moisture charts. Default 30%.
+                The red reference line on Root probe-moisture charts. Default 30%.
               </p>
               <label>
                 Leaf temp offset °C
@@ -772,8 +772,8 @@ export function SettingsPage() {
         <details className="dsc-inventory-group" open={probeStations.some((s) => s.reading_mode !== "idle")}>
           <summary>Probe stations</summary>
           <p className="dsc-muted">
-            Mobile soil probes idle at a home pot and publish thereabouts readings until a soil test moves them.
-            Unassign clears the home pot; Remove probe role demotes the seat so it is no longer a probe station.
+            Mobile soil probes idle at a home probe slot and publish thereabouts readings until a soil test moves them.
+            Unassign clears the home probe slot; Remove probe role demotes the seat so it is no longer a probe station.
           </p>
           {probeStations.length ? (
             <div className="dsc-table-scroll">
@@ -782,7 +782,7 @@ export function SettingsPage() {
                   <tr>
                     <th>Device</th>
                     <th>Mode</th>
-                    <th>Idle home pot</th>
+                    <th>Idle home probe</th>
                     <th>Tent</th>
                     <th>Thereabouts moisture</th>
                     <th />
@@ -815,7 +815,7 @@ export function SettingsPage() {
                               }))
                             }
                           >
-                            {IDLE_POT_OPTIONS.map((p) => (
+                            {IDLE_PROBE_OPTIONS.map((p) => (
                               <option key={p || "none"} value={p}>
                                 {p ? probeLabel(Number(p.replace("pot", ""))) : "— unassigned"}
                               </option>
@@ -885,7 +885,7 @@ export function SettingsPage() {
               </table>
             </div>
           ) : (
-            <p className="dsc-honesty">No probe stations — assign role probe_station on a pot in inventory.</p>
+            <p className="dsc-honesty">No probe stations — assign role probe_station on a probe in inventory.</p>
           )}
           {probeErr ? (
             <p className="dsc-honesty">
@@ -1108,7 +1108,15 @@ export function SettingsPage() {
       </section>
 
       {section === "brain" ? (
-        <AutomationRulesCard seats={inventory.map((r) => String(r.seat_id)).filter(Boolean)} />
+        <AutomationRulesCard
+          // "Seat out of service" only makes sense for appliances and operator-added
+          // Zigbee/extra seats — never hub / panel / probes (taking "hub" OOS is not a
+          // rule action, it is a kit outage).
+          seats={inventory
+            .filter((r) => !["hub", "panel", "pot"].includes(String(r.role ?? "")))
+            .map((r) => String(r.seat_id))
+            .filter(Boolean)}
+        />
       ) : null}
 
       <section className="dsc-card" hidden={section !== "device" && section !== "server"}>
@@ -1116,7 +1124,7 @@ export function SettingsPage() {
         <p className="dsc-muted">
           Updates are sent over the air. One build runs at a time, and nothing is flashed unless you queue it.
         </p>
-        <p className="dsc-muted">Pot 5 and beyond are unavailable until their firmware exists.</p>
+        <p className="dsc-muted">Probe 5 and beyond are unavailable until their firmware exists.</p>
 
         <div className="dsc-honesty" style={{ marginBottom: 12 }}>
           <b>Build toolchain</b>
@@ -1520,8 +1528,8 @@ export function SettingsPage() {
                 body: (
                   <>
                     <p>
-                      Click a device name to rename it — the alias is what Climate, Overview and
-                      the Twin show. Clearing it falls back to the raw Zigbee name.
+                      Click a device name to rename it — the alias is what Climate and
+                      Overview show. Clearing it falls back to the raw Zigbee name.
                     </p>
                     <p>
                       <b>Health</b> is battery, link quality (LQI) and last-seen straight from the
@@ -1703,7 +1711,7 @@ export function SettingsPage() {
               </li>
               <li>
                 When the Unbound row appears, assign Role + Zone → Save roles (or wait for auto-bind). Climate /
-                Overview / Twin pick it up immediately.
+                Overview pick it up immediately.
               </li>
             </ol>
           </div>
