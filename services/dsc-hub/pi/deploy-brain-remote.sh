@@ -67,10 +67,14 @@ if [ -f "${ESPHOME_UNIT_DIR}/dsc-esphome-dashboard.service" ]; then
   put 0644 "${ESPHOME_UNIT_DIR}/dsc-esphome-update.path" /etc/systemd/system/dsc-esphome-update.path
   DSC_DATA_ROOT="$(grep -E '^DSC_DATA=' /opt/dsc-hub/.env 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '"' || true)"
   DSC_DATA_ROOT="${DSC_DATA_ROOT:-/var/lib/dsc-hub}"
-  {
-    echo "DSC_ESPHOME_PROJECT_DIR=${REPO}/firmware/v4"
-    echo "DSC_ESPHOME_OPS_DIR=${DSC_DATA_ROOT}/ops"
-  } | run_sudo tee /etc/dsc-hub/esphome.env >/dev/null
+  # NOT `… | run_sudo tee`: run_sudo feeds the sudo password on stdin, and when
+  # sudo's timestamp is still valid tee writes the PASSWORD into the file.
+  # (That is exactly what happened on the live Pi — esphome.env contained "Digital".)
+  printf 'DSC_ESPHOME_PROJECT_DIR=%s/firmware/v4
+DSC_ESPHOME_OPS_DIR=%s/ops
+' "${REPO}" "${DSC_DATA_ROOT}" > /tmp/dsc-esphome.env
+  run_sudo install -m 0644 /tmp/dsc-esphome.env /etc/dsc-hub/esphome.env
+  rm -f /tmp/dsc-esphome.env
   run_sudo systemctl daemon-reload
   run_sudo systemctl enable --now dsc-esphome-venv-setup.service dsc-esphome-dashboard.service || true
   run_sudo systemctl enable --now dsc-esphome-update.path || true
