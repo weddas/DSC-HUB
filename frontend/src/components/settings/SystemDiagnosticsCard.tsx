@@ -139,15 +139,15 @@ export function SystemDiagnosticsCard() {
               </option>
             ))}
           </select>
-          <Button variant="secondary" onClick={() => load()} disabled={loading}>
-            {loading ? "…" : "Refresh"}
+          <Button variant="secondary" onClick={() => load()} busy={loading}>
+            Refresh
           </Button>
           <a className="dsc-chip" href={system_log_download_url(source)} download>
             Download ↓
           </a>
         </div>
         {log && !log.ok ? (
-          <p className="dsc-muted" style={{ fontSize: 12 }}>
+          <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
             {log.hint} <code>{log.cmd}</code>
           </p>
         ) : null}
@@ -155,7 +155,7 @@ export function SystemDiagnosticsCard() {
           style={{
             maxHeight: 320,
             overflow: "auto",
-            fontSize: 11,
+            fontSize: "var(--dsc-fs-xs)",
             whiteSpace: "pre-wrap",
             background: "var(--dsc-black)",
             padding: 8,
@@ -168,7 +168,7 @@ export function SystemDiagnosticsCard() {
 
       <div className="dsc-honesty" style={{ marginBottom: 12 }}>
         <b>Fleet history</b>
-        <p className="dsc-muted" style={{ fontSize: 12, margin: "4px 0 8px" }}>
+        <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", margin: "4px 0 8px" }}>
           {hist
             ? `${hist.rows.toLocaleString()} rows${
                 hist.oldest_ts && hist.newest_ts
@@ -194,7 +194,8 @@ export function SystemDiagnosticsCard() {
           </label>
           <Button
             variant="secondary"
-            disabled={histBusy || histDays === "" || Number(histDays) === hist?.retention_days}
+            busy={histBusy}
+            disabled={histDays === "" || Number(histDays) === hist?.retention_days}
             onClick={async () => {
               setHistBusy(true);
               try {

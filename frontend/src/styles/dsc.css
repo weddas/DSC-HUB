@@ -37,6 +37,12 @@
   --dsc-radius-lg: 14px;
   --dsc-font: "Segoe UI", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --dsc-mono: "Cascadia Code", "IBM Plex Mono", ui-monospace, monospace;
+  /* Type scale for helper / label / meta text. Body + controls inherit 14px
+     from the base; use these tokens instead of ad-hoc inline fontSize numbers. */
+  --dsc-fs-xs: 11px;
+  --dsc-fs-sm: 12px;
+  --dsc-fs-md: 13px;
+  --dsc-fs-lg: 14px;
   color: var(--dsc-white);
   background: var(--dsc-black);
   font-family: var(--dsc-font);
@@ -3861,5 +3867,57 @@ input[type="checkbox"]:disabled {
 @media (prefers-reduced-motion: reduce) {
   .dsc-inline-edit-trigger .dsc-icon {
     transition: none;
+  }
+}
+
+/* ---- Loading indicator: "dim dash" ------------------------------------ *
+ * Three muted dashes pulsing in sequence. Used inline in busy buttons and
+ * as a standalone route/panel loader, so async actions read as "working"
+ * instead of a dead hang. */
+.dsc-spinner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--dsc-muted);
+  font-size: var(--dsc-fs-sm);
+  line-height: 1;
+}
+.dsc-spinner-dots {
+  display: inline-flex;
+  gap: 3px;
+}
+.dsc-spinner-dots i {
+  width: 7px;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  opacity: 0.25;
+  animation: dsc-dash-pulse 1s ease-in-out infinite;
+}
+.dsc-spinner-dots i:nth-child(2) { animation-delay: 0.15s; }
+.dsc-spinner-dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes dsc-dash-pulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.9; }
+}
+/* In a busy button the dashes ride the button's own text colour (currentColor
+   on the <i> background handles it) and the flex gap spaces them from the label. */
+
+.dsc-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dsc-spinner-dots i {
+    animation: none !important;
+    opacity: 0.6;
   }
 }

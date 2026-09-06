@@ -1,6 +1,6 @@
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { Suspense, useEffect } from "react";
-import { Button, Icon, PageHeader } from "./components/ui";
+import { Button, Icon, PageHeader, Spinner } from "./components/ui";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { HonestyRail } from "./components/Honesty";
 import { DemoBanner } from "./components/DemoBanner";
@@ -72,7 +72,7 @@ function LegacyRedirect() {
 function RouteFallback() {
   return (
     <div className="dsc-page">
-      <p className="dsc-muted">Loading…</p>
+      <Spinner label="Loading" />
     </div>
   );
 }

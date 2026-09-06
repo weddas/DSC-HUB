@@ -107,8 +107,8 @@ export function DecisionLayer({
             Dismiss
           </Button>
           {onConfirm ? (
-            <Button primary onClick={onConfirm} disabled={busy}>
-              {busy ? "Working…" : confirmLabel}
+            <Button primary onClick={onConfirm} busy={busy}>
+              {confirmLabel}
             </Button>
           ) : null}
         </footer>

@@ -196,8 +196,8 @@ export function JournalEntryDetail({
 
         {editable ? (
           <div className="dsc-chip-row" style={{ marginTop: 16 }}>
-            <Button teal disabled={busy || !note.trim()} onClick={() => void onSave()}>
-              {busy ? "Saving…" : "Save changes"}
+            <Button teal disabled={!note.trim()} busy={busy} onClick={() => void onSave()}>
+              Save changes
             </Button>
             <Button variant="danger" disabled={busy} onClick={() => setDeleteOpen(true)}>
               Delete…

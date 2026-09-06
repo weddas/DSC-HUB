@@ -319,11 +319,11 @@ export function GrowLogsPage() {
         <aside className="dsc-logs-sidebar">
           <Card className="dsc-glass" title="Scope">
             {compareScopeMode ? (
-              <p className="dsc-muted" style={{ margin: "0 0 10px", fontSize: 12 }}>
+              <p className="dsc-muted" style={{ margin: "0 0 10px", fontSize: "var(--dsc-fs-sm)" }}>
                 Pick scope {scopeComparePick} from plants, tents, or room — then switch to Trends.
               </p>
             ) : null}
-            <p className="dsc-muted" style={{ margin: "0 0 10px", fontSize: 12 }}>
+            <p className="dsc-muted" style={{ margin: "0 0 10px", fontSize: "var(--dsc-fs-sm)" }}>
               Plants
             </p>
             {plantItems.length ? (
@@ -337,11 +337,11 @@ export function GrowLogsPage() {
                 onSelect={selectScope}
               />
             ) : (
-              <p className="dsc-muted" style={{ margin: "0 0 12px", fontSize: 13 }}>
+              <p className="dsc-muted" style={{ margin: "0 0 12px", fontSize: "var(--dsc-fs-sm)" }}>
                 No roster plants yet.
               </p>
             )}
-            <p className="dsc-muted" style={{ margin: "12px 0 10px", fontSize: 12 }}>
+            <p className="dsc-muted" style={{ margin: "12px 0 10px", fontSize: "var(--dsc-fs-sm)" }}>
               Spaces &amp; facility
             </p>
             <LogsScopeNav
@@ -353,7 +353,7 @@ export function GrowLogsPage() {
               view={view}
               onSelect={selectScope}
             />
-            <p className="dsc-muted" style={{ margin: "12px 0 10px", fontSize: 12 }}>
+            <p className="dsc-muted" style={{ margin: "12px 0 10px", fontSize: "var(--dsc-fs-sm)" }}>
               Operational
             </p>
             <LogsScopeNav
@@ -391,7 +391,7 @@ export function GrowLogsPage() {
               </Button>
             ) : null}
             {compareScopeMode ? (
-              <span className="dsc-muted" style={{ fontSize: 12 }}>
+              <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
                 {scopeCompareReady
                   ? `${scopeCompareLabel(compareScopeA!)} vs ${scopeCompareLabel(compareScopeB!)}`
                   : `Pick scope ${scopeComparePick} (${compareScopeA ? "A set" : "A —"}, ${compareScopeB ? "B set" : "B —"})`}
@@ -402,13 +402,13 @@ export function GrowLogsPage() {
           {showScopeCompareTrends ? (
             <div className="dsc-logs-scope-compare">
               <div className="dsc-logs-scope-compare-col">
-                <p className="dsc-muted" style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 600 }}>
+                <p className="dsc-muted" style={{ margin: "0 0 8px", fontSize: "var(--dsc-fs-md)", fontWeight: 600 }}>
                   {scopeCompareLabel(compareScopeA!)}
                 </p>
                 <LogsTrendsPanel scope={compareScopeA!} compact />
               </div>
               <div className="dsc-logs-scope-compare-col">
-                <p className="dsc-muted" style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 600 }}>
+                <p className="dsc-muted" style={{ margin: "0 0 8px", fontSize: "var(--dsc-fs-md)", fontWeight: 600 }}>
                   {scopeCompareLabel(compareScopeB!)}
                 </p>
                 <LogsTrendsPanel scope={compareScopeB!} compact />
@@ -432,7 +432,7 @@ export function GrowLogsPage() {
                   {compareMode ? "Exit compare" : "Compare entries"}
                 </Button>
                 {compareMode ? (
-                  <span className="dsc-muted" style={{ fontSize: 12 }}>
+                  <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
                     Select two rows ({compareIds.length}/2)
                   </span>
                 ) : null}

@@ -529,7 +529,7 @@ export function JournalScopePanel({
 
             <div className="dsc-chip-row" style={{ marginTop: 8 }}>
 
-              <Button teal disabled={busy || !note.trim()} onClick={() => void onSave()}>
+              <Button teal disabled={!note.trim()} busy={busy} onClick={() => void onSave()}>
 
                 {copy.saveLabel}
 
@@ -537,19 +537,9 @@ export function JournalScopePanel({
 
               {!note.trim() && !busy ? (
 
-                <span className="dsc-muted" style={{ fontSize: 12 }}>
+                <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
 
                   Add text to enable Save
-
-                </span>
-
-              ) : null}
-
-              {busy ? (
-
-                <span className="dsc-muted" style={{ fontSize: 12 }}>
-
-                  Saving…
 
                 </span>
 
@@ -613,9 +603,9 @@ export function JournalScopePanel({
 
           <div className="dsc-chip-row" style={{ marginTop: 10 }}>
 
-            <Button disabled={loading} onClick={() => setPageOffset((o) => o + pageSize)}>
+            <Button busy={loading} onClick={() => setPageOffset((o) => o + pageSize)}>
 
-              {loading ? "Loading…" : "Load more"}
+              Load more
 
             </Button>
 
