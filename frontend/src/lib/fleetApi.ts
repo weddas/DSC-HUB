@@ -156,6 +156,32 @@ export async function apply_network(): Promise<Record<string, string>> {
   return resp.json();
 }
 
+export type InternetStatus = {
+  reachable: boolean;
+  dns_ok: boolean;
+  host: string;
+  checked_at: number;
+  error: string | null;
+};
+
+export async function check_internet(): Promise<InternetStatus> {
+  const resp = await fetch("/settings/network/internet-check", { method: "POST" });
+  if (!resp.ok) throw new Error("internet check failed");
+  return resp.json();
+}
+
+export type EthConfigBody = { mode: "auto" | "static"; static_ip?: string; gateway?: string; dns?: string };
+
+export async function set_ethernet(body: EthConfigBody): Promise<Record<string, unknown>> {
+  const resp = await fetch("/settings/network/ethernet", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) throw new Error((await resp.text()) || "ethernet config failed");
+  return resp.json();
+}
+
 export async function get_catalog_status(): Promise<Record<string, unknown>> {
   const resp = await fetch("/settings/catalog/status");
   if (!resp.ok) throw new Error("catalog status failed");
