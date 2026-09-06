@@ -53,25 +53,12 @@
 # still outrank it.
 # Remote-git safe: no !secret here — stub passes credentials as substitutions.
 
-# ===== v2.4.1 · SUBSTITUTIONS =====
-# rootzone_temp_entity*: the HA entities the closed-loop grow mat reads.
-# v2.4.1: ALL FOUR pot probes are mirrored now (v2.4 alpha read POT1
-# only — a cold POT4 was invisible to the mat, 19 Jul incident). The
-# mat heats on the COLDEST plausible probe and trips the runaway flush
-# on the HOTTEST. A plausibility filter (5-45C) in run_climate_logic
-# ignores faulted probes (POT3 reads a flat 0.0C), which is what
-# unblocked the min() that v2.4 parked.
-substitutions:
-  rootzone_temp_entity: sensor.dsc_probe1_soil_temperature
-  rootzone_temp_entity_2: sensor.dsc_probe2_soil_temperature
-  rootzone_temp_entity_3: sensor.dsc_probe3_soil_temperature
-  rootzone_temp_entity_4: sensor.dsc_probe4_soil_temperature
-  # Plant names live on each pot (permanent NVS). Hub mirrors them from HA
-  # for the panel 0xD4 relay — packet_transport cannot carry text.
-  pot1_plant_entity: text.dsc_probe1_plant_name
-  pot2_plant_entity: text.dsc_probe2_plant_name
-  pot3_plant_entity: text.dsc_probe3_plant_name
-  pot4_plant_entity: text.dsc_probe4_plant_name
+# ===== SUBSTITUTIONS =====
+# v8: the HA-entity substitutions (rootzone_temp_entity*, pot*_plant_entity)
+# were removed with the retired HA lab. Root-zone temps come straight from the
+# pots over ESP-NOW; plant names are pushed by the brain via the native-API
+# `set_plant_name` action. Device identity / secrets come from the stub
+# (dsc-hub.yaml / dsc-hub-kit.yaml).
 
 esphome:
   name: dsc-hub
@@ -211,6 +198,25 @@ api:
   # + ESP-NOW must keep running. Sustained API-wedge recovery (WiFi up,
   # HA Link/handshake dead) is the heartbeat interval below, not this.
   reboot_timeout: 0s
+  # v8: the brain pushes panel plant names here over the native API (no HA).
+  # idx 1-4 -> plant_name_{idx} (<=16 chars), then relayed to the panel via
+  # ESP-NOW 0xD4. Replaces the retired `platform: homeassistant` ha_plant_* .
+  actions:
+    - action: set_plant_name
+      variables:
+        idx: int
+        name: string
+      then:
+        - lambda: |-
+            std::string n = name.size() > 16 ? name.substr(0, 16) : name;
+            switch (idx) {
+              case 1: id(plant_name_1) = n; break;
+              case 2: id(plant_name_2) = n; break;
+              case 3: id(plant_name_3) = n; break;
+              case 4: id(plant_name_4) = n; break;
+              default: return;
+            }
+        - script.execute: tx_names
   on_client_connected:
     - lambda: |-
         ESP_LOGI("api", "HA client connected from %s (%s)",
@@ -404,7 +410,7 @@ ota:
 #    180s). Kills the rapid on/off cycling AND the Event Scribe spam
 #    at the source. Room humidifier + heater get min-off too.
 #  * CLOSED-LOOP GROW MAT: mat demand now tracks the RS485 soil-probe
-#    ROOT-ZONE temp (via HA, ${rootzone_temp_entity}) — energise below
+#    ROOT-ZONE temp (per-pot ESP-NOW, rz_now_1..4) — energise below
 #    Mat Root-Zone Low, cut at Mat Root-Zone High, min-off so it can't
 #    short-cycle. The mat's own plate thermostat regulates its SURFACE;
 #    a 22C setpoint sat the root zone at 16-19C — the probe is the only
@@ -2824,37 +2830,10 @@ text_sensor:
     lambda: 'return {id(link_rec_reason_str)};'
     update_interval: 15s
 
-  # Plant names: HA → hub cache → panel via ESP-NOW 0xD4.
-  # Renames in HA write the pot permanently (optimistic+restore there)
-  # and update these mirrors; the panel never needs HA for display.
-  - platform: homeassistant
-    id: ha_plant_1
-    entity_id: ${pot1_plant_entity}
-    internal: true
-    on_value:
-      - lambda: 'id(plant_name_1) = x.size() > 16 ? x.substr(0, 16) : x;'
-      - script.execute: tx_names
-  - platform: homeassistant
-    id: ha_plant_2
-    entity_id: ${pot2_plant_entity}
-    internal: true
-    on_value:
-      - lambda: 'id(plant_name_2) = x.size() > 16 ? x.substr(0, 16) : x;'
-      - script.execute: tx_names
-  - platform: homeassistant
-    id: ha_plant_3
-    entity_id: ${pot3_plant_entity}
-    internal: true
-    on_value:
-      - lambda: 'id(plant_name_3) = x.size() > 16 ? x.substr(0, 16) : x;'
-      - script.execute: tx_names
-  - platform: homeassistant
-    id: ha_plant_4
-    entity_id: ${pot4_plant_entity}
-    internal: true
-    on_value:
-      - lambda: 'id(plant_name_4) = x.size() > 16 ? x.substr(0, 16) : x;'
-      - script.execute: tx_names
+  # Plant names (v8): pushed by the brain over the native API via the
+  # `set_plant_name` action (see api: above) → plant_name_{1..4} → panel
+  # ESP-NOW 0xD4. The old `platform: homeassistant` ha_plant_* mirrors were
+  # removed with the retired HA lab.
 
 # Optional SoftAP Anchor pin (NVS). Empty = unlocked. Lock WiFi AP auto-fills
 # from current BSSID or ${bridge_mac} when set (F-012).
@@ -3201,48 +3180,14 @@ sensor:
       float avp = svp * (rh / 100.0f);
       return svp - avp;
 
-  # ===== v2.4.1 · ROOT-ZONE TEMPS — HA MIRRORS (fallback source) =====
-  # The closed-loop grow mat's SECOND sense path. v2.4 alpha read POT1
-  # only — a cold POT4 was invisible (19 Jul incident). All four are
-  # mirrored; run_climate_logic takes min() over the PLAUSIBLE (5-45C)
-  # readings for heating and max() for the runaway guard, so POT3's
-  # faulted flat-0.0C probe is simply ignored instead of pegging the
-  # mat on (the exact blocker that parked min() in v2.4).
-  # With ESP-NOW live these are the per-pot FALLBACK: the source-select
-  # in the mat block prefers a pot's direct ESP-NOW reading while it is
-  # fresh (<150s) and only reads the HA mirror when that link is stale.
-  # The freshness stamp advances on a plausible reading from EITHER
-  # path — a faulted probe can neither keep the loop alive nor blind
-  # it. internal: HA's own entities mirrored in; re-exporting them
-  # would just duplicate them.
-  - platform: homeassistant
-    id: rootzone_temp
-    entity_id: ${rootzone_temp_entity}
-    internal: true
-    on_value:
-      - lambda: |-
-          if (!isnan(x) && x > 5.0f && x < 45.0f) id(last_valid_rootzone_time) = millis();
-  - platform: homeassistant
-    id: rootzone_temp_2
-    entity_id: ${rootzone_temp_entity_2}
-    internal: true
-    on_value:
-      - lambda: |-
-          if (!isnan(x) && x > 5.0f && x < 45.0f) id(last_valid_rootzone_time) = millis();
-  - platform: homeassistant
-    id: rootzone_temp_3
-    entity_id: ${rootzone_temp_entity_3}
-    internal: true
-    on_value:
-      - lambda: |-
-          if (!isnan(x) && x > 5.0f && x < 45.0f) id(last_valid_rootzone_time) = millis();
-  - platform: homeassistant
-    id: rootzone_temp_4
-    entity_id: ${rootzone_temp_entity_4}
-    internal: true
-    on_value:
-      - lambda: |-
-          if (!isnan(x) && x > 5.0f && x < 45.0f) id(last_valid_rootzone_time) = millis();
+  # ===== v8 · ROOT-ZONE TEMPS — ESP-NOW ONLY ========================
+  # The old `platform: homeassistant` mirrors (rootzone_temp_1..4) were
+  # removed with the retired HA lab. The closed-loop grow mat now reads
+  # only the pots' direct ESP-NOW packet_transport values (rz_now_1..4,
+  # below) — fresh (<150s) & plausible (5-45C) or ignored. min() over the
+  # plausible readings drives heating, max() the runaway guard, so a
+  # faulted flat-0.0C probe is dropped rather than pegging the mat on.
+  # last_valid_rootzone_time advances on any plausible rz_now_* reading.
 
   # ===== v2.4 · LADDER TIMING TELEMETRY ==============================
   # Firmware truth for the Dashboard v3 appliance module cards.
@@ -3460,27 +3405,18 @@ sensor:
 #     >35C failsafe or the watchdog. Use for canopy-average display /
 #     sanity checks, never safety.
 # Direct Zigbee on this board is not possible (WROOM-32 has no
-# 802.15.4 radio) and a second coordinator would fragment the mesh.
+# 802.15.4 radio). Zigbee canopy sensors reach Climate via the brain
+# (Z2M -> brain -> SPA), not this firmware.
 # ------------------------------------------------------------------
-#   - platform: homeassistant
-#     id: zigbee_canopy_temp
-#     entity_id: sensor.YOUR_ZIGBEE_TEMP_ENTITY
-#     internal: true
-#   - platform: homeassistant
-#     id: zigbee_canopy_rh
-#     entity_id: sensor.YOUR_ZIGBEE_RH_ENTITY
-#     internal: true
 
-  # ===== v2.4.1 · ESP-NOW ROOT-ZONE SENSORS (pot -> hub direct) ======
-  # The HA-independence leg for the SENSING path, LIVE as of v2.4.1.
-  # Each pot unicasts soil_temperature/soil_moisture straight to this
-  # hub every 60s; HA is no longer in the mat's sense loop.
-  # SOURCE PRIORITY (per pot, resolved in run_climate_logic):
-  #   ESP-NOW fresh (<150s) -> HA mirror -> clone-AIR rung -> mat OFF
-  # A dead router, an HA restart, or a pot WiFi drop each degrade one
-  # rung of the chain instead of blinding the mat. Same plausibility
-  # filter (5-45C) applies to every source. These four are internal —
-  # HA already has the pots' own entities; re-exporting would twin them.
+  # ===== ESP-NOW ROOT-ZONE SENSORS (pot -> hub direct) ==============
+  # The mat's sense loop. Each pot unicasts soil_temperature/soil_moisture
+  # straight to this hub every 60s.
+  # SOURCE (per pot, resolved in run_climate_logic):
+  #   ESP-NOW fresh (<150s) & plausible (5-45C) -> else the clone-AIR
+  #   rung -> else mat OFF. A dead router or a pot WiFi drop degrades one
+  #   rung instead of blinding the mat. (v8: the HA mirror rung was
+  #   removed with the retired HA lab.)
   - platform: packet_transport
     provider: dsc_probe1
     remote_id: soil_temperature
@@ -4263,20 +4199,20 @@ script:
             if (id(clone_active) && id(growmat_auto_enabled)) {
               float rz_min = NAN, rz_max = NAN;
               {
-                // v6.1 · SOURCE SELECT (per pot): HA Native API first
-                // (studio Wi-Fi / ESP-NOW parked). Fall back to ESP-NOW
-                // packet_transport only if HA mirror is missing/implausible
-                // and a direct radio reading is still fresh (<150s).
-                auto pick = [nowms](float now_v, uint32_t now_at, float ha_v) -> float {
-                  if (!isnan(ha_v) && ha_v > 5.0f && ha_v < 45.0f) return ha_v;
+                // v8 · SOURCE SELECT (per pot): the pot's direct ESP-NOW
+                // packet_transport reading, used while fresh (<150s). NaN
+                // otherwise so the min()/max()/vote below ignores a stale
+                // or dead pot. (The old HA-mirror primary was removed with
+                // the retired HA lab — it never received on the Pi.)
+                auto pick = [nowms](float now_v, uint32_t now_at) -> float {
                   bool fresh = now_at != 0 && (nowms - now_at) < 150000;
-                  return fresh ? now_v : ha_v;
+                  return fresh ? now_v : NAN;
                 };
                 float probes[4] = {
-                  pick(id(rz_now_1).state, id(rz_now_1_at), id(rootzone_temp).state),
-                  pick(id(rz_now_2).state, id(rz_now_2_at), id(rootzone_temp_2).state),
-                  pick(id(rz_now_3).state, id(rz_now_3_at), id(rootzone_temp_3).state),
-                  pick(id(rz_now_4).state, id(rz_now_4_at), id(rootzone_temp_4).state) };
+                  pick(id(rz_now_1).state, id(rz_now_1_at)),
+                  pick(id(rz_now_2).state, id(rz_now_2_at)),
+                  pick(id(rz_now_3).state, id(rz_now_3_at)),
+                  pick(id(rz_now_4).state, id(rz_now_4_at)) };
                 bool vote[4] = {
                   id(mat_vote_1) && id(pot1_in_service),
                   id(mat_vote_2) && id(pot2_in_service),
@@ -5432,17 +5368,17 @@ interval:
           // heartbeat alive while eligible pots are dark.
           {
             auto pl = [](float v){ return !isnan(v) && v > 5.0f && v < 45.0f; };
-            auto live = [&](bool vote, uint32_t at, float now_v, float ha_v) -> bool {
+            auto live = [&](bool vote, uint32_t at, float now_v) -> bool {
               if (!vote) return false;
               bool fresh = at != 0 && (millis() - at) < 150000;
-              // HA primary (studio cutover); ESP-NOW freshness is parked fallback.
-              return pl(ha_v) || (fresh && pl(now_v));
+              // v8: ESP-NOW direct reading only (HA mirror retired with the lab).
+              return fresh && pl(now_v);
             };
             bool have =
-              live(id(mat_vote_1) && id(pot1_in_service), id(rz_now_1_at), id(rz_now_1).state, id(rootzone_temp).state) ||
-              live(id(mat_vote_2) && id(pot2_in_service), id(rz_now_2_at), id(rz_now_2).state, id(rootzone_temp_2).state) ||
-              live(id(mat_vote_3) && id(pot3_in_service), id(rz_now_3_at), id(rz_now_3).state, id(rootzone_temp_3).state) ||
-              live(id(mat_vote_4) && id(pot4_in_service), id(rz_now_4_at), id(rz_now_4).state, id(rootzone_temp_4).state);
+              live(id(mat_vote_1) && id(pot1_in_service), id(rz_now_1_at), id(rz_now_1).state) ||
+              live(id(mat_vote_2) && id(pot2_in_service), id(rz_now_2_at), id(rz_now_2).state) ||
+              live(id(mat_vote_3) && id(pot3_in_service), id(rz_now_3_at), id(rz_now_3).state) ||
+              live(id(mat_vote_4) && id(pot4_in_service), id(rz_now_4_at), id(rz_now_4).state);
             if (have) id(last_valid_rootzone_time) = millis();
           }
           bool rz_stale = (millis() - id(last_valid_rootzone_time)) > 300000;

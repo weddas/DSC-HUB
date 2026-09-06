@@ -431,7 +431,6 @@ script:
           std::string detail = id(evt_pending_detail);
           if (code.empty()) return;
           auto now = id(sntp_time).now();
-          if (!now.is_valid()) now = id(grow_time).now();
           uint32_t epoch = now.is_valid() ? (uint32_t) now.timestamp : (millis() / 1000u);
           id(evt_last_code) = code;
           id(evt_last_epoch) = epoch;
@@ -475,7 +474,6 @@ script:
           mix(id(vpd_clone_delivered_s));
           id(coherence_hash) = h;
           auto now = id(sntp_time).now();
-          if (!now.is_valid()) now = id(grow_time).now();
           if (now.is_valid()) id(coherence_epoch) = (uint32_t) now.timestamp;
           if (id(coherence_ha_hash) != 0 && id(coherence_ha_hash) != h) {
             if (!id(coherence_mismatch)) {
@@ -551,7 +549,6 @@ script:
     then:
       - lambda: |-
           auto now = id(sntp_time).now();
-          if (!now.is_valid()) now = id(grow_time).now();
           id(clock_valid) = now.is_valid();
           id(learning_paused) = id(fix_active) || !id(clock_valid);
           if (!id(clock_valid)) return;

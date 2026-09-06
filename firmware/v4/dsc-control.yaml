@@ -12,7 +12,7 @@ substitutions:
   api_key_val: !secret dsc_control_api_key
   ota_password_val: !secret dsc_control_ota_password
   ap_password_val: !secret dsc_control_ap_password
-  # Pi Release: ESP-NOW primary (hub peer). HA bus is lab-only (dsc-control-ha-bus.yaml).
+  # Pi Release: ESP-NOW primary (hub peer). No HA bus (retired 2026-09).
   hub_mac: "84:1F:E8:16:E6:60"
   espnow_cmd_tag: "54727"
   wifi_bssid: "00:00:00:00:00:00"
@@ -21,4 +21,4 @@ substitutions:
 packages:
   wifi: !include dsc-control-wifi-pi.yaml
   panel: !include dsc-control-common.yaml
-  # Pi Release: ESP-NOW primary; HA bus is lab-only (dsc-control-ha-bus.yaml).
+  # Pi Release: ESP-NOW primary. No HA bus (retired 2026-09).

@@ -87,6 +87,99 @@ def sync_hub_in_service_sync(seat_id: str, in_service: bool) -> dict[str, Any]:
     return asyncio.run(sync_hub_in_service(seat_id, in_service))
 
 
+# Panel plant names: the retired `text.dsc_probe{n}_plant_name` HA feed is
+# replaced by the hub native-API action `set_plant_name(idx, name)` (declared
+# under `api: actions:` in dsc-hub-v4_0.yaml). The brain pushes on roster edits.
+_PLANT_NAME_ACTION = "set_plant_name"
+_PLANT_NAME_MAX = 16
+
+
+async def push_plant_name(pot_n: int, name: str) -> dict[str, Any]:
+    """Push one panel plant name to the hub via the `set_plant_name` action.
+
+    Best-effort: returns ``{"ok": False, "detail": ...}`` on any miss, never
+    raises. Mirrors the fail-closed shape of :func:`sync_hub_in_service`.
+    """
+    if pot_n not in (1, 2, 3, 4):
+        return {"ok": False, "detail": f"pot out of range: {pot_n}"}
+    hub_row = next((r for r in list_inventory() if r.get("role") == "hub"), None)
+    if not hub_row or not hub_row.get("in_service"):
+        return {"ok": False, "detail": "hub not in service"}
+    host = hub_row.get("host") or ""
+    api_key = hub_row.get("api_key") or get_setting("dsc_hub_api_key", "")
+    if not host:
+        return {"ok": False, "detail": "hub host missing"}
+
+    try:
+        import aioesphomeapi  # noqa: F401
+    except ImportError:
+        return {"ok": False, "detail": "aioesphomeapi not installed"}
+
+    text = ("" if name is None else str(name))[:_PLANT_NAME_MAX]
+    client = make_api_client(host, api_key or "")
+    try:
+        async with host_lock(host):
+            try:
+                await client.connect(login=True)
+                _entities, services = await client.list_entities_services()
+                svc = next(
+                    (
+                        s
+                        for s in services
+                        if str(getattr(s, "name", "")) == _PLANT_NAME_ACTION
+                        or str(getattr(s, "name", "")).endswith("_" + _PLANT_NAME_ACTION)
+                    ),
+                    None,
+                )
+                if svc is None:
+                    return {"ok": False, "detail": "hub set_plant_name action not found"}
+                await client.execute_service(svc, {"idx": pot_n, "name": text})
+                return {"ok": True, "pot": pot_n, "name": text}
+            finally:
+                try:
+                    await client.disconnect()
+                except Exception:  # noqa: BLE001
+                    pass
+    except Exception as exc:  # noqa: BLE001
+        _logger.warning("push_plant_name failed for pot%s: %s", pot_n, exc)
+        return {"ok": False, "detail": str(exc)}
+
+
+def push_plant_name_sync(pot_n: int, name: str) -> dict[str, Any]:
+    return asyncio.run(push_plant_name(pot_n, name))
+
+
+def push_plant_name_bg(pot_n: int, name: str) -> None:
+    """Fire-and-forget plant-name push — safe from sync or async call sites.
+
+    Never blocks the caller and never raises: a stale/offline hub just drops
+    the update (the panel keeps its last name until the next successful push).
+    """
+    try:
+        from .demo_mode import is_demo_mode
+
+        if is_demo_mode():
+            return
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+    if loop is not None:
+        loop.create_task(push_plant_name(pot_n, name))
+        return
+    import threading
+
+    def _run() -> None:
+        try:
+            push_plant_name_sync(pot_n, name)
+        except Exception:  # noqa: BLE001
+            pass
+
+    threading.Thread(target=_run, daemon=True, name=f"push-plant-name-{pot_n}").start()
+
+
 async def emit_proposal(commands: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Best-effort hub write. Returns per-command results."""
     hub_row = next((r for r in list_inventory() if r.get("role") == "hub"), None)

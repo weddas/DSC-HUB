@@ -473,8 +473,9 @@ script:
 
   # ---- SOIL (0xD3) — full per-pot set (cadence large slot) ----
   # Per pot 1..4, 7 × i16: temp*100, moisture*10, EC*1, pH*100, N*1, P*1, K*1.
-  # Temp uses the mat's fresh-ESP-NOW-else-HA pick; the rest are the pot's
-  # broadcast values relayed straight through. NaN/absent -> 0x8000.
+  # Temp is the pot's direct ESP-NOW reading while fresh (<150s), else 0x8000
+  # (v8: the HA mirror fallback was removed with the retired HA lab). The rest
+  # are the pot's broadcast values relayed straight through. NaN/absent -> 0x8000.
   - id: tx_soil
     then:
       - espnow.send:
@@ -489,22 +490,22 @@ script:
             std::vector<uint8_t> p; p.reserve(60);
             uint32_t nowms = millis();
             auto i16 = [&](float v, float sc){ int16_t t = isnan(v) ? (int16_t)0x8000 : (int16_t) lroundf(v * sc); p.push_back(t & 0xFF); p.push_back((t >> 8) & 0xFF); };
-            auto tpick = [&](float now_v, uint32_t now_at, float ha_v){ bool fresh = now_at!=0 && (nowms-now_at)<150000; i16(fresh ? now_v : ha_v, 100); };
+            auto tpick = [&](float now_v, uint32_t now_at){ bool fresh = now_at!=0 && (nowms-now_at)<150000; i16(fresh ? now_v : NAN, 100); };
             p.push_back(0xD3); p.push_back(0x01);
-            tpick(id(rz_now_1).state, id(rz_now_1_at), id(rootzone_temp).state);
+            tpick(id(rz_now_1).state, id(rz_now_1_at));
             i16(id(rz_moist_1).state,10); i16(id(rz_ec_1).state,1); i16(id(rz_ph_1).state,100); i16(id(rz_n_1).state,1); i16(id(rz_p_1).state,1); i16(id(rz_k_1).state,1);
-            tpick(id(rz_now_2).state, id(rz_now_2_at), id(rootzone_temp_2).state);
+            tpick(id(rz_now_2).state, id(rz_now_2_at));
             i16(id(rz_moist_2).state,10); i16(id(rz_ec_2).state,1); i16(id(rz_ph_2).state,100); i16(id(rz_n_2).state,1); i16(id(rz_p_2).state,1); i16(id(rz_k_2).state,1);
-            tpick(id(rz_now_3).state, id(rz_now_3_at), id(rootzone_temp_3).state);
+            tpick(id(rz_now_3).state, id(rz_now_3_at));
             i16(id(rz_moist_3).state,10); i16(id(rz_ec_3).state,1); i16(id(rz_ph_3).state,100); i16(id(rz_n_3).state,1); i16(id(rz_p_3).state,1); i16(id(rz_k_3).state,1);
-            tpick(id(rz_now_4).state, id(rz_now_4_at), id(rootzone_temp_4).state);
+            tpick(id(rz_now_4).state, id(rz_now_4_at));
             i16(id(rz_moist_4).state,10); i16(id(rz_ec_4).state,1); i16(id(rz_ph_4).state,100); i16(id(rz_n_4).state,1); i16(id(rz_p_4).state,1); i16(id(rz_k_4).state,1);
             return p;
 
   # ---- PLANT NAMES (0xD4) — 4×16-byte labels for the soil tab ----
-  # packet_transport cannot carry text, so names ride HA→hub cache then
-  # this ESP-NOW relay. Panel stays HA-independent for display; pot NVS
-  # remains the permanent store when you rename in Home Assistant.
+  # packet_transport cannot carry text. v8: the brain pushes names to the
+  # hub via the `set_plant_name` native-API action (plant_name_{1..4}), and
+  # this ESP-NOW relay forwards them to the panel. Pot NVS stays the store.
   - id: tx_names
     mode: single
     then:
@@ -609,7 +610,6 @@ script:
           data: !lambda |-
             std::vector<uint8_t> p{0xD7, 0x01, 0, 0, 0, 0, 0, 0, 0};
             auto now = id(sntp_time).now();
-            if (!now.is_valid()) now = id(grow_time).now();
             if (now.is_valid()) {
               p[2] = (uint8_t)(now.year >= 2000 ? now.year - 2000 : 0);
               p[3] = (uint8_t) now.month;
