@@ -1066,3 +1066,44 @@ def set_permit_join(
     _ingest._client.publish("zigbee2mqtt/bridge/request/permit_join", payload)
     if callback:
         callback(enabled)
+
+
+def actuatable_zigbee_devices() -> list[dict[str, Any]]:
+    """Bound devices whose role kind is actuatable (plug) — the pickable targets
+    for a `zigbee_switch` automation action."""
+    from .zigbee_catalog import ACTUATABLE_ROLE_KINDS
+
+    role_kind = {str(r["id"]): str(r.get("kind") or "") for r in _effective_role_catalog()}
+    bindings = load_zigbee_bindings()
+    out: list[dict[str, Any]] = []
+    for ieee, b in bindings.items():
+        role = str(b.get("role") or "unbound")
+        if role_kind.get(role) not in ACTUATABLE_ROLE_KINDS:
+            continue
+        fn = str(b.get("friendly_name") or "")
+        out.append(
+            {
+                "ieee": ieee,
+                "friendly_name": fn,
+                "alias": str(b.get("alias") or ""),
+                "role": role,
+            }
+        )
+    return out
+
+
+def set_zigbee_state(friendly_name: str, on: bool) -> dict[str, Any]:
+    """Publish an ON/OFF set to a Zigbee switch/plug. Best-effort — returns a
+    status dict, never raises."""
+    fn = str(friendly_name or "").strip()
+    if not fn:
+        return {"ok": False, "error": "no friendly_name"}
+    if mqtt is None or _ingest._client is None:
+        return {"ok": False, "error": "mqtt not connected", "friendly_name": fn}
+    try:
+        _ingest._client.publish(
+            f"zigbee2mqtt/{fn}/set", json.dumps({"state": "ON" if on else "OFF"})
+        )
+        return {"ok": True, "friendly_name": fn, "state": "ON" if on else "OFF"}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc), "friendly_name": fn}
