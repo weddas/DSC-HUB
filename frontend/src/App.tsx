@@ -8,7 +8,6 @@ import { TwinKeepAlive } from "./components/TwinKeepAlive";
 import { SeatOverlayHost } from "./components/SeatOverlay";
 import { InspectorProvider } from "./components/InspectorHost";
 import { BandChartProvider } from "./components/BandChartHost";
-import { HassProvider } from "./hooks/useHass";
 import { useFleetSelector } from "./hooks/useFleet";
 import { ZoneFocusProvider } from "./hooks/useZoneFocus";
 import { type IconName } from "./icons";
@@ -41,7 +40,6 @@ import { GrowLogsPage } from "./pages/GrowLogsPage";
 import { DashHomePage } from "./pages/DashHomePage";
 import { SetupPage } from "./pages/SetupPage";
 import { preloadPiTwinAssets, piTwinRouteNeedsAssets } from "./lib/ensureLocalCards";
-import type { HomeAssistant } from "./vite-env";
 import dscCss from "./styles/dsc.css?inline";
 
 
@@ -211,30 +209,14 @@ function Shell({ surfaceVersion = "8.0.0" }: { surfaceVersion?: string }) {
   );
 }
 
-export function App({
-  hass,
-  surfaceVersion = "8.0.0",
-  hassRevision = 0,
-  fleetSource = "ha",
-  revisionDrivesTick = true,
-}: {
-  hass: HomeAssistant | null;
-  surfaceVersion?: string;
-  hassRevision?: number;
-  fleetSource?: "pi" | "ha";
-  /** When false (Pi), fleet selectors own freshness — revision does not bump useHass tick. */
-  revisionDrivesTick?: boolean;
-}) {
-  void fleetSource;
+export function App({ surfaceVersion = "8.0.0" }: { surfaceVersion?: string }) {
   return (
-    <HassProvider hass={hass} revision={hassRevision} revisionDrivesTick={revisionDrivesTick}>
-      <ZoneFocusProvider>
-        <InspectorProvider>
-          <BandChartProvider>
-            <Shell surfaceVersion={surfaceVersion} />
-          </BandChartProvider>
-        </InspectorProvider>
-      </ZoneFocusProvider>
-    </HassProvider>
+    <ZoneFocusProvider>
+      <InspectorProvider>
+        <BandChartProvider>
+          <Shell surfaceVersion={surfaceVersion} />
+        </BandChartProvider>
+      </InspectorProvider>
+    </ZoneFocusProvider>
   );
 }
