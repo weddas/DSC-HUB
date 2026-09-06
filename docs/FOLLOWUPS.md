@@ -27,7 +27,38 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 **soak:** `canopy_4x8` ZY-ZTH02 silent since last brain restart (~40 min at check) while `canopy_2x4` reports — check battery/range before the v2 live soak.
 
-**next-plan:** Phase 1 commit/PR + Pi deploy (user's call) → Phase 2 live soak → Phases 3 (safety) ∥ 5 (ESPHome closure) ∥ 6 (housekeeping) → Phase 4 (datapoint exposure, one device type at a time).
+**Executed later the same day (PR #197, branch `feat/zigbee-completion-automation-v2`, commits 7bb203f · 15c7513 · 3d35a2b):**
+
+| Phase | Status |
+|------|--------|
+| 1 Land the working tree | **done** — 3 logical commits (rename + Twin retirement · automation v2 · zigbee/safety/toolchain), pushed, PR #197 open |
+| 3 Safety fixes | **done (code)** — failsafe `force=True` for every driven seat; operator Sonoff flip writes `_relay_commanded`; `emit_proposal` shadow-mode documented in `DSC-BRAIN.md` (decision still the operator's) — `test_appliance_failsafe.py` |
+| 4 Datapoint exposure | **done (code)** — every bound role lands in `zigbee_by_role` with `kind`; `fleet_state` exports every datapoint (`sensor.`/`binary_sensor.dsc_zigbee_<role>_<key>`, catalog units); rule engine age/targets cover them; Climate "Other sensors" table; 8 dead-end roles now `consume: True` — `test_zigbee_datapoints.py` (8) |
+| 5 Toolchain hang | **done (code)** — `fetch_json_bounded` worker-thread GETs (DNS-safe) + memoised `/version` probe — `test_esphome_toolchain_bounded.py` (4). Pi venv-dashboard smoke still pending |
+| 6 Housekeeping | **done (code)** — OOS picker filter; `spa_fallback` JSON 404 for brain-API segments — `test_api_route_fallback.py` |
+| 2 Live soak | **pending deploy** — Pi still on the pre-v2 brain (`/settings/automations/targets` → SPA HTML) |
+
+**Verify:** `cd brain && python -m pytest -q` → 322 passed; `cd frontend && npx tsc --noEmit` exit 0; `npm run build` ok. Rams quick_review on ClimatePage flagged only inline margin / flex-wrap styles — same pattern as the surrounding safety block, left consistent.
+
+**Live gate 2026-09-06 (PR #197 hotpatched to `dsc-brain.local` via `.audit/zigbee-completion-pi-hotpatch.ps1` — whole `dsc_brain` package + `spa-dist`, `docker stop -t 20` + `start`, brain healthy after 10 s, bundle `index-BVWH9jgR.js`):**
+
+| Check | Result |
+|------|--------|
+| `/settings/automations/targets` | **passed** — JSON (9 relays, 13 setpoints, `binary_sensor.dsc_zigbee_` in age prefixes); Pi is on v2 |
+| `/settings/esphome/toolchain` | **passed** — HTTP 200 in **0.3 s** (was >30 s / HTTP 000 on the same box) |
+| `/settings/no-such-route` | **passed** — 404 `application/json` |
+| Datapoint exposure (`.audit/zbc-soak-a.sh`) | **passed** — QA `0xqa00000000c02 → co2_tent`, `mosquitto_pub {co2:812,voc:30}` → `zigbee_by_role.co2_tent {co2, voc, kind:gas}`; `sensor.dsc_zigbee_co2_tent_co2 = 812 ppm`, `_voc = 30 ppb`, `_linkquality = 100 lqi`; targets lists all three; Climate "Other sensors" row rendered (screenshot) |
+| v2 rule on a Zigbee entity | **passed** — banner rule `co2 > 800` fired on the next evaluation tick (`critical_banners` `auto-qa_co2_high`, `firing:true`), cleared at `co2=400` (`.audit/zbc-soak-b.sh`) |
+| Cleanup | **passed** — rule list back to `[]`, original 5 bindings restored, no `co2_tent` row / entity / banner left |
+
+**flakes:** soak A's first `/fleet` read after the rule PUT showed `firing:false` — the edge lands on the next broadcast tick (known ~1-poll lag, `dsc-pi-hotpatch.mdc`); the next read had it firing. Not a gate failure.
+
+**residuals / still open:**
+- v2 **relay cut-out / setpoint** rules and the failsafe / operator-flip fixes are unit-tested only — the physical Sonoff trip on the live grow needs the operator's OK (tracker rows stay Needs Verification).
+- **ESPHome venv dashboard Pi smoke (plan Phase 5)** blocked: the Pi has no route out, so `dsc-esphome-venv-setup.sh` cannot pip-install; live `build_backend=none`, `dashboard_api` still the legacy container name.
+- `canopy_4x8` and `canopy_2x4` show `—` right after the brain restart until the ZY-ZTH02s next report; `canopy_4x8` was already silent before the deploy (battery/range check).
+- `emit_proposal` shadow-mode is documented; flipping it to real demand writes is the operator's product decision.
+- StatusChip uppercases the reading units in the Other-sensors row (`CO₂ 812 PPM`) — cosmetic.
 
 ---
 
