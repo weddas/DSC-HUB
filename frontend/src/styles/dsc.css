@@ -43,6 +43,17 @@
   --dsc-fs-sm: 12px;
   --dsc-fs-md: 13px;
   --dsc-fs-lg: 14px;
+  /* Motion — one easing/duration vocabulary so transitions and entrances feel
+     of a piece. --dsc-ease is a soft "settle" (decelerate into place),
+     --dsc-ease-spring adds a hair of overshoot for press-release. All motion
+     that uses these is disabled under prefers-reduced-motion. */
+  --dsc-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dsc-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dsc-ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --dsc-dur-1: 120ms;
+  --dsc-dur-2: 220ms;
+  --dsc-dur-3: 360ms;
+  --dsc-stagger-step: 34ms;
   color: var(--dsc-white);
   background: var(--dsc-black);
   font-family: var(--dsc-font);
@@ -470,7 +481,12 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: transform 100ms ease, box-shadow 100ms ease, color 150ms ease, border-color 150ms ease, background 150ms ease;
+  transition:
+    transform var(--dsc-dur-1) var(--dsc-ease-spring),
+    box-shadow var(--dsc-dur-1) var(--dsc-ease),
+    color var(--dsc-dur-2) var(--dsc-ease),
+    border-color var(--dsc-dur-2) var(--dsc-ease),
+    background var(--dsc-dur-2) var(--dsc-ease);
   text-decoration: none;
 }
 
@@ -577,7 +593,11 @@ body {
   font: inherit;
   cursor: pointer;
   box-shadow: var(--dsc-shadow-tight);
-  transition: transform 100ms ease, box-shadow 100ms ease, border-color 120ms ease, background 120ms ease;
+  transition:
+    transform var(--dsc-dur-1) var(--dsc-ease-spring),
+    box-shadow var(--dsc-dur-1) var(--dsc-ease),
+    border-color var(--dsc-dur-2) var(--dsc-ease),
+    background var(--dsc-dur-2) var(--dsc-ease);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -590,8 +610,9 @@ body {
 
 .dsc-btn:active,
 .dsc-tab:active {
-  transform: translateY(1px);
+  transform: translateY(1px) scale(0.985);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+  transition-duration: 60ms;
 }
 
 .dsc-btn.primary {
@@ -602,11 +623,23 @@ body {
 }
 
 .dsc-page {
-  animation: dsc-fade 180ms ease;
+  animation: dsc-fade var(--dsc-dur-3) var(--dsc-ease) both;
+}
+/* Route content settles in just behind the page fade — header first, then the
+   body — so a route change reads as a move, not a flash. */
+.dsc-page > .dsc-page-header {
+  animation: dsc-rise-in var(--dsc-dur-3) var(--dsc-ease) both;
+}
+.dsc-page > .dsc-page-header + * {
+  animation: dsc-rise-in var(--dsc-dur-3) var(--dsc-ease) 60ms both;
 }
 
 @keyframes dsc-fade {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes dsc-rise-in {
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
 }
 
@@ -616,7 +649,7 @@ body {
     0 1px 0 rgba(255, 255, 255, 0.04) inset,
     0 10px 28px rgba(0, 0, 0, 0.42),
     0 2px 6px rgba(0, 0, 0, 0.35);
-  animation: dsc-card-in 220ms ease both;
+  animation: dsc-card-in var(--dsc-dur-2) var(--dsc-ease) both;
 }
 .dsc-grid > :nth-child(1) { --dsc-stagger: 0; }
 .dsc-grid > :nth-child(2) { --dsc-stagger: 1; }
@@ -629,23 +662,33 @@ body {
 .dsc-grid > .dsc-col-6 .dsc-glass,
 .dsc-grid > .dsc-col-8 .dsc-glass,
 .dsc-grid > .dsc-col-12 .dsc-glass {
-  animation-delay: calc(var(--dsc-stagger, 0) * 40ms);
+  animation-delay: calc(var(--dsc-stagger, 0) * var(--dsc-stagger-step));
 }
 @keyframes dsc-card-in {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
   to { opacity: 1; transform: none; }
 }
 .dsc-gauge {
-  animation: dsc-gauge-in 320ms ease both;
+  animation: dsc-gauge-in var(--dsc-dur-3) var(--dsc-ease) both;
 }
+/* Gauges in a matrix breathe in left-to-right rather than all at once. */
+.dsc-gauge-row-3 > :nth-child(2) .dsc-gauge { animation-delay: 30ms; }
+.dsc-gauge-row-3 > :nth-child(3) .dsc-gauge { animation-delay: 60ms; }
+.dsc-gauge-row-3 > :nth-child(4) .dsc-gauge { animation-delay: 90ms; }
 @keyframes dsc-gauge-in {
   from { opacity: 0.35; transform: scale(0.96); }
   to { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dsc-page, .dsc-btn, .dsc-tab, .dsc-live-pulse,
-  .dsc-glass, .dsc-gauge {
+  .dsc-page,
+  .dsc-page > .dsc-page-header,
+  .dsc-page > .dsc-page-header + *,
+  .dsc-btn, .dsc-tab, .dsc-live-pulse,
+  .dsc-glass, .dsc-gauge,
+  .dsc-gauge-row-3 > * .dsc-gauge,
+  .dsc-decision-scrim, .dsc-decision-panel,
+  .dsc-kpi-value {
     animation: none !important;
     transition: none !important;
   }
@@ -763,6 +806,8 @@ body {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
   color: var(--dsc-white);
+  /* Tone shifts (ok -> warn -> bad) cross-fade instead of snapping. */
+  transition: color var(--dsc-dur-2) var(--dsc-ease);
 }
 
 .dsc-kpi-unit {
@@ -1180,7 +1225,11 @@ body {
   align-items: flex-start;
   gap: 4px;
   box-shadow: var(--dsc-shadow-tight);
-  transition: transform 100ms ease, box-shadow 100ms ease, border-color 120ms ease, background 120ms ease;
+  transition:
+    transform var(--dsc-dur-1) var(--dsc-ease-spring),
+    box-shadow var(--dsc-dur-1) var(--dsc-ease),
+    border-color var(--dsc-dur-2) var(--dsc-ease),
+    background var(--dsc-dur-2) var(--dsc-ease);
 }
 
 .dsc-demand:hover {
@@ -1188,8 +1237,9 @@ body {
 }
 
 .dsc-demand:active {
-  transform: translateY(1px);
+  transform: translateY(1px) scale(0.985);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+  transition-duration: 60ms;
 }
 
 .dsc-demand.is-on {
@@ -1356,7 +1406,7 @@ body {
 }
 .dsc-tent-targets.is-dim {
   opacity: 0.52;
-  transition: opacity 160ms ease;
+  transition: opacity var(--dsc-dur-2) var(--dsc-ease);
 }
 .dsc-tent-targets.is-dim:hover,
 .dsc-tent-targets.is-dim:focus-within {
@@ -1597,7 +1647,7 @@ body {
   border: 1px solid transparent;
   border-radius: 12px;
   padding: 2px 4px 4px;
-  transition: box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  transition: box-shadow var(--dsc-dur-2) var(--dsc-ease), border-color var(--dsc-dur-2) var(--dsc-ease), background var(--dsc-dur-2) var(--dsc-ease);
 }
 
 .dsc-gauge-row-3.is-lit {
@@ -1651,7 +1701,7 @@ body {
   border: 1px solid transparent;
   border-radius: 12px;
   padding: 8px 6px 10px;
-  transition: box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  transition: box-shadow var(--dsc-dur-2) var(--dsc-ease), border-color var(--dsc-dur-2) var(--dsc-ease), background var(--dsc-dur-2) var(--dsc-ease);
 }
 
 .dsc-gauge-zone.is-lit {
@@ -1781,7 +1831,7 @@ body {
   color: var(--dsc-white);
   cursor: pointer;
   box-shadow: var(--dsc-shadow-tight);
-  transition: border-color 120ms ease, background 120ms ease, transform 100ms ease;
+  transition: border-color var(--dsc-dur-2) var(--dsc-ease), background var(--dsc-dur-2) var(--dsc-ease), transform var(--dsc-dur-1) var(--dsc-ease-spring);
 }
 
 .dsc-icon-btn:hover {
@@ -1867,7 +1917,7 @@ body {
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
   opacity: 0;
-  transition: opacity 180ms ease;
+  transition: opacity var(--dsc-dur-2) var(--dsc-ease);
 }
 
 .dsc-drawer-root.is-open .dsc-drawer-scrim {
@@ -1885,7 +1935,7 @@ body {
   box-shadow: -12px 0 40px rgba(0, 0, 0, 0.55);
   display: flex;
   flex-direction: column;
-  transition: transform 220ms ease;
+  transition: transform var(--dsc-dur-2) var(--dsc-ease);
 }
 
 .dsc-drawer-panel--wide {
@@ -2266,6 +2316,7 @@ body {
   inset: 0;
   background: rgba(4, 8, 10, 0.72);
   backdrop-filter: blur(6px);
+  animation: dsc-fade var(--dsc-dur-2) var(--dsc-ease) both;
 }
 .dsc-decision-panel {
   position: relative;
@@ -2278,6 +2329,11 @@ body {
   border-radius: 14px;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
   padding: 16px 18px;
+  animation: dsc-modal-in var(--dsc-dur-3) var(--dsc-ease) both;
+}
+@keyframes dsc-modal-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: none; }
 }
 .dsc-decision-head {
   display: flex;
@@ -2777,7 +2833,7 @@ button.dsc-chip.is-clickable:hover {
   border-radius: 12px;
   background: rgba(12, 18, 28, 0.35);
   border: 1px solid rgba(130, 165, 230, 0.12);
-  transition: box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  transition: box-shadow var(--dsc-dur-2) var(--dsc-ease), border-color var(--dsc-dur-2) var(--dsc-ease), background var(--dsc-dur-2) var(--dsc-ease);
 }
 
 /* Zone identity stays faint. Semantic tone owns the chrome — ROOT is not

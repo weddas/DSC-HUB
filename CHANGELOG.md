@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- **SPA motion pass** — one easing/duration vocabulary (`--dsc-ease` settle curve,
+  `--dsc-ease-spring` for press-release, `--dsc-dur-1/2/3`, `--dsc-stagger-step`)
+  replacing ad-hoc `Nms ease` transitions. Route change now settles in (page fade
+  → header → body); cards keep their staggered `dsc-card-in`, gauges in a matrix
+  row breathe in left-to-right; buttons/tabs/demand tiles get a spring press
+  (`translateY(1px) scale(0.985)`); the DecisionLayer modal scales + rises in
+  behind a fading scrim; KPI values cross-fade on tone change. All of it is
+  disabled under `prefers-reduced-motion`.
+- **Loading indicator** — shared "dim dash" `<Spinner>` + `<Button busy>`; async
+  actions (Refresh / Apply / Save / confirm / Load more) show pulsing dashes +
+  `aria-busy` instead of freezing or swapping to inconsistent `"…"` text.
+- **Type scale** — `--dsc-fs-xs/sm/md/lg` (11/12/13/14px); touched files routed
+  through it (full sweep tracked separately).
 - **Firmware HA removal (phase 2: hub glass feeds)** — `dsc-hub-v4_0` no longer
   imports from a Home Assistant server. `ha_plant_1..4` (panel OLED plant names)
   is replaced by a native-API action `set_plant_name(idx, name)` that the brain
