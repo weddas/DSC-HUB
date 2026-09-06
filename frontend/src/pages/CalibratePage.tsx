@@ -233,6 +233,7 @@ function FanCalibrateWizard() {
               type="number"
               step="0.01"
               min="0"
+              max="15"
               value={msReading}
               onChange={(e) => setMsReading(e.target.value)}
               placeholder={
@@ -314,6 +315,11 @@ function LightParWizard() {
       setStatus("PAR/PPFD reading looks out of range (0–3000 µmol/m²/s) — leave blank to skip it.");
       return;
     }
+    const h = Number(heightCm);
+    if (!Number.isFinite(h) || h < 1 || h > 300) {
+      setStatus("Sensor height must be 1–300 cm.");
+      return;
+    }
     setSaving(true);
     try {
       await setLightLevel(step.pct);
@@ -386,7 +392,13 @@ function LightParWizard() {
         </p>
         <label>
           Sensor height (cm)
-          <input type="number" min="1" value={heightCm} onChange={(e) => setHeightCm(e.target.value)} />
+          <input
+            type="number"
+            min="1"
+            max="300"
+            value={heightCm}
+            onChange={(e) => setHeightCm(e.target.value)}
+          />
         </label>
         <div className="dsc-stage-track" style={{ margin: "12px 0" }}>
           {LIGHT_STEPS.map((s, i) => (
@@ -397,11 +409,23 @@ function LightParWizard() {
         </div>
         <label>
           LUX @ {step.label}
-          <input type="number" min="0" value={luxReading} onChange={(e) => setLuxReading(e.target.value)} />
+          <input
+            type="number"
+            min="0"
+            max="200000"
+            value={luxReading}
+            onChange={(e) => setLuxReading(e.target.value)}
+          />
         </label>
         <label>
           PAR µmol/m²/s (optional)
-          <input type="number" min="0" value={parReading} onChange={(e) => setParReading(e.target.value)} />
+          <input
+            type="number"
+            min="0"
+            max="3000"
+            value={parReading}
+            onChange={(e) => setParReading(e.target.value)}
+          />
         </label>
         <div className="dsc-row-actions">
           {stepIdx === 0 && !status ? (

@@ -212,6 +212,9 @@ export function SoftCalWizard() {
     }
     setBusy(true);
     setStatus("Writing soft HA offsets…");
+    // Track what actually landed so a mid-sequence failure names the partial
+    // state (these are input_number writes — can't be rolled back, only reported).
+    const written: string[] = [];
     try {
       for (const row of pendingApply) {
         if (!row.offsets) continue;
@@ -220,15 +223,18 @@ export function SoftCalWizard() {
           entity_id: ids.offsetPh,
           value: roundOffset("ph", row.offsets.ph),
         });
+        written.push(`P${row.pot} pH`);
         await callService("input_number", "set_value", {
           entity_id: ids.offsetMoisture,
           value: roundOffset("moisture", row.offsets.moisture),
         });
+        written.push(`P${row.pot} moisture`);
         if (Math.abs(row.offsets.ec) >= 1) {
           await callService("input_number", "set_value", {
             entity_id: ids.offsetEc,
             value: roundOffset("ec", row.offsets.ec),
           });
+          written.push(`P${row.pot} EC`);
         }
       }
       setPendingApply(null);
@@ -241,7 +247,12 @@ export function SoftCalWizard() {
         setStatus("Soft offsets refined from after-water known pH.");
       }
     } catch (exc) {
-      setStatus(exc instanceof Error ? exc.message : "Offset write failed");
+      const base = exc instanceof Error ? exc.message : "Offset write failed";
+      setStatus(
+        written.length
+          ? `${base}. Partial write landed: ${written.join(", ")}. Check probe offsets on Root before re-applying — nothing was rolled back.`
+          : `${base}. No offsets were written.`,
+      );
     } finally {
       setBusy(false);
     }
