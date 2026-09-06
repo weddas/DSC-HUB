@@ -99,7 +99,8 @@ esphome:
             // Policy remap (vitals 0xD1 ver 0x02): Follow 4x8 / Follow Plants /
             // Custom / Off. Migrate legacy Mother / Clones & Seedlings once.
             {
-              const char *opt = id(clone_mode).current_option();
+              std::string opt_s = id(clone_mode).current_option().str();  // StringRef since ESPHome 2026.x
+              const char *opt = opt_s.c_str();
               std::string m = opt ? opt : "";
               if (m == "Clones & Seedlings" || m == "Clones") {
                 id(clone_mode).make_call().set_option("Follow Plants").perform();
@@ -2147,7 +2148,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("grow", "Reject Target Temp — stage '%s' (switch to Custom)",
-                         id(grow_stage).current_option());
+                         id(grow_stage).current_option().c_str());
                 id(num_target_temp).publish_state(id(stage_temp_target));
 
   - platform: template
@@ -2173,7 +2174,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("grow", "Reject VPD Min — stage '%s' (switch to Custom)",
-                         id(grow_stage).current_option());
+                         id(grow_stage).current_option().c_str());
                 id(num_vpd_min).publish_state(id(stage_vpd_min));
 
   - platform: template
@@ -2199,7 +2200,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("grow", "Reject VPD Max — stage '%s' (switch to Custom)",
-                         id(grow_stage).current_option());
+                         id(grow_stage).current_option().c_str());
                 id(num_vpd_max).publish_state(id(stage_vpd_max));
 
   - platform: template
@@ -2225,7 +2226,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("grow", "Reject RH Min — stage '%s' (switch to Custom)",
-                         id(grow_stage).current_option());
+                         id(grow_stage).current_option().c_str());
                 id(num_rh_min).publish_state(id(stage_rh_min));
 
   - platform: template
@@ -2251,7 +2252,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("grow", "Reject RH Max — stage '%s' (switch to Custom)",
-                         id(grow_stage).current_option());
+                         id(grow_stage).current_option().c_str());
                 id(num_rh_max).publish_state(id(stage_rh_max));
 
   # v2.4.1 · SENSOR EFFICIENCY: these polled template numbers only
@@ -2335,7 +2336,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("clone", "Reject Clone Target Temp — mode '%s' (Custom or Follow Plants)",
-                         id(clone_mode).current_option());
+                         id(clone_mode).current_option().c_str());
                 id(num_clone_temp).publish_state(id(clone_temp_target));
 
   - platform: template
@@ -2362,7 +2363,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("clone", "Reject Clone VPD Min — mode '%s' (Custom or Follow Plants)",
-                         id(clone_mode).current_option());
+                         id(clone_mode).current_option().c_str());
                 id(num_clone_vpd_min).publish_state(id(clone_vpd_min));
 
   - platform: template
@@ -2389,7 +2390,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("clone", "Reject Clone VPD Max — mode '%s' (Custom or Follow Plants)",
-                         id(clone_mode).current_option());
+                         id(clone_mode).current_option().c_str());
                 id(num_clone_vpd_max).publish_state(id(clone_vpd_max));
 
   - platform: template
@@ -2416,7 +2417,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("clone", "Reject Clone RH Min — mode '%s' (Custom or Follow Plants)",
-                         id(clone_mode).current_option());
+                         id(clone_mode).current_option().c_str());
                 id(num_clone_rh_min).publish_state(id(clone_rh_min));
 
   - platform: template
@@ -2443,7 +2444,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("clone", "Reject Clone RH Max — mode '%s' (Custom or Follow Plants)",
-                         id(clone_mode).current_option());
+                         id(clone_mode).current_option().c_str());
                 id(num_clone_rh_max).publish_state(id(clone_rh_max));
 
   - platform: template
@@ -3791,7 +3792,8 @@ script:
     mode: restart
     then:
       - lambda: |-
-          const char *opt = id(grow_stage).current_option();
+          std::string opt_s = id(grow_stage).current_option().str();  // StringRef since ESPHome 2026.x
+          const char *opt = opt_s.c_str();
           std::string s = opt ? opt : "";
           // v2.3: OFF = 4x8 out of service. Don't touch the numeric targets
           // (so returning to a stage restores your fine-tuning); just drop
@@ -3845,7 +3847,8 @@ script:
     mode: restart
     then:
       - lambda: |-
-          const char *opt = id(grow_stage).current_option();
+          std::string opt_s = id(grow_stage).current_option().str();  // StringRef since ESPHome 2026.x
+          const char *opt = opt_s.c_str();
           std::string s = opt ? opt : "";
           if (s == "Off") { id(main_active) = false; id(stage_short) = "OFF"; id(stage_light_hours) = 0;
                             ESP_LOGI("grow", "Boot: 4x8 stage OFF (inactive)"); return; }
@@ -3871,7 +3874,8 @@ script:
     mode: restart
     then:
       - lambda: |-
-          const char *opt = id(clone_mode).current_option();
+          std::string opt_s = id(clone_mode).current_option().str();  // StringRef since ESPHome 2026.x
+          const char *opt = opt_s.c_str();
           std::string m = opt ? opt : "";
           if (m == "Off") {
             id(clone_mode_idx) = 3;   // vitals 0xD1 ver 0x02; panel maps 3="Off"
