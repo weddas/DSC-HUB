@@ -51,17 +51,20 @@ echo "=== ESPHome: venv dashboard unit is the default backend now ==="
 # running one so it stops fighting the host unit for :6052.
 run_sudo docker rm -f dsc-hub-esphome 2>/dev/null || true
 ESPHOME_UNIT_DIR="${REPO}/services/dsc-hub/pi"
+# /opt/dsc-hub/pi may be a symlink onto the repo's pi/ dir (remote layout) —
+# `install` refuses src==dst and set -e would abort the whole deploy there.
+put() { if [ "$2" -ef "$3" ] 2>/dev/null; then run_sudo chmod "$1" "$3"; else run_sudo install -m "$1" "$2" "$3"; fi; }
 if [ -f "${ESPHOME_UNIT_DIR}/dsc-esphome-dashboard.service" ]; then
   run_sudo install -d /opt/dsc-hub/pi /etc/dsc-hub
-  run_sudo install -m 0755 "${ESPHOME_UNIT_DIR}/dsc-esphome-venv-setup.sh" /opt/dsc-hub/pi/dsc-esphome-venv-setup.sh
-  run_sudo install -m 0755 "${ESPHOME_UNIT_DIR}/dsc-esphome-dashboard-run.sh" /opt/dsc-hub/pi/dsc-esphome-dashboard-run.sh
-  run_sudo install -m 0644 "${ESPHOME_UNIT_DIR}/dsc-esphome-venv-setup.service" /etc/systemd/system/dsc-esphome-venv-setup.service
-  run_sudo install -m 0644 "${ESPHOME_UNIT_DIR}/dsc-esphome-dashboard.service" /etc/systemd/system/dsc-esphome-dashboard.service
+  put 0755 "${ESPHOME_UNIT_DIR}/dsc-esphome-venv-setup.sh" /opt/dsc-hub/pi/dsc-esphome-venv-setup.sh
+  put 0755 "${ESPHOME_UNIT_DIR}/dsc-esphome-dashboard-run.sh" /opt/dsc-hub/pi/dsc-esphome-dashboard-run.sh
+  put 0644 "${ESPHOME_UNIT_DIR}/dsc-esphome-venv-setup.service" /etc/systemd/system/dsc-esphome-venv-setup.service
+  put 0644 "${ESPHOME_UNIT_DIR}/dsc-esphome-dashboard.service" /etc/systemd/system/dsc-esphome-dashboard.service
   # Host update helper: the containerised brain drops esphome-host/request.json in
   # the ops dir; the .path unit runs dsc-esphome-host.sh update (pip + dashboard restart).
-  run_sudo install -m 0755 "${ESPHOME_UNIT_DIR}/dsc-esphome-host.sh" /opt/dsc-hub/pi/dsc-esphome-host.sh
-  run_sudo install -m 0644 "${ESPHOME_UNIT_DIR}/dsc-esphome-update.service" /etc/systemd/system/dsc-esphome-update.service
-  run_sudo install -m 0644 "${ESPHOME_UNIT_DIR}/dsc-esphome-update.path" /etc/systemd/system/dsc-esphome-update.path
+  put 0755 "${ESPHOME_UNIT_DIR}/dsc-esphome-host.sh" /opt/dsc-hub/pi/dsc-esphome-host.sh
+  put 0644 "${ESPHOME_UNIT_DIR}/dsc-esphome-update.service" /etc/systemd/system/dsc-esphome-update.service
+  put 0644 "${ESPHOME_UNIT_DIR}/dsc-esphome-update.path" /etc/systemd/system/dsc-esphome-update.path
   DSC_DATA_ROOT="$(grep -E '^DSC_DATA=' /opt/dsc-hub/.env 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '"' || true)"
   DSC_DATA_ROOT="${DSC_DATA_ROOT:-/var/lib/dsc-hub}"
   {
