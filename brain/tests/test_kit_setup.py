@@ -162,11 +162,16 @@ def test_full_update_runs_configured_command(temp_db, monkeypatch) -> None:
 
 def test_update_status_offline_safe_and_fleet_diff(temp_db, monkeypatch) -> None:
     monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
-    from dsc_brain.kit_update import update_status
+    from dsc_brain import kit_update
 
-    s = update_status(eth_up=False)
-    assert s["brain"]["ok"] is False  # never raises when offline
+    # Deterministic offline: no GitHub lookup, no raise.
+    monkeypatch.setattr(kit_update, "eth_carrier_up", lambda: False)
+    kit_update._gh_cache.update(tag=None, checked_at=0.0, ok=False, error=None)
+
+    s = kit_update.update_status()
+    assert s["brain"]["ok"] is False
     assert s["brain"]["update_available"] is False
+    assert "offline" in str(s["brain"]["error"]).lower()
     assert "expected_firmware" in s["fleet"]
     assert isinstance(s["fleet"]["devices"], list)
     assert isinstance(s["fleet"]["behind_count"], int)
