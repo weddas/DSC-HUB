@@ -72,7 +72,21 @@
   (`latest_supported`, *Newer ESPHome held back* on the card) until a Device
   Builder adapter lands; rollback stays available with the dashboard down
   (`venv-host` + `dashboard_up: false`) and is offered for a failed update that
-  still moved the venv. Gate evidence in `docs/FOLLOWUPS.md`.
+  still moved the venv; (9) **DSC-CONTROL did not compile on the pinned
+  toolchain** — its LVGL lambdas used `lv_color_to32` (LVGL 8); ESPHome 2026.6.5
+  bundles LVGL 9.5 → `lv_color_eq`. `esphome config` cannot see lambda C++; the
+  re-cut checklist now requires a real `esphome compile` per family; (10) the
+  dashboard OTA path is **`/compile` then `/upload`** — `/upload` alone ships an
+  existing binary (FileNotFoundError on never-compiled seats), `/run` compiles +
+  uploads but then tails the device log forever and the job never exits; (11)
+  `queue_job` refused every seat after the first during a rollout ("flash already
+  running") — the worker is serial, only exact duplicates are refused; the worker
+  also fails jobs left `running` by a brain restart; (12) `deploy-brain-remote.sh`
+  restarted the dashboard mid-flash (every queued job failed "Connection
+  refused") — it now leaves a busy dashboard alone; (13) `static
+  domain_name_servers` was not enough — dhcpcd's hook emptied the resolver again
+  on the next renewal mid-reflash; the host resolver is now static with `nohook
+  resolv.conf`. Gate evidence in `docs/FOLLOWUPS.md`.
 - **Tests** — new `brain/tests/test_esphome_toolchain.py` (venv runner argv / cwd /
   env / timeout / hostless, dashboard WebSocket runner incl. the "too old" hint,
   backend detection, host-helper handshake success + failure, disk guard,
