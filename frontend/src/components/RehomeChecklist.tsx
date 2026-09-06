@@ -20,7 +20,7 @@ export function RehomeChecklist({
   if (from === to || to === "unassigned") return null;
   return (
     <div className="dsc-rehome-checklist">
-      <p className="dsc-muted" style={{ marginTop: 0, fontSize: 13 }}>
+      <p className="dsc-muted" style={{ marginTop: 0, fontSize: "var(--dsc-fs-md)" }}>
         Moving from <strong>{tentLabel(from)}</strong> → <strong>{tentLabel(to)}</strong> — confirm:
       </p>
       <ul className="dsc-checklist">

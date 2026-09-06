@@ -61,7 +61,24 @@ export function formatSnapshotValue(key: string, val: unknown): string {
 
 export function snapshotEntries(snapshot: Record<string, unknown> | undefined): Array<[string, unknown]> {
   if (!snapshot || typeof snapshot !== "object") return [];
-  return Object.entries(snapshot).filter(([, v]) => v != null && v !== "");
+  return Object.entries(snapshot).filter(
+    ([k, v]) => k !== "_backfill" && v != null && v !== "",
+  );
+}
+
+/** Keys that were part of the capture but came back empty (sensor offline / pre-snapshot row). */
+export function snapshotGapCount(snapshot: Record<string, unknown> | undefined): number {
+  if (!snapshot || typeof snapshot !== "object") return 0;
+  return Object.entries(snapshot).filter(
+    ([k, v]) => k !== "_backfill" && (v == null || v === ""),
+  ).length;
+}
+
+/** Keys whose value was reconstructed from history after the fact (brain `_backfill` marker). */
+export function snapshotBackfillKeys(snapshot: Record<string, unknown> | undefined): Set<string> {
+  const meta = (snapshot as { _backfill?: { keys?: unknown } } | undefined)?._backfill;
+  const keys = Array.isArray(meta?.keys) ? (meta?.keys as unknown[]) : [];
+  return new Set(keys.map((k) => String(k)));
 }
 
 export function toLocalInputValue(tsSec: number): string {

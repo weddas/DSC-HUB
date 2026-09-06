@@ -10,6 +10,8 @@ from .settings import get_setting, set_setting
 DEFAULT_MODIFIERS: dict[str, Any] = {
     "fan_demand_scale": 1.0,
     "light_brightness_scale": 1.0,
+    # Pot-moisture "dry" reference line on the Root band charts — was a hardcoded 30.
+    "moisture_dry_pct": 30.0,
     "temp_offset_c": {"room": 0.0, "clone": 0.0, "main": 0.0},
     "rh_offset_pct": {"room": 0.0, "clone": 0.0, "main": 0.0},
     "sensor_clamp": {
@@ -34,7 +36,7 @@ def get_global_modifiers() -> dict[str, Any]:
     if not isinstance(parsed, dict):
         return dict(DEFAULT_MODIFIERS)
     out = json.loads(json.dumps(DEFAULT_MODIFIERS))
-    for key in ("fan_demand_scale", "light_brightness_scale"):
+    for key in ("fan_demand_scale", "light_brightness_scale", "moisture_dry_pct"):
         if key in parsed:
             try:
                 out[key] = float(parsed[key])
@@ -57,6 +59,11 @@ def set_global_modifiers(patch: dict[str, Any]) -> dict[str, Any]:
         if key in patch:
             v = float(patch[key])
             current[key] = _clamp(v, 0.5, 1.5)
+    if "moisture_dry_pct" in patch:
+        try:
+            current["moisture_dry_pct"] = _clamp(float(patch["moisture_dry_pct"]), 5.0, 80.0)
+        except (TypeError, ValueError):
+            pass
     for zone_key in ("temp_offset_c", "rh_offset_pct"):
         if isinstance(patch.get(zone_key), dict):
             for zone, val in patch[zone_key].items():

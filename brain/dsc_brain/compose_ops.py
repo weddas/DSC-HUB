@@ -32,6 +32,18 @@ CAL_PREFIX_BY_SCRIPT: dict[str, str] = {
 CAL_STEPS = (25, 50, 75, 100)
 
 
+def strain_slug(name: str) -> str:
+    """Stable roster ``strain_id`` from a display name.
+
+    One code path for compose-create and the plant editor's PATCH so rows can't end
+    up half slug ("grandmommy_purple") and half raw text ("Runtz Punch").
+    """
+    s = "".join(c if (c.isalnum() or c in "._-") else "_" for c in str(name).strip().lower())
+    while "__" in s:
+        s = s.replace("__", "_")
+    return s.strip("_")[:64]
+
+
 def _strain_is_auto(strain_id: str) -> bool:
     if not strain_id:
         return False
@@ -60,7 +72,7 @@ def _pot_recipe_from_build() -> dict[str, Any]:
     blend = blend_snapshot_from_helpers()
     recipe_note = str(get_helper("input_text.dsc_build_recipe_note", "")).strip()
     tent = tent_id(str(get_helper("input_select.dsc_build_tent", "4x8")))
-    strain_id = strain.replace(" ", "_").lower()[:64]
+    strain_id = strain_slug(strain)
     # growth_stage is derived from the sprout date, not hand-picked; fall back
     # to the veg family when no date is known.
     stage = derived_stage_for(sprout, strain_id) or "veg"
@@ -135,7 +147,7 @@ def assign_to_pot(pot: str | None = None) -> dict[str, Any]:
     upsert_roster(
         seat_id,
         {
-            "strain_id": strain.replace(" ", "_").lower()[:64] or "generic_photoperiod",
+            "strain_id": strain_slug(strain) or "generic_photoperiod",
             "stage": stage_family(recipe.get("growth_stage", "")) or "veg",
             "recipe": recipe,
         },
@@ -197,7 +209,9 @@ def update_pot_recipe(pot_n: int, updates: dict[str, Any]) -> dict[str, Any]:
     if "strain_display" in updates:
         strain = str(updates["strain_display"]).strip()
         recipe_patch["strain_display"] = strain
-        patch["strain_id"] = strain
+        # Keep strain_id a slug on edits too — it was storing the raw display string
+        # here, so editor-touched rows drifted out of format vs compose-created ones.
+        patch["strain_id"] = strain_slug(strain) or row.get("strain_id") or "generic_photoperiod"
     if "notes" in updates:
         recipe_patch["notes"] = str(updates["notes"])
     if "blend" in updates:
@@ -358,7 +372,7 @@ def apply_climate_want() -> dict[str, Any]:
     row = next((r for r in list_roster() if r.get("seat_id") == f"pot{pot}"), None)
     if row:
         stage = str(row.get("stage") or "veg")
-    want = resolve_want(strain_id=strain.replace(" ", "_").lower()[:64] or None, stage=stage)
+    want = resolve_want(strain_id=strain_slug(strain) or None, stage=stage)
     bands = want.get("want") or {}
     if "temp_c" in bands:
         lo, hi = bands["temp_c"]

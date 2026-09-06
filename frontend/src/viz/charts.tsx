@@ -266,6 +266,16 @@ export function MultiLineChart({
 
     const leftMarks: { markLine?: object; markArea?: object } = { markLine: { silent: true, symbol: "none", data: [] as object[] }, markArea: { silent: true, data: [] as object[][] } };
     const rightMarks: { markLine?: object; markArea?: object } = { markLine: { silent: true, symbol: "none", data: [] as object[] }, markArea: { silent: true, data: [] as object[][] } };
+    // A per-series `band` used to only recolor the stroke while `targets` drew a real
+    // shaded area — draw the same faint markArea for `band` so the two read consistently.
+    for (const s of named) {
+      if (s.ghost || !s.band || !Number.isFinite(s.band.min) || !Number.isFinite(s.band.max)) continue;
+      const bucket = (s.axis || "left") === "right" ? rightMarks : leftMarks;
+      (bucket.markArea as { data: object[][] }).data.push([
+        { yAxis: s.band.min, itemStyle: { color: HEX.neon, opacity: 0.06 } },
+        { yAxis: s.band.max },
+      ]);
+    }
     for (const tg of targets) {
       const bucket = (tg.axis || "left") === "right" ? rightMarks : leftMarks;
       const color = hexColor(tg.color, (tg.axis || "left") === "right" ? HEX.teal : HEX.amber);
@@ -307,6 +317,8 @@ export function MultiLineChart({
     return {
       backgroundColor: "transparent",
       animation: !chartStale,
+      animationDuration: chartStale ? 0 : 650,
+      animationEasing: "cubicOut" as const,
       grid: { left: 44, right: hasRight ? 44 : 16, top: 16, bottom: 28 },
       tooltip: {
         trigger: "axis",
@@ -369,6 +381,10 @@ export function MultiLineChart({
           name: s.label || s.id,
           type: "line" as const,
           yAxisIndex,
+          // Gentle smoothing (not 1.0 — that distorts real readings) + a soft
+          // top-down fill gradient so trends read less like raw default ECharts.
+          smooth: s.step ? false : 0.2,
+          smoothMonotone: "x" as const,
           showSymbol: live && !chartStale && !s.ghost,
           symbolSize: 4,
           step: s.step ? ("end" as const) : undefined,
@@ -378,11 +394,27 @@ export function MultiLineChart({
             width: s.ghost ? 1.6 : 2.2,
             type: s.ghost ? ("dashed" as const) : ("solid" as const),
             opacity: s.ghost ? 0.55 : chartStale ? 0.7 : 0.95,
+            // Faint self-glow on the live trace — enough to lift it off the grid, not neon.
+            shadowBlur: s.ghost || chartStale ? 0 : 6,
+            shadowColor: `${color}55`,
           },
           itemStyle: { color },
           areaStyle: s.ghost
             ? undefined
-            : { color, opacity: 0.12 },
+            : {
+                opacity: chartStale ? 0.5 : 1,
+                color: {
+                  type: "linear" as const,
+                  x: 0,
+                  y: 0,
+                  x2: 0,
+                  y2: 1,
+                  colorStops: [
+                    { offset: 0, color: `${color}33` },
+                    { offset: 1, color: `${color}00` },
+                  ],
+                },
+              },
           ...(attachMarks ? marks : {}),
         };
       }),
@@ -654,6 +686,7 @@ export function Sparkline({
     if (series.length < 2) {
       return { backgroundColor: "transparent" };
     }
+    const sparkColor = hexColor(color, HEX.teal);
     return {
       backgroundColor: "transparent",
       animationDuration: 420,
@@ -664,8 +697,23 @@ export function Sparkline({
         {
           type: "line",
           showSymbol: false,
+          smooth: 0.2,
+          smoothMonotone: "x",
           data: series.map((p) => [p.t, p.v]),
-          lineStyle: { color: hexColor(color, HEX.teal), width: 1.6 },
+          lineStyle: { color: sparkColor, width: 1.6 },
+          areaStyle: {
+            color: {
+              type: "linear",
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
+              colorStops: [
+                { offset: 0, color: `${sparkColor}2b` },
+                { offset: 1, color: `${sparkColor}00` },
+              ],
+            },
+          },
         },
       ],
     };

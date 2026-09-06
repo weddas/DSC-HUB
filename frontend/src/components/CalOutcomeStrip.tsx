@@ -9,7 +9,7 @@ export function CalOutcomeStrip({
   expected: string;
 }) {
   return (
-    <div className="dsc-cal-outcome" style={{ fontSize: 12, marginBottom: 10 }}>
+    <div className="dsc-cal-outcome" style={{ fontSize: "var(--dsc-fs-sm)", marginBottom: 10 }}>
       <p style={{ margin: "0 0 4px" }}>
         <strong>What:</strong> {what}
       </p>

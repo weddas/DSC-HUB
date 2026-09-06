@@ -36,6 +36,14 @@ _logger = logging.getLogger(__name__)
 _PREV_HUB_DEMANDS: dict[str, str] = {}
 _BOOT_GROW_LOGGED = False
 
+# Hub mode/ownership switches worth an audit line in the grow-log when they flip.
+_HUB_MODE_SWITCHES: dict[str, str] = {
+    "switch.dsc_hub_manual_takeover": "Manual takeover",
+    "switch.dsc_hub_tent_full_auto_mode": "Full Auto",
+    "switch.dsc_hub_tent_manual_override": "Fan override",
+    "switch.dsc_hub_manual_light_hold": "Manual light hold",
+}
+
 # object_id suffix → fleet values key (pots only — hub uses exact OID map)
 POT_MAP = {
     "soil_moisture": "moisture_pct",
@@ -305,6 +313,18 @@ class EsphomeIngest:
                         label = eid.split(".")[-1].replace("dsc_hub_", "").replace("_demand", "").replace("_", " ")
                         record_grow_log(f"{'▶' if st == 'on' else '■'} {label.title()} demand {st}")
                     _PREV_HUB_DEMANDS[eid] = st
+            # Mode/ownership switches are as consequential as a demand flip but were
+            # never mirrored to the grow-log (only *_demand switches and selects were).
+            for eid, label in _HUB_MODE_SWITCHES.items():
+                ctrl = controls.get(eid)
+                if not ctrl:
+                    continue
+                st = str(ctrl.get("state", "off")).lower()
+                key = f"mode:{eid}"
+                prev = _PREV_HUB_DEMANDS.get(key)
+                if prev is not None and prev != st:
+                    record_grow_log(f"◆ {label} {'on' if st == 'on' else 'off'}")
+                _PREV_HUB_DEMANDS[key] = st
             for eid, ctrl in controls.items():
                 if not eid.startswith("select.dsc_hub_"):
                     continue

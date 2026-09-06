@@ -34,7 +34,7 @@ export function PlantWizardSoilStep({
 }: PlantWizardSoilStepProps) {
   return (
     <Card className="dsc-glass dsc-wizard-panel" title="2 · Pot size & growing medium" icon="compose">
-      <p className="dsc-muted" style={{ marginTop: 0, fontSize: 13 }}>
+      <p className="dsc-muted" style={{ marginTop: 0, fontSize: "var(--dsc-fs-md)" }}>
         Tap a pot size, then pick a common mix or search the medium catalog. Custom blends are tucked away unless you
         need them.
       </p>

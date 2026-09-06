@@ -7,6 +7,7 @@ import { SlideDrawer } from "./chrome";
 import { TimespanControl, CYCLE_TIMESPAN_EXTRAS } from "./HistoryDrawer";
 import { StatusChip } from "./ui";
 import { MultiLineChart, type ChartTarget, type NamedSeries } from "../viz/charts";
+import { getGlobalModifiers } from "../lib/fleetApi";
 
 export type BandChartKind = "temp" | "rh" | "vpd" | "root" | "pot1" | "pot2" | "pot3" | "pot4";
 
@@ -43,6 +44,22 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
     if (target) setHours(defaultHours);
   }, [target, defaultHours, setHours]);
   const fetchPoints = Math.min(Math.max(maxPoints, 96), 288);
+
+  // Pot-moisture "dry" line — operator-tunable via Settings → Brain (global modifiers),
+  // not a hardcoded 30.
+  const [dryPct, setDryPct] = useState(30);
+  useEffect(() => {
+    let cancelled = false;
+    getGlobalModifiers()
+      .then((m) => {
+        const v = Number(m.moisture_dry_pct);
+        if (!cancelled && Number.isFinite(v)) setDryPct(v);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [target]);
 
   const tentT = useEntitySeries("sensor.dsc_hub_tent_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
   const cloneT = useEntitySeries("sensor.dsc_hub_clone_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
@@ -149,7 +166,9 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
             ...withPriorGhost(`pm${n}`, "Moisture", moist, "#3b82f6", "%", { axis: "left" }),
             ...withPriorGhost(`pt${n}`, "Soil °C", temp, ZONE.main, "°C", { axis: "right" }),
           ] satisfies NamedSeries[],
-          targets: [{ value: 30, color: "#ef444488", label: "dry 30%" }] satisfies ChartTarget[],
+          targets: [
+            { value: dryPct, color: "#ef444488", label: `dry ${Math.round(dryPct)}%` },
+          ] satisfies ChartTarget[],
         };
       }
     }
@@ -187,6 +206,7 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
     cloneVpdMax,
     matLo,
     matHi,
+    dryPct,
   ]);
 
   const thin = model ? model.series.every((s) => s.series.length < 2) : true;
@@ -218,7 +238,7 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
           yDomain={model.yDomain}
         />
       ) : null}
-      <p className="dsc-muted" style={{ marginTop: 10, fontSize: 12 }}>
+      <p className="dsc-muted" style={{ marginTop: 10, fontSize: "var(--dsc-fs-sm)" }}>
         Multi-zone history — same series as HA Home gauge popups.
       </p>
     </SlideDrawer>

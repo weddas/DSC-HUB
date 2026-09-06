@@ -294,7 +294,7 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
           ) : null}
           {selectedStation?.thereabouts ? (
             <div style={{ marginTop: 10 }}>
-              <p className="dsc-muted" style={{ fontSize: 12 }}>
+              <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
                 Thereabouts @ idle home:
               </p>
               <ReadingsTable readings={selectedStation.thereabouts as Record<string, number | null>} />
@@ -443,7 +443,7 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
           <ReadingsTable readings={poll?.current} />
           {poll?.average ? (
             <>
-              <p className="dsc-muted" style={{ marginTop: 8, fontSize: 12 }}>
+              <p className="dsc-muted" style={{ marginTop: 8, fontSize: "var(--dsc-fs-sm)" }}>
                 Rolling average:
               </p>
               <ReadingsTable readings={poll.average} />

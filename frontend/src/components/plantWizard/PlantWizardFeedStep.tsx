@@ -19,7 +19,7 @@ export function PlantWizardFeedStep({
 }: PlantWizardFeedStepProps) {
   return (
     <Card className="dsc-glass dsc-wizard-panel" title="3 · Feed recipe (optional)" icon="nutrient">
-      <p className="dsc-muted" style={{ marginTop: 0, fontSize: 13 }}>
+      <p className="dsc-muted" style={{ marginTop: 0, fontSize: "var(--dsc-fs-md)" }}>
         Skip if you are not mixing nutrients yet. Search to add bottles — defaults fill dose from the catalog when
         available.
       </p>
@@ -43,7 +43,7 @@ export function PlantWizardFeedStep({
           ))}
         </div>
       ) : (
-        <p className="dsc-muted" style={{ fontSize: 12 }}>No nutrients added yet.</p>
+        <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>No nutrients added yet.</p>
       )}
       <details className="dsc-wizard-details">
         <summary>Advanced — tank size & all slots</summary>

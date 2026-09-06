@@ -93,7 +93,7 @@ export function LightEnergyPanel({
 
   return (
     <Card className="dsc-glass" title={`${label} energy (estimate)`}>
-      <p className="dsc-muted" style={{ margin: "0 0 8px", fontSize: 12 }}>
+      <p className="dsc-muted" style={{ margin: "0 0 8px", fontSize: "var(--dsc-fs-sm)" }}>
         {honestyLead} Learning never auto-applies a schedule.
       </p>
       {estimate?.ok ? (
@@ -107,7 +107,7 @@ export function LightEnergyPanel({
       {planning ? (
         <div className="dsc-banner dsc-banner--warn" style={{ marginBottom: 8 }}>
           <strong>Learning planning signal</strong>
-          <p className="dsc-muted" style={{ margin: "6px 0 0", fontSize: 13 }}>
+          <p className="dsc-muted" style={{ margin: "6px 0 0", fontSize: "var(--dsc-fs-md)" }}>
             {planning.learning?.reason || "Sticky cost proxy — review alternatives when ready."} Not applied.
           </p>
         </div>
@@ -117,7 +117,7 @@ export function LightEnergyPanel({
           .filter((s) => s.id !== "current")
           .map((s) => (
             <div key={s.id} className="dsc-chip-row" style={{ justifyContent: "space-between" }}>
-              <span style={{ fontSize: 13 }}>
+              <span style={{ fontSize: "var(--dsc-fs-md)" }}>
                 {s.label} · on {s.lights_on.slice(0, 5)} · Δ {fmtMoney(s.delta_vs_current)}
                 {s.learning?.planning_signal ? " · planning" : ""}
               </span>
@@ -135,11 +135,11 @@ export function LightEnergyPanel({
       {pendingTarget ? (
         <div className="dsc-banner" style={{ marginBottom: 8 }}>
           <strong>Confirm slide to {pendingTarget.label}</strong>
-          <p className="dsc-muted" style={{ fontSize: 13, margin: "6px 0" }}>
+          <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-md)", margin: "6px 0" }}>
             Pick flower policy. Nothing changes until Confirm.
           </p>
           {(Object.keys(POLICY_COPY) as Policy[]).map((p) => (
-            <label key={p} style={{ display: "block", fontSize: 13, marginBottom: 4 }}>
+            <label key={p} style={{ display: "block", fontSize: "var(--dsc-fs-md)", marginBottom: 4 }}>
               <input type="radio" name={`policy-${spaceId}`} checked={policy === p} onChange={() => setPolicy(p)} />{" "}
               {POLICY_COPY[p]}
             </label>
@@ -156,7 +156,7 @@ export function LightEnergyPanel({
       ) : null}
       {flips.length ? (
         <div style={{ marginTop: 8 }}>
-          <strong style={{ fontSize: 13 }}>Pending photoperiod flips</strong>
+          <strong style={{ fontSize: "var(--dsc-fs-md)" }}>Pending photoperiod flips</strong>
           {flips.map((f) => (
             <div key={f.id} className="dsc-chip-row" style={{ marginTop: 6 }}>
               <StatusChip
@@ -181,7 +181,7 @@ export function LightEnergyPanel({
               </Button>
             </div>
           ))}
-          <p className="dsc-muted" style={{ fontSize: 12 }}>
+          <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
             Approve marks the request — it does not silently change lights-on.
           </p>
         </div>

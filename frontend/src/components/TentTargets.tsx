@@ -223,7 +223,7 @@ function TentColumn({
             tone="ok"
             icon="tent"
           />
-          <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 13 }}>
+          <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: "var(--dsc-fs-md)" }}>
             {climateFollowsPlants
               ? "Clone climate mode is Follow Plants — the Pi writes these targets on a ~12h cycle, so Want sliders lock here. Manual edits would be silently overwritten. Change mode below to edit by hand."
               : "Clone climate mode is Follow 4×8 — Want targets lock here. Edit 4×8 climate or change mode below."}
@@ -233,7 +233,7 @@ function TentColumn({
       {tent === "clone" ? (
         <div style={{ marginBottom: 10 }}>
           <EntitySelect entityId="select.dsc_hub_clone_mode" label="Climate mode" icon="climate" />
-          <p className="dsc-muted" style={{ fontSize: 12, margin: "6px 0 0" }}>
+          <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", margin: "6px 0 0" }}>
             Follow 4×8 mirrors main stage targets. Follow Plants intersects Want for 2×4 plants (Pi,
             ~12h). Custom leaves sliders alone. Off parks the 2×4. Photoperiod follow is on Light —
             separate from climate mode.

@@ -143,7 +143,7 @@ export function FlowSankey({
         ) : (
           <StatusChip label="Mass chip gated" tone="muted" />
         )}
-        <span className="dsc-muted" style={{ fontSize: 12 }}>
+        <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
           CFM provenance per link (Allocated / Nameplate). Heat/humidity estimated splits removed. Zero links
           omitted.
         </span>

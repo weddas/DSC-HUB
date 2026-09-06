@@ -368,7 +368,7 @@ export function PlantSeatPanel({
           />
           <PlantExtra pot={pot} />
           {seat.blend ? (
-            <p className="dsc-muted" style={{ marginTop: 10, fontSize: 12 }}>
+            <p className="dsc-muted" style={{ marginTop: 10, fontSize: "var(--dsc-fs-sm)" }}>
               {seat.blend}
             </p>
           ) : null}
@@ -573,7 +573,7 @@ export function PlantSeatPanel({
                   },
                 ]}
               />
-              <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 12 }}>
+              <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: "var(--dsc-fs-sm)" }}>
                 {Number.isFinite(learnedEc)
                   ? `Learned nutrient use: ${learnedEc.toFixed(3)} EC per moisture point, from this pot's own history.`
                   : "EC over time shown — not enough history yet to learn this pot's nutrient use."}
@@ -644,7 +644,7 @@ export function PlantSeatPanel({
                 <StatusChip label={`P ${seat.p}`} tone="muted" />
                 <StatusChip label={`K ${seat.k}`} tone="muted" />
               </div>
-              <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 12 }}>
+              <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: "var(--dsc-fs-sm)" }}>
                 NPK = trend indicators. Unavailable stays —. Held shows last good on blip.
               </p>
             </Card>

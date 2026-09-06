@@ -252,6 +252,28 @@ export function GrowLogsPage() {
     });
   };
 
+  /** Mid-pick reset — clear A/B and start over from A without leaving compare mode. */
+  const restartScopePick = () => {
+    updateParams(scope, "trends", {
+      anchorSec: chartAnchorSec ?? undefined,
+      compareScopeA: null,
+      compareScopeB: null,
+      compareScopes: true,
+    });
+    setScopeComparePick("A");
+  };
+
+  /** Swap which picked scope is A vs B. */
+  const swapScopePick = () => {
+    if (!compareScopeA && !compareScopeB) return;
+    updateParams(scope, view, {
+      anchorSec: chartAnchorSec ?? undefined,
+      compareScopeA: compareScopeB ? formatCompareScopeParam(compareScopeB) : null,
+      compareScopeB: compareScopeA ? formatCompareScopeParam(compareScopeA) : null,
+      compareScopes: true,
+    });
+  };
+
   const toggleCompareScopes = () => {
     if (compareScopeMode) {
       updateParams(scope, view, { anchorSec: chartAnchorSec ?? undefined });
@@ -289,6 +311,37 @@ export function GrowLogsPage() {
 
   const trackEntryForCompare = (entry: JournalEntry) => {
     mergeEntryCache([entry]);
+  };
+
+  /** Bulk export of the loaded rows for the current scope as a CSV download. */
+  const exportScopeCsv = () => {
+    const src = entryCache.slice().sort((a, b) => b.occurred_at - a.occurred_at);
+    const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const header = ["id", "occurred_at_iso", "source", "provenance", "tags", "note"];
+    const body = src.map((e) =>
+      [
+        e.id,
+        new Date(e.occurred_at * 1000).toISOString(),
+        e.source,
+        e.provenance ?? "",
+        e.tags.join("|"),
+        e.note,
+      ]
+        .map(esc)
+        .join(","),
+    );
+    const csv = [header.map(esc).join(","), ...body].join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `journal-${scope.kind}${scope.id ? `-${scope.id}` : ""}-${new Date()
+      .toISOString()
+      .slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
   };
 
   const scopeCompareReady = compareScopeA != null && compareScopeB != null;
@@ -397,6 +450,18 @@ export function GrowLogsPage() {
                   : `Pick scope ${scopeComparePick} (${compareScopeA ? "A set" : "A —"}, ${compareScopeB ? "B set" : "B —"})`}
               </span>
             ) : null}
+            {compareScopeMode && (compareScopeA || compareScopeB) ? (
+              <>
+                <Button variant="secondary" onClick={restartScopePick}>
+                  Restart pick
+                </Button>
+                {compareScopeA && compareScopeB ? (
+                  <Button variant="secondary" onClick={swapScopePick}>
+                    Swap A↔B
+                  </Button>
+                ) : null}
+              </>
+            ) : null}
           </div>
 
           {showScopeCompareTrends ? (
@@ -436,6 +501,9 @@ export function GrowLogsPage() {
                     Select two rows ({compareIds.length}/2)
                   </span>
                 ) : null}
+                <Button variant="secondary" disabled={!entryCache.length} onClick={exportScopeCsv}>
+                  Export CSV
+                </Button>
               </div>
               <JournalScopePanel
                 scope={scope}

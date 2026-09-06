@@ -83,6 +83,35 @@ def _debt_list(db_path: Path | None = None) -> list[str]:
     return [str(x) for x in data]
 
 
+def _reconcile_flash_debt(debt: list[str], db_path: Path | None) -> list[str]:
+    """Drop ``not_flashed:<seat>`` items for seats that are actually online at the
+    expected firmware — a device flashed outside the wizard (or a resumed setup)
+    should not leave a stale debt that makes a live fleet look half-commissioned.
+    """
+    flash_debt = [d for d in debt if d.startswith("not_flashed:")]
+    if not flash_debt:
+        return debt
+    try:
+        from .kit_update import fleet_firmware_status
+
+        fw = {d["seat_id"]: d for d in fleet_firmware_status().get("devices", [])}
+    except Exception:  # noqa: BLE001 — never let reconciliation break the endpoint
+        return debt
+    cleared = {
+        d
+        for d in flash_debt
+        if (row := fw.get(d.split(":", 1)[1])) is not None
+        and row.get("online")
+        and row.get("running")
+        and row.get("running") == row.get("expected")
+    }
+    if not cleared:
+        return debt
+    pruned = [d for d in debt if d not in cleared]
+    set_setting(KEY_DEBT, json.dumps(pruned), db_path)
+    return pruned
+
+
 def get_setup_state(db_path: Path | None = None) -> dict[str, Any]:
     commissioned = get_setting(KEY_COMMISSIONED, "false", db_path).lower() == "true"
     phase_raw = get_setting(KEY_PHASE, "welcome", db_path) or "welcome"
@@ -90,7 +119,7 @@ def get_setup_state(db_path: Path | None = None) -> dict[str, Any]:
     return {
         "commissioned": commissioned,
         "phase": phase,
-        "debt": _debt_list(db_path),
+        "debt": _reconcile_flash_debt(_debt_list(db_path), db_path),
         "version": __version__,
         "surface": SURFACE_VERSION,
     }

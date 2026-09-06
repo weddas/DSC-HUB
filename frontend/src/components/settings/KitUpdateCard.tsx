@@ -106,7 +106,7 @@ export function KitUpdateCard() {
               ) : null}
             </p>
             {st.brain.error && !st.brain.ok ? (
-              <p className="dsc-muted" style={{ margin: "4px 0", fontSize: 12 }}>
+              <p className="dsc-muted" style={{ margin: "4px 0", fontSize: "var(--dsc-fs-sm)" }}>
                 {st.brain.error}
               </p>
             ) : null}
@@ -123,7 +123,7 @@ export function KitUpdateCard() {
               </Button>
             </div>
             {st.update_job ? (
-              <pre style={{ maxHeight: 160, overflow: "auto", fontSize: 11, whiteSpace: "pre-wrap" }}>
+              <pre style={{ maxHeight: 160, overflow: "auto", fontSize: "var(--dsc-fs-xs)", whiteSpace: "pre-wrap" }}>
                 [{st.update_job.status}]{"\n"}
                 {st.update_job.detail}
               </pre>

@@ -57,6 +57,7 @@ from .kit_update import check_updates, start_full_update, update_status
 from .paths import EXPECTED_FIRMWARE, SURFACE_VERSION
 from .settings import (
     get_all_settings,
+    get_setting,
     init_settings_db,
     list_inventory,
     list_learning,
@@ -761,9 +762,14 @@ async def control_demand(body: DemandBody) -> dict[str, Any]:
 
 @app.get("/history")
 def history_get(
-    entity_id: str = Query(..., min_length=3),
+    entity_id: str = Query("", max_length=200),
     hours: float = Query(6.0, ge=0.25, le=168.0),
 ) -> dict[str, Any]:
+    # An unresolved channel ("") is an honest empty state, not a 422 — some SPA series
+    # resolvers hand back "" before their entity binds and would otherwise error-spam.
+    entity_id = (entity_id or "").strip()
+    if not entity_id:
+        return {"entity_id": "", "hours": hours, "points": [], "tracked": False}
     tracked = entity_id in ENTITY_METRIC_MAP
     if not tracked:
         import logging
@@ -1444,16 +1450,44 @@ async def catalogs_proxy(
     return search(key, q, limit=limit)
 
 
+def _local_strain_detail(strain_id: str) -> dict[str, Any] | None:
+    """Shape the on-Pi sqlite corpus row like a hydrate response (gaps stay gaps)."""
+    row = get_strain(strain_id)
+    if not row:
+        return None
+    raw = row.get("raw") or {}
+    return {
+        "id": row.get("id"),
+        "name": row.get("name"),
+        "type": row.get("type"),
+        "curated": row.get("curated"),
+        "want": row.get("want") or {},
+        "raw": raw,
+        "source": "local_sqlite",
+        "media": [],
+    }
+
+
 @app.get("/v1/catalogs/strains/{strain_id}")
 async def strain_detail_proxy(strain_id: str) -> dict[str, Any]:
-    """Live CannaLib strain_tree hydrate (licensed media when present)."""
+    """CannaLib strain_tree hydrate; falls back to the on-Pi sqlite corpus when the
+    remote is unreachable (same contract as the list route), instead of a bare 502."""
+    use_local = get_setting("cannalib_use_local_fallback", "true").lower() == "true"
+    remote_err: Exception | None = None
     try:
         detail = await catalog_strain_detail(strain_id)
     except Exception as exc:  # noqa: BLE001
-        raise HTTPException(502, f"CannaLib strain hydrate failed: {exc}") from exc
-    if not detail:
-        raise HTTPException(404, "strain not found")
-    return detail
+        remote_err = exc
+        detail = None
+    if detail:
+        return detail
+    if use_local:
+        local = _local_strain_detail(strain_id)
+        if local:
+            return local
+    if remote_err is not None:
+        raise HTTPException(502, f"CannaLib strain hydrate failed: {remote_err}")
+    raise HTTPException(404, "strain not found")
 
 
 @app.get("/v1/media/assets/{asset_id}")
@@ -1954,6 +1988,16 @@ def spa_index() -> FileResponse:
     return _spa_index_response(index)
 
 
+# Anything that looks like a build artifact — a stale chunk hash after a redeploy is
+# the usual cause. Must 404, never fall through to index.html, or the browser parses
+# HTML as JS/CSS ("Uncaught SyntaxError: Unexpected token '<'" on load).
+_ASSET_EXTS = (
+    ".js", ".mjs", ".cjs", ".css", ".map", ".json", ".wasm",
+    ".woff", ".woff2", ".ttf", ".otf", ".eot",
+    ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".avif", ".ico",
+)
+
+
 @app.get("/{full_path:path}")
 def spa_fallback(full_path: str) -> FileResponse:
     if full_path.startswith("api") or full_path.startswith("v1"):
@@ -1963,6 +2007,8 @@ def spa_fallback(full_path: str) -> FileResponse:
         if full_path.endswith(".html"):
             return _spa_index_response(file_path)
         return FileResponse(file_path, headers={"Cache-Control": "public, max-age=31536000, immutable"})
+    if full_path.lower().endswith(_ASSET_EXTS):
+        raise HTTPException(404, "asset not found (stale build? hard-refresh the SPA)")
     index = STATIC_DIR / "index.html"
     if index.exists():
         return _spa_index_response(index)

@@ -39,13 +39,15 @@ export function InventoryInServiceToggle({
   const apply = async () => {
     setBusy(true);
     try {
+      // The PATCH response is the confirmation — don't hold the control disabled
+      // through a full brain.refresh(); reconcile derived state in the background.
       await patch_inventory(seatId, { in_service: next });
-      await refreshBrain();
-      onPatched?.();
     } finally {
       setBusy(false);
       setConfirm(null);
     }
+    void refreshBrain();
+    onPatched?.();
   };
 
   if (readOnly) {

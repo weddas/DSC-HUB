@@ -588,18 +588,29 @@ class ZigbeeMqttIngest:
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
 
-    def stop(self) -> None:
+    def stop(self, *, timeout: float = 2.0) -> None:
         self._running = False
         self._mqtt_connected = False
-        if self._client:
+        client = self._client
+        if client is not None:
             # paho-mqtt's Client shape has shifted across major versions (loop_stop has been
             # observed missing under some installed versions) — teardown must never raise.
-            loop_stop = getattr(self._client, "loop_stop", None)
-            if callable(loop_stop):
-                loop_stop()
-            disconnect = getattr(self._client, "disconnect", None)
-            if callable(disconnect):
-                disconnect()
+            # disconnect() first so paho stops its own reconnect + winds the loop down
+            # cleanly; loop_stop() after is the belt-and-braces stop.
+            for name in ("disconnect", "loop_stop"):
+                fn = getattr(client, name, None)
+                if callable(fn):
+                    try:
+                        fn()
+                    except Exception:  # noqa: BLE001 — teardown is best-effort
+                        _logger.debug("zigbee mqtt %s() during stop raised", name, exc_info=True)
+        # Join the ingest thread so stop() is synchronous — a lingering daemon thread
+        # processing one last message was the source of pytest teardown flakiness.
+        thread = self._thread
+        if thread is not None and thread.is_alive() and thread is not threading.current_thread():
+            thread.join(timeout=timeout)
+        self._thread = None
+        self._client = None
 
     def _run(self) -> None:
         host = os.environ.get("MQTT_HOST", "mosquitto")

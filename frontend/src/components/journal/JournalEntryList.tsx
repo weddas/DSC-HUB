@@ -18,6 +18,8 @@ export type JournalEntryListProps = {
   onCompareToggle?: (row: JournalEntry) => void;
   onEntryOpen?: (row: JournalEntry) => void;
   highlightRowRef?: Ref<HTMLLIElement>;
+  /** Hide source==="system" rows (schedule slides, re-asserts, etc.). */
+  hideSystem?: boolean;
 };
 
 export function JournalEntryList({
@@ -33,12 +35,20 @@ export function JournalEntryList({
   onCompareToggle,
   onEntryOpen,
   highlightRowRef,
+  hideSystem = false,
 }: JournalEntryListProps) {
   const embedded = variant === "embedded";
   const listClass = embedded
     ? "dsc-journal-list dsc-journal-teaser-scroll"
     : "dsc-journal-list";
-  const displayEntries = useMemo(() => collapseConsecutiveSystemDuplicates(entries), [entries]);
+  const systemCount = useMemo(
+    () => entries.filter((e) => e.source === "system").length,
+    [entries],
+  );
+  const displayEntries = useMemo(() => {
+    const src = hideSystem ? entries.filter((e) => e.source !== "system") : entries;
+    return collapseConsecutiveSystemDuplicates(src);
+  }, [entries, hideSystem]);
 
   const scrollStyle =
     embedded && scrollMaxRows > 0
@@ -66,8 +76,13 @@ export function JournalEntryList({
           />
         );
       })}
+      {hideSystem && systemCount > 0 ? (
+        <li className="dsc-muted" style={{ fontSize: "var(--dsc-fs-xs)" }}>
+          {systemCount} system row{systemCount > 1 ? "s" : ""} hidden
+        </li>
+      ) : null}
       {!entries.length ? (
-        <li className="dsc-muted" style={{ fontSize: 13 }}>
+        <li className="dsc-muted" style={{ fontSize: "var(--dsc-fs-md)" }}>
           {emptyMessage}
         </li>
       ) : null}

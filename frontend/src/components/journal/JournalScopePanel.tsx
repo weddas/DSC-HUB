@@ -328,6 +328,8 @@ export function JournalScopePanel({
 
   const [saveErr, setSaveErr] = useState<string | null>(null);
 
+  const [hideSystem, setHideSystem] = useState(false);
+
 
 
   const logsHref = footerHref ?? journalScopeToLogsHref(scope);
@@ -437,7 +439,7 @@ export function JournalScopePanel({
 
       <Card className="dsc-glass" title={title ?? copy.title}>
 
-        <p className="dsc-muted" style={{ margin: 0, fontSize: 13 }}>
+        <p className="dsc-muted" style={{ margin: 0, fontSize: "var(--dsc-fs-md)" }}>
 
           Assign a plant to this probe to keep a mini journal that follows the plant.
 
@@ -457,7 +459,7 @@ export function JournalScopePanel({
 
       <Card className="dsc-glass" title="Grow log">
 
-        <p className="dsc-muted" style={{ margin: 0, fontSize: 13 }}>
+        <p className="dsc-muted" style={{ margin: 0, fontSize: "var(--dsc-fs-md)" }}>
 
           Operational messages — opens on Grow → Logs grow log tab.
 
@@ -477,7 +479,7 @@ export function JournalScopePanel({
 
       <Card className="dsc-glass" title={title ?? copy.title}>
 
-        <p className="dsc-muted" style={{ margin: "0 0 8px", fontSize: 12 }}>
+        <p className="dsc-muted" style={{ margin: "0 0 8px", fontSize: "var(--dsc-fs-sm)" }}>
 
           {help ?? copy.help}
 
@@ -506,23 +508,21 @@ export function JournalScopePanel({
               {copy.composeLabel}
 
               <textarea
-
                 rows={2}
-
                 value={note}
-
                 onChange={(e) => setNote(e.target.value)}
-
+                onKeyDown={(e) => {
+                  // Enter (or ⌘/Ctrl+Enter) submits; Shift+Enter keeps its newline.
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    if (note.trim() && !busy) void onSave();
+                  }
+                }}
                 placeholder={
-
                   scope.kind === "plant"
-
-                    ? "What you saw (observation, not a diagnosis)"
-
-                    : `${copy.composeLabel} observation`
-
+                    ? "What you saw (observation, not a diagnosis) — Enter to save, Shift+Enter for a new line"
+                    : `${copy.composeLabel} observation — Enter to save`
                 }
-
               />
 
             </label>
@@ -557,7 +557,7 @@ export function JournalScopePanel({
 
         {loading && !listEntries.length ? (
 
-          <p className="dsc-muted" style={{ margin: "12px 0 0", fontSize: 13 }}>
+          <p className="dsc-muted" style={{ margin: "12px 0 0", fontSize: "var(--dsc-fs-md)" }}>
 
             Loading journal…
 
@@ -567,13 +567,27 @@ export function JournalScopePanel({
 
         {error ? <StatusChip label={error} tone="bad" /> : null}
 
-
+        {!embedded && listEntries.some((e) => e.source === "system") ? (
+          <label
+            className="dsc-muted"
+            style={{ display: "inline-flex", gap: 6, alignItems: "center", fontSize: "var(--dsc-fs-sm)", margin: "6px 0" }}
+          >
+            <input
+              type="checkbox"
+              checked={hideSystem}
+              onChange={(e) => setHideSystem(e.target.checked)}
+            />
+            Hide system rows
+          </label>
+        ) : null}
 
         <JournalEntryList
 
           entries={listEntries}
 
           variant={variant}
+
+          hideSystem={!embedded && hideSystem}
 
           scope={scope}
 
@@ -609,7 +623,7 @@ export function JournalScopePanel({
 
             </Button>
 
-            <span className="dsc-muted" style={{ fontSize: 12 }}>
+            <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
 
               {listEntries.length} of {total}
 
@@ -623,7 +637,7 @@ export function JournalScopePanel({
 
         {embedded ? (
 
-          <p style={{ margin: "10px 0 0", fontSize: 13 }}>
+          <p style={{ margin: "10px 0 0", fontSize: "var(--dsc-fs-md)" }}>
 
             <Link to={logsHref}>Open full journal</Link>
 

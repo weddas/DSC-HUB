@@ -81,7 +81,7 @@ function TrendGroupCard({
         </p>
       ) : null}
       {!chartSeries.length ? (
-        <p className="dsc-muted" style={{ margin: 0, fontSize: 13 }}>
+        <p className="dsc-muted" style={{ margin: 0, fontSize: "var(--dsc-fs-md)" }}>
           No recorder data for this window.
         </p>
       ) : (
@@ -145,7 +145,7 @@ export function LogsTrendsPanel({
   if (!groups.length) {
     return (
       <Card className="dsc-glass" title="Trends">
-        <p className="dsc-muted" style={{ margin: 0, fontSize: 13 }}>
+        <p className="dsc-muted" style={{ margin: 0, fontSize: "var(--dsc-fs-md)" }}>
           {scope.kind === "core"
             ? "Core scope has facility rollup only — no sensor trends to chart."
             : scope.kind === "grow_log"

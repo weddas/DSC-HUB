@@ -69,7 +69,7 @@ export function PhotoperiodTimeline({
         </span>
       </div>
       {flipAhead ? (
-        <p className="dsc-muted" style={{ margin: "4px 0 0", fontSize: 12 }}>
+        <p className="dsc-muted" style={{ margin: "4px 0 0", fontSize: "var(--dsc-fs-sm)" }}>
           {flipAhead}
         </p>
       ) : null}

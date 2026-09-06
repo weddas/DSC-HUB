@@ -118,9 +118,9 @@ export function DashCannalibTiles({ bus }: { bus: Bus }) {
     { label: "Corpus strains", id: "sensor.dsc_cannalib_corpus_strains", fmt: (v: number) => String(Math.round(v)) },
   ];
   return (
-    <Card className="dsc-glass" title="Cannalib catalog API" icon="research">
+    <Card className="dsc-glass" title="CannaLib catalog API" icon="research">
       {!online ? (
-        <p className="dsc-muted" style={{ marginTop: 0, fontSize: 12 }}>
+        <p className="dsc-muted" style={{ marginTop: 0, fontSize: "var(--dsc-fs-sm)" }}>
           Catalog offline — hit counts and corpus size are stale until the API is reachable.
         </p>
       ) : null}
@@ -399,7 +399,7 @@ export function DashOperationalNow({ bus, onNavigate }: { bus: Bus; onNavigate: 
         <StatusChip label={`Priority ${pri}`} tone="muted" />
         <StatusChip label={mode} tone={mode === "Full Auto" ? "ok" : mode === "Standby" ? "muted" : "warn"} />
       </div>
-      <p className="dsc-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
+      <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-md)", lineHeight: 1.5 }}>
         <strong>4×8</strong> {tentT}°C / {tentRh}% / VPD {Number.isFinite(tentVpd) ? tentVpd.toFixed(2) : "—"} (
         {bandDelta(tentVpd, num("number.dsc_hub_vpd_target_min", 0.8), num("number.dsc_hub_vpd_target_max", 1.4))}) · band{" "}
         {state("number.dsc_hub_vpd_target_min")}–{state("number.dsc_hub_vpd_target_max")}
@@ -475,10 +475,43 @@ const BAND_FOCUS: { id: ZoneFocus; label: string }[] = [
   { id: "room", label: "Room" },
 ];
 
+/** One metric's state as a coloured, chart-opening chip — the compact-Overview primitive. */
+function BandStatusChip({
+  label,
+  value,
+  band,
+  unit,
+  stale,
+  onClick,
+}: {
+  label: string;
+  value: number;
+  band?: { min: number; max: number };
+  unit?: string;
+  stale?: boolean;
+  onClick: () => void;
+}) {
+  const tone = zoneTone({
+    value,
+    band,
+    margin: defaultBandMargin(band, unit),
+    stale: !!(stale && Number.isFinite(value)),
+    available: Number.isFinite(value),
+  });
+  const uiTone: "ok" | "warn" | "bad" | "muted" =
+    tone === "critical" ? "bad" : tone === "warn" ? "warn" : tone === "ok" ? "ok" : "muted";
+  const shown = Number.isFinite(value)
+    ? `${label} ${value.toFixed(unit === "kPa" ? 2 : unit === "%" ? 0 : 1)}${unit && unit !== "%" ? "" : unit ?? ""}`
+    : `${label} —`;
+  return <StatusChip label={shown} tone={uiTone} onClick={onClick} />;
+}
+
 export function DashBandsGrid({
   readings,
   onChartOpen,
+  compact = false,
 }: {
+  compact?: boolean;
   readings: {
     tentT: number;
     tentRh: number;
@@ -510,9 +543,71 @@ export function DashBandsGrid({
   const rowLit = (id: ZoneFocus) =>
     focus === "compare" || focus === id ? "dsc-gauge-row-3 is-lit" : "dsc-gauge-row-3";
 
+  if (compact) {
+    // Overview = glance dispatcher: a per-zone in-band / drifting / alert row, not a
+    // full second copy of the Climate arc-gauge matrix. Chips still open the chart.
+    const zones: Array<{
+      tag: string;
+      metrics: Array<{ label: string; value: number; band?: { min: number; max: number }; unit?: string; stale?: boolean; kind: BandChartKind }>;
+    }> = [
+      {
+        tag: "4×8",
+        metrics: [
+          { label: "T", value: r.tentT, band: { min: r.targetTemp - 2, max: r.targetTemp + 2 }, unit: "°C", stale: r.stale.tentT, kind: "temp" },
+          { label: "RH", value: r.tentRh, band: { min: r.rhMin, max: r.rhMax }, unit: "%", stale: r.stale.tentRh, kind: "rh" },
+          { label: "VPD", value: r.tentVpd, band: { min: r.vpdMin, max: r.vpdMax }, unit: "kPa", stale: r.stale.tentVpd, kind: "vpd" },
+        ],
+      },
+      {
+        tag: "2×4",
+        metrics: [
+          { label: "T", value: r.cloneT, band: { min: r.cloneTargetTemp - 2, max: r.cloneTargetTemp + 2 }, unit: "°C", stale: r.stale.cloneT, kind: "temp" },
+          { label: "RH", value: r.cloneRh, band: { min: r.cloneRhMin, max: r.cloneRhMax }, unit: "%", stale: r.stale.cloneRh, kind: "rh" },
+          { label: "VPD", value: r.cloneVpd, band: { min: r.cloneVpdMin, max: r.cloneVpdMax }, unit: "kPa", stale: r.stale.cloneVpd, kind: "vpd" },
+        ],
+      },
+      {
+        tag: "Room",
+        metrics: [
+          { label: "T", value: r.roomT, band: { min: r.targetTemp - 2, max: r.targetTemp + 2 }, unit: "°C", stale: r.stale.roomT, kind: "temp" },
+          { label: "RH", value: r.roomRh, band: { min: r.rhMin, max: r.rhMax }, unit: "%", stale: r.stale.roomRh, kind: "rh" },
+        ],
+      },
+      {
+        tag: "Root",
+        metrics: [
+          { label: "coldest", value: r.rootT, band: { min: r.matLo, max: r.matHi }, unit: "°C", stale: r.stale.rootT, kind: "root" },
+        ],
+      },
+    ];
+    return (
+      <Card className="dsc-glass" title="Bands" icon="gauge">
+        <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", margin: "0 0 10px" }}>
+          Per-zone glance — green in band · amber drifting · red alert · grey no data. Open Climate for the gauges.
+        </p>
+        {zones.map((z) => (
+          <div key={z.tag} className="dsc-chip-row" style={{ margin: "6px 0", alignItems: "center" }}>
+            <span className="dsc-gauge-row-tag" style={{ minWidth: 44 }}>{z.tag}</span>
+            {z.metrics.map((m) => (
+              <BandStatusChip
+                key={`${z.tag}-${m.label}`}
+                label={m.label}
+                value={m.value}
+                band={m.band}
+                unit={m.unit}
+                stale={m.stale}
+                onClick={() => onChartOpen(m.kind)}
+              />
+            ))}
+          </div>
+        ))}
+      </Card>
+    );
+  }
+
   return (
     <Card className="dsc-glass" title="Bands" icon="gauge">
-      <p className="dsc-muted" style={{ fontSize: 12, margin: "0 0 10px" }}>
+      <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", margin: "0 0 10px" }}>
         Green = in band · amber = drifting · red = alert · grey = no data or out of service
       </p>
       <div className="dsc-tent-segment" style={{ marginBottom: 10 }}>
@@ -682,7 +777,7 @@ export function DashRootTankSection({
   const fleet = useFleet();
   return (
     <Card className="dsc-glass" title="Root & tank" icon="root">
-      <p className="dsc-muted" style={{ fontSize: 12, margin: "0 0 8px" }}>
+      <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", margin: "0 0 8px" }}>
         Grey gauges mean no moisture Got or probe out of service — never a fake reading.
         Band is Root Want (`potWantBand`); missing Want stays unbanded.
       </p>
@@ -702,7 +797,7 @@ export function DashRootTankSection({
         })}
       </div>
       {rosterSlots.some((s) => s.pot && s.pot !== "none") ? (
-        <div className="dsc-muted" style={{ fontSize: 13, margin: "8px 0" }}>
+        <div className="dsc-muted" style={{ fontSize: "var(--dsc-fs-md)", margin: "8px 0" }}>
           {KIT_PROBE_NUMBERS.map((p) => {
             const slot = rosterSlots.find((s) => String(s.pot) === String(p));
             if (!slot) return null;
@@ -788,7 +883,7 @@ export function DashGrowLog({ bus }: { bus: Bus }) {
 
   return (
     <Card className="dsc-glass" title="Grow log" icon="roster">
-      <p className="dsc-muted" style={{ fontSize: 12, margin: "0 0 8px" }}>
+      <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", margin: "0 0 8px" }}>
         History of stage and duty events. Amber rows are past notables — not live critical banners.
       </p>
       <div className="dsc-chip-row" style={{ marginBottom: 8 }}>

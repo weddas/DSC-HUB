@@ -46,6 +46,29 @@ def _norm(v: str | None) -> str:
     return s[1:] if s[:1].lower() == "v" else s
 
 
+def _version_core(v: str | None) -> tuple[int, ...]:
+    """Numeric core of a version, ignoring a pre-release / label tail.
+
+    ``v8.0.0-AlphaPi`` -> ``(8, 0, 0)`` so it matches the running ``8.0.0`` and does
+    not read as a newer release just because the tag string differs.
+    """
+    core = _norm(v).split("-", 1)[0].split("+", 1)[0]
+    parts: list[int] = []
+    for chunk in core.split("."):
+        digits = "".join(c for c in chunk if c.isdigit())
+        parts.append(int(digits) if digits else 0)
+    return tuple(parts) or (0,)
+
+
+def _is_newer(latest: str | None, running: str | None) -> bool:
+    """True only when ``latest``'s numeric core is strictly greater than ``running``."""
+    lc, rc = _version_core(latest), _version_core(running)
+    width = max(len(lc), len(rc))
+    lc += (0,) * (width - len(lc))
+    rc += (0,) * (width - len(rc))
+    return lc > rc
+
+
 def github_latest(*, force: bool = False) -> dict[str, Any]:
     """Latest GitHub release for weddas/DSC-HUB. Cached, Ethernet-gated, never raises."""
     now = time.time()
@@ -142,7 +165,7 @@ def update_status(*, eth_up: bool | None = None, refresh: bool = False) -> dict[
         eth_up = eth_carrier_up()
     gh = github_latest(force=refresh)
     latest_tag = _norm(gh.get("tag"))
-    update_available = bool(gh["ok"] and latest_tag and latest_tag != _norm(__version__))
+    update_available = bool(gh["ok"] and latest_tag and _is_newer(latest_tag, __version__))
     fleet = fleet_firmware_status()
     return {
         "eth_up": bool(eth_up),

@@ -163,7 +163,7 @@ export function CropScheduler({ compact }: { compact?: boolean }) {
   return (
     <Card className="dsc-glass" title="Crop scheduler" icon="roster">
       <p className="dsc-honesty" style={{ marginTop: 0 }}>
-        Each tent tracks its own stage rail and pots — 4×8 and 2×4 are separate grow environments.
+        Each tent tracks its own stage rail and plants — 4×8 and 2×4 are separate grow environments.
       </p>
       <div className="dsc-scheduler-tents-split">
         <TentCropColumn tent="main" seats={seats} hass={hass} compact={compact} stockSlots={stockSlots} />
@@ -175,7 +175,7 @@ export function CropScheduler({ compact }: { compact?: boolean }) {
       </div>
       {unassigned.length ? (
         <>
-          <p className="dsc-muted" style={{ fontSize: 12, margin: "12px 0 6px" }}>
+          <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", margin: "12px 0 6px" }}>
             Unassigned probes
           </p>
           <div className={`dsc-scheduler-lanes${compact ? " is-compact" : ""}`}>

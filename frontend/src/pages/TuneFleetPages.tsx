@@ -34,7 +34,7 @@ export function TuneLearningPage() {
           <LearningWizard />
         </div>
         <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Kit / In service" icon="settings">
+          <Card className="dsc-glass" title="Kit & in service" icon="settings">
             <p className="dsc-muted" style={{ marginTop: 0 }}>
               Status only — change In service on Settings → Device.
             </p>
@@ -119,7 +119,7 @@ export function FleetOverviewPage() {
         </div>
 
         <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Kit Pulse" icon="system">
+          <Card className="dsc-glass" title="Kit pulse" icon="system">
             <p className="dsc-honesty" style={{ marginTop: 0 }}>
               Grey = offline or out of service. Every device shows its real state.
             </p>
@@ -128,7 +128,7 @@ export function FleetOverviewPage() {
         </div>
 
         <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Kit / In service" icon="settings">
+          <Card className="dsc-glass" title="Kit & in service" icon="settings">
             <p className="dsc-muted" style={{ marginTop: 0 }}>
               Status only — change In service on Settings → Device.
             </p>

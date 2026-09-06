@@ -89,16 +89,29 @@ def tail_log(source: str, lines: int = 200) -> dict[str, Any]:
     code, out = _run(cmd)
     body = out.strip().splitlines()
     ok = code == 0 and bool(body)
+    if ok:
+        hint = None
+    else:
+        base = (
+            "This host doesn't expose that log (not a Pi, or the command needs adjusting via the "
+            f"log_cmd_{src} setting)."
+        )
+        # Fold the raw subprocess error into the hint rather than leaking a bare
+        # "[Errno 2] ... 'journalctl'" into the log pane as if it were log output.
+        if code == 127:
+            hint = f"'{shlex.split(cmd)[0] if cmd.strip() else cmd}' is not installed on this host. {base}"
+        elif code == 124:
+            hint = f"Log command timed out. {base}"
+        else:
+            hint = base
     return {
         "source": src,
         "cmd": cmd,
         "ok": ok,
-        "lines": body[-n:],
+        # Only real log content here — failures speak through `hint`.
+        "lines": body[-n:] if ok else [],
         "exit": code,
-        "hint": None
-        if ok
-        else "This host doesn't expose that log (not a Pi, or the command needs adjusting via the "
-        f"log_cmd_{src} setting).",
+        "hint": hint,
     }
 
 

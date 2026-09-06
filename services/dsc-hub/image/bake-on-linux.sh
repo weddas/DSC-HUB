@@ -43,6 +43,21 @@ mkdir -p "${STAGE}/opt/dsc-hub/firmware/kit"
 if [[ -d "${COMPOSE}/firmware" && "${STAGE}/opt/dsc-hub/firmware" != "${COMPOSE}/firmware" ]]; then
   cp -a "${COMPOSE}/firmware/." "${STAGE}/opt/dsc-hub/firmware/" 2>/dev/null || true
 fi
+# ESPHome venv/dashboard backend compiles from firmware/v4 SOURCE — ship it, not just
+# the kit .bin placeholders. Without this the dashboard unit no-ops forever
+# (DSC_ESPHOME_PROJECT_DIR points at /opt/dsc-hub/firmware/v4). Exclude secrets +
+# build artifacts.
+if [[ -d "${ROOT}/firmware/v4" ]]; then
+  mkdir -p "${STAGE}/opt/dsc-hub/firmware/v4"
+  rsync -a --delete \
+    --exclude 'secrets.yaml' \
+    --exclude '.esphome/' \
+    --exclude '*.bin' \
+    --exclude '__pycache__/' \
+    "${ROOT}/firmware/v4/" "${STAGE}/opt/dsc-hub/firmware/v4/" \
+    || cp -a "${ROOT}/firmware/v4/." "${STAGE}/opt/dsc-hub/firmware/v4/"
+  echo "staged firmware/v4 source ($(find "${STAGE}/opt/dsc-hub/firmware/v4" -name '*.yaml' | wc -l) yaml)"
+fi
 if [[ -d "${ROOT}/data" ]]; then
   rm -rf "${STAGE}/opt/dsc-hub/data"
   cp -a "${ROOT}/data" "${STAGE}/opt/dsc-hub/data"

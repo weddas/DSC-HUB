@@ -174,7 +174,7 @@ export function LiveLightPage() {
       {mainScheduleMissing ? (
         <div className="dsc-banner dsc-banner--warn" style={{ marginBottom: 12 }}>
           <strong>4×8 lights-on time is not set — both tent schedules are dead until you set it.</strong>
-          <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 13 }}>
+          <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: "var(--dsc-fs-md)" }}>
             Set <strong>Lights on</strong> on the 4×8 card below. 2×4 can mirror that window or run independent hours.
           </p>
         </div>
@@ -183,7 +183,7 @@ export function LiveLightPage() {
       {(manualHold || !autoPhoto) && (darkViolation || catchup || missing) ? (
         <div className="dsc-banner dsc-banner--warn" style={{ marginBottom: 12 }}>
           <strong>Manual photoperiod override active</strong>
-          <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 13 }}>
+          <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: "var(--dsc-fs-md)" }}>
             {manualHold ? "Manual light hold is on. " : ""}
             {!autoPhoto ? "Auto photoperiod is off. " : ""}
             Catch-up and dark alerts may reflect operator intent — confirm before clearing holds.
@@ -310,7 +310,7 @@ export function LiveLightPage() {
                 onClick={() => open("input_number.dsc_cal_ppfd_100", "Calibrated PPFD", "numeric")}
               />
             ) : (
-              <p className="dsc-muted" style={{ fontSize: 12, marginBottom: 0 }}>
+              <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginBottom: 0 }}>
                 DLI estimate needs SF1000 PPFD calibration — Fleet → Calibrate.
               </p>
             )}
@@ -405,13 +405,20 @@ export function LiveLightPage() {
                 showBrightness
               />
               <EntityToggle confirm entityId="switch.dsc_hub_auto_photoperiod" label="Auto photoperiod" icon="lighting" />
-              <EntityToggle confirm entityId="switch.dsc_hub_manual_light_hold" label="Manual light hold" icon="settings" />
+              <EntityToggle
+                confirm={{
+                  body: "Manual light hold freezes the SF1000 at its current on/off + brightness and stops the photoperiod schedule (and any active catch-up) from moving it until you clear the hold.",
+                }}
+                entityId="switch.dsc_hub_manual_light_hold"
+                label="Manual light hold"
+                icon="settings"
+              />
             </div>
             <EntitySelect entityId="select.dsc_hub_clone_photoperiod" label="Schedule source" icon="clone" />
             {followsMain ? (
               <div className="dsc-tent-follow-banner">
                 <StatusChip icon="tent" label="Schedule follows 4×8" tone="ok" />
-                <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 13 }}>
+                <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: "var(--dsc-fs-md)" }}>
                   Opens at <strong>{mainOnTime}</strong> · <strong>{fmt(hours2, 0)} h</strong> window (mirrored from
                   4×8). Edit the 4×8 card to change timing, or switch Schedule source to Independent.
                 </p>
@@ -440,12 +447,12 @@ export function LiveLightPage() {
                 icon="analytics"
               />
             ) : (
-              <p className="dsc-muted" style={{ fontSize: 12, marginBottom: 0 }}>
+              <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginBottom: 0 }}>
                 DLI estimate needs SF1000 PPFD calibration — Fleet → Calibrate.
               </p>
             )}
             {independent ? (
-              <p className="dsc-muted" style={{ fontSize: 12, marginBottom: 0 }}>
+              <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginBottom: 0 }}>
                 Independent — 2×4 schedule does not track 4×8.
               </p>
             ) : null}

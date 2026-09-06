@@ -40,7 +40,7 @@ export function TentLightClock({
           <span className="dsc-light-clocks-tent">{title}</span>
           <StatusChip icon="alert" label="No schedule" tone="warn" />
         </div>
-        <p className="dsc-muted" style={{ margin: 0, fontSize: 12 }}>
+        <p className="dsc-muted" style={{ margin: 0, fontSize: "var(--dsc-fs-sm)" }}>
           Check lights-on time on the hub.
         </p>
       </div>

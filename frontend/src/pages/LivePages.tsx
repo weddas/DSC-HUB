@@ -26,6 +26,7 @@ import { useInspector } from "../components/InspectorHost";
 import { MultiLineChart } from "../viz/charts";
 import { potsInTent, isPotInServiceWithFleet, probeLabel, type TentId } from "../lib/seatModel";
 import { HelpTip } from "../components/HelpTip";
+import { JournalScopePanel } from "../components/journal/JournalScopePanel";
 import { PlantSeatPanel } from "./GrowPages";
 
 export { LiveClimatePage } from "./ClimatePage";
@@ -345,6 +346,20 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
                 </>
               )}
             </div>
+          </Card>
+        </div>
+
+        <div className="dsc-col-12">
+          <Card className="dsc-glass" title="Activity" icon="catalog">
+            <p className="dsc-muted" style={{ margin: "0 0 6px", fontSize: "var(--dsc-fs-sm)" }}>
+              Recent journal + system events for this tent.
+            </p>
+            <JournalScopePanel
+              scope={{ kind: "space", id: tent === "main" ? "4x8" : "2x4" }}
+              variant="embedded"
+              fetchLimit={20}
+              visibleRows={4}
+            />
           </Card>
         </div>
 

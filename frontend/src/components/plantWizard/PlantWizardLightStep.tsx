@@ -19,7 +19,7 @@ export function PlantWizardLightStep({
 }: PlantWizardLightStepProps) {
   return (
     <Card className="dsc-glass dsc-wizard-panel" title="4 · Light fixture (optional)" icon="lighting">
-      <p className="dsc-muted" style={{ marginTop: 0, fontSize: 13 }}>
+      <p className="dsc-muted" style={{ marginTop: 0, fontSize: "var(--dsc-fs-md)" }}>
         Match a catalog fixture or pick from hub presets. Skip if the tent light is already configured.
       </p>
       <div className="dsc-row-actions" style={{ marginBottom: 12 }}>

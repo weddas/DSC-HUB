@@ -37,7 +37,7 @@ export function GrowLogStream() {
 
   return (
     <Card className="dsc-glass" title="Grow log" icon="roster">
-      <p className="dsc-muted" style={{ fontSize: 12, margin: "0 0 8px" }}>
+      <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", margin: "0 0 8px" }}>
         Operational stage and duty events — read-only. Amber rows are past notables, not live critical banners.
       </p>
       <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
@@ -57,7 +57,7 @@ export function GrowLogStream() {
       {!loading && !filtered.length ? (
         <p className="dsc-muted">No operational events in the last 24 hours.</p>
       ) : null}
-      <p className="dsc-muted" style={{ margin: "10px 0 0", fontSize: 12 }}>
+      <p className="dsc-muted" style={{ margin: "10px 0 0", fontSize: "var(--dsc-fs-sm)" }}>
         GET-only v1 — no edit or delete on grow log rows.
       </p>
       {loading && events.length ? <StatusChip label="Refreshing…" tone="muted" /> : null}

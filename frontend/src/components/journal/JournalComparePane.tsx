@@ -59,7 +59,7 @@ function EntryColumn({ entry, side }: { entry: JournalEntry; side: "A" | "B" }) 
           ))}
         </div>
       ) : (
-        <p className="dsc-muted" style={{ margin: 0, fontSize: 12 }}>
+        <p className="dsc-muted" style={{ margin: 0, fontSize: "var(--dsc-fs-sm)" }}>
           No snapshot on this row.
         </p>
       )}
@@ -83,7 +83,7 @@ export function JournalComparePane({ left, right, scope, onClear }: JournalCompa
 
       {diffRows.length ? (
         <div className="dsc-journal-compare-diff" style={{ marginTop: 14 }}>
-          <p className="dsc-muted" style={{ margin: "0 0 8px", fontSize: 12 }}>
+          <p className="dsc-muted" style={{ margin: "0 0 8px", fontSize: "var(--dsc-fs-sm)" }}>
             Snapshot diff{hasDiff ? "" : " — values match"}
           </p>
           <ul className="dsc-journal-compare-diff-list">
@@ -111,7 +111,7 @@ export function JournalComparePane({ left, right, scope, onClear }: JournalCompa
       </div>
 
       {onClear ? (
-        <p style={{ margin: "12px 0 0", fontSize: 13 }}>
+        <p style={{ margin: "12px 0 0", fontSize: "var(--dsc-fs-md)" }}>
           <Button variant="secondary" onClick={onClear}>
             Clear compare selection
           </Button>
