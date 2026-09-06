@@ -614,11 +614,13 @@ espnow:
         }
 
 time:
+  # v8: SNTP only. The Pi has no HA, so the `platform: homeassistant` backup
+  # (`ha_time`) never synced. The panel also runs SNTP directly and the hub
+  # broadcasts a 0xD7 TIME courtesy pack over ESP-NOW (logged, not yet a
+  # clock source). clock_valid is now sntp_time.now().is_valid() alone.
   - platform: sntp
     id: sntp_time
     timezone: "Australia/Sydney"
-  - platform: homeassistant
-    id: ha_time
 
 # ==========================================
 #  CYD HARDWARE — dual-USB ESP32-2432S028R
@@ -1542,7 +1544,7 @@ globals:
   - id: fix_hold_start          # millis() when the Fleet Fix button was pressed
     type: uint32_t
     initial_value: '0'
-  - id: clock_valid             # sntp_time OR ha_time valid; polled, not per-frame
+  - id: clock_valid             # sntp_time valid; polled, not per-frame
     type: bool
     initial_value: 'false'
 
@@ -4305,7 +4307,7 @@ script:
             }
           }
           bool hub_ok = id(gv_hub_last) != 0 && (millis() - id(gv_hub_last)) < 30000u;
-          bool clk_ok = id(sntp_time).now().is_valid() || id(ha_time).now().is_valid();
+          bool clk_ok = id(sntp_time).now().is_valid();
           bool pots_ok = true;
           for (int i = 0; i < 4; i++) {
             if (!(id(fix_skip_mask) & (4 << i)) && !((id(gv_coord) >> (2 + i)) & 1)) pots_ok = false;
@@ -4887,7 +4889,6 @@ script:
           // ---- clock (always; setl no-ops when unchanged) ----
           {
             auto now = id(sntp_time).now();
-            if (!now.is_valid()) now = id(ha_time).now();
             if (now.is_valid()) {
               snprintf(b, sizeof(b), "%02d:%02d", now.hour, now.minute);
               setl(id(lock_clock), b);
@@ -5613,7 +5614,7 @@ interval:
   - interval: 15s
     then:
       - lambda: |-
-          bool cv = id(sntp_time).now().is_valid() || id(ha_time).now().is_valid();
+          bool cv = id(sntp_time).now().is_valid();
           if (cv != id(clock_valid)) {
             id(clock_valid) = cv;
             id(clock_valid_bs).publish_state(cv);

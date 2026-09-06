@@ -643,15 +643,17 @@ packet_transport:
       - name: dsc_probe4
         encryption: ${espnow_key}
 
-# Time: SNTP primary (internet, HA-independent) so the photoperiod
-# keeps running even if Home Assistant is down. HA time is backup.
+# Time: SNTP only (internet-synced, HA-independent). The photoperiod holds
+# last-known truth when the clock isn't valid yet (no invented catch-up).
 # TIMEZONE IS CRITICAL — without it the schedule runs on UTC.
+# (v8: dropped the `platform: homeassistant` backup `grow_time` — the Pi has
+#  no HA, so it never synced. The hub already broadcasts a 0xD7 TIME courtesy
+#  pack to the panel over ESP-NOW; promoting that to a real backup source is a
+#  separate enhancement, not needed for correctness.)
 time:
   - platform: sntp
     id: sntp_time
     timezone: "Australia/Sydney"
-  - platform: homeassistant
-    id: grow_time
 
 # ==========================================
 # 1. (removed v4.0) OLED CONTROL MODULE
@@ -4830,7 +4832,6 @@ script:
           int dur = id(stage_light_hours);
           if (!id(main_active) || dur <= 0) { id(lights_currently_on) = false; return; }
           auto now = id(sntp_time).now();
-          if (!now.is_valid()) now = id(grow_time).now();
           if (!now.is_valid()) return;           // no clock yet -> hold last truth
           int cur  = now.hour * 60 + now.minute;
           int on_m = id(lights_on_time).hour * 60 + id(lights_on_time).minute;
@@ -4900,7 +4901,6 @@ script:
           }
 
           auto now = id(sntp_time).now();
-          if (!now.is_valid()) now = id(grow_time).now();
           if (!now.is_valid()) return;           // no clock yet -> leave the light
 
           // Seconds-resolution clock for a smooth ramp
@@ -5136,7 +5136,6 @@ interval:
       - lambda: |-
           if (!id(boot_resume_pending)) return;
           auto t = id(sntp_time).now();
-          if (!t.is_valid()) t = id(grow_time).now();
           if (id(boot_time_synced_at) == 0 && (t.is_valid() || millis() > 120000))
             id(boot_time_synced_at) = millis();
           if (id(boot_time_synced_at) != 0 && (millis() - id(boot_time_synced_at)) > 60000) {
