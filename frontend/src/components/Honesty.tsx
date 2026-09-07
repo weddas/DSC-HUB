@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Card, StatusChip } from "./ui";
+import { Button, Card, StatusChip, StatusTag } from "./ui";
 import { DecisionLayer } from "./DecisionLayer";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleet, useFleetLastUpdated } from "../hooks/useFleet";
@@ -18,7 +18,7 @@ function relativeAgeLabel(sinceMs: number | null, nowMs: number): string {
   return `${hours}h ago`;
 }
 
-export function FleetFreshnessChip() {
+function useFleetAgeLabel(): string {
   const lastUpdatedAt = useFleetLastUpdated();
   const [now, setNow] = useState(() => Date.now());
 
@@ -27,12 +27,18 @@ export function FleetFreshnessChip() {
     return () => window.clearInterval(timer);
   }, []);
 
-  return (
-    <StatusChip
-      label={`Updated ${relativeAgeLabel(lastUpdatedAt, now)}`}
-      tone="muted"
-    />
-  );
+  return relativeAgeLabel(lastUpdatedAt, now);
+}
+
+export function FleetFreshnessChip() {
+  const age = useFleetAgeLabel();
+  return <StatusChip label={`Updated ${age}`} tone="muted" />;
+}
+
+/** Top-bar spelling of the same fact — `UPDATED 34S AGO`. */
+export function FleetFreshnessTag() {
+  const age = useFleetAgeLabel();
+  return <StatusTag label={`UPDATED ${age}`} tone="muted" title="Wall-clock age of the last fleet snapshot" />;
 }
 
 export function useHonestyGaps(): HonestyGap[] {
@@ -149,10 +155,10 @@ export function NextRecommendedCard({ gaps }: { gaps?: HonestyGap[] }) {
           No critical gaps — fly Live or open Overview.
         </p>
         <div className="dsc-row-actions">
-          <Button primary onClick={() => navigate("/live/overview")}>
+          <Button primary onClick={() => navigate("/overview")}>
             Open Overview
           </Button>
-          <Button teal onClick={() => navigate("/live/climate")}>
+          <Button teal onClick={() => navigate("/climate")}>
             Climate Want
           </Button>
         </div>

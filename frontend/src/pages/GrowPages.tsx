@@ -35,7 +35,7 @@ export function GrowComposePage() {
         title="Compose"
         subtitle="Step through strain, probe, soil, and optional feed — one confirm to add."
         primaryAction={
-          <Button teal onClick={() => navigate("/grow/roster")}>
+          <Button teal onClick={() => navigate("/plants/roster")}>
             Open Roster
           </Button>
         }
@@ -48,7 +48,7 @@ export function GrowComposePage() {
               </p>
               <p>Example: delete plant on Probe 2 → reopen Compose → strain/probe steps should be blank.</p>
             </HelpTip>
-            <Button primary onClick={() => navigate("/grow/research")}>
+            <Button primary onClick={() => navigate("/cannalib")}>
               Browse Catalog
             </Button>
           </>
@@ -67,35 +67,24 @@ export function GrowResearchPage() {
   const navigate = useNavigate();
   return (
     <div className="dsc-page">
-      <PageHeader
-        icon="research"
-        title="Research"
-        subtitle="Live CannaLib catalog — strains, mediums, nutrients, and lights."
-        actions={
-          <>
-            <HelpTip title="Catalog honesty">
-              <p>
-                Research only shows chips the catalog actually has. Missing chem or height is a blank — never invented
-                filler.
-              </p>
-              <p>
-                <b>Use in Compose</b> drafts helpers for a new plant; <b>Open Roster</b> jumps to a plant already on the
-                roster.
-              </p>
-            </HelpTip>
-            <Button primary onClick={() => navigate("/grow/compose")}>
-              Use in Compose
-            </Button>
-            <Button teal onClick={() => navigate("/grow/roster")}>
-              Open Roster
-            </Button>
-          </>
-        }
-      />
-      <p className="dsc-honesty" style={{ marginTop: 0 }}>
-        Height, flowering, and chemistry chips appear only when the catalog has real data — gaps are shown as gaps.
-        Use in Compose to draft a plant, or Open Roster to work with a plant already assigned.
-      </p>
+      <header className="dsc-ov-head">
+        <div>
+          <div className="dsc-eyebrow">Grow · CannaLib</div>
+          <h1 className="dsc-headline">A live catalog behind the grow.</h1>
+          <p className="dsc-subline">
+            Strains, mediums, nutrients and lights — searchable, then pushed into Compose. Height, flowering and chemistry
+            chips appear only when the catalog has real data; gaps are shown as gaps.
+          </p>
+        </div>
+        <div className="dsc-tagrow dsc-ov-tags">
+          <Button primary onClick={() => navigate("/plants/compose")}>
+            Use in Compose
+          </Button>
+          <Button teal onClick={() => navigate("/plants/roster")}>
+            Open Roster
+          </Button>
+        </div>
+      </header>
       <CatalogResearch />
     </div>
   );
@@ -212,7 +201,7 @@ export function GrowRosterPage() {
         title="Roster"
         subtitle="Detach frees a probe without deleting the plant; Delete retires the plant."
         primaryAction={
-          <Link to="/grow/compose">
+          <Link to="/plants/compose">
             <Button primary>Use in Compose</Button>
           </Link>
         }

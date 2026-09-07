@@ -72,7 +72,7 @@ export function FleetOverviewPage() {
     <div className="dsc-page">
       <PageHeader
         icon="fleet"
-        title="Fleet"
+        title="Kit"
         subtitle={`${svc.inService} of ${svc.total} devices in service. Device health, tank, and service toggles.`}
         actions={
           <HelpTip title="Kit pulse">

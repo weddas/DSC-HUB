@@ -7,7 +7,7 @@ export type GrowLogListProps = {
   className?: string;
 };
 
-/** Shared grow-log row renderer for DashGrowLog and GrowLogStream. */
+/** Shared grow-log row renderer for GrowLogStream and the Logs desk. */
 export function GrowLogList({ events, timeFormat = "full", className }: GrowLogListProps) {
   if (!events.length) return null;
 

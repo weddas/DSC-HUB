@@ -31,7 +31,7 @@ export function LearningWizard() {
     <>
       <Card className="dsc-glass" title="CFM cal ownership" icon="learning">
         <p className="dsc-honesty">
-          Guided fan CFM sessions live on <Link to="/fleet/calibrate">Fleet → Calibrate</Link> (select duct → live hold →
+          Guided fan CFM sessions live on <Link to="/kit/calibrate">Fleet → Calibrate</Link> (select duct → live hold →
           save points). This Learning page edits the <strong>same</strong>{" "}
           <code>input_number.dsc_cal_*</code> / <code>script.dsc_cal_*</code> helpers for gate and climate learn — pick one
           surface per fan session; prefer Calibrate for the anemometer walk.

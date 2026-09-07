@@ -12,6 +12,8 @@
     "test:compose": "npx --yes tsx src/lib/composePlantLogic.smoke.ts"
   },
   "dependencies": {
+    "@fontsource/fira-mono": "^5.3.0",
+    "@fontsource/fira-sans": "^5.3.0",
     "@react-three/drei": "^10.0.6",
     "@react-three/fiber": "^9.1.2",
     "echarts": "^6.1.0",

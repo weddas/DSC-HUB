@@ -1,0 +1,835 @@
+{
+  "name": "DSC-HUB Cultivation Icons",
+  "version": "5.0-mono",
+  "grid": 24,
+  "stroke": 1.5,
+  "count": 165,
+  "gallery": "https://claude.ai/code/artifact/c76c0a86-d629-4154-aae7-ea90a800d567",
+  "icons": [
+    {
+      "name": "air-conditioner",
+      "category": "device",
+      "label": "air conditioner"
+    },
+    {
+      "name": "air-pressure",
+      "category": "environment",
+      "label": "air pressure"
+    },
+    {
+      "name": "airflow",
+      "category": "environment",
+      "label": "airflow"
+    },
+    {
+      "name": "alert-triangle",
+      "category": "value",
+      "label": "alert"
+    },
+    {
+      "name": "backup-restore",
+      "category": "ui",
+      "label": "backup / restore"
+    },
+    {
+      "name": "ballast",
+      "category": "device",
+      "label": "ballast"
+    },
+    {
+      "name": "barcode-tag",
+      "category": "science",
+      "label": "batch barcode"
+    },
+    {
+      "name": "batch-lot",
+      "category": "science",
+      "label": "lot tracking"
+    },
+    {
+      "name": "battery-level",
+      "category": "value",
+      "label": "battery"
+    },
+    {
+      "name": "bell",
+      "category": "ui",
+      "label": "bell"
+    },
+    {
+      "name": "bud",
+      "category": "plant",
+      "label": "flower / cola"
+    },
+    {
+      "name": "calendar",
+      "category": "measurement",
+      "label": "grow calendar"
+    },
+    {
+      "name": "calibration",
+      "category": "measurement",
+      "label": "calibration"
+    },
+    {
+      "name": "camera-monitor",
+      "category": "device",
+      "label": "grow cam"
+    },
+    {
+      "name": "cannabis-leaf",
+      "category": "plant",
+      "label": "cannabis leaf"
+    },
+    {
+      "name": "canopy-top",
+      "category": "plant",
+      "label": "canopy (top view)"
+    },
+    {
+      "name": "carbon-filter",
+      "category": "device",
+      "label": "carbon filter"
+    },
+    {
+      "name": "chart-bar",
+      "category": "measurement",
+      "label": "bar chart"
+    },
+    {
+      "name": "chart-scatter",
+      "category": "measurement",
+      "label": "scatter plot"
+    },
+    {
+      "name": "chevron-down",
+      "category": "ui",
+      "label": "chevron down"
+    },
+    {
+      "name": "chevron-right",
+      "category": "ui",
+      "label": "chevron right"
+    },
+    {
+      "name": "clone-cutting",
+      "category": "plant",
+      "label": "clone cutting"
+    },
+    {
+      "name": "close",
+      "category": "ui",
+      "label": "close"
+    },
+    {
+      "name": "co2-burner",
+      "category": "device",
+      "label": "co₂ burner"
+    },
+    {
+      "name": "co2-level",
+      "category": "environment",
+      "label": "co₂ level"
+    },
+    {
+      "name": "co2-sensor",
+      "category": "device",
+      "label": "co₂ sensor"
+    },
+    {
+      "name": "co2-tank",
+      "category": "device",
+      "label": "co₂ tank"
+    },
+    {
+      "name": "compare",
+      "category": "ui",
+      "label": "compare"
+    },
+    {
+      "name": "compliance-cert",
+      "category": "science",
+      "label": "compliance"
+    },
+    {
+      "name": "controller-hub",
+      "category": "device",
+      "label": "controller hub"
+    },
+    {
+      "name": "curing-jar",
+      "category": "growth",
+      "label": "curing jar"
+    },
+    {
+      "name": "dashboard-home",
+      "category": "place",
+      "label": "dashboard home"
+    },
+    {
+      "name": "data-log",
+      "category": "measurement",
+      "label": "data log"
+    },
+    {
+      "name": "dehumidifier",
+      "category": "device",
+      "label": "dehumidifier"
+    },
+    {
+      "name": "dew-point",
+      "category": "environment",
+      "label": "dew point"
+    },
+    {
+      "name": "dli",
+      "category": "measurement",
+      "label": "dli"
+    },
+    {
+      "name": "dna-strand",
+      "category": "science",
+      "label": "genetics (dna)"
+    },
+    {
+      "name": "door",
+      "category": "device",
+      "label": "tent door"
+    },
+    {
+      "name": "dosing-pump",
+      "category": "device",
+      "label": "dosing pump"
+    },
+    {
+      "name": "drip-irrigation",
+      "category": "device",
+      "label": "drip irrigation"
+    },
+    {
+      "name": "dry-back",
+      "category": "measurement",
+      "label": "dry-back"
+    },
+    {
+      "name": "drying-rack",
+      "category": "growth",
+      "label": "drying rack"
+    },
+    {
+      "name": "ducting",
+      "category": "device",
+      "label": "flex ducting"
+    },
+    {
+      "name": "ec-ppm-meter",
+      "category": "measurement",
+      "label": "ec / ppm meter"
+    },
+    {
+      "name": "ec-tds-meter",
+      "category": "science",
+      "label": "ec / tds meter"
+    },
+    {
+      "name": "exhaust-fan",
+      "category": "device",
+      "label": "exhaust fan"
+    },
+    {
+      "name": "fan-speed-controller",
+      "category": "device",
+      "label": "fan speed controller"
+    },
+    {
+      "name": "flower-stage",
+      "category": "growth",
+      "label": "flowering stage"
+    },
+    {
+      "name": "flush-cycle",
+      "category": "growth",
+      "label": "final flush"
+    },
+    {
+      "name": "gauge-dial",
+      "category": "value",
+      "label": "reading"
+    },
+    {
+      "name": "germination",
+      "category": "growth",
+      "label": "germination"
+    },
+    {
+      "name": "grow-cycle",
+      "category": "growth",
+      "label": "grow cycle"
+    },
+    {
+      "name": "grow-gloves",
+      "category": "tool",
+      "label": "grow gloves"
+    },
+    {
+      "name": "grow-light",
+      "category": "device",
+      "label": "grow light"
+    },
+    {
+      "name": "grow-light-cmh",
+      "category": "device",
+      "label": "cmh / cdm light"
+    },
+    {
+      "name": "grow-light-hps",
+      "category": "device",
+      "label": "hps / mh light"
+    },
+    {
+      "name": "grow-light-led-bar",
+      "category": "device",
+      "label": "led bar light"
+    },
+    {
+      "name": "grow-light-led-panel",
+      "category": "device",
+      "label": "led quantum board"
+    },
+    {
+      "name": "grow-light-t5",
+      "category": "device",
+      "label": "t5 fluorescent"
+    },
+    {
+      "name": "grow-tent",
+      "category": "device",
+      "label": "grow tent"
+    },
+    {
+      "name": "growth-stage-timeline",
+      "category": "growth",
+      "label": "growth stage"
+    },
+    {
+      "name": "hand-loupe",
+      "category": "tool",
+      "label": "hand loupe"
+    },
+    {
+      "name": "harvest-cut",
+      "category": "growth",
+      "label": "harvest"
+    },
+    {
+      "name": "harvest-tote",
+      "category": "tool",
+      "label": "harvest tote"
+    },
+    {
+      "name": "heater-mat",
+      "category": "device",
+      "label": "heat mat"
+    },
+    {
+      "name": "humidifier",
+      "category": "device",
+      "label": "humidifier"
+    },
+    {
+      "name": "humidity-gauge",
+      "category": "environment",
+      "label": "humidity"
+    },
+    {
+      "name": "hvac-minisplit",
+      "category": "device",
+      "label": "hvac / mini-split"
+    },
+    {
+      "name": "info",
+      "category": "ui",
+      "label": "info"
+    },
+    {
+      "name": "inline-fan",
+      "category": "device",
+      "label": "inline duct fan"
+    },
+    {
+      "name": "inline-fan-4in",
+      "category": "device",
+      "label": "inline fan (4"
+    },
+    {
+      "name": "inline-fan-6in",
+      "category": "device",
+      "label": "inline fan (6"
+    },
+    {
+      "name": "intake-fan",
+      "category": "device",
+      "label": "intake fan"
+    },
+    {
+      "name": "journal",
+      "category": "ui",
+      "label": "journal"
+    },
+    {
+      "name": "lab-flask",
+      "category": "science",
+      "label": "lab flask"
+    },
+    {
+      "name": "lab-sample-vial",
+      "category": "science",
+      "label": "sample vial"
+    },
+    {
+      "name": "leaf-temperature",
+      "category": "measurement",
+      "label": "leaf temperature"
+    },
+    {
+      "name": "leak-sensor",
+      "category": "device",
+      "label": "leak / water sensor"
+    },
+    {
+      "name": "light-hanger",
+      "category": "device",
+      "label": "light hanger"
+    },
+    {
+      "name": "light-mover",
+      "category": "device",
+      "label": "light mover"
+    },
+    {
+      "name": "light-reflector",
+      "category": "device",
+      "label": "reflector / hood"
+    },
+    {
+      "name": "light-schedule",
+      "category": "environment",
+      "label": "light schedule"
+    },
+    {
+      "name": "lst-training",
+      "category": "growth",
+      "label": "lst training"
+    },
+    {
+      "name": "manual-hand",
+      "category": "ui",
+      "label": "manual takeover"
+    },
+    {
+      "name": "microscope",
+      "category": "science",
+      "label": "microscope"
+    },
+    {
+      "name": "mister",
+      "category": "device",
+      "label": "mister"
+    },
+    {
+      "name": "mother-plant",
+      "category": "plant",
+      "label": "mother plant"
+    },
+    {
+      "name": "network-ap",
+      "category": "device",
+      "label": "network access point"
+    },
+    {
+      "name": "node-stem",
+      "category": "plant",
+      "label": "node"
+    },
+    {
+      "name": "nutrient-bottle",
+      "category": "device",
+      "label": "nutrient bottle"
+    },
+    {
+      "name": "observation-window",
+      "category": "device",
+      "label": "observation window"
+    },
+    {
+      "name": "oscillating-fan",
+      "category": "device",
+      "label": "circulation fan"
+    },
+    {
+      "name": "par-intensity",
+      "category": "environment",
+      "label": "light intensity"
+    },
+    {
+      "name": "par-meter",
+      "category": "science",
+      "label": "par / ppfd meter"
+    },
+    {
+      "name": "pause-hold",
+      "category": "ui",
+      "label": "pause / hold"
+    },
+    {
+      "name": "percent-ring",
+      "category": "value",
+      "label": "progress ring"
+    },
+    {
+      "name": "ph-meter",
+      "category": "science",
+      "label": "ph meter"
+    },
+    {
+      "name": "ph-strip",
+      "category": "science",
+      "label": "ph strip"
+    },
+    {
+      "name": "photoperiod-day",
+      "category": "measurement",
+      "label": "photoperiod (day)"
+    },
+    {
+      "name": "photoperiod-night",
+      "category": "measurement",
+      "label": "photoperiod (night)"
+    },
+    {
+      "name": "pistil-hair",
+      "category": "plant",
+      "label": "pistil hairs"
+    },
+    {
+      "name": "plant-stake",
+      "category": "tool",
+      "label": "plant stake & tie"
+    },
+    {
+      "name": "potency-test",
+      "category": "science",
+      "label": "potency test"
+    },
+    {
+      "name": "pruning-shears",
+      "category": "growth",
+      "label": "pruning shears"
+    },
+    {
+      "name": "refractometer",
+      "category": "science",
+      "label": "refractometer"
+    },
+    {
+      "name": "refresh",
+      "category": "ui",
+      "label": "refresh"
+    },
+    {
+      "name": "reservoir-tank",
+      "category": "device",
+      "label": "reservoir tank"
+    },
+    {
+      "name": "room",
+      "category": "place",
+      "label": "room"
+    },
+    {
+      "name": "root-system",
+      "category": "plant",
+      "label": "root system"
+    },
+    {
+      "name": "root-zone-temp",
+      "category": "environment",
+      "label": "root zone temp"
+    },
+    {
+      "name": "ruler-height",
+      "category": "measurement",
+      "label": "height"
+    },
+    {
+      "name": "scrog-net",
+      "category": "growth",
+      "label": "scrog net"
+    },
+    {
+      "name": "search",
+      "category": "ui",
+      "label": "search"
+    },
+    {
+      "name": "seed",
+      "category": "plant",
+      "label": "seed"
+    },
+    {
+      "name": "server-jobs",
+      "category": "device",
+      "label": "server jobs"
+    },
+    {
+      "name": "settings-gear",
+      "category": "value",
+      "label": "settings"
+    },
+    {
+      "name": "signal-strength",
+      "category": "value",
+      "label": "signal"
+    },
+    {
+      "name": "site",
+      "category": "place",
+      "label": "site"
+    },
+    {
+      "name": "smart-outlet",
+      "category": "device",
+      "label": "smart outlet"
+    },
+    {
+      "name": "snooze",
+      "category": "ui",
+      "label": "snooze"
+    },
+    {
+      "name": "soil-probe",
+      "category": "device",
+      "label": "soil probe"
+    },
+    {
+      "name": "space-heater",
+      "category": "device",
+      "label": "space heater"
+    },
+    {
+      "name": "spray-bottle",
+      "category": "tool",
+      "label": "spray bottle"
+    },
+    {
+      "name": "sprout",
+      "category": "plant",
+      "label": "sprout"
+    },
+    {
+      "name": "status-ok",
+      "category": "value",
+      "label": "status ok"
+    },
+    {
+      "name": "stopwatch",
+      "category": "measurement",
+      "label": "duration"
+    },
+    {
+      "name": "strain-tag",
+      "category": "plant",
+      "label": "strain tag"
+    },
+    {
+      "name": "substrate-sensor",
+      "category": "device",
+      "label": "root-zone sensor"
+    },
+    {
+      "name": "target-goal",
+      "category": "value",
+      "label": "target"
+    },
+    {
+      "name": "tariff-cost",
+      "category": "value",
+      "label": "tariff cost"
+    },
+    {
+      "name": "temp-gauge",
+      "category": "environment",
+      "label": "temperature"
+    },
+    {
+      "name": "temp-humidity-sensor",
+      "category": "device",
+      "label": "temp/humidity sensor"
+    },
+    {
+      "name": "terpene-drop",
+      "category": "plant",
+      "label": "terpene profile"
+    },
+    {
+      "name": "test-tube",
+      "category": "science",
+      "label": "test tube"
+    },
+    {
+      "name": "timer",
+      "category": "device",
+      "label": "cycle timer"
+    },
+    {
+      "name": "transplant",
+      "category": "growth",
+      "label": "transplant"
+    },
+    {
+      "name": "trend-chart",
+      "category": "value",
+      "label": "trend chart"
+    },
+    {
+      "name": "trend-down",
+      "category": "value",
+      "label": "trending down"
+    },
+    {
+      "name": "trend-up",
+      "category": "value",
+      "label": "trending up"
+    },
+    {
+      "name": "trichome",
+      "category": "plant",
+      "label": "trichome view"
+    },
+    {
+      "name": "trimming-scissors",
+      "category": "tool",
+      "label": "trimming scissors"
+    },
+    {
+      "name": "trowel",
+      "category": "tool",
+      "label": "trowel"
+    },
+    {
+      "name": "twin-3d",
+      "category": "place",
+      "label": "3d twin"
+    },
+    {
+      "name": "unit-celsius",
+      "category": "unit",
+      "label": "°c"
+    },
+    {
+      "name": "unit-ec",
+      "category": "unit",
+      "label": "ec"
+    },
+    {
+      "name": "unit-gram",
+      "category": "unit",
+      "label": "grams"
+    },
+    {
+      "name": "unit-hour",
+      "category": "unit",
+      "label": "hours"
+    },
+    {
+      "name": "unit-kwh",
+      "category": "unit",
+      "label": "kwh"
+    },
+    {
+      "name": "unit-liter",
+      "category": "unit",
+      "label": "l"
+    },
+    {
+      "name": "unit-lux",
+      "category": "unit",
+      "label": "lux"
+    },
+    {
+      "name": "unit-percent",
+      "category": "unit",
+      "label": "%"
+    },
+    {
+      "name": "unit-ph",
+      "category": "unit",
+      "label": "ph"
+    },
+    {
+      "name": "unit-ppm",
+      "category": "unit",
+      "label": "ppm"
+    },
+    {
+      "name": "unit-psi",
+      "category": "unit",
+      "label": "psi"
+    },
+    {
+      "name": "unit-watt",
+      "category": "unit",
+      "label": "watts"
+    },
+    {
+      "name": "veg-stage",
+      "category": "growth",
+      "label": "vegetative stage"
+    },
+    {
+      "name": "vpd-gauge",
+      "category": "environment",
+      "label": "vpd"
+    },
+    {
+      "name": "water-activity",
+      "category": "measurement",
+      "label": "water activity"
+    },
+    {
+      "name": "water-chiller",
+      "category": "device",
+      "label": "water chiller"
+    },
+    {
+      "name": "water-drop",
+      "category": "environment",
+      "label": "water drop"
+    },
+    {
+      "name": "water-pump",
+      "category": "device",
+      "label": "water pump"
+    },
+    {
+      "name": "watering-can",
+      "category": "tool",
+      "label": "watering can"
+    },
+    {
+      "name": "weight-scale",
+      "category": "measurement",
+      "label": "yield weight"
+    },
+    {
+      "name": "wifi",
+      "category": "device",
+      "label": "wifi"
+    },
+    {
+      "name": "zigbee",
+      "category": "device",
+      "label": "zigbee"
+    }
+  ]
+}

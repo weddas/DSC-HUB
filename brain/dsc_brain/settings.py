@@ -401,6 +401,74 @@ def list_history(
     return [dict(r) for r in rows]
 
 
+def list_history_bucketed(
+    seat_id: str,
+    metric: str,
+    since_ts: float,
+    max_points: int = 720,
+    until_ts: float | None = None,
+    db_path: Path | None = None,
+) -> list[dict[str, Any]]:
+    """Every sample in [since_ts, until_ts] reduced to at most `max_points` buckets of
+    equal width, oldest-first. A bucket carries the mean value and its mid time; a
+    binary metric (every sample 0 or 1) rounds so on/off strips stay crisp. Unlike
+    `list_history`, a long window never collapses to the newest samples — the whole
+    span is represented, which is what a 7-day or 30-day chart needs."""
+    until = float(until_ts if until_ts is not None else time.time())
+    if max_points < 1:
+        max_points = 1
+    conn = connect(db_path)
+    rows = conn.execute(
+        """
+        SELECT value, ts FROM fleet_history
+        WHERE seat_id=? AND metric=? AND ts>=? AND ts<=? AND value IS NOT NULL
+        ORDER BY ts ASC
+        """,
+        (seat_id, metric, since_ts, until),
+    ).fetchall()
+    conn.close()
+    pts = [(float(r["ts"]), float(r["value"])) for r in rows]
+    if len(pts) <= max_points:
+        return [{"ts": t, "value": v} for t, v in pts]
+    span = max(until - since_ts, 1e-6)
+    width = span / max_points
+    binary = all(v in (0.0, 1.0) for _, v in pts)
+    buckets: dict[int, list[float]] = {}
+    for t, v in pts:
+        i = min(int((t - since_ts) / width), max_points - 1)
+        buckets.setdefault(i, []).append(v)
+    out: list[dict[str, Any]] = []
+    for i in sorted(buckets):
+        vals = buckets[i]
+        mean = sum(vals) / len(vals)
+        out.append({"ts": since_ts + (i + 0.5) * width, "value": float(round(mean)) if binary else mean})
+    return out
+
+
+_LAST_RECORDED: dict[tuple[str, str], tuple[float, float]] = {}
+
+
+def record_history_throttled(
+    seat_id: str,
+    metric: str,
+    value: float,
+    ts: float,
+    *,
+    heartbeat_s: float = 300.0,
+    db_path: Path | None = None,
+) -> bool:
+    """Record only when the value changed or `heartbeat_s` has passed — for slow
+    state (switches, setpoints, computed flags) that would otherwise add a row per
+    2-second poll. Returns True when a row was written."""
+    key = (seat_id, metric)
+    prev = _LAST_RECORDED.get(key)
+    if prev is not None and prev[0] == value and ts - prev[1] < heartbeat_s:
+        return False
+    record_history(seat_id, metric, value, ts, db_path)
+    _LAST_RECORDED[key] = (value, ts)
+    return True
+
+
 def list_roster(db_path: Path | None = None) -> list[dict[str, Any]]:
     conn = connect(db_path)
     rows = conn.execute(

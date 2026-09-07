@@ -137,7 +137,7 @@ export function SetupPage() {
     setErr("");
     try {
       await postSetupCommission(false);
-      navigate("/live/overview");
+      navigate("/overview");
     } catch (e: unknown) {
       setErr(String(e));
     } finally {
@@ -149,7 +149,7 @@ export function SetupPage() {
     return (
       <div className="dsc-page">
         <PageHeader icon="settings" title="Setup" subtitle="Kit already commissioned" />
-        <Button primary onClick={() => navigate("/live/overview")}>
+        <Button primary onClick={() => navigate("/overview")}>
           Open Overview
         </Button>
       </div>

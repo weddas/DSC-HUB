@@ -27,6 +27,7 @@ import { KitUpdateCard } from "../components/settings/KitUpdateCard";
 import { NetworkExtrasCard } from "../components/settings/NetworkExtrasCard";
 import { SystemDiagnosticsCard } from "../components/settings/SystemDiagnosticsCard";
 import { SpaceEnergySettingsCard } from "../components/settings/SpaceEnergySettingsCard";
+import { ZonesSettingsCard } from "../components/settings/ZonesSettingsCard";
 import {
   apply_network,
   backup_export_url,
@@ -1009,6 +1010,7 @@ export function SettingsPage() {
         </DecisionLayer>
       </section>
 
+      {section === "zones" ? <ZonesSettingsCard /> : null}
       {section === "network" ? <NetworkExtrasCard /> : null}
 
       {section === "system" ? <SystemDiagnosticsCard /> : null}

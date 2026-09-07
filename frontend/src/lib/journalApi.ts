@@ -30,7 +30,7 @@ function journalBasePath(scope: JournalScope): string {
 
 /** Deep-link href for Grow → Logs (Task 5 page; footer uses this in Task 3). */
 export function journalScopeToLogsHref(scope: JournalScope, view?: "list" | "trends"): string {
-  return `/grow/logs?${buildLogsSearchParams(scope, view).toString()}`;
+  return `/logs?${buildLogsSearchParams(scope, view).toString()}`;
 }
 
 export type LogsView = "list" | "trends";

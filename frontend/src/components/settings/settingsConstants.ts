@@ -12,6 +12,7 @@ export const IDLE_PROBE_OPTIONS = ["", "pot1", "pot2"] as const;
 export const TENT_OPTIONS = ["2x4", "4x8"] as const;
 
 export const SECTION_SUBTITLE: Record<SettingsSectionId, string> = {
+  zones: "Rooms and tents — name them, flip their role in place",
   hub: "Appliance backup and restore",
   brain: "Global tuning and catalog",
   device: "Inventory, assignment, probes, Zigbee, ESPHome",

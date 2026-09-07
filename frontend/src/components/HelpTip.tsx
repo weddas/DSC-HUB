@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { isTopModalLayer, popModalLayer, pushModalLayer } from "../lib/modalLayer";
+import { Icon } from "./ui";
 
 type DetailsWithLayer = HTMLDetailsElement & { _dscLayer?: symbol };
 
@@ -53,7 +54,9 @@ export function HelpTip({ title, children }: { title: string; children: ReactNod
 
   return (
     <details ref={ref} className="dsc-help-tip">
-      <summary aria-label={`Help: ${title}`}>?</summary>
+      <summary aria-label={`Help: ${title}`}>
+        <Icon name="info" size={12} />
+      </summary>
       <div className="dsc-help-tip-body" role="note">
         <strong>{title}</strong>
         {children}

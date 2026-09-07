@@ -303,6 +303,57 @@ export function StatusChip({
   );
 }
 
+/**
+ * Square bordered uppercase status tag — the v2 "reveal language" tag
+ * (`HUB ONLINE`, `PROBE 2 HELD`, `1 CRITICAL`, `DARK PERIOD OK`). Dashed = out of
+ * service; `live` adds the slow glow that says the condition is current, not a
+ * remembered one. Prefer this over `StatusChip` in headline rows and panel legends.
+ */
+export function StatusTag({
+  label,
+  tone = "muted",
+  dashed,
+  live,
+  icon,
+  onClick,
+  title,
+  pressed,
+  className = "",
+}: {
+  label: ReactNode;
+  tone?: "ok" | "bad" | "warn" | "muted" | "lamp" | "teal";
+  dashed?: boolean;
+  live?: boolean;
+  icon?: IconName;
+  onClick?: () => void;
+  title?: string;
+  pressed?: boolean;
+  className?: string;
+}) {
+  const cls = `dsc-tag dsc-tag--${tone}${dashed ? " is-dashed" : ""}${live ? " is-live" : ""}${className ? ` ${className}` : ""}`;
+  const leading = icon ? <Icon name={icon} size={11} /> : null;
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className={`${cls} is-clickable`}
+        title={title}
+        onClick={onClick}
+        aria-pressed={pressed}
+      >
+        {leading}
+        {label}
+      </button>
+    );
+  }
+  return (
+    <span className={cls} title={title}>
+      {leading}
+      {label}
+    </span>
+  );
+}
+
 export type EntityToggleConfirm = boolean | { title?: string; body?: string; confirmLabel?: string };
 
 /** Pressable demand / override switch via HA callService. */
@@ -344,10 +395,29 @@ export function EntityToggle({
   // failed/lost write never leaves the button stuck showing the wrong state.
   const [pendingOn, setPendingOn] = useState<boolean | null>(null);
   const on = pendingOn ?? busOn;
+  // Three-state flow (plan § Motion "control depress"): press → waiting for the hub to
+  // confirm → confirmed flash, or failed shake + the reason under the button.
+  const [confirmed, setConfirmed] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
 
   useEffect(() => {
-    if (pendingOn != null && busOn === pendingOn) setPendingOn(null);
+    if (pendingOn != null && busOn === pendingOn) {
+      setPendingOn(null);
+      setConfirmed(true);
+    }
   }, [busOn, pendingOn]);
+
+  useEffect(() => {
+    if (!confirmed) return;
+    const t = window.setTimeout(() => setConfirmed(false), 450);
+    return () => window.clearTimeout(t);
+  }, [confirmed]);
+
+  useEffect(() => {
+    if (!failed) return;
+    const t = window.setTimeout(() => setFailed(null), 6000);
+    return () => window.clearTimeout(t);
+  }, [failed]);
 
   useEffect(() => {
     if (pendingOn == null) return;
@@ -369,14 +439,24 @@ export function EntityToggle({
     if (oos) return;
     if (!ok) return;
     const nextOn = !on;
+    setFailed(null);
     setPendingOn(nextOn);
-    if (domain === "switch" || domain === "input_boolean") {
-      void callService(domain, nextOn ? "turn_on" : "turn_off", { entity_id: entityId });
+    const svc = nextOn ? "turn_on" : "turn_off";
+    const write =
+      domain === "switch" || domain === "input_boolean"
+        ? callService(domain, svc, { entity_id: entityId })
+        : domain === "light"
+          ? callService("light", svc, { entity_id: entityId })
+          : null;
+    if (!write) {
+      setPendingOn(null);
       return;
     }
-    if (domain === "light") {
-      void callService("light", nextOn ? "turn_on" : "turn_off", { entity_id: entityId });
-    }
+    write.catch((e: unknown) => {
+      // The brain refused or never answered: drop the optimistic draft at once and say why.
+      setPendingOn(null);
+      setFailed(e instanceof Error ? e.message : String(e));
+    });
   };
 
   const onPress = () => {
@@ -414,7 +494,7 @@ export function EntityToggle({
     <>
       <button
         type="button"
-        className={`dsc-demand${on && !oos ? " is-on" : ""}${!ok && !oos ? " is-missing" : ""}${oos ? " is-oos" : ""}${pending ? " is-pending" : ""}`}
+        className={`dsc-demand${on && !oos ? " is-on" : ""}${!ok && !oos ? " is-missing" : ""}${oos ? " is-oos" : ""}${pending ? " is-pending" : ""}${confirmed ? " is-confirmed" : ""}${failed ? " is-failed" : ""}`}
         onClick={onPress}
         disabled={oos || (!ok && !warnWhenMissing)}
         title={
@@ -451,6 +531,11 @@ export function EntityToggle({
                     : "OFF"}
         </span>
       </button>
+      {failed ? (
+        <span className="dsc-demand-error" role="status" aria-live="polite">
+          {label} not applied — {failed.length > 90 ? `${failed.slice(0, 90)}…` : failed}
+        </span>
+      ) : null}
       {oos && oosHelp ? (
         <span className="dsc-demand-oos-help">
           <HelpTip title={`Why is ${label} on hold?`}>{oosHelp}</HelpTip>

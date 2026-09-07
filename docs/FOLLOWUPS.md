@@ -4376,3 +4376,307 @@ All in the working tree, **not committed**. Tracker rows updated in Notion (DSC-
 **deferred:** automation ws-loop writes are fire-and-forget (log only, no `last_error`); `oos_seat` unconditional restore; per-condition truth values in rule summary; `SeatSnapshot→DeviceSeatSnapshot` only if brain adopts it; `BandChartKind "pot1".."pot4"`; `seatApi.smoke.ts` filename; Settings `seats` prop offers hub/panel/probe to the OOS picker (tracker Low).
 
 **soak:** v2 relay/setpoint rules and the Sonoff cut-out restore path are unit-tested only — exercise on the live Pi (arm one cut-out rule, trip it, confirm driver re-asserts on clear) before trusting.
+
+## 2026-09-07 — Dashboard v2 Pass A: navigation rebuild + reveal language + Overview 2a
+
+Branch `feat/dashboard-v2`, all in the working tree, **not committed, not hotpatched to the Pi**. Target: Claude Design `DSC-HUB v2.dc.html` (docs/design/mockups), plan `docs/design/plan-v2-dashboard-2026-09-06.md`. Verified against the live brain through a new Vite dev proxy (`frontend/vite.config.ts` → `dsc-brain.local:8787`, `DSC_BRAIN_ORIGIN` to override).
+
+| Item | Status |
+|------|--------|
+| Navigation | **done** — one flat desk row (Overview · Climate · Root · Light · Plants · CannaLib · Logs · Alerts · Kit) + gear Settings; zone is `?zone=` context (`ZoneStrip` on Climate/Root/Light, `useZoneFocus` owns it, `?tent=` still read); sub-tabs only for Climate (Room / Tent cockpit), Plants, Kit, Settings; phone bottom bar (Overview · Climate · Plants · Alerts · More sheet); `routes.ts` is a `DESKS` table, `lib/paths.ts` is the only place a path is spelled; every 7.x path (`/live/*`, `/grow/*`, `/fleet*`) and older `/ops /plant /tune /advanced /system` redirects (`/live/4x8` → `/climate/tent?zone=main`). 41 `navigate("/…")` call sites migrated; labels Mission→Alerts, Fleet→Kit. |
+| Tokens / type | **done** — `--dsc-radius-sm` 4px (cards, chips, tags, buttons 6px), `--dsc-lamp/-dim/-glow`, `--dsc-phase-*`, `--dsc-rail`, `--dsc-elev-0..3`, grid wash on `.dsc-root` (star field no longer mounted in `DscRoot`; `ParallaxStars` kept for public pages). Fira Sans 400–700 + Fira Mono 400/500 self-hosted via `@fontsource` (imported in `main.tsx`), first in `--dsc-font` / `--dsc-mono`. |
+| Primitives | **done** — `Panel` (legend on border, tone border, dashed OOS, bad glow), `StatusTag` (square uppercase mono; `dashed`, `live`), `PhaseChip`, `Triad` + `MiniArc` (plain SVG 270° arc, HELD tag with age), `DutyBars` + `FanGlyph` (spin period from duty, stopped at 0/offline), `TwoClocks` (rails, STATE/ON IN, lamp line, energy "not a bill" from `/energy` estimate), `MissionLine` + `buildMissionStory`, `GrowLogCompact` (time · glyph · text), `ZoneCard`, `ZoneStrip`. |
+| Overview 2a | **done** — `pages/OverviewPage.tsx` rebuilt: eyebrow/headline/subline + BEAT/UP/HELD/CANOPY/CRITICAL tags → mission line → ROOM · UMBRELLA LUNG panel wrapping the two tent panels → duties · clocks · grow log. **Journals removed** (operator decision). Zone view-model `hooks/useZones.ts` (Pass A SPA-only; Pass C moves it behind `/zones`); `lib/scaleLadder.ts` present, tents rung only. |
+| Derived metrics (first slice) | **done** — `lib/derived/climate.ts`: air VPD (room VPD falls back to T+RH with `* VPD FROM T + RH` legend), leaf VPD (−1.5 °C default offset, shown as `leaf ≈`), in-band fraction over 24 h from `/history` (`VPD IN BAND 9h 37 · 24H` legend), DLI on the 2×4 lamp tag from the SF1000 calibration curve, day of cycle from roster sprout dates. Dew point / absolute humidity / slope helpers exist but are not surfaced yet. |
+| Honesty | 2×4 climate *mode* (Follow 4x8 …) is a tag, not a phase; 4×8 shows `WINDOW` (not LAMP) while no Twin is wired; device-dependent slots stay absent (no CO₂/PPFD sample numbers anywhere); OOS tags dashed. |
+| Cross-cutting motion | fan blades by duty, bad-tone glow on tags/panels/mission line, arc fill transition — all static under `prefers-reduced-motion`. |
+
+**Verify:** `cd frontend && npx tsc --noEmit` → exit 0; `npm run build` → ok (index 537 kB, tune-fleet 836 kB — pre-existing sizes; fonts ~24 kB per weight woff2). Browser (Vite → live Pi): Overview desktop 1400 + phone 375, Climate (Room + Tent cockpit with zone strip), Alerts, Kit, Plants, Logs, Light, Root, Settings all render; `#/live/4x8` redirects to `#/climate/tent?zone=main`. Rams quick_review on Panel/Triad/ZoneStrip/MissionLine: a11y names added (legend button, triad cells, zone chips); "→ glyph" and "toneCssColor bypasses tokens" findings rejected (Fira Mono carries →; the helper returns `var(--dsc-*)`).
+
+**resolved during the pass:** Kit/Logs/Plants/Root looked ~80 % dim in the in-app browser pane after hash navigation. Diagnosed, not a code bug: the pane tab reports `document.hidden === true`, so every CSS animation (`dsc-fade`, `dsc-card-in`) sits at `currentTime 0` and the `both` fill freezes the page mid-fade. Real browsers advance the animation; the earlier dim Pi captures of Mission/Fleet were the same artefact.
+
+**deferred:** `DashHomeSections` Overview sections (`DashBandsGrid`, `DashRootTankSection`, `DashRunningChips`, `DashConditionalBanners`, `DashNowStrip`) are now unused by Overview — leave for the legacy Dash until Pass B, then delete; `ZoneCard` compact/row densities (rungs 3–4) with Pass C; hover `Tooltip` primitive and click-to-inspector parity on Overview tags with Pass B; page-level status tags on Overview repeat BEAT/UP from the old strip — trim once Alerts (Pass D) owns hub link detail; `.dsc-primary-tabs` / `.dsc-secondary-tabs` CSS blocks are dead (App no longer renders them) — delete in Pass B.
+
+**soak:** not hotpatched — the Pi still serves the 7.x nav. Hotpatch (`dsc-pi-hotpatch.mdc`, `docker stop -t 20` + `start`) is the operator's call; old bookmarks keep working through `LEGACY_REDIRECTS`.
+
+## 2026-09-07 — Dashboard v2 Pass B: Climate desk (frame 1d) + per-zone VPD chart
+
+Same branch `feat/dashboard-v2`, uncommitted, not hotpatched. Verified through the Vite → Pi proxy at 1400 px and 375 px, zone focus main / clone / compare.
+
+| Item | Status |
+|------|--------|
+| Climate header | **done** — eyebrow/headline/subline + tags (HUB °C, FULL AUTO / OFF, MANUAL TAKEOVER, FAN OVERRIDE, CAPACITY OFFLINE, zone in focus). Old PageHeader, overflow menu, page-local zone chips and timespan row removed; the shell's zone strip owns focus. |
+| VPD · MASTER hero | **done** — `components/VpdHero.tsx`: 56 px value (tone), band label + `in band 8h 16 of 24 h` (derived from `/history`), band track with marker, T / RH tiles with set text, CO₂ and PPFD as honest slots (`— · possible with an NDIR CO₂ sensor` / `PAR sensor at the canopy`; the 2×4 shows calibrated PPFD + DLI when the SF1000 is on). Click → inspector. |
+| Setpoints by phase | **done** — `components/SetpointsByPhase.tsx`: the hub stage presets around the current stage (VPD / temp / RH from `tentWant` rails), phase chips, current row marked, live want in the footer. |
+| Per-zone VPD chart with history | **done** — `components/ZoneVpdChart.tsx` + `MultiLineChart` gained `shades` (x-range markAreas): zone VPD trace with its band shaded, leaf VPD dashed (brain `sensor.dsc_leaf_vpd_kpa` / `dsc_clone_leaf_vpd_kpa`), lights-off windows from the tent schedule (`lib/lightsOffShades.ts`), stage-change markers (purple) and alert ticks (amber) from the grow log, RH or T on the right axis, other zones ghosted in compare, ranges 24 h / 48 h / 7 d / cycle / photo (7 d shows what the recorder holds and says so). |
+| Equipment · pulling toward setpoint | **done** — `components/EquipmentTiles.tsx`: per-zone tiles with state, direction of pull (`↓ RH`, `↑ T`, `↑ ROOT`, CFM) and what is happening now — `pulling 62 → 55 · 14 min` from the observed RH/T slope (`slopePerHour`), `arms below 48 %` when idle, OOS dashed (Cool F-001, Mister F-002), relay offline red. Heat lines animate off the heater / mat tile while on (`HeatLines`), fan glyph spins by duty. Click → inspector, whose Turn on/off already confirms through `DecisionLayer`. |
+| Removed | Triad gauge matrix + GotWant bars and the three separate T / RH / VPD chart cards (the hero, chart and inspector cover them). Command, Room umbrella, Targets, Air path, Zigbee, Fan duty, Efficacy and CropScheduler stay below, unchanged (restyle with the tokens is still pending). |
+
+**Verify:** `npx tsc --noEmit` exit 0; `npm run build` ok. Screens: `#/climate?zone=main` (hero 1.01 kPa red below the 1.2–1.4 Flower band, dehum `pulling 62 → 55`), `?zone=compare` (4×8 hero, 2×4 + room ghosted), `?zone=clone` on a phone (single column, tiles 2-up).
+
+**deferred:** hover `Tooltip` primitive (exact value · time · last change · provenance) — Pass C; band *history* (stepped band as the stage changed) needs `number.*` history from the brain, so the band is today's; the chart's phase marker is the grow-log stage line, not a brain phase event; Command / Room umbrella / Air path / Zigbee / Fan duty / Efficacy cards still on the old `Card` look; `dsc-primary-tabs` / `dsc-secondary-tabs` CSS dead code; `SHARED_AIR_FAN_PCT` + `fanPctChip` still live in `DashHomeSections`.
+
+## 2026-09-07 — Dashboard v2 Pass C: zone model + role flip + Settings › Zones
+
+Same branch `feat/dashboard-v2`, uncommitted, not hotpatched. First brain change of the v2 work.
+
+| Item | Status |
+|------|--------|
+| Brain zone model | **done** — `brain/dsc_brain/zone_model.py`: every room and space as a zone (Site › Room › Zone › Plant); role `grow · dry · cure · empty` (rooms are `room`) stored in the existing `space.extra_json` (`role`, `role_since`, `role_history`, `name`, `notes`) — no schema migration; operator room names in `room.extra_json` because the kit-defaults upsert rewrites `label` on boot. A flip writes a **system** entry on the space journal with a snapshot; same-role patches are no-ops. `ROLE_EFFECTS` is the honest does / does-not list the API returns. |
+| Routes | **done** — `GET /zones` (zones, roles, effects), `PATCH /zones/{id}` (name, role, notes; 400 bad role / blank name / room role, 404 unknown). Allowed in demo mode (brain-local state, no actuator). Tests `brain/tests/test_zone_model.py` (5) — defaults, flip + journal + no-op + flip back, rename/notes/rejections, API with `DEFAULT_DB` monkeypatched onto the temp DB. Full brain suite: **331 passed**. |
+| SPA | **done** — `lib/zonesApi.ts`, `hooks/useZoneMeta.ts` (shared store, 60 s poll, refresh after PATCH), `useZones` merges role: Dry → the hub's Dry Mode rail (19 °C ± 1.5 · RH 55–62 · VPD 0.8–1.0, 0 h light), Cure/Empty → no band; `phase`/`day` follow the role. Settings › **Zones** (new first section: `routes.ts`, `SettingsPage`, `settingsConstants`) — `components/settings/ZonesSettingsCard.tsx`: room + tents tree, rename in place, role switcher, 3b before/after diff + the brain's effects list in a `DecisionLayer` confirm. Overview zone card shows the role phase chip, `4×8 · DRY · DAY 1`, and a `LAMP ON · ROLE NOT ENFORCED` warn tag when a non-grow zone's lamp is on. |
+| Dev tooling | `vite.config.ts` reads `DSC_BRAIN_ORIGIN` / `DSC_ZONES_ORIGIN` from the shell or `frontend/.env` (git-ignored); `/zones` can proxy to a local brain while the Pi lags the branch. Verified with `DSC_DEMO_MODE=1 python -m uvicorn dsc_brain.api:app --port 8788`: flipped the 4×8 to Dry from the UI (journal written, Overview re-banded), flipped back, dev DB reset. |
+
+**Verify:** `npx tsc --noEmit` exit 0; `npm run build` ok; `python -m pytest -q` 331 passed.
+
+**red-flag (observed, not code):** during the check the Pi's room sensor briefly read `50.0 °C · 100.0 % · 0.00 kPa` — a saturated DHT-style reading rendered as a plain number. The room has no band so it stayed grey/ok; worth a plausibility gate (T > 45 or RH ≥ 100 → held/fault) in `useHeldReading` or the brain's sensor trust. Logged to the tracker.
+
+**deferred:** the flip does **not** touch the lamp, fans, appliances or rules — the brain control pass has to consume `zone role` (lamp off + dark lock for dry/cure, appliance allow-list, rule set swap) and the UI says so until it does; compact / row zone-card densities (3a rungs 3–4) and the `+ New zone` flow (1k) wait for zones beyond the kit's two; cultivar-from-CannaLib on the zone (1k step 2) is still roster-driven; `role_since` day counter is calendar days, not the dry-batch day model from 1h.
+
+## 2026-09-07 — Dashboard v2 Pass D: Alerts desk (frame 1j)
+
+Same branch `feat/dashboard-v2`, uncommitted, not hotpatched.
+
+| Item | Status |
+|------|--------|
+| Alerts desk | **done** — `pages/LiveMissionPage.tsx` rewritten as the Alerts desk: eyebrow "The hub acts before it calls you." + link tags (HUB / PANEL / BEAT / FLEET / FULL AUTO / TAKEOVER / FAN OVERRIDE / CAPACITY); **ACTIVE NOW** cards (zone · playbook title · *what the hub did* = the latest grow-log line on the alert's theme in the last 6 h, else "no automatic action recorded" · seen-for · CTA to the owning desk · acknowledge-until-reboot); **HISTORY · 24 H** (time · zone · text · ALERT / HUB / NOTE); **RULES** table from automation v2 (condition summary · scope inferred from the condition entities · hub action · live STATE armed / pending / firing / releasing / write-failed · enabled switch that PUTs the rule set); LINK line and the "do this next" card kept. Kit pulse, lung CFM and plant probes left the page (Kit / Climate / Root own them); the quick-jump drawer is gone (flat nav). |
+| Honesty | "since" is *seen-for* (this SPA session — `hooks/useAlertSince.ts`) because the bus stamps every compat entity `last_changed = now`; fired-count column replaced by live STATE (the brain does not count firings); the "hub did" line is a matched log line, labelled `Hub:` with its time, never a synthesised narrative. |
+| Resilience | rules and targets load independently — the Pi's brain serves `/settings/automations` but not `/settings/automations/targets`, and unknown API paths fall through to the SPA's `index.html` with **200 text/html** (so `fetch().json()` throws a `<!DOCTYPE` parse error rather than a 404). |
+
+**Verify:** `npx tsc --noEmit` exit 0; `#/alerts` at 1400 px and 375 px (no horizontal overflow, history scrolls in place). The Pi currently has zero rules and zero active alerts, so the ACTIVE NOW empty state and "No rules yet" copy are what was seen live; the card/rule rows were checked by code path only.
+
+**red-flag (logged to tracker):** the Pi is running a brain **older than repo head** — `/settings/automations/targets` and `/zones` fall through to the SPA HTML with 200 — so Settings › Brain's rule editor is degraded there too. Hotpatching the brain (not just the SPA) is part of shipping this branch. Consider a JSON guard in `fleetApi` (content-type check → "brain route missing" error) so an old brain fails loud, not with a parser message.
+
+**deferred:** notification history / push (design's "phone push to 2 people") has no backing yet; per-rule fired counts need a brain counter; the rule editor stays in Settings › Brain (link provided).
+
+## 2026-09-07 — Dashboard v2 Pass E: Light desk (2a clocks + 1f fixtures / PPFD)
+
+Same branch `feat/dashboard-v2`, uncommitted, not hotpatched.
+
+| Item | Status |
+|------|--------|
+| Light desk | **done** — `pages/LightPage.tsx`: eyebrow "Two desks, two clocks." + tags (DARK PERIOD OK/BROKEN, MISSING IN WINDOW, CATCH-UP, AUTO PHOTOPERIOD ON/OFF, MANUAL HOLD, LIT WINDOW BUYING HEAT); the two schedule-missing / manual-override banners are mission lines. Each tent is a tone-bordered `Panel` (legend `4×8 · FLOWERING · 12H RAIL` / `2×4 · FOLLOWS 4×8 · 12H RAIL`, legend-right = live lamp/window state) topped by the 2a clock block (`TentClock` from `TwoClocks`, now exported with `showEyebrow`): STATE DARK/LIT · ON IN/OFF IN, the 24 h rail, lamp + "not a bill" energy line. Every existing control kept: got/want arc, want hours, timeline, duty strips, Twin / SF1000 toggles, lights-on / sunrise / sunset / min-dark editors, schedule source, follow banner, DLI. Chips → square tags. |
+| Fixtures | **done** — `FIXTURES · NAMEPLATE WATTS · DUTY SOURCE` panel from `/spaces` (SF1000 100 W, 4×8 fixture 480 W nameplate), with the honest line that the estimate is watts × hours × tariff and that the 4×8 fixture is not a driven lamp yet. |
+| PPFD | **done** — `PPFD AT CANOPY · SF1000 CALIBRATION CURVE`: the 25/50/75/100 % operator measurements when they exist (live estimate + DLI), otherwise the honest "no calibration yet — measure on Kit › Calibrate; a PAR sensor would make this live" slot. No PPFD map, spectrum mix or recipe library (INVENTED; no hardware). |
+
+**Verify:** `npx tsc --noEmit` exit 0; `npm run build` ok; `#/light` at 1400 px, both halves (clocks, controls, fixtures, PPFD slot, crop scheduler, energy, journals).
+
+**deferred:** intensity-by-day-of-cycle (1f) needs a day-of-cycle dimension on the schedule model; the space journals stay on this desk (operator only removed them from Overview); `dsc-light-hero` / `dsc-tent-card` CSS is now unused on this page.
+
+## 2026-09-07 — Dashboard v2 Pass F: Root desk (frame 1e + 3a rung 1)
+
+Same branch `feat/dashboard-v2`, uncommitted, not hotpatched.
+
+| Item | Status |
+|------|--------|
+| Root desk | **done** — `pages/RootPage.tsx`: eyebrow "Grey means no data." + tags (COLDEST ROOT / ROOT PROBE FAULT, MAT ON · h today, STEERING AUTO · P1–P3 / MANUAL, PUMP BOUND / NO PUMP · SHOTS WITHHELD dashed). Top row: **ROOT ZONE · HEAT MAT** panel (heat lines while the mat runs, coldest-root value, mat band text, 24 h duty strip) and **SHOTS · IRRIGATION** — the honest OOS tile: with no Zigbee `plug_pump` bound it explains what would appear and links Settings › Device; with one bound it offers 2 s manual shots per probe through `/control/irrigation/shot` (`post_irrigation_shot` added to `fleetApi`). Steering auto/manual moved into that panel (same `DecisionLayer` confirm). |
+| Plant-as-card | **done** — each probe is a tone-bordered `Panel` with legend `PROBE 1 · RUNTZ PUNCH · 4×8 · D59` and legend-right = the brain's steering phase (`P0 NIGHT · NO ACT WINDOW`) from `fleet.root_steering`; gauges (moisture, soil °C, dry-back, EC, pH), NPK-from-EC, phase chip, and a footer line: dry-back % (sensor), rate %/h, `last shot — (no pump bound) · next feed —`, steering reason. OOS probes are dashed. |
+| Dry-back sawtooth | **done** — `components/DrybackChart.tsx` per probe: moisture history (24 h / 48 h / 7 d) with the want band shaded, EC dashed on the right axis, the tent's lights-off windows shaded; no shot ticks because there are no shots (the key says so). `/history` on the Pi held probe 2's moisture, so the sawtooth and EC drew live. |
+| Kept | Probe stations · thereabouts (now a Panel), Soil test drawer, plant drawer. |
+
+**Verify:** `npx tsc --noEmit` exit 0; `npm run build` ok; `#/root` at 1400 px top and bottom (probe 1 dark = grey gauges + "no moisture history yet"; probe 2 sawtooth live).
+
+**observed:** both probes reported `SENSOR FAULT · PROBE DARK` on the Pi during the check, so coldest-root read `—` and the mat panel said "warming toward 20–22 °C" without a reading — honest, but worth confirming the probes are actually powered. Dev-only console noise: an HMR remount of `main.tsx` throws "BrainProvider missing" once (not reproducible on a reload).
+
+**deferred:** field-capacity line and dry-back target on the chart need the brain's steering targets exposed per probe (`root_steering.targets` is global today); shot editor fields (P1 count, P2 burst/interval, window) wait for a bound pump; per-site overnight strip (1e) needs more than two probes.
+
+## 2026-09-07 — Dashboard v2 Pass G: CannaLib strain detail + runs in DSC-HUB (frame 1i)
+
+Same branch `feat/dashboard-v2`, uncommitted, not hotpatched.
+
+| Item | Status |
+|------|--------|
+| CannaLib desk | **done** — `GrowResearchPage` header is the eyebrow "A live catalog behind the grow." (reveal frame 14) with Use in Compose / Open Roster as the actions; `CatalogResearch` Browse / Detail / Compare cards are Panels (`BROWSE`, `DETAIL · STRAIN`, `COMPARE`), chips → square tags. Existing search, filters, media, chemistry tier and compare all kept. |
+| Lineage | **done, gated** — a `Lineage` row appears only when the CannaLib hydrate or the item carries one (string, list, or parents/mother/father); the current catalog returned none for the strains tried, so it stays absent — no invented lineage tree. |
+| Runs in DSC-HUB | **done** — `components/StrainRuns.tsx`: every roster plant matching the strain (plant · zone · sprouted · days · stage · VPD in band 24 h · g/W · log link), `n LIVE · m ON ROSTER` tag, zone from the probe's live tent when the plant is on a probe (the roster's remembered tent was stale for Runtz Punch). VPD in band is the zone's last 24 h from `/history` with the zone band (— when the zone has no rail); g/W stays — until a harvest is logged. Aroma / terp chips and awards (1i) are absent because the catalog has no such fields — not fabricated. |
+
+**Verify:** `npx tsc --noEmit` exit 0; `npm run build` ok; `#/cannalib` → search "Runtz" → Runtz detail shows the runs table with Runtz Punch · d 59 · Flowering.
+
+**deferred:** run-level VPD in band needs recorder retention beyond days; g/W needs a harvest-weight journal entry type; aroma/terpene/award chips need CannaLib fields.
+
+## 2026-09-07 — Dashboard v2 Pass H: phone density + refresh pulse
+
+Same branch `feat/dashboard-v2`, uncommitted, not hotpatched.
+
+| Item | Status |
+|------|--------|
+| Phone overflow | **fixed** — at 375 px the Light desk (page 387 px) and CannaLib (399 px) were widened by a sentence-length status tag with `white-space: nowrap` ("2×4 empty · assign probes or set clone mode", "Brain catalog proxy (Settings → CannaLib API URL)"). `.dsc-tag` now has `max-width: 100%`; below 480 px a static tag wraps and a clickable tag ellipsises. The catalog source tag is a label (`BRAIN CATALOG` / `LOCAL CATALOG`) with the full note on `title`. |
+| Phone density | **done** — below 480 px: 22 px headline, 12 px subline, 10 px header tags, 10 px grid gaps on Climate/Root/Light, 20 px clock numeral in the Light panels. Overview · Climate · Root · Light · CannaLib · Alerts · Settings › Zones all measure `scrollWidth === innerWidth` (375). |
+| Refresh pulse (plan § Motion) | **done** — `hooks/useFreshFlag.ts` flags a value that actually moved (never the first reading, never an unchanged tick); `TriadCell` and `VpdHero` numerals get `.is-fresh` for 600 ms (brightness lift + 1 px rise, `prefers-reduced-motion` → none). Observed on Overview against the live brain: two polls 45 s apart lifted only the four values that changed (21.4 °C, 0.93 kPa, 57.0 %, 1.26 kPa; then 63.6 %, 23.8 °C, …). |
+| Zones on an old brain | **done** — `zonesApi` checks the content type: the Pi's SPA catch-all answers `/zones` with `index.html` (HTTP 200), which used to surface as `Unexpected token '<'`. Settings › Zones now says "the brain on the hub predates zones — hotpatch the brain to name rooms and flip roles". |
+| Cure-vessel frame | parked (plan) |
+
+**Verify:** `npx tsc --noEmit` exit 0; `npm run build` ok; Browser pane at the 375 px mobile preset — no page wider than the viewport; `.is-fresh` seen via a MutationObserver on Overview across two brain polls.
+
+**deferred:** `UPDATED 34s` legend stamp (plan § Motion) needs the bus tick time per entity; the hover `Tooltip` primitive and actuator waiting-for-brain state are still open (Pass A deferred list).
+
+## 2026-09-07 — Dashboard v2 Pass I spike: the tent model on the real bundle
+
+Same branch `feat/dashboard-v2`, uncommitted, not hotpatched. The plan asks for a one-day spike that loads
+`grow-tent-120x60x210.glb` on the bundle and measures load time and frame rate on the operator's phone and laptop
+**before any UI is built on the twin**. Laptop half done here; phone half is the operator's.
+
+| Item | Status |
+|------|--------|
+| Model manifest | **done** — `frontend/public/models/manifest.json` (`slug`, `file`, `kind`, `dims_cm`, `zone`, `anchors`, `materials`) + `src/twin/manifest.ts` (`loadManifest`, `findModel`, `anchorRoleOf` by node-name prefix). The tent's anchors: `vent_port_roof` → exhaust fan, `vent_port_side_right_lower` → intake, the other ports → passive duct, `cable_port_*`, `floor_tray`, `divider_shelf`, windows, doors. Node names in the GLB already follow the convention (119 nodes, 75 meshes, 7 materials: `shell_black`, `foil_lining`, `trim_green`, `roller_silver`, `window_acrylic`, `frame_steel`, `tray_pvc`). |
+| `TwinViewport` (lazy `twin-three` chunk) | **done** — `src/twin/TwinViewport.tsx`: `useGLTF`, materials mapped through the manifest to CSS tokens (accent = `--dsc-neon`, glass = `--dsc-teal` α .14, foil/frame = `--dsc-gray-5`), edge lines (`EdgesGeometry` 25°) over a faint fill = the holographic wire look; model normalised to 1 unit = 1 m standing on y = 0; `frameloop="never"` with a hand-driven loop capped at 30 fps that skips hidden tabs; `window.__twinBench(n)` renders n frames with `gl.finish()` for a GPU-synced cost that works even when the tab is hidden. |
+| `TwinPanel` wrapper | **done** — `src/components/TwinPanel.tsx`: mounts the chunk only once the panel scrolls into view (IntersectionObserver), pauses the loop when out of view or the tab hides, honest dashed still on phones (≤ 640 px) / reduced motion / no WebGL (no PNG yet — says so), `force` for the spike only. |
+| Spike page | **done** — `#/twin-spike` (`pages/TwinSpikePage.tsx`, not a desk): the model in a teal panel + a COST table (chunk, GLB load, first frame, fps, meshes/triangles, draw calls, bench) + Run bench. `?force3d=1` renders the live twin on a phone for the measurement. |
+
+**Measured (laptop, Vite dev server, tab visible, 800 × 729 pane):**
+
+| Metric | Value |
+|---|---|
+| GLB | 385 KB (no Draco), 118 mesh nodes, 10 920 triangles |
+| `twin-three` chunk | 1 109 ms in dev (unbundled modules); production chunk **1 129 KB raw / 315 KB gzip** (three + fiber + drei + three-stdlib — the same chunk `AirflowParticleScene` already pulls) |
+| GLB fetch + parse + restyle | 369 ms (213 ms on a warm cache) |
+| First frame | 85 ms after mount |
+| Frame rate | 30 fps steady at the cap |
+| Bench (90 frames, `gl.finish()`) | 2.4–2.6 ms/frame ≈ 400 fps uncapped |
+| Draw calls | 328–355 per frame (one fill + one edge set per mesh node) |
+
+**Reading:** on the laptop the twin is nearly free at runtime; the real cost is the 315 KB gzip chunk, which is already
+paid whenever the airflow scene mounts. The draw-call count is the number to fix before the phone: merging fills and
+edges by material role would cut ~350 calls to under 20. The renderer reports ~2× the mesh triangle count drawn per frame
+(19–22 k vs 10.9 k) — likely transparent + edge passes; worth a look but not a blocker.
+
+**Verify:** `npx tsc --noEmit` exit 0; `npm run build` ok; `#/twin-spike` shows the wire tent, orbit works, COST fills in.
+
+**Next for Pass I (after the operator's phone number and the hotpatch):** merge geometry by material role; `lib/twin/bindings.ts`
+(zone anchor role → entity id from `useZones`); fan/lamp/mat/probe device models; tent in the Overview room panel and the
+Climate zone panel with tooltip/inspector parity; a rendered PNG still for phones.
+
+**deferred:** Draco compression (not needed at 385 KB); a `3D | cards` toggle on Overview waits for the 4×8 model.
+
+## 2026-09-07 — Dashboard v2 interaction pass: Tooltip primitive + actuator confirm/fail
+
+Same branch `feat/dashboard-v2`, uncommitted, not hotpatched. Closes the two interaction items deferred since Pass A.
+
+| Item | Status |
+|------|--------|
+| `Tooltip` primitive | **done** — `components/Tooltip.tsx`: opens after 300 ms hover (mouse only), at once on keyboard focus; Escape / blur / scroll close it; touch: first tap opens, second tap falls through to the child's click. Portal to `body`, fixed position above the anchor (below when near the top), clamped to the viewport, `role="tooltip"` + `aria-describedby`. Content mounts only while open. `TipRow` for key · value rows with ok/warn/bad/muted tones. |
+| `ReadingTip` (exact value · time · last change · want · provenance) | **done** — in `Triad.tsx`; on every `TriadCell` (Overview zone cards) and the Climate `VpdHero`. Rows: exact value (3 dp for kPa), `POLLED HH:MM · n s ago` from the fleet snapshot time, `HELD SINCE` only when stale, `WAS x at HH:MM` = last history point outside a per-unit deadband (0.1 °C, 0.5 %, 0.02 kPa) fetched on open (`useHistory`, 6 h), `WANT min–max`, and `MEASURED <entity>` or `DERIVED <formula>`; the VPD hero adds `leaf VPD = air − 1.5 °C`. Nothing is invented: no history → no WAS row; no band → no WANT row. |
+| Actuator three-state flow | **done** — `EntityToggle` (ui.tsx): press → `is-pending` (dashed pulse, `ON…`, unchanged) → bus echoes the state → `is-confirmed` neon ring flash 400 ms; the write promise rejecting → optimistic draft dropped at once, `is-failed` shake + `<label> not applied — <brain reason>` under the button (`role="status"`, 6 s). Previously a failed write kept the wrong state on screen for up to 75 s and said nothing. Not exercised against the live grow (it would flip real appliances); the failed path is driven by `call_service` rejecting on a non-2xx. |
+| Charts crosshair | already there — ECharts `axisPointer` on `MultiLineChart`. |
+
+**Verify:** `npx tsc --noEmit` exit 0; `npm run build` ok; Overview: hover the 4×8 VPD cell → tooltip `0.912 kPa · POLLED 02:50 · 3 s ago · WAS 0.93 kPa at 02:35 · WANT 1.2–1.4 kPa · MEASURED sensor.dsc_hub_vpd_kpa`; Escape closes; Tab-focus on the temperature cell opens it; blur closes.
+
+**deferred:** tests for the touch first-tap/second-tap rule need a device. (Lamp clock tooltips landed in the addendum below: state, on/off-in, window, fixture, energy on both `TentClock` state lines.)
+
+### Addendum (same day): tiles, duty bars, UPDATED stamp
+
+| Item | Status |
+|------|--------|
+| Equipment tile tooltips | **done** — every Climate equipment tile: name · state, pull/duty, the why line, entity id (or "out of service"). `title=` removed; `aria-label` kept. |
+| Duty bar tooltips | **done** — each fan row: duty %, learned exhaust CFM on EX OUT, spin period by duty (`fanSpinSeconds`), entity id. |
+| `UPDATED 34s` legend stamp | **done** — `components/UpdatedStamp.tsx` on both zone-card legends (`VPD IN BAND … · UPDATED 2S`), from the fleet snapshot age (the same fact as the top-bar tag — no panel claims a fresher reading than the bus has); amber past 2 min; hidden on phone with the rest of legend-right. |
+| Lamp clock tooltips | **done** — both `TentClock` state lines (focusable): lamp LIT/DARK, on-in/off-in, window (`06:00 + 12 h · follows 4×8`), fixture line, energy estimate. |
+| Rams quick_review | 3 findings, all rejected: tooltip colours/contrast live in `.dsc-tooltip` (dsc.css) which the checker did not see; the reduced-motion guard for `.dsc-tooltip` is in the same block; the five hex fallbacks in `TwinPanel.readPalette` equal the token values and only apply if the token layer is absent. |
+
+### Observation (2026-09-07 03:15 AEST): hub says LIT, SPA clocks said DARK
+
+`/fleet` on the live Pi: `dsc_hub_4x8_window_open = true`, `dsc_hub_2x4_window_open = true`, `light.dsc_hub_sf1000_dimmer` on @255, clock valid, light debt 12.6 h, catch-up inactive — while both `TentClock`s showed `DARK · ON IN 2H 47M` from `time.dsc_hub_lights_on_time = 06:00:00` + a 12 h rail, and Light said `DARK PERIOD OK`. The hub's window is `((now − lights_on_time) mod 1440) < hours × 60` on its **own** `lights_on_time`, which is not in the fleet snapshot or `/fleet/computed`; the SPA's 06:00 is therefore unconfirmed. Tracker row: *Hub reports both photoperiod windows OPEN … clock disagreement not surfaced* (Open, Honesty / Live Desks).
+
+**SPA fix landed:** `TentClock` takes LIT/DARK from the hub's window entity (`tentWindowEntity`), keeps the computed clock for on-in/off-in, and shows a live bad tag `HUB LIT · SCHEDULE DARK` plus a tooltip `conflict` row when they disagree (verified: both clocks now read LIT with the tag). The lit band on the rail is still the SPA schedule — it stays until the hub's on-time is exposed.
+
+**Brain/hub follow-up (operator):** publish the hub's `lights_on_time` / `stage_light_hours` in the fleet snapshot; confirm whether the 2×4 is meant to run the local night.
+
+**Where the 06:00 comes from:** `/fleet/computed` → `hass_extras["time.dsc_hub_lights_on_time"] = 06:00:00` (`honesty: ok`), emitted by `computed_ops.py` from the brain's stored helper, not read back from the hub; the same feed says `sensor.dsc_lights_deviation_today = −10.53 h`, so brain and hub agree the lamps are far behind but disagree on the on-time. Brain follow-up: read the hub's on-time back and mark the helper `unconfirmed` when they differ.
+
+**Dev infra:** the Vite `spa` server (Node 24.15, Windows) died twice with exit 0xC0000409 after `ws proxy socket error: write ECONNABORTED` on `/ws/fleet`; restart with the launch config. Tracker row under Test Infra (Open).
+
+**Verify:** Overview hover EX OUT → `EX OUT 70 % duty · EXHAUST 8 CFM learned · SPIN … · MEASURED sensor.dsc_fan_exhaust_outside_pct`; zone legends carry `UPDATED nS`; Climate hover a tile → four rows.
+
+
+## 2026-09-07 — Dashboard v2 cleanup: dead nav CSS + legacy Dash sections retired
+
+Same branch `feat/dashboard-v2`, uncommitted. Closes the cleanup items deferred in Passes A and B.
+
+| Item | Status |
+|------|--------|
+| Dead CSS | **done** — 15 rules under `.dsc-primary-tabs` / `.dsc-secondary-tabs` / `.dsc-light-hero` removed from `dsc.css` (no selector referenced from `src/` since Pass A's `DeskNav` / `SubTabs`); shared selector lists trimmed rather than dropped; `.dsc-tab` itself kept (SubTabs still uses it). Brace balance and `npm run build` checked; DeskNav, Climate sub-tabs and Settings sub-tabs verified in the pane. |
+| `DashHomeSections.tsx` | **deleted** (921 lines) — every section component (`DashNowStrip`, `DashBandsGrid`, `DashRootTankSection`, `DashRunningChips`, `DashConditionalBanners`, `DashOperationalNow`, `DashTodaySection`, `DashGrowLog`, `DashCannalibTiles`, `DashEspLinkChips`, `DashFanChips`, `DashActiveAlerts`, `fmtUptime`) had zero importers since the v2 Overview. The three live exports moved: `SHARED_AIR_FAN_PCT` + `fanPctChip` → `lib/fanPlant.ts` (used by `DutyBars` and Climate's fan card), `activeAlertIds` → `lib/alertPlaybook.ts` (Overview). |
+
+**Verify:** `npx tsc --noEmit` exit 0; `npm run build` ok (index chunk unchanged in size class); `#/climate` and `#/settings/zones` render their sub-tabs with the active tone.
+
+## 2026-09-07 — Dashboard v2: DSC-HUB Cultivation Icons v4 wired in
+
+Same branch `feat/dashboard-v2`, uncommitted. The operator supplied `dsc-hub-icons-v4-duotone.zip` (105 icons, 24 px duotone SVG: strokes `currentColor`, accent `var(--ia)` at 30 % fill / 62 % stroke, plus 256 px PNG renders). Closes the plan's "icon set additions" item (§ Glanceable state).
+
+| Item | Status |
+|------|--------|
+| Source of truth | **done** — `docs/design/icons/dsc-hub-icons-v4/` (svg-24, README, index.json; the PNG renders are derivable and not committed). |
+| Generator | **done** — `scripts/gen-dsc-hub-icons-v4.py` → `frontend/src/iconSvgV4.ts` (`ICON_SVG_V4` inline bodies, `ICON_META_V4` category + accent mode, `IconNameV4`). The old `gen-dsc-hub-icon-svg.py` still points at the retired `Y:` path — left as is. |
+| Registry | **done** — `IconName = legacy camelCase ∪ v4 kebab-case`; `iconSvg()` looks up both; `ICON_PATH` is partial with a `/icons/<name>.svg` fallback. `<Icon name="vpd-gauge" />` works everywhere `Icon` already did (`StatusTag icon`, nav, tiles). |
+| Tinting | **done** — `.dsc-icon { --ia: var(--dsc-teal) }` default; `.dsc-icon--ok/warn/bad/muted/lamp/teal` set colour and collapse the accent to `currentColor` so state never fights the two-hue look; `.dsc-icon.is-oos` = dashed strokes, no accent (the `--oos` variant from the plan, without a second file per icon). Tags and nav collapse the accent to the tag tone; the active desk keeps the teal accent. |
+| Where it landed | **done** — desks: Climate `vpd-gauge`, Root `root-system`, Light `grow-light`, Plants `cannabis-leaf`, CannaLib `dna-strand`, Logs `data-log`, Alerts `alert-triangle`, Kit `controller-hub` (Overview keeps `home` — no dashboard glyph in the set). Settings tabs likewise. Triad labels (`temp-gauge`, `humidity-gauge`, `vpd-gauge`), phase chips (`veg-stage`, `flower-stage`, `bud`, `trichome`, `drying-rack`, `curing-jar`), zone-card tags (want `target-goal`, probes `root-zone-temp`, cultivar `strain-tag`, lamp `grow-light` / `led-panel` / `light-schedule`), appliance tags and equipment tiles via `lib/deviceIcons.ts` (`applianceIcon()` keyword map: humidifier, dehumidifier, heater-mat, fans, filter, duct, pump, plug, CO₂, PAR). Fans keep the legacy five-spoke `FanGlyph` because it is the only glyph whose blades can spin alone. |
+| Honest gaps | Heater, air conditioner and mister get **no icon** rather than a wrong metaphor — see the request list below. |
+
+**Verify:** `npx tsc --noEmit` exit 0; `npm run build` ok (index +1.8 KB gzip); Overview at 1400 px shows 9 desk icons, 6 triad icons, 2 phase icons, 10 tag icons, 0 empty icon slots; Climate tiles show humidifier / dehumidifier / mat / lamp glyphs; phone bottom bar icons render.
+
+**Icons still needed from the operator** (names as they would go into the pack; all 24 px, same duotone rules):
+`space-heater` (radiator / fan heater), `air-conditioner` (split unit or portable AC), `mister` (fogger / fine spray head), `soil-probe` (moisture / EC stake in substrate), `door` (tent door / zip), `observation-window`, `room` (site › room level), `site`, `journal` (grow log note), `compare` (two overlaid traces), `refresh`, `search`, `close`, `chevron-right`, `chevron-down`, `info`, `bell` (alert), `snooze`, `pause-hold` (held / manual hold), `manual-hand` (takeover), `zigbee`, `wifi`, `backup-restore`, `network-ap` (access point), `server-jobs`, `twin-3d` (wire cube), `tariff-cost` (energy price), `dli` (daily light integral), `photoperiod-day`, `photoperiod-night`, `leaf-temperature`, `water-activity` (aw, for cure), `dashboard-home` (Overview desk), `dew-point` exists — `dry-back` (sawtooth) would help Root.
+
+## 2026-09-07 — Dashboard v2: Cultivation Icons v5 (165, mono) replace v4
+
+Same branch `feat/dashboard-v2`, uncommitted. The operator supplied `cultivation-icons-full_2.zip` and the gallery
+artifact (https://claude.ai/code/artifact/c76c0a86-d629-4154-aae7-ea90a800d567). 165 mono line icons, 24 px, 1.5 px
+stroke, every stroke and fill `currentColor`, 11 gallery categories. A superset of v4 (99 shared ids, 6 renamed:
+`cmh-cdm`→`grow-light-cmh`, `hps-mh`→`grow-light-hps`, `led-bar`→`grow-light-led-bar`, `led-panel`→`grow-light-led-panel`,
+`speed-controller`→`fan-speed-controller`, `t5-fluorescent`→`grow-light-t5`) plus **every icon on the request list**.
+
+| Item | Status |
+|------|--------|
+| Source of truth | **done** — `docs/design/icons/dsc-hub-icons-v5/` (svg-24, README, `index.json` built from the gallery's per-card category + label). The v4 duotone folder, its generator and `iconSvgV4.ts` are retired — one set, one registry. |
+| Generator | **done** — `scripts/gen-dsc-hub-icons.py` → `frontend/src/iconSet.ts` (`ICON_SVG_SET`, `ICON_META_SET`, `IconNameSet`); refuses hard-coded colours. `IconName` = legacy ∪ set. |
+| Tinting | unchanged — `.dsc-icon--ok/warn/bad/muted/lamp/teal`, `.is-oos` dashed. The `--ia` accent rules are now no-ops (mono set) and stay harmless. |
+| Gaps filled | **done** — heater `space-heater`, cool `air-conditioner`, mister `mister`, probes `soil-probe`, Overview `dashboard-home`, Logs `journal`, Settings: Zones `site`, Hub `backup-restore`, Network `network-ap`, Server `server-jobs`; clocks get `photoperiod-day` / `photoperiod-night` on the STATE word; held tags `pause-hold`; MANUAL TAKEOVER `manual-hand`; MANUAL HOLD `pause-hold`; CATCH-UP `stopwatch`; Refresh zones `refresh`; twin spike `twin-3d`. `lib/deviceIcons.ts` now also maps leak / canopy / substrate sensors, 4"/6" fans, chiller, mini-split, drip, tank, zigbee, wifi, camera. |
+| Placed (same day, second pass) | `dry-back` on the Root sawtooth legend; `leaf-temperature` on the VPD hero leaf row; `tariff-cost` on both clock energy lines; `bell` on the Alerts ACTIVE NOW legend and `snooze` on acknowledge; `compare` on the zone strip ALL chip and the ghosted-zones legend; `chevron-right` on every clickable panel legend; `close` and `search` now resolve to the set (set names win over legacy on collision); `info` replaces the `?` on HelpTip; `Panel` gained `legendIcon` (room, grow-tent, soil-probe, heater-mat, drip-irrigation, grow-light, light-hanger, par-meter, vpd-gauge, growth-stage-timeline, trend-chart, fan-speed-controller, site, twin-3d, gauge-dial, airflow, light-schedule, journal). `twin/manifest.ts` has `ANCHOR_ICON` (door, observation-window, exhaust/intake fan, ducting, lamp, mat, probe…) and the spike page lists the tent's anchors with those glyphs — the same map the Pass I bindings will use. |
+| Still parked | `water-activity` (cure vessel frame), `dli` (needs a DLI number — derived metric, not yet computed). |
+
+**Verify:** `npx tsc --noEmit` exit 0; `npm run build` ok (index 121 KB gzip); Overview / Climate / Settings › Zones render with 0 empty icon slots; clocks show the day/night glyph.
+
+## 2026-09-07 — Settings & preferences: knob catalogue + page architecture (plan only)
+
+Operator opened a settings/preferences workstream: "as transparent as possible, easy GUI customisation and configuration; easy navigation, logical grouping, depth of settings." Nothing implemented. Plan: [`docs/design/plan-settings-2026-09-07.md`](design/plan-settings-2026-09-07.md).
+
+| Item | Status |
+|------|--------|
+| Inventory sweep | **done** — ~190 tunables over four tiers: B this browser (3 ad-hoc keys), N brain KV (`DEFAULT_SETTINGS` 22 keys + JSON blobs), S brain tables (zones, roster, tariff, learning, zigbee, calibration), H hub ESP entities (~70 `*.dsc_hub_*`, most reachable only via the entity inspector), F firmware/code constants. Zero operator preferences exist; General tab is prose. |
+| Peer notes | **done** — AROYA (user settings vs facility Setup), Growlink (setpoints daily vs rules at commissioning), Home Assistant 2026 (Devices & services / Protocols / System, sidebar editor), TrolMaster (device / alarm / system). Borrowed the user-vs-facility split and setpoints-vs-rules; vendor names stay out of the UI. |
+| Proposed IA | rail grouped **You** (Preferences, Alerts) · **The grow** (Zones, Climate, Light, Root, Sensors, Automation) · **The kit** (Devices, Integrations, Network, System); depth capped rail → section → drawer; live status subtitles on the rail; search; deep-link anchors; seven legacy redirects. |
+| Primitives | `SettingRow` (scope badge · default chip + reset · changed-at · consumers · HELD / FIRMWARE states), `SettingsCard`, `SettingsDrawer`, `usePreference`, `useSettingsManifest` (brain `GET /settings/manifest`). |
+| Passes | S1 foundation + Preferences → S2 grow sections (hub helpers as tier-H rows) → S3 alerts/automation + settings journal → S5 devices restructure (SP-P0-3) → S4 system/transparency. |
+
+**Findings (all logged to the tracker, 11 rows):** SPA `DEFAULT_LEAF_OFFSET_C = -1.5` vs brain `leaf_offset_c = "2"` — two leaf-VPD numbers from one setting; `set_global_modifiers` drops `sensor_clamp`; root steering targets have no UI; ~40 hub tunables only in the inspector; no timezone / NTP / clock-drift surface; irrigation shot 2 s hardcoded; settings writes not journaled; no search / anchors in a 1816-line `SettingsPage.tsx`; General tab subtitle promises controls that do not exist; no preference layer at all.
+
+**Open for the operator (plan § Open questions):** °F at all; light theme ship vs exploration; stage-rail overrides need hub firmware; may Settings write hub helpers via `/control/service` or should the brain own them; people / PIN scope; journal retention.
+
+## 2026-09-07 — History persistence audit: every chart, gauge and value against the brain's record
+
+Operator ask: "make sure all charts, graphs and values are reading/recording persistent history — the brain owns the
+record, and persists regardless of session/uptime." Branch `feat/dashboard-v2` (PR #199), verified against the live Pi
+through the dev proxy and against a local brain on the new code.
+
+**What is true today (live Pi):** the brain records to `fleet_history` in `dsc_ops.sqlite3` on disk — 1 717 366 rows,
+oldest 2026-08-24, retention 45 days (pruned at boot), independent of any browser session. Every SPA series hook
+(`useHistory` → `useEntitySeries` → charts, sparklines, in-band fractions, slopes, ETAs, tooltip "was" rows) seeds
+from `GET /history`; the only browser-side state is the live tail appended between polls (re-seeded from the brain on
+reload), the held-reading last-known-good, the alert first-seen clock (labelled "since this session") and alert
+acknowledgements (localStorage per hub boot). Journals, grow log, zones and roles live in SQLite on the brain.
+
+| Finding | Status |
+|------|--------|
+| **A 7-day chart only showed the newest ~25 h.** `list_history` returned the newest 2 000 samples in range (≈ 2 s cadence), so `hours=168` collapsed to a day; the SPA's own downsampler then thinned that. | **fixed** — `settings.list_history_bucketed` reads the whole window and reduces it to ≤ `max_points` equal-width buckets (mean; binaries round so on/off strips stay crisp). `GET /history` accepts `max_points` (8–2000, default 720) and `hours` up to 2 160; the SPA passes the points it will draw. Test: 10 080 one-minute samples → 336 buckets spanning the full week. |
+| **Recorded but unreachable.** Every `switch.dsc_hub_*_demand` was recorded (`switch_dsc_hub_<x>_demand`) yet only `grow_mat_demand` was in `ENTITY_METRIC_MAP`, so the inspector for Heater / Cool / Hum / Dehum / C-Hum reported `tracked: false` and drew nothing. | **fixed** — `history_ops.resolve_entity_metric` resolves the recorder's generic shapes: hub `switch.` / `number.` / `binary_sensor.` controls, raw hub values (`sensor.dsc_hub_<key>` for `light_debt_hours`, `dynamic_co2_ppm`, `wifi_rssi`…), probe values, and the brain's computed entities. Static map still wins. |
+| **Setpoints, mode switches and hub flags were never recorded** (`number.dsc_hub_vpd_target_*`, `manual_takeover`, `auto_photoperiod`, `light_catchup_active`, `clock_valid`…), so band history and "when did takeover start" had no record. | **fixed** — `esphome_client` records them through `record_history_throttled` (a row on change or every 5 min, so a 2 s poll does not multiply the table). |
+| **The brain's computed entities existed only while a browser was polling** (`sensor.dsc_lights_on_today_*`, `dsc_lights_deviation_today`, `dsc_heater_runtime_today`, `dsc_bought_runtime_today`, `dsc_vent_heat_dump_btu`, `dsc_ah_room`, alert flags…): `build_computed_hass_states` runs on request only. | **fixed** — `dsc_brain/computed_history.py`: a 60 s background task started in the app lifespan records every numeric / on-off computed `sensor.dsc_*` and `binary_sensor.dsc_*` under seat `computed` (throttled). Brain-owned cadence, no client needed. |
+| **The SPA never said "not recorded".** Inspector, history drawer, VPD chart and dry-back chart showed an empty plot for an untracked entity, indistinguishable from "no points in range". | **fixed** — `get_entity_history` returns `{points, tracked}`; `useHistory` / `useEntitySeries` expose `tracked`; `NOT RECORDED BY THE BRAIN` (dashed warn) on the VPD and dry-back charts, `Not recorded by the brain` chip + empty label in the inspector and drawer. |
+| VPD chart ranges | **done** — `30 d` added (brain buckets it to 720 points; retention is 45 d). |
+| `sensor.dsc_coldest_root_zone_temp` last recorded 2026-09-01; probe 1 has no moisture / EC history in 7 d, probe 2 is continuous. | observation — consistent with the SENSOR FAULT / PROBE DARK tags; the chart is honestly empty, nothing to fix in the SPA. |
+| Retention 45 d is shorter than a flower run (60–75 d), so "VPD in band over the run" can never be computed from the record. | **recommendation** — raise `fleet_history_retention_days` to 120 (Settings › System, or `POST /settings/system/history-retention`); at today's ~120 k rows/day that is ~15 M rows, fine for SQLite on the Pi's SSD. Tracker row. |
+| Alert acknowledgements are per browser (localStorage, keyed by hub boot). Another device still sees the alert. | **recommendation** — move to a brain-owned `ack` (space journal or a small table). Tracker row. |
+
+**Verify:** brain suite 338 passed (7 new in `tests/test_history_ops.py`); `npx tsc --noEmit` + `npm run build` green; against the live Pi (old brain) the SPA still works — it sends `max_points`, the old brain ignores it, and the Heater tile inspector now shows *Not recorded by the brain* instead of a blank chart; against a local brain on the new code, `switch.dsc_hub_heater_demand`, `number.dsc_hub_vpd_target_min`, `binary_sensor.dsc_hub_light_catchup_active` and `sensor.dsc_lights_on_today_4x8` resolve as tracked and the 7-day request returns buckets that span the window.
+
+**After hotpatch:** the new metrics begin at hotpatch time (there is no back-fill for what was never recorded); the 7-day / 30-day views fill in from the existing record immediately.
