@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Icon } from "./ui";
+import { Icon, StatusTag } from "./ui";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { darkIntervals } from "../lib/lightsOffShades";
@@ -58,6 +58,7 @@ export function DrybackChart({
     <div className="dsc-zvc">
       <div className="dsc-zvc-controls">
         <span className="dsc-legend"><Icon name="dry-back" size={11} className="dsc-legend-icon" /> Substrate · moisture (sawtooth) · EC (right axis)</span>
+        {moist.tracked === false ? <StatusTag label="NOT RECORDED BY THE BRAIN" tone="warn" dashed title={`${moistId} is not in the brain's recorder`} /> : null}
         <div className="dsc-zvc-ranges" role="group" aria-label="Chart range">
           {RANGES.map((r) => (
             <button

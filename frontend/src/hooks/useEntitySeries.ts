@@ -10,6 +10,8 @@ export interface EntitySeriesResult {
   series: SeriesPoint[];
   lastSyncAt: number | undefined;
   ghost: SeriesPoint[];
+  /** false = the brain's recorder has no series for this entity; null = not known yet. */
+  tracked: boolean | null;
 }
 
 export function ghostSpanHours(hours: number): number {
@@ -41,7 +43,7 @@ export function useEntitySeries(
   const fleet = useFleet();
   const source = useFleetSource();
   const fleetTick = useFleetTick();
-  const { points: seed } = useHistory(entityId, fetchHours, fetchPoints);
+  const { points: seed, tracked } = useHistory(entityId, fetchHours, fetchPoints);
   const [live, setLive] = useState<SeriesPoint[]>([]);
   const last = useRef<number | null>(null);
   const seeded = useRef(false);
@@ -106,5 +108,5 @@ export function useEntitySeries(
     };
   }, [seed, live, heldCap, withGhost, hours]);
 
-  return { series, lastSyncAt, ghost };
+  return { series, lastSyncAt, ghost, tracked };
 }

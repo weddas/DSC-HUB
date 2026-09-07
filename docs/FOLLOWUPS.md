@@ -4651,3 +4651,32 @@ Operator opened a settings/preferences workstream: "as transparent as possible, 
 **Findings (all logged to the tracker, 11 rows):** SPA `DEFAULT_LEAF_OFFSET_C = -1.5` vs brain `leaf_offset_c = "2"` — two leaf-VPD numbers from one setting; `set_global_modifiers` drops `sensor_clamp`; root steering targets have no UI; ~40 hub tunables only in the inspector; no timezone / NTP / clock-drift surface; irrigation shot 2 s hardcoded; settings writes not journaled; no search / anchors in a 1816-line `SettingsPage.tsx`; General tab subtitle promises controls that do not exist; no preference layer at all.
 
 **Open for the operator (plan § Open questions):** °F at all; light theme ship vs exploration; stage-rail overrides need hub firmware; may Settings write hub helpers via `/control/service` or should the brain own them; people / PIN scope; journal retention.
+
+## 2026-09-07 — History persistence audit: every chart, gauge and value against the brain's record
+
+Operator ask: "make sure all charts, graphs and values are reading/recording persistent history — the brain owns the
+record, and persists regardless of session/uptime." Branch `feat/dashboard-v2` (PR #199), verified against the live Pi
+through the dev proxy and against a local brain on the new code.
+
+**What is true today (live Pi):** the brain records to `fleet_history` in `dsc_ops.sqlite3` on disk — 1 717 366 rows,
+oldest 2026-08-24, retention 45 days (pruned at boot), independent of any browser session. Every SPA series hook
+(`useHistory` → `useEntitySeries` → charts, sparklines, in-band fractions, slopes, ETAs, tooltip "was" rows) seeds
+from `GET /history`; the only browser-side state is the live tail appended between polls (re-seeded from the brain on
+reload), the held-reading last-known-good, the alert first-seen clock (labelled "since this session") and alert
+acknowledgements (localStorage per hub boot). Journals, grow log, zones and roles live in SQLite on the brain.
+
+| Finding | Status |
+|------|--------|
+| **A 7-day chart only showed the newest ~25 h.** `list_history` returned the newest 2 000 samples in range (≈ 2 s cadence), so `hours=168` collapsed to a day; the SPA's own downsampler then thinned that. | **fixed** — `settings.list_history_bucketed` reads the whole window and reduces it to ≤ `max_points` equal-width buckets (mean; binaries round so on/off strips stay crisp). `GET /history` accepts `max_points` (8–2000, default 720) and `hours` up to 2 160; the SPA passes the points it will draw. Test: 10 080 one-minute samples → 336 buckets spanning the full week. |
+| **Recorded but unreachable.** Every `switch.dsc_hub_*_demand` was recorded (`switch_dsc_hub_<x>_demand`) yet only `grow_mat_demand` was in `ENTITY_METRIC_MAP`, so the inspector for Heater / Cool / Hum / Dehum / C-Hum reported `tracked: false` and drew nothing. | **fixed** — `history_ops.resolve_entity_metric` resolves the recorder's generic shapes: hub `switch.` / `number.` / `binary_sensor.` controls, raw hub values (`sensor.dsc_hub_<key>` for `light_debt_hours`, `dynamic_co2_ppm`, `wifi_rssi`…), probe values, and the brain's computed entities. Static map still wins. |
+| **Setpoints, mode switches and hub flags were never recorded** (`number.dsc_hub_vpd_target_*`, `manual_takeover`, `auto_photoperiod`, `light_catchup_active`, `clock_valid`…), so band history and "when did takeover start" had no record. | **fixed** — `esphome_client` records them through `record_history_throttled` (a row on change or every 5 min, so a 2 s poll does not multiply the table). |
+| **The brain's computed entities existed only while a browser was polling** (`sensor.dsc_lights_on_today_*`, `dsc_lights_deviation_today`, `dsc_heater_runtime_today`, `dsc_bought_runtime_today`, `dsc_vent_heat_dump_btu`, `dsc_ah_room`, alert flags…): `build_computed_hass_states` runs on request only. | **fixed** — `dsc_brain/computed_history.py`: a 60 s background task started in the app lifespan records every numeric / on-off computed `sensor.dsc_*` and `binary_sensor.dsc_*` under seat `computed` (throttled). Brain-owned cadence, no client needed. |
+| **The SPA never said "not recorded".** Inspector, history drawer, VPD chart and dry-back chart showed an empty plot for an untracked entity, indistinguishable from "no points in range". | **fixed** — `get_entity_history` returns `{points, tracked}`; `useHistory` / `useEntitySeries` expose `tracked`; `NOT RECORDED BY THE BRAIN` (dashed warn) on the VPD and dry-back charts, `Not recorded by the brain` chip + empty label in the inspector and drawer. |
+| VPD chart ranges | **done** — `30 d` added (brain buckets it to 720 points; retention is 45 d). |
+| `sensor.dsc_coldest_root_zone_temp` last recorded 2026-09-01; probe 1 has no moisture / EC history in 7 d, probe 2 is continuous. | observation — consistent with the SENSOR FAULT / PROBE DARK tags; the chart is honestly empty, nothing to fix in the SPA. |
+| Retention 45 d is shorter than a flower run (60–75 d), so "VPD in band over the run" can never be computed from the record. | **recommendation** — raise `fleet_history_retention_days` to 120 (Settings › System, or `POST /settings/system/history-retention`); at today's ~120 k rows/day that is ~15 M rows, fine for SQLite on the Pi's SSD. Tracker row. |
+| Alert acknowledgements are per browser (localStorage, keyed by hub boot). Another device still sees the alert. | **recommendation** — move to a brain-owned `ack` (space journal or a small table). Tracker row. |
+
+**Verify:** brain suite 338 passed (7 new in `tests/test_history_ops.py`); `npx tsc --noEmit` + `npm run build` green; against the live Pi (old brain) the SPA still works — it sends `max_points`, the old brain ignores it, and the Heater tile inspector now shows *Not recorded by the brain* instead of a blank chart; against a local brain on the new code, `switch.dsc_hub_heater_demand`, `number.dsc_hub_vpd_target_min`, `binary_sensor.dsc_hub_light_catchup_active` and `sensor.dsc_lights_on_today_4x8` resolve as tracked and the 7-day request returns buckets that span the window.
+
+**After hotpatch:** the new metrics begin at hotpatch time (there is no back-fill for what was never recorded); the 7-day / 30-day views fill in from the existing record immediately.

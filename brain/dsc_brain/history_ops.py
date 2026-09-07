@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from .settings import list_history
+from .settings import list_history, list_history_bucketed
 
 # entity_id → (seat_id, metric) stored in fleet_history
 ENTITY_METRIC_MAP: dict[str, tuple[str, str]] = {
@@ -79,11 +79,78 @@ ENTITY_METRIC_MAP: dict[str, tuple[str, str]] = {
 }
 
 
-def query_entity_history(entity_id: str, hours: float = 6.0) -> list[dict[str, Any]]:
+# Hub numeric values the ESPHome client records verbatim under their key
+# (esphome_client: `for metric, value in values.items()`), addressable as
+# `sensor.dsc_hub_<key>` without a hand-written map entry.
+HUB_VALUE_KEYS: frozenset[str] = frozenset(
+    {
+        "temp_c", "rh_pct", "room_temp_c", "room_rh_pct", "clone_temp_c", "clone_rh_pct",
+        "vpd_kpa", "clone_vpd_kpa", "room_vpd_kpa", "leaf_vpd_kpa", "clone_leaf_vpd_kpa",
+        "co2_sensor_voltage", "dynamic_co2_ppm", "wifi_rssi", "uptime", "heartbeat",
+        "api_down_age", "ha_handshake_age", "link_recovery_bounces",
+        "light_delivered_hours", "light_debt_hours", "mister_delivered_hours", "mister_debt_hours",
+        "vpd_main_band_hours", "vpd_clone_band_hours", "vpd_main_band_debt_hours", "vpd_clone_band_debt_hours",
+        "dehumidifier_fire_countdown", "humidifier_fire_countdown", "heater_fire_countdown",
+        "ac_fire_countdown", "grow_mat_fire_countdown", "clone_humidifier_fire_countdown",
+        "humidifier_cooldown_remaining", "dehumidifier_cooldown_remaining", "ac_cooldown_remaining",
+        "heater_cooldown_remaining", "grow_mat_cooldown_remaining", "clone_humidifier_cooldown_remaining",
+    }
+)
+
+# Seat the brain uses for its own computed entities (computed_history.py).
+COMPUTED_SEAT = "computed"
+
+
+def resolve_entity_metric(entity_id: str) -> tuple[str, str] | None:
+    """entity_id → (seat_id, metric), or None when the recorder has no such series.
+
+    Static map first (hand-curated names), then the generic shapes the recorder writes:
+    hub controls (`switch.dsc_hub_*`, `number.dsc_hub_*`), hub binaries
+    (`binary_sensor.dsc_*` → `bin_*`), raw hub values (`sensor.dsc_hub_<key>`), probe values
+    (`sensor.dsc_probe<n>_<key>`), and the brain's computed entities (seat `computed`,
+    metric = entity_id)."""
     key = ENTITY_METRIC_MAP.get(entity_id)
+    if key:
+        return key
+    eid = (entity_id or "").strip()
+    if not eid or "." not in eid:
+        return None
+    domain, obj = eid.split(".", 1)
+    if domain == "switch" and obj.startswith("dsc_hub_"):
+        return ("hub", f"switch_{obj}")
+    if domain == "number" and obj.startswith("dsc_hub_"):
+        return ("hub", f"number_{obj}")
+    if domain == "binary_sensor" and obj.startswith("dsc_hub_"):
+        return ("hub", f"bin_{obj}")
+    if domain == "sensor" and obj.startswith("dsc_hub_") and obj[len("dsc_hub_"):] in HUB_VALUE_KEYS:
+        return ("hub", obj[len("dsc_hub_"):])
+    if domain == "sensor" and obj.startswith("dsc_probe") and "_" in obj[9:]:
+        n, _, rest = obj[9:].partition("_")
+        if n.isdigit() and rest:
+            return (f"pot{n}", rest)
+    if domain in ("sensor", "binary_sensor") and obj.startswith("dsc_"):
+        return (COMPUTED_SEAT, eid)
+    return None
+
+
+def is_tracked(entity_id: str) -> bool:
+    return resolve_entity_metric(entity_id) is not None
+
+
+def query_entity_history(
+    entity_id: str,
+    hours: float = 6.0,
+    max_points: int = 720,
+    *,
+    now: float | None = None,
+) -> list[dict[str, Any]]:
+    """Points for one entity over the last `hours`, the whole window represented in at
+    most `max_points` buckets (see `list_history_bucketed`)."""
+    key = resolve_entity_metric(entity_id)
     if not key:
         return []
     seat_id, metric = key
-    since = time.time() - hours * 3600.0
-    rows = sorted(list_history(seat_id, metric, since), key=lambda r: r["ts"])
+    until = time.time() if now is None else now
+    since = until - hours * 3600.0
+    rows = list_history_bucketed(seat_id, metric, since, max_points=max_points, until_ts=until)
     return [{"t": int(r["ts"] * 1000), "v": float(r["value"])} for r in rows if r.get("value") is not None]

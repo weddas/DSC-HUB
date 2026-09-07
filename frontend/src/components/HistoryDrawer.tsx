@@ -82,7 +82,7 @@ export function HistoryDrawer({
     >
       <div className="dsc-chip-row" style={{ marginBottom: 12 }}>
         <TimespanControl hours={hours} setHours={setHours} extras={CYCLE_TIMESPAN_EXTRAS} />
-        {thin ? <StatusChip label="Thin recorder" tone="warn" /> : null}
+        {series.tracked === false ? <StatusChip label="Not recorded by the brain" tone="warn" /> : thin ? <StatusChip label="Thin recorder" tone="warn" /> : null}
         {ghost.length > 1 ? <StatusChip label="Prior window ghost" tone="muted" /> : null}
       </div>
       {entityId ? (

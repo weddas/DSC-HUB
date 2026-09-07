@@ -5,19 +5,22 @@ import type { ZoneModel } from "../hooks/useZones";
 import { darkIntervals } from "../lib/lightsOffShades";
 import { readTentPhotoperiodInput } from "../lib/lightSchedule";
 import { growLogSeverity, type DisplayGrowLogEvent } from "../lib/growLogFilter";
+import { StatusTag } from "./ui";
 import { MultiLineChart, type ChartShade, type ChartTimeMarker, type NamedSeries } from "../viz/charts";
 
-export type VpdRange = 24 | 48 | 168 | 12 | 18;
+export type VpdRange = 24 | 48 | 168 | 720 | 12 | 18;
 
 const RANGES: { hours: VpdRange; label: string; hint: string }[] = [
   { hours: 24, label: "24 h", hint: "Last day" },
   { hours: 48, label: "48 h", hint: "Last two days" },
-  { hours: 168, label: "7 d", hint: "Last week — needs a week of recorder history" },
+  { hours: 168, label: "7 d", hint: "Last week, bucketed by the brain" },
+  { hours: 720, label: "30 d", hint: "Last thirty days — the recorder keeps 45" },
   { hours: 12, label: "Cycle", hint: "One 12 h photoperiod" },
   { hours: 18, label: "Photo", hint: "One 18 h veg window" },
 ];
 
 function pointsFor(hours: number): number {
+  if (hours >= 720) return 720;
   if (hours >= 168) return 336;
   if (hours >= 48) return 192;
   return 144;
@@ -137,6 +140,7 @@ export function ZoneVpdChart({
             </button>
           ))}
         </div>
+        {vpd.tracked === false ? <StatusTag label="NOT RECORDED BY THE BRAIN" tone="warn" dashed title={`${zone.vpd.entityId} is not in the brain's recorder — nothing to chart`} /> : null}
         <div className="dsc-zvc-ranges" role="group" aria-label="Right axis">
           {(["rh", "temp"] as const).map((c) => (
             <button

@@ -17,8 +17,9 @@ export function useHistory(
   entityId: string,
   hours = 6,
   maxPoints = 96,
-): { points: SeriesPoint[]; loading: boolean; error: string | null } {
+): { points: SeriesPoint[]; loading: boolean; error: string | null; tracked: boolean | null } {
   const [points, setPoints] = useState<SeriesPoint[]>([]);
+  const [tracked, setTracked] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,14 +29,16 @@ export function useHistory(
     async function load() {
       if (!entityId) {
         setPoints([]);
+        setTracked(null);
         setLoading(false);
         return;
       }
       setLoading(true);
       setError(null);
       try {
-        const rows = await get_entity_history(entityId, hours);
+        const { points: rows, tracked: isTracked } = await get_entity_history(entityId, hours, maxPoints);
         if (cancelled) return;
+        setTracked(isTracked);
         const series = rows.filter((p) => Number.isFinite(p.t) && Number.isFinite(p.v));
         series.sort((a, b) => a.t - b.t);
         setPoints(downsample(series, maxPoints));
@@ -54,5 +57,5 @@ export function useHistory(
     };
   }, [entityId, hours, maxPoints]);
 
-  return { points, loading, error };
+  return { points, loading, error, tracked };
 }

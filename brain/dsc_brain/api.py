@@ -24,7 +24,7 @@ from .backup_ops import export_backup_zip, import_backup_zip
 from .catalog import get_strain, init_db, reload_catalogs, search
 from .computed_ops import build_computed_hass_states
 from .control_ops import call_service_proxy, sync_inventory_in_service_to_hub
-from .history_ops import ENTITY_METRIC_MAP, query_entity_history
+from .history_ops import ENTITY_METRIC_MAP, is_tracked, query_entity_history
 from .event_log import list_grow_log
 from .decision_loop import decision_tick
 from .appliance_driver import start_appliance_driver, stop_appliance_driver
@@ -406,6 +406,10 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
         migrate_legacy_plant_ids()
     except Exception:  # noqa: BLE001
         pass
+    # The brain's own record of its computed entities — every mode, no client needed.
+    from .computed_history import start_computed_recorder, stop_computed_recorder
+
+    start_computed_recorder()
     if is_demo_mode():
         prepare_demo_settings()
         assert_demo_safe_config()
@@ -417,6 +421,7 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
         start_zigbee_ingest()
         start_follow_plants_job()
     yield
+    stop_computed_recorder()
     if is_demo_mode():
         await stop_demo_simulator()
     else:
@@ -770,24 +775,25 @@ async def control_demand(body: DemandBody) -> dict[str, Any]:
 @app.get("/history")
 def history_get(
     entity_id: str = Query("", max_length=200),
-    hours: float = Query(6.0, ge=0.25, le=168.0),
+    hours: float = Query(6.0, ge=0.25, le=2160.0),
+    max_points: int = Query(720, ge=8, le=2000),
 ) -> dict[str, Any]:
     # An unresolved channel ("") is an honest empty state, not a 422 — some SPA series
     # resolvers hand back "" before their entity binds and would otherwise error-spam.
     entity_id = (entity_id or "").strip()
     if not entity_id:
         return {"entity_id": "", "hours": hours, "points": [], "tracked": False}
-    tracked = entity_id in ENTITY_METRIC_MAP
+    tracked = is_tracked(entity_id)
     if not tracked:
         import logging
 
         logging.getLogger(__name__).debug(
             "GET /history requested for unmapped entity_id=%s — not in ENTITY_METRIC_MAP", entity_id
         )
-    points = query_entity_history(entity_id, hours)
+    points = query_entity_history(entity_id, hours, max_points=max_points)
     # Distinguishes "recorder never heard of this entity" from "tracked but genuinely
     # empty in range" — both otherwise looked identical as points: [].
-    return {"entity_id": entity_id, "hours": hours, "points": points, "tracked": tracked}
+    return {"entity_id": entity_id, "hours": hours, "max_points": max_points, "points": points, "tracked": tracked}
 
 
 @app.get("/grow-log")

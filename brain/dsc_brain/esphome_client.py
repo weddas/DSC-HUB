@@ -28,7 +28,7 @@ from .hub_controls import (
 from .api_lock import host_lock
 from .native_api import make_api_client
 from .paths import EXPECTED_FIRMWARE, SURFACE_VERSION
-from .settings import list_inventory, record_history
+from .settings import list_inventory, record_history, record_history_throttled
 from .zigbee_mqtt import apply_zigbee_cache_to_state
 
 _logger = logging.getLogger(__name__)
@@ -325,6 +325,15 @@ class EsphomeIngest:
                     record_grow_log("; ".join(bits))
                 _BOOT_GROW_LOGGED = True
             for eid, ctrl in controls.items():
+                if eid.startswith("switch.dsc_hub_") and not eid.endswith("_demand"):
+                    # Mode / ownership switches: on change or every 5 min (charts + audits).
+                    record_history_throttled("hub", eid.replace(".", "_"), 1.0 if ctrl.get("state") == "on" else 0.0, now)
+                elif eid.startswith("number.dsc_hub_"):
+                    # Setpoints and rails: the band history the VPD chart needs.
+                    try:
+                        record_history_throttled("hub", eid.replace(".", "_"), float(ctrl.get("state")), now)
+                    except (TypeError, ValueError):
+                        pass
                 if eid.startswith("switch.dsc_hub_") and eid.endswith("_demand"):
                     metric = eid.replace(".", "_").replace("switch_", "switch_")
                     on = 1.0 if ctrl.get("state") == "on" else 0.0
@@ -362,6 +371,8 @@ class EsphomeIngest:
             for eid, on in binaries.items():
                 if not eid.startswith("binary_sensor.dsc_"):
                     continue
+                if eid.startswith("binary_sensor.dsc_hub_"):
+                    record_history_throttled("hub", "bin_" + eid.split(".", 1)[1], 1.0 if on else 0.0, now)
                 key = f"bin:{eid}"
                 st = "on" if on else "off"
                 prev = _PREV_HUB_DEMANDS.get(key)

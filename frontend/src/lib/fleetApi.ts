@@ -1,16 +1,27 @@
 import { formatApiError } from "./apiError";
 
-export async function get_entity_history(
-  entityId: string,
-  hours = 6,
-): Promise<Array<{ t: number; v: number }>> {
+export interface EntityHistory {
+  points: Array<{ t: number; v: number }>;
+  /** false = the brain's recorder has no series for this entity (not "no points in range"). */
+  tracked: boolean | null;
+}
+
+/**
+ * One entity's history from the brain's recorder. The brain buckets the *whole* window to
+ * `maxPoints`, so a 7-day or 30-day request spans the window instead of collapsing to the
+ * newest samples. `tracked` is the brain's word on whether it records this entity at all.
+ */
+export async function get_entity_history(entityId: string, hours = 6, maxPoints = 720): Promise<EntityHistory> {
   // Some channel resolvers can hand back "" before a series is bound — an unresolved
   // channel is an honest empty state, not a request worth sending (backend 422s on it anyway).
-  if (!entityId) return [];
-  const resp = await fetch(`/history?entity_id=${encodeURIComponent(entityId)}&hours=${hours}`);
-  if (!resp.ok) return [];
-  const data = (await resp.json()) as { points?: Array<{ t: number; v: number }> };
-  return data.points ?? [];
+  if (!entityId) return { points: [], tracked: null };
+  const mp = Math.max(8, Math.min(2000, Math.round(maxPoints)));
+  const resp = await fetch(`/history?entity_id=${encodeURIComponent(entityId)}&hours=${hours}&max_points=${mp}`);
+  if (!resp.ok) return { points: [], tracked: null };
+  const ctype = resp.headers.get("content-type") || "";
+  if (!ctype.includes("json")) return { points: [], tracked: null };
+  const data = (await resp.json()) as { points?: Array<{ t: number; v: number }>; tracked?: boolean };
+  return { points: data.points ?? [], tracked: typeof data.tracked === "boolean" ? data.tracked : null };
 }
 
 export type GrowLogEvent = { id: number; message: string; ts: number };
