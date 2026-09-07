@@ -50,8 +50,10 @@ sudo bash services/dsc-hub/image/bake-sd-image.sh /path/to/raspios-lite-arm64.im
 
 ## Explicit non-goals on the card
 
-- Fat CannaLib corpus (thin local / YAML only; optional `--profile thin-catalog`)
+- Fat CannaLib corpus (kit default = remote URL + slim Want YAML / on-Pi sqlite when present)
+- Working `docker compose --profile thin-catalog` out of the box (see trap below)
 - Compile-from-source as required first flash path
+- WT32-ETH01 **bridge** firmware (retired; see trap below)
 
 ## Next
 
@@ -65,3 +67,55 @@ when one is absent, and that file is gitignored so it is never in the repo or th
 tar. A naive bake therefore mints a new key set and the baked firmware stops matching the
 live fleet's OTA keys. Always copy the live set from `/opt/dsc-hub-repo/firmware/v4/secrets.yaml`
 into `/opt/dsc-hub-bake-src/firmware/v4/secrets.yaml` before baking, and check the md5s match.
+
+**Trap — hollow kit `.bin` files:** `bake-firmware.sh` writes **0-byte placeholders** when
+the ESPHome CLI is missing, secrets are missing, or (historically) when
+`dsc_fleet_setup` failed to compile on the pinned ESPHome. The live hub
+(`dsc-hub-v4_0.yaml`) does **not** pull that SoftAP component, so fleet OTA can stay
+green while the card cannot USB-flash a kit. Tip `0b06f58` restored SoftAP compile on
+2026.6.5 and made `bake-on-linux.sh` abort under `DSC_RELEASE=1` if any staged
+`firmware/kit/*.bin` is empty. For a shippable card:
+
+```bash
+export DSC_RELEASE=1 DSC_VERSION=8.1.0
+bash services/dsc-hub/image/bake-on-linux.sh
+# after bake:
+find services/dsc-hub/firmware/kit -name '*.bin' -printf '%s %p\n' | awk '$1==0{bad=1;print} END{exit bad}'
+```
+
+`.audit/kit-linux-bake.ps1` does **not** set `DSC_RELEASE=1` today — set it on the
+remote bake command, or verify sizes before flashing SD. Toolchain detail:
+[`docs/ops/ESPHOME-TOOLCHAIN.md`](../../../docs/ops/ESPHOME-TOOLCHAIN.md) § Kit SoftAP.
+
+**Trap — retired `bridge` role still in the USB-flash menu:**
+`services/dsc-hub/firmware/kit-manifest.json` and `brain/dsc_brain/usb_flash.py`
+`KIT_ROLES` still list **`bridge`** (WT32-ETH01). `bake-firmware.sh` deliberately
+**excludes** bridge from both the `KIT` map and `ORDER` (source lives under
+`firmware/_history`). A successful bake therefore produces eight real
+`firmware/kit/*.bin` files and **no** `bridge.bin`. The SPA setup wizard still
+offers the role; flash fails with `Missing firmware binary for bridge`. Product
+fix (not a bake bug): drop the role from the manifest / wizard, or hide roles
+whose binary is absent. Do not expect bridge SoftAP on an 8.1.0 card.
+
+**Trap — `thin-catalog` profile cannot start on a fresh card:**
+
+```mermaid
+flowchart LR
+  bake["bake-on-linux.sh"] --> tar["payload tar"]
+  bake --> dock["docker tar"]
+  tar -->|"brain, spa-dist, data, services/dsc-hub, firmware/v4"| card[SD card]
+  dock -->|"brain + mosquitto + z2m only"| card
+  card -.->|"compose --profile thin-catalog"| miss["no services/cannalib context<br/>no dsc-hub-cannalib image"]
+```
+
+`docker-compose.yml` keeps `cannalib` behind `profiles: ["thin-catalog"]` with
+`build.context: ../cannalib` and `image: dsc-hub-cannalib:8.1.0`. Neither lands
+on the card today:
+
+1. `.audit/kit-linux-bake.ps1` packs `brain frontend/spa-dist data services/dsc-hub firmware/v4` — **not** `services/cannalib`.
+2. `bake-on-linux.sh` builds/saves only `dsc-hub-brain`, `eclipse-mosquitto:2`, and `koenkk/zigbee2mqtt:2`.
+
+Default boot (brain + mosquitto + z2m) is fine; catalog stays remote URL / Want
+YAML / optional sqlite mount. Enabling thin-catalog on a baked card needs a
+product bake change (pack `services/cannalib` + `docker save dsc-hub-cannalib`).
+Detail: [`docs/ops/CANNALIB-API.md`](../../../docs/ops/CANNALIB-API.md).

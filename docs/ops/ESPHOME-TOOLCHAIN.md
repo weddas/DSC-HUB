@@ -12,9 +12,9 @@ venv.
 | Version pin | `esphome: min_version: "2026.6.5"` in `dsc-hub-v4_0.yaml`, `dsc-control-common.yaml`, `dsc-pot-common.yaml`, `dsc-sonoff-common.yaml`. Builds on older ESPHome fail fast. |
 | Toolchain venv | `/opt/dsc-esphome-venv` — provisioned by `dsc-esphome-venv-setup.service` (→ `services/dsc-hub/pi/dsc-esphome-venv-setup.sh`), floored to `2026.6.5`. Separate from the brain venv. Updated from the container via `dsc-esphome-update.path` → `pi/dsc-esphome-host.sh`. |
 | Dashboard | `dsc-esphome-dashboard.service` runs `esphome dashboard` on `0.0.0.0:6052`. Reachable at `http://dsc-brain.local:6052` (hostname `dsc-brain` + avahi). |
-| Job runner | `brain/dsc_brain/esphome_jobs.py` — `build_backend()` picks: local `<esphome_bin> compile|run` (`cwd=firmware/v4`, `PLATFORMIO_CORE_DIR`), or the dashboard WebSocket. Serialised, one at a time. Probe seats map to `dsc-potN.yaml`. |
+| Job runner | `brain/dsc_brain/esphome_jobs.py` — serialised, one at a time. Local CLI: `compile` / `run --no-logs`. Dashboard: **`/compile` then `/upload`** for OTA (not `/run`, not upload-only). `SEAT_YAML` maps seats → yaml (`potN` → `dsc-potN.yaml`, dehumidifier → `dsc-de-humidifier.yaml`); `queue_job` refuses when the project dir is visible and the file is missing. |
 | Status / update API | `GET /settings/esphome/toolchain`, `POST /settings/esphome/toolchain/update`, `POST /settings/esphome/toolchain/rollback`, `GET|POST /settings/esphome/rollout?mode=all|canary|rest` (`brain/dsc_brain/esphome_toolchain.py`). |
-| Settings UI | Settings → Device → **ESPHome** card: installed / latest / pinned-min, build backend + disk free, **Update ESPHome**, **Roll back**, secrets / helper / disk chips, per-seat drift, **Open ESPHome Dashboard**, canary → release-the-rest rollout. |
+| Settings UI | Settings › **Devices** › **Firmware** (`#/settings/devices#firmware`): installed / latest_supported / pinned-min, build backend + disk free, **Update ESPHome**, **Roll back**, secrets / helper / disk / held-back chips, per-seat drift, **Open ESPHome Dashboard**, canary → release-the-rest rollout. |
 
 Settings keys (`brain/dsc_brain/settings.py`): `esphome_bin`, `esphome_project_dir`,
 `esphome_dashboard_url` (browser link), `esphome_dashboard_api` (brain→dashboard),
@@ -24,13 +24,16 @@ Settings keys (`brain/dsc_brain/settings.py`): `esphome_bin`, `esphome_project_d
 
 ## Update ESPHome to latest
 
-1. Settings → Device → ESPHome. The card shows **installed** vs **latest** (PyPI,
-   only when Ethernet is up) vs the **pinned min**.
+1. Settings › **Devices** › **Firmware**. The card shows **installed** vs
+   **latest_supported** (newest PyPI release below the dashboard ceiling; only
+   when Ethernet/DNS work) vs the **pinned min**. PyPI's absolute newest may be
+   higher and shown as *Newer ESPHome held back*.
 2. **Update ESPHome →** the mechanism follows `build_backend()` (table below):
    host helper on the shipping kit, `pip` on a bare-venv brain, compose bump on
    the legacy container. Refused if a compile/OTA job is queued/running, if
-   offline, if the target is below the pinned `min_version`, or under 1.5 GiB free.
-   **Roll back to X** appears once a change is on record.
+   offline, if the target is below the pinned `min_version`, at/past the
+   2026.8 dashboard boundary (unless `device_builder: true`), or under 1.5 GiB free.
+   **Roll back to X** appears once a change is on record (see Roll back).
 3. When the venv version moves, the card offers **Canary <probe> first** or
    **Reflash whole fleet**; after the canary rejoins, **Release the rest (hub last)**.
    Nothing flashes until you confirm (`esphome_fleet_ota_prompt`).
@@ -40,8 +43,12 @@ Settings keys (`brain/dsc_brain/settings.py`): `esphome_bin`, `esphome_project_d
 Do this deliberately, not on every ESPHome release:
 
 1. Update the venv (`Update ESPHome`, or `sudo -u dsc /opt/dsc-esphome-venv/bin/pip install -U esphome`).
-2. `cd firmware/v4 && /opt/dsc-esphome-venv/bin/esphome config dsc-hub.yaml` → exit 0
-   for hub / control / a pot / a sonoff.
+2. `cd firmware/v4 && /opt/dsc-esphome-venv/bin/esphome config …` → exit 0 for
+   hub / control / a pot / a sonoff **and** a real
+   `esphome compile` per family **plus** at least one SoftAP kit stub
+   (`dsc-hub-kit.yaml`). Live gate lesson: `config` misses lambda C++
+   (panel `lv_color_eq` / LVGL 9; hub `StringRef` / `.str()` on ESPHome 2026.x;
+   kit SoftAP `ScanResultsLock` / `get_ssid().str()` on 2026.6.5).
 3. Run the firmware QA rig (`scripts/run_sim_gates.sh`) → 0 violations.
 4. Bump `min_version:` in the four `esphome:` blocks + `PIN=` in
    `dsc-esphome-venv-setup.sh` + `PINNED_MIN_VERSION` in `esphome_toolchain.py`,
@@ -63,10 +70,39 @@ container already bind-mounts.
 
 | Result | When | compile / OTA | Update ESPHome |
 |---|---|---|---|
-| `venv` | `esphome_bin` resolves to a real file / PATH entry (host or bare-venv brain) | `subprocess` in `firmware/v4`, streamed, real exit code | `pip install -U esphome` in that venv, restart the dashboard unit |
-| `venv-host` | no local CLI; `GET {esphome_dashboard_api}/version` answers **and** `<ops>/esphome-host/capabilities.json` exists (written by `pi/dsc-esphome-host.sh`) — **the shipping topology** | dashboard WebSocket `/compile` or `/upload`: `{"type":"spawn","configuration":<yaml>}`, stream `{"event":"line"}`, finish on `{"event":"exit","code":N}` | write `<ops>/esphome-host/request.json`; `dsc-esphome-update.path` fires `dsc-esphome-update.service` → `dsc-esphome-host.sh update` (disk guard, `pip install esphome==<target>` as `dsc`, `systemctl restart dsc-esphome-dashboard`, `result.json`); the brain tails `progress.log` into the job row |
+| `venv` | `esphome_bin` resolves to a real file / PATH entry (host or bare-venv brain) | `subprocess` in `firmware/v4` (`compile` / `run --no-logs`), streamed, real exit code | `pip install -U esphome` in that venv, restart the dashboard unit |
+| `venv-host` | no local CLI; `<ops>/esphome-host/capabilities.json` exists **and** the answering dash is not the legacy container — **the shipping topology**. Dashboard may be **down** (`dashboard_up: false`); update/rollback still work | dashboard WebSocket: compile = `/compile`; OTA = `/compile` → `/upload` (`{"type":"spawn","configuration":<yaml>}`, stream `{"event":"line"}`, finish on `{"event":"exit","code":N}`) | write `<ops>/esphome-host/request.json`; `dsc-esphome-update.path` fires `dsc-esphome-update.service` → `dsc-esphome-host.sh update` (disk guard, `pip install esphome==<target>` as `dsc`, `systemctl restart dsc-esphome-dashboard`, `result.json`); the brain tails `progress.log` into the job row |
 | `dashboard` | a dashboard answers but no helper file: the legacy `dsc-hub-esphome` container (`dashboard_legacy: true`), or a host unit deployed before the helper | same WebSocket path | legacy: compose image-tag bump + redeploy (or the exact steps when no `docker`); host-without-helper: refused with `sudo systemctl enable --now dsc-esphome-update.path` |
 | `none` | nothing reachable | job fails clean; `pi/flash-fleet-remote.sh` is the manual path | refused |
+
+### Job runner pitfalls (live gate)
+
+```mermaid
+flowchart LR
+  q[queue_job] --> yaml{yaml exists?}
+  yaml -->|no + tree visible| refuse[ValueError at button]
+  yaml -->|yes / tree hidden| worker[serial worker]
+  worker --> backend{backend}
+  backend -->|venv| cli["esphome compile / run --no-logs"]
+  backend -->|venv-host / dashboard| steps["/compile then /upload"]
+  steps -.->|never| run["/run tails device logs forever"]
+  steps -.->|never alone| upOnly["/upload alone needs an existing binary"]
+```
+
+- **OTA path:** `_run_job_via_dashboard` always compiles first, then uploads. `/upload`
+  alone fails `FileNotFoundError` on a seat never built on this Pi. `/run` attaches
+  to the device log and never exits — the job stays `running` until the deadline
+  and blocks the serial queue (dehumidifier, 2026-09-07).
+- **Seat yaml map:** `SEAT_YAML` — probes stay `dsc-potN.yaml` (not `DSC-ProbeN.yaml`);
+  dehumidifier is `dsc-de-humidifier.yaml`. Exact duplicate seat+action while
+  queued/running is refused; other seats may queue behind a running job (fleet
+  rollout).
+- **Reaper:** `start_esphome_worker` → `_reap_stale_running` fails any row still
+  `running` from a previous brain process so queue / rollout / toolchain-update
+  guards are not stuck after a restart/redeploy mid-flash.
+- **Deploy idle restart:** `pi/deploy-brain-remote.sh` skips
+  `systemctl restart dsc-esphome-dashboard` when `pgrep -f 'esphome (run|compile|upload)'`
+  matches — restarting mid-job made queued OTAs fail *Connection refused*.
 
 ### Host helper protocol (`<ops>/esphome-host/`, default `/var/lib/dsc-hub/ops/esphome-host/`)
 
@@ -84,8 +120,14 @@ UTF-8); the EXIT trap writes a failure `result.json` if the script dies before i
 own; the helper dir is `dsc:dsc 0775` so the dashboard wrapper (runs as `dsc`) can
 refresh capabilities; and pip is refused up front when `pypi.org` does not resolve
 on the **host** — the Pi's `dhcpcd` wrote an empty `/etc/resolv.conf` while Docker
-containers resolved through their own pinned servers. `pi/bring-up-eth0.sh` now
-pins `static domain_name_servers` for eth0 in `dhcpcd.conf`.
+containers resolved through their own pinned servers.
+
+**Host DNS (v2):** `static domain_name_servers` alone was **not** enough — dhcpcd
+still emptied `resolv.conf` on the next renewal (mid fleet-reflash: hub/probe builds
+failed resolving github.com). `pi/bring-up-eth0.sh` now adds `nohook resolv.conf` to
+`dhcpcd.conf` and installs a static `/etc/resolv.conf` (site `192.168.86.1` +
+`8.8.8.8` / `1.1.1.1`, matching Docker's pin). Site-specific first nameserver is a
+known residual for other networks (FOLLOWUPS P2).
 
 Status fields the Settings card reads: `build_backend`, `dashboard_legacy`,
 `dashboard_up`, `host_helper`, `secrets_present`, `disk_free_gb` / `disk_free_ok` (update
@@ -125,9 +167,12 @@ when it is needed.
 ### Roll back
 
 `POST /settings/esphome/toolchain/rollback` (Settings → **Roll back to X**) reinstalls
-the version the last successful change came from (`from_version` of the newest
-`done` row in `esphome_toolchain_jobs`), same guard rails, downgrade allowed. Never
-offered below the pinned `min_version`.
+the prior version from `esphome_toolchain_jobs`: newest row that is either
+`status=done`, **or** any job whose `to_version` matches what is currently
+installed (a failed update that still moved the venv — live 2026-09-06 dashboard
+restart failure). Same guard rails; downgrade allowed. Never offered below the
+pinned `min_version`, and never onto a release at/past `DASHBOARD_REMOVED_FROM`
+unless the helper reports `device_builder: true`.
 
 ### Fleet rollout — canary first
 
@@ -147,6 +192,86 @@ The bake owns the keys: `image/bake-on-linux.sh` requires (or generates)
 `/opt/dsc-hub/firmware/v4/secrets.yaml` (`0600 dsc:dsc`, never git). One bake =
 one kit = one key set, so later on-Pi OTA builds agree with the baked binaries.
 The card shows **No firmware secrets** when the helper reports it missing.
+
+**Trap — fresh secrets on rebake:** `secrets.yaml` is gitignored. A naive
+`bake-on-linux.sh` *generates* a new key set when the file is absent, so the
+baked `.bin` files stop matching the live fleet’s OTA/API keys. Before baking
+8.1.0 (or any rebake against a live grow), copy the live set
+(`/opt/dsc-hub-repo/firmware/v4/secrets.yaml` or the kit image’s
+`/opt/dsc-hub/firmware/v4/secrets.yaml`) into the bake tree and confirm md5s
+match. Full bake runbook: [`services/dsc-hub/image/README.md`](../../services/dsc-hub/image/README.md).
+
+### Kit SoftAP firmware bake (`dsc_fleet_setup`)
+
+Factory USB flash uses **prebuilt** kit binaries under
+`services/dsc-hub/firmware/kit/*.bin`, compiled by `image/bake-firmware.sh`
+from the `*-kit.yaml` stubs — **not** the live lab YAMLs.
+
+| Path | Uses `dsc_fleet_setup`? | Role |
+|---|---|---|
+| `dsc-hub-v4_0.yaml` (live hub) | **No** | Lab / in-grow OTA — SoftAP portal not compiled here |
+| `dsc-hub-kit.yaml` → `dsc-fleet-setup-hub.yaml` | **Yes** | Factory SoftAP (`DSC-Setup-*`) |
+| `dsc-control-kit.yaml` → `dsc-fleet-setup-satellite.yaml` | **Yes** | Satellite joins hub setup AP |
+| `dsc-pot{N}-kit.yaml` → `dsc-fleet-setup-pot-kit.yaml` | **Yes** | Probe SoftAP join |
+| Sonoff kit YAMLs (`dsc-heater.yaml` …) | No SoftAP component | Plain compile into `kit/*.bin` |
+
+```mermaid
+flowchart TD
+  bake["bake-on-linux.sh"] --> secrets{"secrets.yaml?"}
+  secrets -->|missing| gen["generate-secrets.sh"]
+  secrets -->|present| fw["bake-firmware.sh"]
+  gen --> fw
+  fw --> compile["esphome compile *-kit.yaml"]
+  compile -->|ok| bins["firmware/kit/*.bin non-empty"]
+  compile -->|fail / no CLI| ph["empty placeholder .bin"]
+  bins --> guard{"DSC_RELEASE=1?"}
+  ph --> guard
+  guard -->|yes + any 0-byte| abort["bake aborts"]
+  guard -->|no| stage["stage /opt/dsc-hub — hollow card possible"]
+```
+
+**Why the live fleet can look fine while the card cannot flash a kit:** OTA /
+Settings › Devices › Firmware only builds the **lab** stubs. The SoftAP
+component bit-rots against ESPHome Wi-Fi API moves without anyone noticing
+until the next SD bake. Tip `0b06f58` / merge `4d73cfc` restored compile on
+pinned **2026.6.5**:
+
+1. Declare `hub_mac_str()` / `panel_mac_str()` in `dsc_fleet_setup.h` (defs were
+   orphaned — only `bridge_mac_str()` was declared).
+2. ESPHome 2026.x removed `wifi::ScanResultsLock`. Call
+   `set_keep_scan_results(true)` in `setup()` so hub portal AP lists and
+   satellite `DSC-Setup-*` scans still see `get_scan_result()` outside an
+   active scan.
+3. `WiFiScanResult::get_ssid()` returns `StringRef` — take `.str()` (length-
+   honouring; not guaranteed NUL-terminated).
+4. ArduinoJson: assign MAC / SSID as `std::string` so the library **copies** —
+   a `char[18]` local stored by pointer dies before `serialize()`.
+
+**Release guard:** `bake-firmware.sh` refuses placeholders when
+`DSC_RELEASE=1`. Tip `0b06f58` also makes `bake-on-linux.sh` abort under
+`DSC_RELEASE=1` if any staged `firmware/kit/*.bin` is zero bytes (the hollow
+8.0.0 card shipped because the bake never set the flag and compile failure
+fell through to placeholders).
+
+**Operator pitfalls**
+
+- `.audit/kit-linux-bake.ps1` currently exports `DSC_VERSION` only — **not**
+  `DSC_RELEASE=1`. For a shippable card, set `DSC_RELEASE=1` on the bake host
+  (or verify `find …/firmware/kit -name '*.bin' ! -size 0` after bake).
+- Bump checklist must `esphome compile` at least one SoftAP stub
+  (`dsc-hub-kit.yaml`), not only `dsc-hub.yaml` / `esphome config`.
+- Live fleet firmware train stays **8.0.0.0** — this SoftAP fix does **not**
+  imply a grow reflash; it unblocks the **next** SD / USB-flash bake.
+- **Retired `bridge` role:** `kit-manifest.json` + `usb_flash.KIT_ROLES` still
+  advertise WT32-ETH01 `bridge.bin`, but `bake-firmware.sh` never compiles it
+  (comment in script: retired to `firmware/_history`). USB flash of `bridge`
+  fails with a missing binary after a clean bake. Eight kit roles are real:
+  hub, control, pot1, pot2, heater, heatmat, humidifier, dehumidifier. See
+  [`services/dsc-hub/image/README.md`](../../services/dsc-hub/image/README.md).
+- **Thin-catalog CannaLib:** SD bake does **not** ship `services/cannalib` or
+  `dsc-hub-cannalib` — `docker compose --profile thin-catalog up -d` fails on a
+  fresh card. Default kit path stays remote / Want YAML. See
+  [`CANNALIB-API.md`](CANNALIB-API.md).
 
 ### Units on the Pi
 
@@ -175,8 +300,16 @@ inventory, default order `pot2 pot1 heater heatmat humidifier dehumidifier contr
 * 2026-09-06 against the live Pi dashboard (pre-helper): `GET :6052/version`,
   `/devices` (47 configs), `esphome config dsc-hub.yaml` valid on 2026.8.x, a
   `2099.1.0` pin correctly rejected, `/compile` and `/upload` confirmed as WebSocket
-  endpoints. The live `/upload` OTA had not yet been fired at a device.
-* 2026-09-06 dev box: `esphome config` sweep over every `firmware/v4` entry point
-  on ESPHome 2026.8.0 with the 8.0.0.0 project version — see `CHANGELOG.md`.
-* **Pi gate (both layouts) still pending** — see `docs/FOLLOWUPS.md` for the gate
-  write-up once it runs.
+  endpoints.
+* 2026-09-06/07 **remote-deploy layout Pi gate — GREEN with fixes** (fleet to
+  **8.0.0.0 / 2026.6.5**): canary → release-the-rest via `/compile`→`/upload`;
+  dashboard ceiling + rollback; DNS v2; compile-then-upload (not `/run`); deploy
+  idle-restart; LVGL 9 + hub `StringRef` compile fixes. Full write-up:
+  `docs/FOLLOWUPS.md` § *ESPHome Pi gate*.
+* **SD-image layout gate still pending** (same units bake path; not yet soak-proven
+  on a fresh SD). Legacy compose profile `legacy-esphome` stays for rollback until
+  that gate closes.
+* 2026-09-07 tip `0b06f58` / `4d73cfc`: `dsc_fleet_setup` compiles again on
+  ESPHome **2026.6.5**; `DSC_RELEASE=1` empty-bin guard on `bake-on-linux.sh`.
+  Prove the next release bake with non-empty `firmware/kit/*.bin` before
+  shipping a card (hollow 8.0.0 lesson).
