@@ -10,6 +10,21 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-09-07 — Maker PPFD 3D surface + fixture catalog binding (tip `7017bfb`)
+
+Landed on master via `7238c13` / merge `7017bfb`. Developer SoT: [`docs/brain/PPFD-FIELD.md`](brain/PPFD-FIELD.md).
+
+| Item | Status |
+|------|--------|
+| Field model | **done** — `frontend/src/lib/ppfdField.ts` (+ `ppfdField.test.ts`): bilinear/IDW resample, per-cell inverse-power height blend, inverse-square extrapolation floor, linear dim, `superpose` with gap cells, DLI helper |
+| Light 3D tab | **done** — `PpfdSurface` isometric SVG hang-height slider; MEASURED vs ESTIMATED + rule note |
+| Catalog binding | **done** — `catalogIdForDevice` (`extra.catalog_id` or kit name hints); kit SF1000 seed in `space_model.KIT_DEVICE_DEFAULTS`; fixtures panel prints binding; one `PpfdMapCard` per enabled bound lamp |
+| Twin canopy | **open** — `superpose` tested but Twin desk does not import `ppfdField` yet |
+
+**Honesty:** maker maps ≠ live PAR / Got. Calibration PPFD + DLI curve unchanged. Static `/dsc-catalog/ppfd/` crops remain separate.
+
+---
+
 ## 2026-09-07 — 3D twin: the composed live scene (`#/twin`) + pack-3 model briefs
 
 Same branch `feat/dashboard-v2`, uncommitted, not hotpatched. First scene that *composes* the model library into the
@@ -46,9 +61,9 @@ fixed camera per tent (cameras unbound → grey). **Desk nav:** `Twin` is a desk
 zone strip re-aims the camera; `/live/twin` now redirects here). `npm run build` ok; `tsc` clean for these files.
 
 **Open (tracker rows added 2026-09-07):** calibrated what-if response model; `useHeldReading` bump-per-tick churn on every `useZones` consumer; room shell placeholder (roof fans
-within 1 cm of the ceiling) until § G is measured. Also: no desk-nav entry for `/twin`; no pre-rendered PNG still for
-phones; plant labels overlap when two pots are close (DOM labels, no collision); `PlantInstances` exports a non-component
-(`plantPlace`) so Vite Fast Refresh falls back to a full reload for that module.
+within 1 cm of the ceiling) until § G is measured. Also: no pre-rendered PNG still for phones; plant labels overlap when
+two pots are close (DOM labels, no collision); `PlantInstances` exports a non-component (`plantPlace`) so Vite Fast
+Refresh falls back to a full reload for that module. (Desk-nav for `#/twin` landed with pack 3 — struck from this open list.)
 
 ---
 
@@ -4499,7 +4514,7 @@ Same branch `feat/dashboard-v2`, uncommitted, not hotpatched.
 |------|--------|
 | Light desk | **done** — `pages/LightPage.tsx`: eyebrow "Two desks, two clocks." + tags (DARK PERIOD OK/BROKEN, MISSING IN WINDOW, CATCH-UP, AUTO PHOTOPERIOD ON/OFF, MANUAL HOLD, LIT WINDOW BUYING HEAT); the two schedule-missing / manual-override banners are mission lines. Each tent is a tone-bordered `Panel` (legend `4×8 · FLOWERING · 12H RAIL` / `2×4 · FOLLOWS 4×8 · 12H RAIL`, legend-right = live lamp/window state) topped by the 2a clock block (`TentClock` from `TwoClocks`, now exported with `showEyebrow`): STATE DARK/LIT · ON IN/OFF IN, the 24 h rail, lamp + "not a bill" energy line. Every existing control kept: got/want arc, want hours, timeline, duty strips, Twin / SF1000 toggles, lights-on / sunrise / sunset / min-dark editors, schedule source, follow banner, DLI. Chips → square tags. |
 | Fixtures | **done** — `FIXTURES · NAMEPLATE WATTS · DUTY SOURCE` panel from `/spaces` (SF1000 100 W, 4×8 fixture 480 W nameplate), with the honest line that the estimate is watts × hours × tariff and that the 4×8 fixture is not a driven lamp yet. |
-| PPFD | **done** — `PPFD AT CANOPY · SF1000 CALIBRATION CURVE`: the 25/50/75/100 % operator measurements when they exist (live estimate + DLI), otherwise the honest "no calibration yet — measure on Kit › Calibrate; a PAR sensor would make this live" slot. No PPFD map, spectrum mix or recipe library (INVENTED; no hardware). |
+| PPFD | **done (Pass E)** — `PPFD AT CANOPY · SF1000 CALIBRATION CURVE`: the 25/50/75/100 % operator measurements when they exist (live estimate + DLI), otherwise the honest "no calibration yet — measure on Kit › Calibrate; a PAR sensor would make this live" slot. **Superseded for maker maps** by tip `7017bfb`: per-fixture CannaLib Map/3D/Spectrum/Bands (`PPFD-FIELD.md`). Recipe library / live PAR sensor still INVENTED. |
 
 **Verify:** `npx tsc --noEmit` exit 0; `npm run build` ok; `#/light` at 1400 px, both halves (clocks, controls, fixtures, PPFD slot, crop scheduler, energy, journals).
 
