@@ -42,6 +42,22 @@ fi
 [[ -f "${SECRETS}" ]] || { echo "ERROR: ${SECRETS} still missing" >&2; exit 1; }
 bash "${IMAGE_DIR}/bake-firmware.sh"
 
+# Belt-and-braces: the 8.0.0 image shipped with every kit .bin at 0 bytes because
+# bake-firmware's placeholder fallback is only refused under DSC_RELEASE=1 and that
+# bake did not set it. Never let an empty binary reach the card on a release bake.
+if [[ "${DSC_RELEASE:-0}" == "1" ]]; then
+  empty_bins=()
+  while IFS= read -r -d '' bin; do
+    [[ -s "${bin}" ]] || empty_bins+=("$(basename "${bin}")")
+  done < <(find "${COMPOSE}/firmware/kit" -name '*.bin' -print0 2>/dev/null)
+  if ((${#empty_bins[@]})); then
+    echo "ERROR: DSC_RELEASE=1 but these kit binaries are empty: ${empty_bins[*]}" >&2
+    echo "       a card baked from these cannot flash a kit — aborting." >&2
+    exit 1
+  fi
+  echo "release guard: all kit .bin files are non-empty"
+fi
+
 # --- 3) Stage /opt/dsc-hub payload ---
 rm -rf "${STAGE}/opt/dsc-hub"
 mkdir -p "${STAGE}/opt/dsc-hub"
