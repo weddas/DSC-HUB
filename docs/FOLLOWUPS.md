@@ -5031,3 +5031,16 @@ Resolution: S5 structure kept; master's toolchain body and the toolchain / rollb
 transplanted verbatim (re-indented). `FOLLOWUPS.md` kept both appended sections. Verified: `tsc` clean,
 `npm run build` ok, brain suite 419 passed. The `eth0-dhcpcd.conf` untracked copy was identical to master's
 tracked file and was dropped. Pi still to be hotpatched with S4/S5 + T1.
+
+## 2026-09-07 — Docs SoT: Settings S4/S5 + Tuya T1 (tip `c3958ff`)
+
+Engineering-docs automation after #208 merge. Durable brain/ops SoT landed on docs branch
+`cursor/engineering-documentation-16d8` (supersedes open #207 tip-`7837693` draft), re-verified on tip `c3958ff` (product identical to `1082ea3`; only `.gitignore` for `.claude` differs):
+
+- [`docs/brain/SETTINGS.md`](brain/SETTINGS.md) — S1–S5 (Devices hash sub-tabs + drawers; System cards)
+- [`docs/brain/TUYA-LOCAL.md`](brain/TUYA-LOCAL.md) + corrections to [`docs/ops/TUYA-LOCAL-SETUP.md`](ops/TUYA-LOCAL-SETUP.md)
+- Carried forward from #207: ZONE / TWIN / PPFD / AUTOMATION / RELAY / SPA-PROD-BUNDLE / ESPHOME-TOOLCHAIN
+- Notion tip blurbs on Pi offline brain + Local webserver UI → `c3958ff` (was `1082ea3`)
+
+Not a product code change. Residual: merge this docs PR; close #207; Pi hotpatch still open for S4/S5 + T1.
+Source-verify pass on `c3958ff`: fixed Automation “Settings › Brain” → Automation; SettingsDrawer Cancel-while-saving honesty; ESPHome “Device” → Devices › Firmware.
