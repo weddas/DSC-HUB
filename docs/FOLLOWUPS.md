@@ -5068,3 +5068,16 @@ Engineering-docs automation after master merge `4d73cfc` (`fix/kit-firmware-comp
 - Notion tracker [dsc_fleet_setup compile break](https://app.notion.com/p/3d42b4cda3708173b157d435d156ee44) → Needs Verification; Pi offline brain + Local webserver UI tip blurbs → `4d73cfc`
 
 Docs branch `cursor/engineering-documentation-db6e` (supersedes #211). Residual: prove next release bake with non-empty `firmware/kit/*.bin`; publish `v8.1.0`; Pi hotpatch of S4/S5 + T1 + 8.1.0; set `DSC_RELEASE=1` in the Windows bake driver (product follow-up).
+
+## 2026-09-07 — Docs SoT: SD bake honesty (bridge + thin-catalog) on tip `4d73cfc`
+
+Cron engineering-docs run — tip unchanged (`4d73cfc`). Tip SoT #212 still open; this pass adds two source-verified bake pitfalls that #212 did not cover (found in the Issue Tracker the same day):
+
+| Gap | Verified in | Doc |
+|---|---|---|
+| `kit-manifest.json` / `usb_flash.KIT_ROLES` advertise retired **`bridge`**; bake never emits `bridge.bin` | `bake-firmware.sh` KIT/ORDER; `usb_flash.py` missing-binary fail | image README + ESPHOME SoftAP pitfalls |
+| `docker compose --profile thin-catalog` cannot start on a fresh SD card | bake tar omits `services/cannalib`; docker save omits `dsc-hub-cannalib` | image README + [`CANNALIB-API.md`](ops/CANNALIB-API.md) |
+
+Default card path stays honest: eight flashable kit roles; catalog via remote/Want YAML (not thin-catalog). Product residuals stay Open on the tracker (manifest/wizard hide bridge; pack cannalib into bake) — docs only here.
+
+Docs branch `cursor/engineering-documentation-a10f` (supersedes #212).

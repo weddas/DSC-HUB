@@ -262,6 +262,16 @@ fell through to placeholders).
   (`dsc-hub-kit.yaml`), not only `dsc-hub.yaml` / `esphome config`.
 - Live fleet firmware train stays **8.0.0.0** — this SoftAP fix does **not**
   imply a grow reflash; it unblocks the **next** SD / USB-flash bake.
+- **Retired `bridge` role:** `kit-manifest.json` + `usb_flash.KIT_ROLES` still
+  advertise WT32-ETH01 `bridge.bin`, but `bake-firmware.sh` never compiles it
+  (comment in script: retired to `firmware/_history`). USB flash of `bridge`
+  fails with a missing binary after a clean bake. Eight kit roles are real:
+  hub, control, pot1, pot2, heater, heatmat, humidifier, dehumidifier. See
+  [`services/dsc-hub/image/README.md`](../../services/dsc-hub/image/README.md).
+- **Thin-catalog CannaLib:** SD bake does **not** ship `services/cannalib` or
+  `dsc-hub-cannalib` — `docker compose --profile thin-catalog up -d` fails on a
+  fresh card. Default kit path stays remote / Want YAML. See
+  [`CANNALIB-API.md`](CANNALIB-API.md).
 
 ### Units on the Pi
 
