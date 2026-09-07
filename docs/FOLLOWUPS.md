@@ -4959,3 +4959,18 @@ Branch `feat/dashboard-v2`, uncommitted. Plan: [`docs/design/plan-settings-2026-
 **Gotchas:** the other session hotpatched the Pi earlier today with the whole tree, which carried the in-flight S3 brain modules — the Pi now has an *older* S3 (before the severity baseline and the `baseline_severity` field); the SPA handles the missing field (falls back to warn) but a re-hotpatch is needed for the fixed critical id. Demo mode blocks every `/settings/*` write; use a non-demo brain for write verification. In the hidden Browser pane `el.blur()` on a never-focused input fires no event — dispatch `focusout` to commit a row. `.env.s2` removed after verification.
 
 **deferred (tracker rows):** snooze presets on the Delivery card (the desk's snooze exists; no preset durations in Settings yet); per-camera media bytes + download-before-delete in the storage card (S7b); auto plant archive on **harvest** goes through the same `archive_roster_slot` once the harvest flow exists (S6); push-to-phone relay; the toast rising edge on a real hub. Next: Pass S5 (device drawers), then S4 (system/transparency), per the plan order S1→S2→S3→S5→S4→S6→S7.
+
+## 2026-09-07 — feat/esphome-completion merged into master
+
+Merged twice (master had moved 15, then 4 more commits: settings S1–S3, cameras, twin, light PPFD).
+Conflicts and how they were resolved: `esphome_toolchain._dash_get` keeps master's bounded fetch +
+10 s `/version` memo **and** the branch's last-answering-base tracking (`dashboard_is_legacy()`);
+`latest()` uses the bounded fetch and still derives `latest_supported`; the ESPHome card changes
+were ported from the deleted `SettingsPage.tsx` into `pages/settings/DevicesSettingsPage.tsx`.
+
+**found while merging (tracker rows):** the `/version` memo leaked between tests that mock
+different dashboards — `reset_dashboard_probe_cache()` now also forgets the base, and
+`test_esphome_toolchain.py` resets it per test (autouse); master's pre-queue "yaml exists" check
+needed the runner tests to seed their temp project dir. `test_tuya_local.py` has 4 failures that
+reproduce on clean master (pre-existing, dashboard-v2 chat has uncommitted edits there).
+Result: 410 pass + those 4. Local `master` fast-forwarded; **not pushed**.
