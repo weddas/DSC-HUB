@@ -191,6 +191,14 @@ The bake owns the keys: `image/bake-on-linux.sh` requires (or generates)
 one kit = one key set, so later on-Pi OTA builds agree with the baked binaries.
 The card shows **No firmware secrets** when the helper reports it missing.
 
+**Trap — fresh secrets on rebake:** `secrets.yaml` is gitignored. A naive
+`bake-on-linux.sh` *generates* a new key set when the file is absent, so the
+baked `.bin` files stop matching the live fleet’s OTA/API keys. Before baking
+8.1.0 (or any rebake against a live grow), copy the live set
+(`/opt/dsc-hub-repo/firmware/v4/secrets.yaml` or the kit image’s
+`/opt/dsc-hub/firmware/v4/secrets.yaml`) into the bake tree and confirm md5s
+match. Full bake runbook: [`services/dsc-hub/image/README.md`](../../services/dsc-hub/image/README.md).
+
 ### Units on the Pi
 
 | Unit | Role |

@@ -2,7 +2,7 @@
 
 **In one line:** One gear surface grouped by the operator's question (You / The grow / The kit); every row states who owns the value and whether it is synced.
 
-Plan: [`docs/design/plan-settings-2026-09-07.md`](../design/plan-settings-2026-09-07.md). Evidence: `docs/FOLLOWUPS.md` §§ Settings Pass S1–S5. Cameras (S7 core): [`docs/cameras.md`](../cameras.md). Firmware toolchain: [`docs/ops/ESPHOME-TOOLCHAIN.md`](../ops/ESPHOME-TOOLCHAIN.md). Tuya Wi-Fi lane: [`docs/ops/TUYA-LOCAL-SETUP.md`](../ops/TUYA-LOCAL-SETUP.md) · [`TUYA-LOCAL.md`](TUYA-LOCAL.md).
+Verified against tip `0d3d7f0` (Hub **8.1.0**). Plan: [`docs/design/plan-settings-2026-09-07.md`](../design/plan-settings-2026-09-07.md). Evidence: `docs/FOLLOWUPS.md` §§ Settings Pass S1–S5. Cameras (S7 core): [`docs/cameras.md`](../cameras.md). Firmware toolchain: [`docs/ops/ESPHOME-TOOLCHAIN.md`](../ops/ESPHOME-TOOLCHAIN.md). Tuya Wi-Fi lane: [`docs/ops/TUYA-LOCAL-SETUP.md`](../ops/TUYA-LOCAL-SETUP.md) · [`TUYA-LOCAL.md`](TUYA-LOCAL.md). Upgrade / Kit Update: [`../../UPGRADE.md`](../../UPGRADE.md).
 
 ## Intent
 
