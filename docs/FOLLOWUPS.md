@@ -4635,3 +4635,19 @@ stroke, every stroke and fill `currentColor`, 11 gallery categories. A superset 
 | Still parked | `water-activity` (cure vessel frame), `dli` (needs a DLI number — derived metric, not yet computed). |
 
 **Verify:** `npx tsc --noEmit` exit 0; `npm run build` ok (index 121 KB gzip); Overview / Climate / Settings › Zones render with 0 empty icon slots; clocks show the day/night glyph.
+
+## 2026-09-07 — Settings & preferences: knob catalogue + page architecture (plan only)
+
+Operator opened a settings/preferences workstream: "as transparent as possible, easy GUI customisation and configuration; easy navigation, logical grouping, depth of settings." Nothing implemented. Plan: [`docs/design/plan-settings-2026-09-07.md`](design/plan-settings-2026-09-07.md).
+
+| Item | Status |
+|------|--------|
+| Inventory sweep | **done** — ~190 tunables over four tiers: B this browser (3 ad-hoc keys), N brain KV (`DEFAULT_SETTINGS` 22 keys + JSON blobs), S brain tables (zones, roster, tariff, learning, zigbee, calibration), H hub ESP entities (~70 `*.dsc_hub_*`, most reachable only via the entity inspector), F firmware/code constants. Zero operator preferences exist; General tab is prose. |
+| Peer notes | **done** — AROYA (user settings vs facility Setup), Growlink (setpoints daily vs rules at commissioning), Home Assistant 2026 (Devices & services / Protocols / System, sidebar editor), TrolMaster (device / alarm / system). Borrowed the user-vs-facility split and setpoints-vs-rules; vendor names stay out of the UI. |
+| Proposed IA | rail grouped **You** (Preferences, Alerts) · **The grow** (Zones, Climate, Light, Root, Sensors, Automation) · **The kit** (Devices, Integrations, Network, System); depth capped rail → section → drawer; live status subtitles on the rail; search; deep-link anchors; seven legacy redirects. |
+| Primitives | `SettingRow` (scope badge · default chip + reset · changed-at · consumers · HELD / FIRMWARE states), `SettingsCard`, `SettingsDrawer`, `usePreference`, `useSettingsManifest` (brain `GET /settings/manifest`). |
+| Passes | S1 foundation + Preferences → S2 grow sections (hub helpers as tier-H rows) → S3 alerts/automation + settings journal → S5 devices restructure (SP-P0-3) → S4 system/transparency. |
+
+**Findings (all logged to the tracker, 11 rows):** SPA `DEFAULT_LEAF_OFFSET_C = -1.5` vs brain `leaf_offset_c = "2"` — two leaf-VPD numbers from one setting; `set_global_modifiers` drops `sensor_clamp`; root steering targets have no UI; ~40 hub tunables only in the inspector; no timezone / NTP / clock-drift surface; irrigation shot 2 s hardcoded; settings writes not journaled; no search / anchors in a 1816-line `SettingsPage.tsx`; General tab subtitle promises controls that do not exist; no preference layer at all.
+
+**Open for the operator (plan § Open questions):** °F at all; light theme ship vs exploration; stage-rail overrides need hub firmware; may Settings write hub helpers via `/control/service` or should the brain own them; people / PIN scope; journal retention.
