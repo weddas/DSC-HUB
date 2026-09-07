@@ -7,7 +7,8 @@ assembles timelapses with ffmpeg. Nothing streams continuously and nothing leave
 
 Settings → Devices → **Cameras** (`#/settings/devices#cameras`) is the only place a
 camera is configured. Every source kind is tested with **Test source** before Save so the
-framing is seen first.
+framing is seen first. Settings architecture: [`docs/brain/SETTINGS.md`](brain/SETTINGS.md).
+Compose / ffmpeg / device map: [`docs/ops/DSC-HUB-DOCKER.md`](ops/DSC-HUB-DOCKER.md).
 
 ## Source kinds
 
