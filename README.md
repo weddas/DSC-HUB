@@ -4,8 +4,8 @@
 
 | | |
 |---|---|
-| **Release** | tree is **8.1.0** · latest published download: [8.0.0 AlphaPi](https://github.com/weddas/DSC-HUB/releases/tag/v8.0.0-AlphaPi) |
-| **Surface** | Brain / SPA **8.1.0** · kit firmware train **8.0.0.0** (ESPHome-only; fleet reflash via Settings → Device → ESPHome) |
+| **Release** | tree is **8.1.0** (`0d3d7f0`) · latest published SD download: [8.0.0 AlphaPi](https://github.com/weddas/DSC-HUB/releases/tag/v8.0.0-AlphaPi) (GitHub tag may lag; see [`UPGRADE.md`](UPGRADE.md)) |
+| **Surface** | Brain / SPA **8.1.0** · kit firmware train **8.0.0.0** (ESPHome-only; fleet reflash via Settings → Devices → Firmware) |
 | **Product path** | Flash SD → Pi boots → SPA Setup (`#/setup`) → USB flash fleet → SoftAP/LAN join → Zigbee bind |
 
 Home Assistant lab, HACS, and Lovelace delivery were **retired** (2026-09). The SPA still speaks an HA-shaped entity / `call_service` dialect that **DSC-Brain implements natively** — there is no HA runtime.
@@ -33,11 +33,14 @@ flowchart LR
 
 ---
 
-## Get started (kit — AlphaPi)
+## Get started (kit)
+
+Published SD assets may still be **AlphaPi** while `master` is **8.1.0** — see
+[`UPGRADE.md`](UPGRADE.md) for AlphaPi → 8.1.0 (brain-only; firmware stays 8.0.0.0).
 
 ### 1. Flash the SD image
 
-1. Download **`dsc-hub-8.0.0-arm64.img.xz`** from the [8.0.0 AlphaPi release](https://github.com/weddas/DSC-HUB/releases/tag/v8.0.0-AlphaPi).
+1. Download **`dsc-hub-8.0.0-arm64.img.xz`** from the [8.0.0 AlphaPi release](https://github.com/weddas/DSC-HUB/releases/tag/v8.0.0-AlphaPi) (or the `dsc-hub-8.1.0-arm64.img.xz` asset once the GitHub `v8.1.0` release publishes).
 2. Open [Raspberry Pi Imager](https://www.raspberrypi.com/software/) → **Use custom** → select that file.
 3. Flash a card for **Pi 4 or Pi 5** (aarch64).
 4. Insert the card, power the Pi, prefer **Ethernet** on first boot.
