@@ -159,6 +159,12 @@ Factory image bake lives under [`services/dsc-hub/image/`](services/dsc-hub/imag
 |---|---|
 | [`SETUP.md`](SETUP.md) | Fleet SoftAP unbox (hub / panel / pots / bridge) |
 | [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md) | Pi brain architecture |
+| [`docs/brain/WEBUI.md`](docs/brain/WEBUI.md) | Operator SPA desks + Settings gear |
+| [`docs/brain/SETTINGS.md`](docs/brain/SETTINGS.md) | Settings S1–S3 / hub tunables |
+| [`docs/brain/TWIN.md`](docs/brain/TWIN.md) | Composed 3D twin desk |
+| [`docs/brain/PPFD-FIELD.md`](docs/brain/PPFD-FIELD.md) | Maker PPFD 3D surface + fixture catalog binding |
+| [`docs/cameras.md`](docs/cameras.md) | Zone cameras + timelapse |
+| [`docs/ops/SPA-PROD-BUNDLE.md`](docs/ops/SPA-PROD-BUNDLE.md) | SPA chunk graph / vite preview gate |
 | [`brain/README.md`](brain/README.md) | Brain CLI / API / catalogs |
 | [`docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md`](docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md) | Kit SD installer design (8.0.0) |
 | [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md) | Living engineering backlog |
