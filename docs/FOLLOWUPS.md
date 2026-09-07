@@ -10,6 +10,21 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-09-07 — Maker PPFD 3D surface + fixture catalog binding (tip `7017bfb`)
+
+Landed on master via `7238c13` / merge `7017bfb`. Developer SoT: [`docs/brain/PPFD-FIELD.md`](brain/PPFD-FIELD.md).
+
+| Item | Status |
+|------|--------|
+| Field model | **done** — `frontend/src/lib/ppfdField.ts` (+ `ppfdField.test.ts`): bilinear/IDW resample, per-cell inverse-power height blend, inverse-square extrapolation floor, linear dim, `superpose` with gap cells, DLI helper |
+| Light 3D tab | **done** — `PpfdSurface` isometric SVG hang-height slider; MEASURED vs ESTIMATED + rule note |
+| Catalog binding | **done** — `catalogIdForDevice` (`extra.catalog_id` or kit name hints); kit SF1000 seed in `space_model.KIT_DEVICE_DEFAULTS`; fixtures panel prints binding; one `PpfdMapCard` per enabled bound lamp |
+| Twin canopy | **open** — `superpose` tested but Twin desk does not import `ppfdField` yet |
+
+**Honesty:** maker maps ≠ live PAR / Got. Calibration PPFD + DLI curve unchanged. Static `/dsc-catalog/ppfd/` crops remain separate.
+
+---
+
 ## 2026-09-07 — 3D twin: the composed live scene (`#/twin`) + pack-3 model briefs
 
 Same branch `feat/dashboard-v2`, uncommitted, not hotpatched. First scene that *composes* the model library into the
@@ -21,7 +36,7 @@ still on phones).
 | Twin state | **done** — `lib/twinState.ts` (pure) + `hooks/useTwinState.ts`: zones from `useZones`, four fans (duty from `sensor.dsc_fan_*_pct`, falling back to the hub `fan.*` percentage; CFM via `resolveCfm`), cascade CFM from its own sensor, lamps, appliances, roster plants (stage → drawn variant + progression, vessel → pot footprint, probe moisture tone). What-if overrides applied last and flagged `simulated`; never written. Returns the same object while nothing drawn changed (bus ticks far outnumber reading changes). |
 | Scene compositor | **done** — `twin/Placed.tsx` (load GLB → `wire.ts` restyle → snap to a parent instance's anchor with an optional self-anchor → publish own anchors → per-frame bindings: spin, emissive, show/hide, tint by node or material, error pulse, offline grey), `twin/anchors.ts` (world-space anchor registry, microtask-batched notifications), `twin/RigScene.tsx` (room → 4×8 + 2×4 → lamps, six-inch exhausts + filter + passive vent + four-inch intakes, canopy puck, heater, humidifiers, mister, mat, dome tray, dehum, AC, tank, hub; plants via `PlantInstances`; air paths from anchors). Hand-authored 2×4 anchors come from mesh-prefix bboxes (`__top/__bottom` helpers). |
 | Effect layers | **done** — `twin/layers/`: airflow (duct tubes + centrelines + streaks: count by duty, speed by CFM, colour by role), thermal volume (vertical-gradient shader tinted against the want band), humidity haze (density by RH, tone by band, red inside 2 °C of dew point) + mist, heat shimmer, lamp cone + canopy footprint. All app-side; documented in BRIEFS-3 § F so nobody models them. |
-| Page | **done** — `#/twin` (`pages/TwinPage.tsx`, `components/TwinStagePanel.tsx`): layer toggles, camera presets (Room · 4×8 · 2×4 · Canopy · Root, damped glide) + cinematic auto-orbit, what-if panel (fan/lamp sliders, appliance flips, `SIMULATED · n OVERRIDES · NOT WRITTEN`, reset), roster-in-place list, cost panel. Hover → entity label; click → `EntityInspector`. `paths.twin()`. Not in the desk nav yet (route only). |
+| Page | **done** — `#/twin` (`pages/TwinPage.tsx`, `components/TwinStagePanel.tsx`): layer toggles, camera presets (Room · 4×8 · 2×4 · Canopy · Root, damped glide) + cinematic auto-orbit, what-if panel (fan/lamp sliders, appliance flips, `SIMULATED · n OVERRIDES · NOT WRITTEN`, reset), roster-in-place list, cost panel. Hover → entity label; click → `EntityInspector`. `paths.twin()`. **Desk nav:** Twin is a desk (pack 3); `#/live/twin` redirects here. |
 | Pack-3 briefs | **written** — `docs/design/models/BRIEFS-3.md`: plant/vessel split (9 stage plants + 6 catalogue vessels), the 2×4 rebuilt as a builder with anchors, Pi/panel/thermistor/hygrometer/IR-leaf/timer/wall-fan, real room + fixed cameras, deformable ducts, cuttings and harvest bin, the operator's room-measurement checklist, manifest deltas (`kind: plant|vessel`, `origin: soil`). |
 
 **Measured (laptop, Vite dev, in-app pane 1600 × 1000 emulated, other sessions' dev servers running):** all 20 GLBs of the rig
@@ -46,9 +61,9 @@ fixed camera per tent (cameras unbound → grey). **Desk nav:** `Twin` is a desk
 zone strip re-aims the camera; `/live/twin` now redirects here). `npm run build` ok; `tsc` clean for these files.
 
 **Open (tracker rows added 2026-09-07):** calibrated what-if response model; `useHeldReading` bump-per-tick churn on every `useZones` consumer; room shell placeholder (roof fans
-within 1 cm of the ceiling) until § G is measured. Also: no desk-nav entry for `/twin`; no pre-rendered PNG still for
-phones; plant labels overlap when two pots are close (DOM labels, no collision); `PlantInstances` exports a non-component
-(`plantPlace`) so Vite Fast Refresh falls back to a full reload for that module.
+within 1 cm of the ceiling) until § G is measured. Also: no pre-rendered PNG still for phones; plant labels overlap when
+two pots are close (DOM labels, no collision); `PlantInstances` exports a non-component (`plantPlace`) so Vite Fast
+Refresh falls back to a full reload for that module. (Desk-nav for `#/twin` landed with pack 3 — struck from this open list.)
 
 ---
 
@@ -4499,7 +4514,7 @@ Same branch `feat/dashboard-v2`, uncommitted, not hotpatched.
 |------|--------|
 | Light desk | **done** — `pages/LightPage.tsx`: eyebrow "Two desks, two clocks." + tags (DARK PERIOD OK/BROKEN, MISSING IN WINDOW, CATCH-UP, AUTO PHOTOPERIOD ON/OFF, MANUAL HOLD, LIT WINDOW BUYING HEAT); the two schedule-missing / manual-override banners are mission lines. Each tent is a tone-bordered `Panel` (legend `4×8 · FLOWERING · 12H RAIL` / `2×4 · FOLLOWS 4×8 · 12H RAIL`, legend-right = live lamp/window state) topped by the 2a clock block (`TentClock` from `TwoClocks`, now exported with `showEyebrow`): STATE DARK/LIT · ON IN/OFF IN, the 24 h rail, lamp + "not a bill" energy line. Every existing control kept: got/want arc, want hours, timeline, duty strips, Twin / SF1000 toggles, lights-on / sunrise / sunset / min-dark editors, schedule source, follow banner, DLI. Chips → square tags. |
 | Fixtures | **done** — `FIXTURES · NAMEPLATE WATTS · DUTY SOURCE` panel from `/spaces` (SF1000 100 W, 4×8 fixture 480 W nameplate), with the honest line that the estimate is watts × hours × tariff and that the 4×8 fixture is not a driven lamp yet. |
-| PPFD | **done** — `PPFD AT CANOPY · SF1000 CALIBRATION CURVE`: the 25/50/75/100 % operator measurements when they exist (live estimate + DLI), otherwise the honest "no calibration yet — measure on Kit › Calibrate; a PAR sensor would make this live" slot. No PPFD map, spectrum mix or recipe library (INVENTED; no hardware). |
+| PPFD | **done (Pass E)** — `PPFD AT CANOPY · SF1000 CALIBRATION CURVE`: the 25/50/75/100 % operator measurements when they exist (live estimate + DLI), otherwise the honest "no calibration yet — measure on Kit › Calibrate; a PAR sensor would make this live" slot. **Superseded for maker maps** by tip `7017bfb`: per-fixture CannaLib Map/3D/Spectrum/Bands (`PPFD-FIELD.md`). Recipe library / live PAR sensor still INVENTED. |
 
 **Verify:** `npx tsc --noEmit` exit 0; `npm run build` ok; `#/light` at 1400 px, both halves (clocks, controls, fixtures, PPFD slot, crop scheduler, energy, journals).
 
@@ -4974,3 +4989,9 @@ different dashboards — `reset_dashboard_probe_cache()` now also forgets the ba
 needed the runner tests to seed their temp project dir. `test_tuya_local.py` has 4 failures that
 reproduce on clean master (pre-existing, dashboard-v2 chat has uncommitted edits there).
 Result: 410 pass + those 4. Local `master` fast-forwarded; **not pushed**.
+
+**Docs (tip `7837693`):** ops runbook [`docs/ops/ESPHOME-TOOLCHAIN.md`](ops/ESPHOME-TOOLCHAIN.md)
+refreshed for post-gate pitfalls — DNS v2 (`nohook` + static resolv), OTA
+`/compile`→`/upload` (not `/run`), job reaper, deploy idle-restart, rollback from
+venv-reached jobs, remote gate GREEN / SD pending. Carries PPFD + settings/twin SoT
+from docs PR #206 onto this tip.
