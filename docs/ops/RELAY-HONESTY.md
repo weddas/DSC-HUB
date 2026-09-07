@@ -57,4 +57,4 @@ Here the driver last commanded ON and the hub still demands ON, but the contact 
 
 ## Soak / audit helpers
 
-Under `.audit/`: `zbc-sonoff-state.sh`, `zbc-soak-c|d|e.sh`, ESPHome smoke scripts from the relay-honesty pass. Prefer docker **`stop -t 20` + `start`** for brain hotpatch (not `restart` / `kill`).
+Under `.audit/`: `zbc-sonoff-state.sh`, `zbc-soak-c|d|e.sh`, ESPHome smoke scripts from the relay-honesty pass. Prefer docker **`stop -t 20` + `start`** for brain hotpatch (not `restart` / `kill`) — full runbook: [`PI-HOTPATCH.md`](PI-HOTPATCH.md).
