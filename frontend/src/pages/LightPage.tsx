@@ -26,6 +26,7 @@ import { buildCloneLightDesk } from "../lib/lightViewModel";
 import { LightEnergyPanel } from "../components/energy/LightEnergyPanel";
 import { JournalScopePanel } from "../components/journal/JournalScopePanel";
 import { PpfdMapCard } from "../components/PpfdMapCard";
+import { catalogIdForDevice } from "../lib/lightCatalog";
 
 function fmt(n: number, digits = 1): string {
   return Number.isFinite(n) ? n.toFixed(digits) : "—";
@@ -471,6 +472,9 @@ export function LiveLightPage() {
                       <span className="dsc-fixture-label">{d.label || d.device_id}</span>
                       <span className="dsc-fixture-watts">{Number.isFinite(Number(d.watts)) ? `${Math.round(Number(d.watts))} W` : "— W"}</span>
                       <span className="dsc-fixture-duty">{String(d.duty_source || "photoperiod")}{d.enabled === false ? " · off" : ""}</span>
+                      <span className="dsc-fixture-catalog" title="CannaLib lights-catalog record (extra.catalog_id on the fixture)">
+                        {catalogIdForDevice(d) ? `cannalib · ${catalogIdForDevice(d)}` : "no catalog record"}
+                      </span>
                     </div>
                   )),
                 )}
@@ -512,10 +516,17 @@ export function LiveLightPage() {
           </Panel>
         </div>
 
-        <div className="dsc-col-6">
-          {/* Catalog id is the SF1000 until the fixture table carries a CannaLib id per lamp (Settings plan, The kit). */}
-          <PpfdMapCard catalogId="spider_farmer_sf1000" legend="SF1000 · MAKER PPFD MAP · CANNALIB" />
-        </div>
+        {(fixtures ?? [])
+          .flatMap((sp) => sp.devices.map((d) => ({ sp, d, catalogId: catalogIdForDevice(d) })))
+          .filter((x) => x.catalogId && x.d.enabled !== false)
+          .map(({ sp, d, catalogId }) => (
+            <div key={`ppfd-${sp.space_id}-${d.device_id}`} className="dsc-col-6">
+              <PpfdMapCard
+                catalogId={catalogId as string}
+                legend={`${sp.space_id === "4x8" ? "4×8" : sp.space_id === "2x4" ? "2×4" : sp.space_id} · ${(d.label || d.device_id).toUpperCase()} · MAKER PPFD MAP`}
+              />
+            </div>
+          ))}
 
         <div className="dsc-col-12">
           <CropScheduler />
