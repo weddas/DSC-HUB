@@ -475,11 +475,14 @@ export type ZigbeeRecipe = {
 
 export type ZigbeeCapabilityClass = "climate" | "liquid" | "plug" | "motion" | "other" | "safety";
 
+// Mirror of brain `device_bindings.CLASS_ROLE_KINDS` (both lanes).
 const CLASS_ROLE_KINDS: Record<string, ReadonlySet<string>> = {
   climate: new Set(["climate"]),
   liquid: new Set(["safety"]),
   safety: new Set(["safety"]),
   plug: new Set(["plug"]),
+  meter: new Set(["meter"]),
+  water: new Set(["water"]),
   motion: new Set(),
   other: new Set(),
 };
@@ -661,8 +664,209 @@ export async function save_calibration(
   return resp.json();
 }
 
+// ---- Tuya (SmartLife Wi-Fi) local lane — plan-tuya-local § 2.5 ---------------
+
+export type TuyaLink = "live" | "stale" | "offline" | "key_changed";
+export type TuyaWriteState = "pending" | "synced" | "differs" | "failed" | null;
+
+export type TuyaDeviceState = {
+  friendly_name: string;
+  device_id: string;
+  lane: "tuya";
+  updated_at: number | null;
+  link: TuyaLink | string;
+  link_reason?: string | null;
+  write_state?: TuyaWriteState | string | null;
+  write_error?: string | null;
+  commanded?: boolean | null;
+  role: string;
+  zone: string;
+  /** Datapoints (state, power, ph, …) as normalised by the device's DPS map. */
+  [datapoint: string]: unknown;
+};
+
+export type TuyaDevice = {
+  id: string;
+  name: string;
+  ip: string;
+  version: string;
+  type: string;
+  type_label: string;
+  dps_map: Record<string, number>;
+  scales: Record<string, number>;
+  enabled: boolean;
+  added_at: number;
+  product_name?: string;
+  mac?: string;
+  local_key_set: boolean;
+  binding: { role: string; zone: string; alias?: string; enabled?: boolean; capability_override?: string } | null;
+  status: "bound" | "unbound" | "conflict" | string;
+  capability_class: string;
+  capability_override?: string;
+  can_actuate: boolean;
+  runnable: boolean;
+  state: TuyaDeviceState;
+  raw_dps: Record<string, unknown>;
+};
+
+export type TuyaHealth = {
+  available: boolean;
+  running: boolean;
+  device_count: number;
+  enabled_count: number;
+  live: number;
+  stale: number;
+  offline: number;
+  key_changed: number;
+  note: string;
+};
+
+export type TuyaDeviceType = ZigbeeDeviceType & {
+  dps_map: Record<string, number>;
+  scales: Record<string, number>;
+  note?: string;
+};
+
+export type TuyaProbeResult = {
+  ok: boolean;
+  source?: "probe" | "live";
+  dps?: Record<string, unknown>;
+  link?: string;
+  guess_type?: string | null;
+  error?: string;
+  err_code?: string;
+  hint?: string;
+};
+
+async function jsonOrThrow<T>(resp: Response, fallback: string): Promise<T> {
+  if (!resp.ok) {
+    let msg = fallback;
+    try {
+      const j = (await resp.json()) as { detail?: unknown };
+      if (j?.detail) msg = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail);
+    } catch {
+      /* keep fallback */
+    }
+    throw new Error(msg);
+  }
+  return resp.json() as Promise<T>;
+}
+
+export async function get_tuya_devices(): Promise<{ devices: TuyaDevice[]; health: TuyaHealth }> {
+  return jsonOrThrow(await fetch("/settings/tuya/devices"), "tuya devices failed");
+}
+
+export async function get_tuya_device_types(): Promise<{ device_types: TuyaDeviceType[] }> {
+  return jsonOrThrow(await fetch("/settings/tuya/device-types"), "tuya device types failed");
+}
+
+/** Body is the `tinytuya wizard` devices.json — a list, or `{devices:[…]}`. */
+export async function post_tuya_import(devices: unknown): Promise<{
+  imported: string[];
+  skipped: Array<{ id: string; reason: string }>;
+  missing_ip: string[];
+  count: number;
+  devices: TuyaDevice[];
+}> {
+  return jsonOrThrow(
+    await fetch("/settings/tuya/devices/import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ devices }),
+    }),
+    "tuya import failed",
+  );
+}
+
+export async function post_tuya_probe(
+  deviceId: string | null,
+  override?: { ip?: string; local_key?: string; version?: string },
+): Promise<TuyaProbeResult> {
+  const url = deviceId ? `/settings/tuya/devices/${encodeURIComponent(deviceId)}/probe` : "/settings/tuya/probe";
+  return jsonOrThrow(
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ip: override?.ip ?? "", local_key: override?.local_key ?? "", version: override?.version ?? "3.3" }),
+    }),
+    "tuya probe failed",
+  );
+}
+
+export async function put_tuya_device(
+  deviceId: string,
+  patch: Partial<{
+    name: string;
+    ip: string;
+    version: string;
+    type: string;
+    enabled: boolean;
+    local_key: string;
+    dps_map: Record<string, number>;
+    scales: Record<string, number>;
+  }>,
+): Promise<TuyaDevice> {
+  return jsonOrThrow(
+    await fetch(`/settings/tuya/devices/${encodeURIComponent(deviceId)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    }),
+    "tuya device save failed",
+  );
+}
+
+export async function delete_tuya_device(deviceId: string): Promise<{ ok: boolean }> {
+  return jsonOrThrow(await fetch(`/settings/tuya/devices/${encodeURIComponent(deviceId)}`, { method: "DELETE" }), "tuya delete failed");
+}
+
+export async function post_tuya_set(deviceId: string, on: boolean): Promise<{ ok: boolean; state: string; queued: boolean }> {
+  return jsonOrThrow(
+    await fetch(`/settings/tuya/devices/${encodeURIComponent(deviceId)}/set`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ on }),
+    }),
+    "tuya set failed",
+  );
+}
+
+export async function get_tuya_bindings(): Promise<{ bindings: Record<string, Record<string, unknown>> }> {
+  return jsonOrThrow(await fetch("/settings/tuya/bindings"), "tuya bindings failed");
+}
+
+export async function put_tuya_bindings(
+  bindings: Record<string, Record<string, unknown>>,
+): Promise<{ bindings: Record<string, Record<string, unknown>> }> {
+  return jsonOrThrow(
+    await fetch("/settings/tuya/bindings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bindings }),
+    }),
+    "tuya bindings save failed",
+  );
+}
+
+export type ActuatableDevice = {
+  lane: "zigbee" | "tuya" | string;
+  id: string;
+  friendly_name: string;
+  alias: string;
+  role: string;
+  /** Tuya rows only. */
+  device_id?: string;
+  /** Zigbee rows only. */
+  ieee?: string;
+};
+
+/** Lane-tagged switch targets across every local lane — the rule editor's one plug picker. */
+export async function get_devices_actuatable(): Promise<{ devices: ActuatableDevice[] }> {
+  return jsonOrThrow(await fetch("/settings/devices/actuatable"), "actuatable devices failed");
+}
+
 export type AutomationOp = "gt" | "lt" | "gte" | "lte" | "eq" | "ne" | "is" | "is_not";
-export type AutomationActionType = "banner" | "oos_seat" | "zigbee_switch" | "relay" | "setpoint";
+export type AutomationActionType = "banner" | "oos_seat" | "zigbee_switch" | "tuya_switch" | "relay" | "setpoint";
 
 /** One condition. `hysteresis` only for numeric ops; `max_age_s` needs a device timestamp. */
 export type AutomationCondition = {

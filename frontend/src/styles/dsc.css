@@ -5903,3 +5903,46 @@ button.dsc-metric:focus-visible { outline: 2px solid var(--dsc-teal); outline-of
 .dsc-ppfd-iso { max-width: 560px; margin: 0 auto; }
 .dsc-ppfd-iso-floor { fill: var(--dsc-gray-1); stroke: var(--dsc-gray-3); stroke-width: 1; }
 .dsc-ppfd-3d-note { font-size: var(--dsc-fs-sm); margin: 0; }
+
+/* ---- Settings drawer (plan-settings S5) ------------------------------------------------ */
+.dsc-settings-drawer { display: flex; flex-direction: column; min-height: 100%; gap: 10px; }
+.dsc-settings-drawer-body { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; }
+.dsc-settings-drawer-foot {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding-top: 10px; border-top: 1px solid var(--dsc-gray-2); position: sticky; bottom: 0;
+  background: var(--dsc-gray-0, var(--dsc-black));
+}
+.dsc-drawer-field { display: flex; flex-direction: column; gap: 4px; }
+.dsc-drawer-field-label { font-size: var(--dsc-fs-xs); letter-spacing: 0.06em; text-transform: uppercase; color: var(--dsc-gray-5); }
+.dsc-drawer-field-hint { font-size: var(--dsc-fs-sm); color: var(--dsc-gray-5); }
+.dsc-drawer-field input, .dsc-drawer-field select { width: 100%; }
+
+/* ---- Device seat rows (Devices › Inventory) ---------------------------------------------- */
+.dsc-device-list { display: flex; flex-direction: column; gap: 2px; }
+.dsc-device-row {
+  display: grid; grid-template-columns: 20px minmax(0, 1fr) auto auto 28px; align-items: center; gap: 10px;
+  padding: 6px 4px; border-bottom: 1px solid var(--dsc-gray-2);
+}
+.dsc-device-row:last-child { border-bottom: 0; }
+.dsc-device-row-icon { color: var(--dsc-teal); }
+.dsc-device-row.is-oos .dsc-device-row-icon { color: var(--dsc-gray-5); }
+.dsc-device-row.is-offline .dsc-device-row-icon { color: var(--dsc-red, #e0564b); }
+.dsc-device-row-main { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; min-width: 0; background: none; border: 0; padding: 0; color: inherit; text-align: left; cursor: pointer; font: inherit; }
+.dsc-device-row-name { font-weight: 600; }
+.dsc-device-row-sub { font-size: var(--dsc-fs-sm); color: var(--dsc-gray-5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.dsc-device-row-open { background: none; border: 0; color: var(--dsc-gray-5); font-size: 18px; line-height: 1; cursor: pointer; padding: 2px 6px; }
+.dsc-device-row-open:hover, .dsc-device-row-main:hover .dsc-device-row-name { color: var(--dsc-white); }
+.dsc-link-btn { background: none; border: 0; padding: 0; color: var(--dsc-teal); cursor: pointer; font: inherit; text-align: left; }
+.dsc-link-btn:hover { text-decoration: underline; }
+@media (max-width: 640px) {
+  .dsc-device-row { grid-template-columns: 20px minmax(0, 1fr) auto auto; gap: 8px; }
+  .dsc-device-row-open { display: none; }
+}
+
+/* ---- System › About routes + Developer ------------------------------------------------- */
+.dsc-routes-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dsc-routes-list li { display: flex; align-items: center; gap: 8px; font-size: var(--dsc-fs-sm); flex-wrap: wrap; }
+.dsc-routes-list li code { color: var(--dsc-gray-5); font-size: var(--dsc-fs-xs); }
+.dsc-routes-list li.is-missing span { color: var(--dsc-gray-5); }
+.dsc-change-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: var(--dsc-fs-sm); }
+[data-dsc-invented="off"] .dsc-invented { display: none; }

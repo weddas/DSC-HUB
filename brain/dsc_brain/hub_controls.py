@@ -408,4 +408,6 @@ HUB_TEXT_SENSOR_OID_TO_KEY: dict[str, str] = {
     "link_rec_last_reason": "link_recovery_last_reason",
     "last_evt": "last_evt",
     "last_evt_ts": "last_evt",
+    # S4: hub wall clock (epoch seconds or "unsynced") for the Time card.
+    "hub_clock": "hub_clock_epoch",
 }

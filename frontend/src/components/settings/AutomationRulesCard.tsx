@@ -6,7 +6,8 @@ import { SettingsTable, SettingsRow, SettingsSubRow, InlineEditCell, ActionsCell
 import {
   get_automation_targets,
   get_automations,
-  get_zigbee_actuatable,
+  get_devices_actuatable,
+  type ActuatableDevice,
   put_automations,
   type AutomationCondition,
   type AutomationRule,
@@ -124,6 +125,8 @@ export function thenSummary(r: AutomationRule, targets: AutomationTargets | null
       return `Seat ${String(p.seat_id ?? "—")} out of service`;
     case "zigbee_switch":
       return `Zigbee ${String(p.friendly_name ?? "—")} ${p.on_when_firing === false ? "OFF" : "ON"} while firing`;
+    case "tuya_switch":
+      return `Tuya plug ${String(p.device_id ?? "—")} ${p.on_when_firing === false ? "OFF" : "ON"} while firing`;
     case "relay": {
       const t = targets?.relays.find((x) => x.entity_id === p.entity_id);
       return `${t?.label ?? String(p.entity_id ?? "—")} ${p.on_when_firing ? "ON" : "OFF"} while firing, restored on clear`;
@@ -161,6 +164,8 @@ function ruleInvalid(r: AutomationRule, targets: AutomationTargets | null): stri
       return String(p.seat_id ?? "").trim() ? null : "pick a seat";
     case "zigbee_switch":
       return String(p.friendly_name ?? "").trim() ? null : "pick a Zigbee device";
+    case "tuya_switch":
+      return String(p.device_id ?? "").trim() ? null : "pick a Tuya plug";
     case "relay": {
       const t = targets?.relays.find((x) => x.entity_id === p.entity_id);
       if (!t) return "pick an allowed relay";
@@ -189,7 +194,10 @@ export function AutomationRulesCard({ seats, defaults }: { seats: string[]; defa
   const [dirty, setDirty] = useState(false);
   const [msg, setMsg] = useState("");
   const [nextN, setNextN] = useState(1);
-  const [zbSwitches, setZbSwitches] = useState<string[]>([]);
+  /** Lane-tagged plug targets (Zigbee + Tuya) — one picker, the lane decides the action type. */
+  const [switches, setSwitches] = useState<ActuatableDevice[]>([]);
+  const zbSwitches = switches.filter((s) => s.lane === "zigbee").map((s) => s.friendly_name).filter(Boolean);
+  const tuyaSwitches = switches.filter((s) => s.lane === "tuya");
   const [targets, setTargets] = useState<AutomationTargets | null>(null);
   const [targetsErr, setTargetsErr] = useState(false);
   const [open, setOpen] = useState<Set<string>>(new Set());
@@ -197,8 +205,8 @@ export function AutomationRulesCard({ seats, defaults }: { seats: string[]; defa
   const [removed, setRemoved] = useState<AutomationRule[]>([]);
 
   useEffect(() => {
-    void get_zigbee_actuatable()
-      .then((r) => setZbSwitches((r.devices ?? []).map((d) => d.friendly_name).filter(Boolean)))
+    void get_devices_actuatable()
+      .then((r) => setSwitches(r.devices ?? []))
       .catch(() => undefined);
     void get_automation_targets()
       .then(setTargets)
@@ -271,6 +279,8 @@ export function AutomationRulesCard({ seats, defaults }: { seats: string[]; defa
       switch (type) {
         case "zigbee_switch":
           return { ...r, action: { type, params: { friendly_name: zbSwitches[0] ?? "", on_when_firing: true } } };
+        case "tuya_switch":
+          return { ...r, action: { type, params: { device_id: tuyaSwitches[0]?.device_id ?? "", on_when_firing: true } } };
         case "oos_seat":
           return { ...r, action: { type, params: { seat_id: seats[0] ?? "", banner: "" } } };
         case "relay":
@@ -612,6 +622,9 @@ export function AutomationRulesCard({ seats, defaults }: { seats: string[]; defa
                       <option value="zigbee_switch" disabled={zbSwitches.length === 0}>
                         Zigbee switch {zbSwitches.length === 0 ? "(none bound)" : ""}
                       </option>
+                      <option value="tuya_switch" disabled={tuyaSwitches.length === 0}>
+                        Tuya plug {tuyaSwitches.length === 0 ? "(none bound)" : ""}
+                      </option>
                       <option value="relay" disabled={relayTargets.length === 0}>
                         Hold relay / hub switch {targetsErr ? "(targets unavailable)" : ""}
                       </option>
@@ -654,6 +667,29 @@ export function AutomationRulesCard({ seats, defaults }: { seats: string[]; defa
                         </select>
                         <select
                           aria-label="Zigbee direction"
+                          value={r.action.params.on_when_firing === false ? "off" : "on"}
+                          onChange={(e) => setActionParam(i, "on_when_firing", e.target.value === "on")}
+                        >
+                          <option value="on">turn ON while firing</option>
+                          <option value="off">turn OFF while firing</option>
+                        </select>
+                      </>
+                    ) : r.action.type === "tuya_switch" ? (
+                      <>
+                        <select
+                          aria-label="Tuya plug"
+                          value={String(r.action.params.device_id ?? "")}
+                          onChange={(e) => setActionParam(i, "device_id", e.target.value)}
+                        >
+                          <option value="">— plug —</option>
+                          {tuyaSwitches.map((s) => (
+                            <option key={s.device_id} value={s.device_id}>
+                              {s.friendly_name} · {s.role}
+                            </option>
+                          ))}
+                        </select>
+                        <select
+                          aria-label="Tuya direction"
                           value={r.action.params.on_when_firing === false ? "off" : "on"}
                           onChange={(e) => setActionParam(i, "on_when_firing", e.target.value === "on")}
                         >

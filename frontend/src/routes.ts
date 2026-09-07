@@ -214,8 +214,8 @@ export const SETTINGS_TABS: SettingsTab[] = [
     label: "Devices",
     path: "/settings/devices",
     icon: "smart-outlet",
-    headline: "Inventory, assignment, Zigbee and firmware.",
-    subline: "Everything the brain is allowed to read from or act on.",
+    headline: "Inventory, assignment, Zigbee, cameras and firmware.",
+    subline: "Everything the brain is allowed to read from or act on — one list per tab, details in a drawer.",
   },
   {
     id: "integrations",

@@ -8,6 +8,7 @@ driven through ``ingest`` / ``mark_link``), which is the same path the thread us
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 from typing import Any
 
@@ -46,6 +47,7 @@ class FakeTuyaDevice:
         return {"dps": {str(index): value}}
 
     def receive(self) -> None:
+        time.sleep(0.05)  # a real socket blocks up to SOCKET_TIMEOUT_S; keep the worker loop polite
         return None
 
     def heartbeat(self, nowait: bool = True) -> None:
@@ -170,7 +172,7 @@ def test_ingest_scales_dps_and_feeds_role_buckets(lane) -> None:
     by_role = fleet.system["zigbee_by_role"]
     assert by_role["plug_pump"]["device_id"] == PLUG_ID
     assert by_role["plug_pump"]["kind"] == "plug"
-    assert fleet.system["tuya_health"]["live"] == 0  # no worker running in tests → not "runnable" counted live
+    assert fleet.system["tuya_health"]["live"] == 1 and fleet.system["tuya_health"]["enabled_count"] == 1
     # Entities carry the lane in their id, never "zigbee" for a Wi-Fi plug.
     hass = fleet.to_hass_states(list_inventory())
     assert hass["binary_sensor.dsc_tuya_plug_pump_state"]["state"] == "on"
@@ -365,8 +367,7 @@ def test_tuya_switch_action_and_clear(lane, monkeypatch: pytest.MonkeyPatch) -> 
     def fleet(temp_c: float) -> None:
         f = get_fleet_state()
         f.hub.online = True
-        f.hub.last_seen = 1e12
-        f.hub.values = {"tent_temperature": temp_c}
+        f.hub.values["temp_c"] = temp_c
         update_fleet_state(f)
 
     fleet(35.0)
@@ -379,14 +380,14 @@ def test_tuya_switch_action_and_clear(lane, monkeypatch: pytest.MonkeyPatch) -> 
 
 def test_rule_age_resolves_for_tuya_entities(lane) -> None:
     from dsc_brain.automation_rules import AGE_PREFIXES, timestamp_source
-    from dsc_brain.automation_rules import _device_timestamp  # type: ignore[attr-defined]
+    from dsc_brain.automation_rules import _entity_timestamp
     from dsc_brain.fleet_state import get_fleet_state
 
     _register_plug(lane)
     lane.ingest(PLUG_ID, {"1": True})
     assert "sensor.dsc_tuya_" in AGE_PREFIXES
     assert timestamp_source("binary_sensor.dsc_tuya_plug_pump_state") == "zigbee"
-    ts = _device_timestamp(get_fleet_state(), "binary_sensor.dsc_tuya_plug_pump_state")
+    ts = _entity_timestamp(get_fleet_state(), "binary_sensor.dsc_tuya_plug_pump_state")
     assert ts == pytest.approx(lane._updated_at[PLUG_ID])
 
 
@@ -412,7 +413,10 @@ def test_routes_round_trip(lane) -> None:
         r = client.get("/settings/tuya/devices")
         body = r.json()
         plug = next(d for d in body["devices"] if d["id"] == PLUG_ID)
-        assert plug["status"] == "bound" and plug["state"]["link"] == "offline" and "local_key" not in plug
+        # The lifespan started the lane: a worker opened the fake device with a
+        # persistent socket and its first status() report made the row live.
+        assert plug["status"] == "bound" and plug["state"]["link"] == "live" and "local_key" not in plug
+        assert any(d.persistent and d.timeout == 2.0 for d in FakeTuyaDevice.instances)
         assert body["health"]["device_count"] == 2
         r = client.get("/settings/devices/actuatable")
         assert [d["lane"] for d in r.json()["devices"]] == ["tuya"]
