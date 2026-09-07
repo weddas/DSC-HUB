@@ -83,7 +83,8 @@ Mobile (&lt; 640 px): bottom bar `Overview · Climate · Plants · Alerts · Mor
 
 ## Twin
 
-- **Desk** `#/twin` — composed room/tents from GLBs + live Zone/fleet state.
+- **Desk** `#/twin` — composed room/tents from GLBs + live Zone/fleet state; zone strip re-aims the camera (`TwinPage` + `useZoneFocus`).
+- Pack 3: vessel + plant-stage pairs, rebuilt 2×4 anchors, Pi/panel/puck/fixed cameras; **134** GLBs — see [`TWIN.md`](TWIN.md).
 - **Spike** `#/twin-spike` — cost/fps measure only (not a desk). Phone: `?force3d=1`.
 - Models under `frontend/public/models/`; build via `frontend/scripts/build-twin-models.mjs`.
 - **Always** verify with `vite preview` (or the Pi) before hotpatch — see [`../ops/SPA-PROD-BUNDLE.md`](../ops/SPA-PROD-BUNDLE.md).
