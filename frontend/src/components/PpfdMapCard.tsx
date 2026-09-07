@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Panel } from "./Panel";
 import { StatusTag } from "./ui";
+import { PpfdSurface } from "./PpfdSurface";
 import {
   BANDS,
   fetchLightDetail,
@@ -17,7 +18,7 @@ import {
   type Spectrum,
 } from "../lib/lightCatalog";
 
-type Tab = "map" | "spectrum" | "bands";
+type Tab = "map" | "surface" | "spectrum" | "bands";
 
 /**
  * Maker-published PPFD map, spectrum, and band shares for one catalog light,
@@ -30,6 +31,7 @@ export function PpfdMapCard({ catalogId, legend }: { catalogId: string; legend?:
   const [result, setResult] = useState<LightDetailResult | null>(null);
   const [tab, setTab] = useState<Tab>("map");
   const [layerId, setLayerId] = useState<string | null>(null);
+  const [heightCm, setHeightCm] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,6 +69,7 @@ export function PpfdMapCard({ catalogId, legend }: { catalogId: string; legend?:
               {(
                 [
                   ["map", `Map${layers.length ? ` · ${layers.length}` : ""}`],
+                  ["surface", "3D"],
                   ["spectrum", `Spectrum${spectra.length ? ` · ${spectra.length}` : ""}`],
                   ["bands", "Bands"],
                 ] as Array<[Tab, string]>
@@ -78,13 +81,13 @@ export function PpfdMapCard({ catalogId, legend }: { catalogId: string; legend?:
                   aria-selected={tab === key}
                   className={`dsc-chip${tab === key ? " is-active" : ""}`}
                   onClick={() => setTab(key)}
-                  disabled={(key === "map" && !layers.length) || (key !== "map" && !spectra.length)}
+                  disabled={((key === "map" || key === "surface") && !layers.length) || ((key === "spectrum" || key === "bands") && !spectra.length)}
                 >
                   {label}
                 </button>
               ))}
             </div>
-            <StatusTag {...provenanceLabel(tab === "map" ? layer?.provenance : spectra[0]?.provenance)} />
+            <StatusTag {...provenanceLabel(tab === "map" || tab === "surface" ? layer?.provenance : spectra[0]?.provenance)} />
           </div>
 
           {tab === "map" && layer ? (
@@ -109,6 +112,9 @@ export function PpfdMapCard({ catalogId, legend }: { catalogId: string; legend?:
             </>
           ) : null}
 
+          {tab === "surface" && layer ? (
+            <PpfdSurface layers={layers} heightCm={heightCm ?? layer.conditions.height_cm} onHeight={setHeightCm} range={range} />
+          ) : null}
           {tab === "spectrum" && spectra.length ? <SpectrumChart spectra={spectra} /> : null}
           {tab === "bands" && spectra.length ? <BandsRadar spectra={spectra} /> : null}
 

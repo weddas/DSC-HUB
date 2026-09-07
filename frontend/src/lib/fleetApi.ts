@@ -1141,6 +1141,8 @@ export type SpaceDevice = {
   watts: number;
   duty_source: string;
   enabled: boolean;
+  /** Brain-side free-form fields; `catalog_id` binds the lamp to a CannaLib lights record. */
+  extra?: Record<string, unknown>;
 };
 
 export async function getSpaces(): Promise<

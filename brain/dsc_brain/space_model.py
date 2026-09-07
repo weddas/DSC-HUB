@@ -36,6 +36,8 @@ KIT_DEVICE_DEFAULTS: tuple[dict[str, Any], ...] = (
         "watts": 100.0,
         "duty_source": "photoperiod",
         "enabled": True,
+        # CannaLib lights-catalog record this lamp is; the Light page's maker PPFD card keys off it.
+        "extra": {"catalog_id": "spider_farmer_sf1000"},
     },
     {
         "space_id": "4x8",
@@ -150,7 +152,7 @@ def ensure_kit_spaces(db_path: Path | None = None) -> list[dict[str, Any]]:
             conn.execute(
                 """
                 INSERT INTO space_device(space_id, device_id, label, watts, duty_source, enabled, extra_json, updated_at)
-                VALUES(?, ?, ?, ?, ?, ?, '{}', ?)
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     dev["space_id"],
@@ -159,6 +161,7 @@ def ensure_kit_spaces(db_path: Path | None = None) -> list[dict[str, Any]]:
                     float(dev["watts"]),
                     dev["duty_source"],
                     1 if dev.get("enabled", True) else 0,
+                    json.dumps(dev.get("extra") or {}, separators=(",", ":")),
                     now,
                 ),
             )
