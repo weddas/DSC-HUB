@@ -163,6 +163,7 @@ Factory image bake lives under [`services/dsc-hub/image/`](services/dsc-hub/imag
 | [`docs/brain/SETTINGS.md`](docs/brain/SETTINGS.md) | Settings S1–S3 / hub tunables |
 | [`docs/brain/TWIN.md`](docs/brain/TWIN.md) | Composed 3D twin desk |
 | [`docs/brain/PPFD-FIELD.md`](docs/brain/PPFD-FIELD.md) | Maker PPFD 3D surface + fixture catalog binding |
+| [`docs/ops/ESPHOME-TOOLCHAIN.md`](docs/ops/ESPHOME-TOOLCHAIN.md) | Host venv / dashboard OTA / ceiling / canary |
 | [`docs/cameras.md`](docs/cameras.md) | Zone cameras + timelapse |
 | [`docs/ops/SPA-PROD-BUNDLE.md`](docs/ops/SPA-PROD-BUNDLE.md) | SPA chunk graph / vite preview gate |
 | [`brain/README.md`](brain/README.md) | Brain CLI / API / catalogs |

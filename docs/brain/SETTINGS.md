@@ -2,7 +2,7 @@
 
 **In one line:** One gear surface grouped by the operator's question (You / The grow / The kit); every row states who owns the value and whether it is synced.
 
-Plan: [`docs/design/plan-settings-2026-09-07.md`](../design/plan-settings-2026-09-07.md). Evidence: `docs/FOLLOWUPS.md` §§ Settings Pass S1–S3. Cameras (S7 core): [`docs/cameras.md`](../cameras.md).
+Plan: [`docs/design/plan-settings-2026-09-07.md`](../design/plan-settings-2026-09-07.md). Evidence: `docs/FOLLOWUPS.md` §§ Settings Pass S1–S3. Cameras (S7 core): [`docs/cameras.md`](../cameras.md). Firmware toolchain card: [`docs/ops/ESPHOME-TOOLCHAIN.md`](../ops/ESPHOME-TOOLCHAIN.md).
 
 ## Intent
 
