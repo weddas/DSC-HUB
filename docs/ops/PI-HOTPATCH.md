@@ -2,7 +2,7 @@
 
 **In one line:** Push a rebuilt `frontend/spa-dist` (and optionally the brain package) into the live `dsc-hub-brain` container with **PuTTY `pscp`/`plink`**, then reload with **`docker stop -t 20` + `start`** — never bare `restart` or `kill` on this Pi.
 
-Verified against tip `0d3d7f0` (Hub **8.1.0**; firmware train still **8.0.0.0**). Rule: [`.cursor/rules/dsc-pi-hotpatch.mdc`](../../.cursor/rules/dsc-pi-hotpatch.mdc) · AGENTS Pi hotpatch bullet. Lab host: `dsc@…`, container `dsc-hub-brain`, static `/app/static/`.
+Verified against tip `4d73cfc` (Hub **8.1.0**; firmware train still **8.0.0.0**; SoftAP kit bake compile restored on ESPHome 2026.6.5). Rule: [`.cursor/rules/dsc-pi-hotpatch.mdc`](../../.cursor/rules/dsc-pi-hotpatch.mdc) · AGENTS Pi hotpatch bullet. Lab host: `dsc@…`, container `dsc-hub-brain`, static `/app/static/`.
 
 ## Intent
 
@@ -95,7 +95,7 @@ Do **not** reopen Live UX as regressions without new dishonesty evidence.
 - **Never commit** live Pi passwords, sudo phrases, API keys, or hostkeys into docs, FOLLOWUPS tip blurbs, Notion Wiki, or PR bodies. Lab credentials live in the Notion **API Keys & Credentials** DB.
 - Do not invent height/chem/PPFD/NPK or claim GPIO5 optical wired.
 - Playwright vs `:8787`: prefer `domcontentloaded` over `networkidle`.
-- Tip `0d3d7f0` / 8.1.0 product (Settings S4/S5 + Tuya T1 + release bump) is **not yet assumed hotpatched** to the lab Pi — verify served index hash and `/health` `version` before claiming live.
+- Tip `4d73cfc` / 8.1.0 product (Settings S4/S5 + Tuya T1 + release bump + SoftAP kit bake fix) is **not yet assumed hotpatched** to the lab Pi — verify served index hash and `/health` `version` before claiming live.
 
 ## Related
 

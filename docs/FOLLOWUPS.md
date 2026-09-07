@@ -5057,3 +5057,14 @@ Engineering-docs automation after master merge `0d3d7f0` (**DSC-HUB 8.1.0** — 
 - Notion Pi offline brain + Local webserver UI tip blurbs → `0d3d7f0`
 
 Docs branch `cursor/engineering-documentation-9207` (supersedes #210). Residual: publish GitHub `v8.1.0` so Kit Update Check offers the cut; Pi product hotpatch of S4/S5 + T1 + 8.1.0 still open; close superseded docs PRs #200–#210.
+
+## 2026-09-07 — Docs SoT: SoftAP kit bake tip `4d73cfc`
+
+Engineering-docs automation after master merge `4d73cfc` (`fix/kit-firmware-compile` — `dsc_fleet_setup` compiles again on ESPHome **2026.6.5**; `DSC_RELEASE=1` empty-bin guard). Carries unmerged #211 durable SoT onto the new tip and documents the hollow-card lesson:
+
+- [`docs/ops/ESPHOME-TOOLCHAIN.md`](ops/ESPHOME-TOOLCHAIN.md) — Kit SoftAP bake path vs live hub; Wi-Fi API constraints (`set_keep_scan_results`, `StringRef.str()`, ArduinoJson copy); release empty-bin guard; bump checklist includes `dsc-hub-kit.yaml` compile
+- [`services/dsc-hub/image/README.md`](../services/dsc-hub/image/README.md) — hollow `.bin` trap + `DSC_RELEASE=1` / size check (`.audit/kit-linux-bake.ps1` does not set the flag today)
+- [`UPGRADE.md`](../UPGRADE.md) / tip stamps — SoftAP fix does **not** imply live-fleet reflash; next SD bake must prove non-empty kit bins
+- Notion tracker [dsc_fleet_setup compile break](https://app.notion.com/p/3d42b4cda3708173b157d435d156ee44) → Needs Verification; Pi offline brain + Local webserver UI tip blurbs → `4d73cfc`
+
+Docs branch `cursor/engineering-documentation-db6e` (supersedes #211). Residual: prove next release bake with non-empty `firmware/kit/*.bin`; publish `v8.1.0`; Pi hotpatch of S4/S5 + T1 + 8.1.0; set `DSC_RELEASE=1` in the Windows bake driver (product follow-up).

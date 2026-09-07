@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Release** | tree is **8.1.0** (`0d3d7f0`) · latest published SD download: [8.0.0 AlphaPi](https://github.com/weddas/DSC-HUB/releases/tag/v8.0.0-AlphaPi) (GitHub tag may lag; see [`UPGRADE.md`](UPGRADE.md)) |
+| **Release** | tree is **8.1.0** (`4d73cfc`) · latest published SD download: [8.0.0 AlphaPi](https://github.com/weddas/DSC-HUB/releases/tag/v8.0.0-AlphaPi) (GitHub tag may lag; see [`UPGRADE.md`](UPGRADE.md)) |
 | **Surface** | Brain / SPA **8.1.0** · kit firmware train **8.0.0.0** (ESPHome-only; fleet reflash via Settings → Devices → Firmware) |
 | **Product path** | Flash SD → Pi boots → SPA Setup (`#/setup`) → USB flash fleet → SoftAP/LAN join → Zigbee bind |
 

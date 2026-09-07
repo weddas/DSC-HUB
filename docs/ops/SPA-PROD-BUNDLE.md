@@ -2,7 +2,7 @@
 
 **In one line:** Vite **dev** does not exercise Rollup `manualChunks`; a green `:5173` session can still ship a blank Pi SPA.
 
-Verified against tip `0d3d7f0` (Hub **8.1.0**; lazy Twin + `vendor-react` / `twin-three` chunk split still required). Code: `frontend/vite.config.ts`, `frontend/src/App.tsx` (default `surfaceVersion` **8.1.0**).
+Verified against tip `4d73cfc` (Hub **8.1.0**; lazy Twin + `vendor-react` / `twin-three` chunk split still required). Code: `frontend/vite.config.ts`, `frontend/src/App.tsx` (default `surfaceVersion` **8.1.0**).
 
 ## Failure mode (2026-09-07)
 

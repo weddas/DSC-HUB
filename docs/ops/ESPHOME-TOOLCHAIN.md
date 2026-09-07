@@ -45,8 +45,10 @@ Do this deliberately, not on every ESPHome release:
 1. Update the venv (`Update ESPHome`, or `sudo -u dsc /opt/dsc-esphome-venv/bin/pip install -U esphome`).
 2. `cd firmware/v4 && /opt/dsc-esphome-venv/bin/esphome config …` → exit 0 for
    hub / control / a pot / a sonoff **and** a real
-   `esphome compile` per family. Live gate lesson: `config` misses lambda C++
-   (panel `lv_color_eq` / LVGL 9; hub `StringRef` / `.str()` on ESPHome 2026.x).
+   `esphome compile` per family **plus** at least one SoftAP kit stub
+   (`dsc-hub-kit.yaml`). Live gate lesson: `config` misses lambda C++
+   (panel `lv_color_eq` / LVGL 9; hub `StringRef` / `.str()` on ESPHome 2026.x;
+   kit SoftAP `ScanResultsLock` / `get_ssid().str()` on 2026.6.5).
 3. Run the firmware QA rig (`scripts/run_sim_gates.sh`) → 0 violations.
 4. Bump `min_version:` in the four `esphome:` blocks + `PIN=` in
    `dsc-esphome-venv-setup.sh` + `PINNED_MIN_VERSION` in `esphome_toolchain.py`,
@@ -199,6 +201,68 @@ baked `.bin` files stop matching the live fleet’s OTA/API keys. Before baking
 `/opt/dsc-hub/firmware/v4/secrets.yaml`) into the bake tree and confirm md5s
 match. Full bake runbook: [`services/dsc-hub/image/README.md`](../../services/dsc-hub/image/README.md).
 
+### Kit SoftAP firmware bake (`dsc_fleet_setup`)
+
+Factory USB flash uses **prebuilt** kit binaries under
+`services/dsc-hub/firmware/kit/*.bin`, compiled by `image/bake-firmware.sh`
+from the `*-kit.yaml` stubs — **not** the live lab YAMLs.
+
+| Path | Uses `dsc_fleet_setup`? | Role |
+|---|---|---|
+| `dsc-hub-v4_0.yaml` (live hub) | **No** | Lab / in-grow OTA — SoftAP portal not compiled here |
+| `dsc-hub-kit.yaml` → `dsc-fleet-setup-hub.yaml` | **Yes** | Factory SoftAP (`DSC-Setup-*`) |
+| `dsc-control-kit.yaml` → `dsc-fleet-setup-satellite.yaml` | **Yes** | Satellite joins hub setup AP |
+| `dsc-pot{N}-kit.yaml` → `dsc-fleet-setup-pot-kit.yaml` | **Yes** | Probe SoftAP join |
+| Sonoff kit YAMLs (`dsc-heater.yaml` …) | No SoftAP component | Plain compile into `kit/*.bin` |
+
+```mermaid
+flowchart TD
+  bake["bake-on-linux.sh"] --> secrets{"secrets.yaml?"}
+  secrets -->|missing| gen["generate-secrets.sh"]
+  secrets -->|present| fw["bake-firmware.sh"]
+  gen --> fw
+  fw --> compile["esphome compile *-kit.yaml"]
+  compile -->|ok| bins["firmware/kit/*.bin non-empty"]
+  compile -->|fail / no CLI| ph["empty placeholder .bin"]
+  bins --> guard{"DSC_RELEASE=1?"}
+  ph --> guard
+  guard -->|yes + any 0-byte| abort["bake aborts"]
+  guard -->|no| stage["stage /opt/dsc-hub — hollow card possible"]
+```
+
+**Why the live fleet can look fine while the card cannot flash a kit:** OTA /
+Settings › Devices › Firmware only builds the **lab** stubs. The SoftAP
+component bit-rots against ESPHome Wi-Fi API moves without anyone noticing
+until the next SD bake. Tip `0b06f58` / merge `4d73cfc` restored compile on
+pinned **2026.6.5**:
+
+1. Declare `hub_mac_str()` / `panel_mac_str()` in `dsc_fleet_setup.h` (defs were
+   orphaned — only `bridge_mac_str()` was declared).
+2. ESPHome 2026.x removed `wifi::ScanResultsLock`. Call
+   `set_keep_scan_results(true)` in `setup()` so hub portal AP lists and
+   satellite `DSC-Setup-*` scans still see `get_scan_result()` outside an
+   active scan.
+3. `WiFiScanResult::get_ssid()` returns `StringRef` — take `.str()` (length-
+   honouring; not guaranteed NUL-terminated).
+4. ArduinoJson: assign MAC / SSID as `std::string` so the library **copies** —
+   a `char[18]` local stored by pointer dies before `serialize()`.
+
+**Release guard:** `bake-firmware.sh` refuses placeholders when
+`DSC_RELEASE=1`. Tip `0b06f58` also makes `bake-on-linux.sh` abort under
+`DSC_RELEASE=1` if any staged `firmware/kit/*.bin` is zero bytes (the hollow
+8.0.0 card shipped because the bake never set the flag and compile failure
+fell through to placeholders).
+
+**Operator pitfalls**
+
+- `.audit/kit-linux-bake.ps1` currently exports `DSC_VERSION` only — **not**
+  `DSC_RELEASE=1`. For a shippable card, set `DSC_RELEASE=1` on the bake host
+  (or verify `find …/firmware/kit -name '*.bin' ! -size 0` after bake).
+- Bump checklist must `esphome compile` at least one SoftAP stub
+  (`dsc-hub-kit.yaml`), not only `dsc-hub.yaml` / `esphome config`.
+- Live fleet firmware train stays **8.0.0.0** — this SoftAP fix does **not**
+  imply a grow reflash; it unblocks the **next** SD / USB-flash bake.
+
 ### Units on the Pi
 
 | Unit | Role |
@@ -235,3 +299,7 @@ inventory, default order `pot2 pot1 heater heatmat humidifier dehumidifier contr
 * **SD-image layout gate still pending** (same units bake path; not yet soak-proven
   on a fresh SD). Legacy compose profile `legacy-esphome` stays for rollback until
   that gate closes.
+* 2026-09-07 tip `0b06f58` / `4d73cfc`: `dsc_fleet_setup` compiles again on
+  ESPHome **2026.6.5**; `DSC_RELEASE=1` empty-bin guard on `bake-on-linux.sh`.
+  Prove the next release bake with non-empty `firmware/kit/*.bin` before
+  shipping a card (hollow 8.0.0 lesson).

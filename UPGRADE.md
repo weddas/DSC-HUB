@@ -4,7 +4,8 @@
 **Release notes:** [`RELEASE.md`](RELEASE.md) · [`CHANGELOG.md`](CHANGELOG.md).
 
 Repo: https://github.com/weddas/DSC-HUB · branch **`master`** · tree tip **8.1.0**
-(`0d3d7f0`). Published download tags may lag the tree — see [Kit update honesty](#kit-update-honesty).
+(`4d73cfc` — SoftAP kit bake compile fix on ESPHome 2026.6.5). Published download
+tags may lag the tree — see [Kit update honesty](#kit-update-honesty).
 
 There is no Home Assistant in the upgrade path. Everything below happens in the
 Pi SPA (`http://dsc-brain.local:8787`, or `http://10.42.0.1:8787` on the kit
@@ -47,17 +48,20 @@ flowchart LR
    greater than the running brain (`kit_update._is_newer`), **Update DSC-Brain**
    runs `brain_update_cmd` (or shows the manual deploy hint if unset).
 3. If Check still shows AlphaPi as latest (no `v8.1.0` GitHub release yet),
-   pull `master` / tip `0d3d7f0` via workstation deploy or
+   pull `master` / tip `4d73cfc` via workstation deploy or
    [`docs/ops/PI-HOTPATCH.md`](docs/ops/PI-HOTPATCH.md) — do not invent a Kit
    Update button that is not offered.
 4. Verify: `GET /health` → `version` and `surface` **8.1.0**,
    `expected_firmware` **8.0.0.0**; Overview fleet chip **ok**.
 5. Skip canary / reflash unless you are also bumping ESPHome or rebuilding
-   firmware YAML.
+   firmware YAML. SoftAP kit-bake compile fixes (`dsc_fleet_setup`) do **not**
+   require a live-fleet reflash — they only matter for the **next** SD / USB
+   flash bake.
 
 Compose image tags on tip: `dsc-hub-brain:8.1.0` / `dsc-hub-cannalib:8.1.0`.
 SD bake: [`services/dsc-hub/image/README.md`](services/dsc-hub/image/README.md)
-(`DSC_VERSION=8.1.0`, **copy live** `firmware/v4/secrets.yaml` before bake).
+(`DSC_VERSION=8.1.0`, **copy live** `firmware/v4/secrets.yaml`, set
+`DSC_RELEASE=1`, confirm kit `.bin` files are non-empty — hollow 8.0.0 lesson).
 
 ---
 
