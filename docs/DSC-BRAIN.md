@@ -24,7 +24,8 @@ Notion (canonical Wiki): [Product layers](https://app.notion.com/p/3b52b4cda3708
 | [`SETUP.md`](../SETUP.md) | SoftAP kit unbox (product path) |
 | [`INSTALL.md`](../INSTALL.md) | HA lab bring-up (scaffold) |
 | [`docs/HA-SCAFFOLD.md`](HA-SCAFFOLD.md) | Promote-don't-deepen rules |
-| [`docs/brain/`](brain/) | Specs: decision loop, web UI, Pi appliance path |
+| [`docs/brain/`](brain/) | Specs: desks/WEBUI, zone model, automation rules, decision loop |
+| [`docs/ops/RELAY-HONESTY.md`](ops/RELAY-HONESTY.md) | Sonoff observed vs commanded vs hub demand |
 
 ## Phases
 
@@ -49,3 +50,5 @@ Notion (canonical Wiki): [Product layers](https://app.notion.com/p/3b52b4cda3708
 3. The brain already acts where it owns the surface: setpoints and modes via `/control/service` (clamped by the ESP), Zigbee tasks, automation rules (cut-outs, operator-owned switches, clamped setpoints), and the Sonoff appliance driver.
 
 The path to brain-driven demand is a firmware change, not a flag: a hub *brain-owned demand* mode in which the ladder yields the `*_demand` switches while the brain is fresh (and takes them back on staleness), plus symmetric on/off proposals with hysteresis. Tracked as a Suggested Feature. Until then the honest wording is "brain proposes, hub applies".
+
+Relay entity honesty (device-observed vs commanded vs demand): [`docs/ops/RELAY-HONESTY.md`](ops/RELAY-HONESTY.md). Dashboard desks + zone roles: [`docs/brain/WEBUI.md`](brain/WEBUI.md) · [`docs/brain/ZONE-MODEL.md`](brain/ZONE-MODEL.md). Settings / hub tunables: [`docs/brain/SETTINGS.md`](brain/SETTINGS.md). Composed twin: [`docs/brain/TWIN.md`](brain/TWIN.md). Zone cameras: [`docs/cameras.md`](cameras.md). SPA prod chunk rule: [`docs/ops/SPA-PROD-BUNDLE.md`](ops/SPA-PROD-BUNDLE.md).
