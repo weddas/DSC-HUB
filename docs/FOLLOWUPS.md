@@ -46,9 +46,9 @@ fixed camera per tent (cameras unbound → grey). **Desk nav:** `Twin` is a desk
 zone strip re-aims the camera; `/live/twin` now redirects here). `npm run build` ok; `tsc` clean for these files.
 
 **Open (tracker rows added 2026-09-07):** calibrated what-if response model; `useHeldReading` bump-per-tick churn on every `useZones` consumer; room shell placeholder (roof fans
-within 1 cm of the ceiling) until § G is measured. Also: no desk-nav entry for `/twin`; no pre-rendered PNG still for
-phones; plant labels overlap when two pots are close (DOM labels, no collision); `PlantInstances` exports a non-component
-(`plantPlace`) so Vite Fast Refresh falls back to a full reload for that module.
+within 1 cm of the ceiling) until § G is measured. Also: no pre-rendered PNG still for phones; plant labels overlap when
+two pots are close (DOM labels, no collision); `PlantInstances` exports a non-component (`plantPlace`) so Vite Fast
+Refresh falls back to a full reload for that module. (Desk-nav for `#/twin` landed with pack 3 — struck from this open list.)
 
 ---
 
