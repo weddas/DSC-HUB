@@ -8,6 +8,13 @@ import { Button } from "./components/ui";
 import { BrainProvider, useBrainRefresh, useBrainSelector } from "./hooks/useBrain";
 import { FleetProvider } from "./hooks/useFleet";
 import type { HassEntity } from "./vite-env";
+// v2 type — self-hosted (the Pi is LAN-only, no Google Fonts). Latin subsets only.
+import "@fontsource/fira-sans/400.css";
+import "@fontsource/fira-sans/500.css";
+import "@fontsource/fira-sans/600.css";
+import "@fontsource/fira-sans/700.css";
+import "@fontsource/fira-mono/400.css";
+import "@fontsource/fira-mono/500.css";
 import "./styles/dsc.css";
 
 function PiBootGate({ children }: { children: ReactNode }) {

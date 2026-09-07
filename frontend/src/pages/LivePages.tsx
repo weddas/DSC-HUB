@@ -18,6 +18,7 @@ import { readProbeTrust } from "../lib/probeTrust";
 import { VesselGlyph } from "../components/VesselGlyph";
 import { readProbeVessel } from "../lib/vesselSpec";
 import { useEntityBus } from "../hooks/useEntityBus";
+import { tentFromFocus, useZoneFocus } from "../hooks/useZoneFocus";
 import { useTentVitals } from "../hooks/useFleet";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
@@ -129,7 +130,7 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
         title={title}
         subtitle={`Tent cockpit — ${probes.length} probe(s). ${pathNote}`}
         primaryAction={
-          <Button teal onClick={() => navigate("/live/overview")}>
+          <Button teal onClick={() => navigate("/overview")}>
             Both tents
           </Button>
         }
@@ -145,7 +146,7 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
                 desk with <code>?tent=</code> already set.
               </p>
             </HelpTip>
-            <Button primary onClick={() => navigate(`/live/climate?tent=${tent}`)}>
+            <Button primary onClick={() => navigate(`/climate?zone=${tent}`)}>
               Climate Want
             </Button>
           </>
@@ -401,4 +402,10 @@ export function LiveMainPage() {
 
 export function LiveClonePage() {
   return <TentCockpitPage tent="clone" />;
+}
+
+/** `/climate/tent` — the per-tent cockpit; the zone strip picks the tent (`?zone=`). */
+export function LiveTentPage() {
+  const { focus } = useZoneFocus();
+  return <TentCockpitPage tent={tentFromFocus(focus)} />;
 }

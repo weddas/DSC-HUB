@@ -47,5 +47,8 @@ export const ICON_SVG = {
   "trends": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" width=\"100%\" height=\"100%\">\n<path d=\"M3 17l6-6 4 4 8-8\"/><path d=\"M14 7h7v7\"/>\n</svg>",
 } as const;
 
-export type IconName = keyof typeof ICON_SVG;
+import type { IconNameSet } from "./iconSet";
+
+/** Legacy panel icons (camelCase) + the v4 cultivation set (kebab-case). */
+export type IconName = keyof typeof ICON_SVG | IconNameSet;
 

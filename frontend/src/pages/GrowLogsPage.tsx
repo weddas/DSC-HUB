@@ -105,11 +105,11 @@ function LogsScopeNav({
           item.scope.kind === compareScopeB.kind &&
           String(item.scope.id ?? "") === String(compareScopeB.id ?? "");
         // HashRouter app — hand `<Link>` a route-relative target so it renders a
-        // correct `#/grow/logs?…` href (copy-link / middle-click / open-in-new-tab
-        // now work) instead of the raw-path `<a href="/grow/logs?…">` that only
+        // correct `#/logs?…` href (copy-link / middle-click / open-in-new-tab
+        // now work) instead of the raw-path `<a href="/logs?…">` that only
         // navigated because onClick preventDefault'd it. Plain clicks still route
         // through onSelect so compare-picking + anchor carry-through are unchanged.
-        const to = `/grow/logs?${buildLogsSearchParams(item.scope, view).toString()}`;
+        const to = `/logs?${buildLogsSearchParams(item.scope, view).toString()}`;
 
         return (
           <Link
@@ -348,7 +348,7 @@ export function GrowLogsPage() {
   const showScopeCompareTrends = compareScopeMode && scopeCompareReady && view === "trends";
 
   if (!params.get("scope")) {
-    return <Navigate to="/grow/logs?scope=room&id=grow_room" replace />;
+    return <Navigate to="/logs?scope=room&id=grow_room" replace />;
   }
 
   return (

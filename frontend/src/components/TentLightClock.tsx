@@ -140,7 +140,7 @@ function TentLightSummaryChip({ tent }: { tent: TentPhotoperiodId }) {
         icon="alert"
         label={`${title} — no schedule`}
         tone="warn"
-        onClick={() => navigate("/live/light")}
+        onClick={() => navigate("/light")}
       />
     );
   }
@@ -157,7 +157,7 @@ function TentLightSummaryChip({ tent }: { tent: TentPhotoperiodId }) {
       icon="lighting"
       label={label}
       tone={isLit ? "ok" : "muted"}
-      onClick={() => navigate("/live/light")}
+      onClick={() => navigate("/light")}
     />
   );
 }

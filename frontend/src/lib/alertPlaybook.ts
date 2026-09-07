@@ -243,10 +243,10 @@ export function alertRoute(entityId: string): { href: string; cta: string } {
     entityId.includes("photo") ||
     entityId.includes("catchup")
   ) {
-    return { href: "/live/light", cta: "Open Light" };
+    return { href: "/light", cta: "Open Light" };
   }
   if (entityId.includes("vpd")) {
-    return { href: "/live/climate", cta: "Open Climate" };
+    return { href: "/climate", cta: "Open Climate" };
   }
   if (
     entityId.includes("root") ||
@@ -255,7 +255,7 @@ export function alertRoute(entityId: string): { href: string; cta: string } {
     entityId.includes("grow_mat") ||
     entityId.includes("tank_")
   ) {
-    return { href: "/live/root", cta: "Open Root" };
+    return { href: "/root", cta: "Open Root" };
   }
   if (
     entityId.includes("climate") ||
@@ -265,15 +265,15 @@ export function alertRoute(entityId: string): { href: string; cta: string } {
     entityId.includes("coherence") ||
     entityId.includes("plant_specs")
   ) {
-    return { href: "/live/climate", cta: "Open Climate" };
+    return { href: "/climate", cta: "Open Climate" };
   }
   if (entityId.includes("failsafe") || entityId.includes("emergency")) {
-    return { href: "/live/mission", cta: "Mission" };
+    return { href: "/alerts", cta: "Alerts" };
   }
   if (entityId.includes("reduced_kit") || entityId.includes("nest_channel")) {
-    return { href: "/fleet", cta: "Open Fleet" };
+    return { href: "/kit", cta: "Open Kit" };
   }
-  return { href: "/live/overview", cta: "Overview" };
+  return { href: "/overview", cta: "Overview" };
 }
 
 export function playbookFor(
@@ -295,3 +295,8 @@ export function playbookFor(
 }
 
 export const ALERT_ENTITY_IDS = Object.keys(ALERTS);
+
+/** Alert entities currently `on` and not snoozed — the Overview / Alerts fault list. */
+export function activeAlertIds(state: (id: string, fb?: string) => string, isSnoozed: (id: string) => boolean): string[] {
+  return ALERT_ENTITY_IDS.filter((id) => state(id) === "on" && !isSnoozed(id));
+}

@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "models": [
+    {
+      "slug": "grow-tent-120x60x210",
+      "file": "/models/grow-tent-120x60x210.glb",
+      "kind": "tent",
+      "dims_cm": [120, 60, 210],
+      "zone": "2x4",
+      "bytes": 385028,
+      "anchors": {
+        "vent_port_roof": "fan_exhaust",
+        "vent_port_side_right_lower": "fan_intake",
+        "vent_port_side_left_upper": "duct_passive",
+        "vent_port_side_left_lower": "duct_passive",
+        "vent_port_upper_chamber": "duct_passive",
+        "cable_port_1": "cable",
+        "cable_port_2": "cable",
+        "floor_tray": "tray",
+        "divider_shelf": "shelf",
+        "observation_window_1": "window",
+        "observation_window_2": "window",
+        "vent_window": "vent_window",
+        "door_main_left": "door",
+        "door_main_right": "door"
+      },
+      "materials": {
+        "trim_green": "accent",
+        "foil_lining": "dim",
+        "window_acrylic": "glass",
+        "shell_black": "shell",
+        "frame_steel": "frame",
+        "roller_silver": "frame",
+        "tray_pvc": "frame"
+      }
+    }
+  ]
+}

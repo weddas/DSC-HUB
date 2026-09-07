@@ -37,14 +37,14 @@ export function ProbeOverlayHost() {
       {probe != null ? (
         <>
           <PlantProbePanel probe={probe} onSelectProbe={setProbe} onRetired={close} />
-          {location.pathname !== "/live/root" ? (
+          {location.pathname !== "/root" ? (
             <div className="dsc-row-actions" style={{ marginTop: 12 }}>
               <Button
                 teal
                 onClick={() => {
                   const n = probe;
                   close();
-                  navigate(`/live/root?pot=${n}`);
+                  navigate(`/root?pot=${n}`);
                 }}
               >
                 Open Root

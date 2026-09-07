@@ -1699,6 +1699,36 @@ def spaces_ensure() -> dict[str, Any]:
     return spaces_get()
 
 
+class ZonePatchBody(BaseModel):
+    name: str | None = None
+    role: str | None = None
+    notes: str | None = None
+
+
+@app.get("/zones")
+def zones_get() -> dict[str, Any]:
+    """Every room and space as a zone with its role (grow · dry · cure · empty · room)."""
+    from .zone_model import ROLE_EFFECTS, ZONE_ROLES, list_zones
+
+    return {"zones": list_zones(), "roles": list(ZONE_ROLES), "effects": ROLE_EFFECTS}
+
+
+@app.patch("/zones/{zone_id}")
+def zones_patch(zone_id: str, body: ZonePatchBody) -> dict[str, Any]:
+    """Rename, annotate, or flip a zone's role. A flip writes a system journal entry.
+
+    Allowed in demo mode: a role is brain-local state (no LAN host, no actuator) and the
+    simulated room should be able to flip like the real one."""
+    from .zone_model import patch_zone
+
+    try:
+        return patch_zone(zone_id, body.model_dump(exclude_none=True))
+    except KeyError as exc:
+        raise HTTPException(404, f"unknown zone {zone_id}") from exc
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
 @app.put("/spaces/{space_id}/devices/{device_id}")
 def spaces_device_put(space_id: str, device_id: str, body: SpaceDeviceBody) -> dict[str, Any]:
     from .space_model import upsert_space_device

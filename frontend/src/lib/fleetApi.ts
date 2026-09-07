@@ -726,6 +726,20 @@ export async function put_automations(rules: AutomationRule[]): Promise<{ rules:
   return resp.json();
 }
 
+/** IrrigAct manual shot — the brain withholds it (honest OOS payload) when no plug_pump is bound. */
+export async function post_irrigation_shot(
+  potId: string,
+  durationS = 2,
+): Promise<{ ok?: boolean; detail?: string; kind?: string }> {
+  const resp = await fetch("/control/irrigation/shot", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pot_id: potId, duration_s: durationS }),
+  });
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "irrigation shot failed"));
+  return resp.json();
+}
+
 export function backup_export_url(): string {
   return "/settings/backup/export";
 }

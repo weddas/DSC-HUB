@@ -452,12 +452,12 @@ export function PlantProbePanel({
                     {
                       id: "compose",
                       label: "Open Compose (strain/catalog)",
-                      onSelect: () => navigate("/grow/compose"),
+                      onSelect: () => navigate("/plants/compose"),
                     },
                     {
                       id: "root",
                       label: "Root zone",
-                      onSelect: () => navigate("/live/root"),
+                      onSelect: () => navigate("/root"),
                     },
                     {
                       id: "delete",
@@ -612,7 +612,7 @@ export function PlantProbePanel({
                 />
               </label>
               <div style={{ marginTop: 10 }}>
-                <Link to="/grow/compose">
+                <Link to="/plants/compose">
                   <Button teal>Mix in Compose</Button>
                 </Link>
               </div>
@@ -666,7 +666,7 @@ export function PlantProbePanel({
                   4×8
                 </Button>
                 <Button onClick={() => setPendingTent("unassigned")}>Unassigned</Button>
-                <Link to="/live/root">
+                <Link to="/root">
                   <Button>Open Root</Button>
                 </Link>
               </div>

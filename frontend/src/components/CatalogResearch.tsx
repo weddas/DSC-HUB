@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { Panel } from "./Panel";
+import { StrainRuns } from "./StrainRuns";
 import { useNavigate } from "react-router-dom";
 import { CatalogPicker } from "./CatalogPicker";
-import { Button, Card, StatusChip } from "./ui";
+import { Button, StatusTag } from "./ui";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
 import { catalogMediaBase, fetchStrainDetail, hasLocalPpfdMap, loadPpfdManifest, resolveKitPpfdUrl, searchCatalog, type CatalogItem, type CatalogKind } from "../lib/catalog";
@@ -171,6 +173,20 @@ export function CatalogResearch() {
   const [hydrateNote, setHydrateNote] = useState("");
   const [ppfdManifest, setPpfdManifest] = useState<Record<string, { local_path?: string; file?: string }>>({});
   const fields = useMemo(() => compareFields(kind), [kind]);
+  const lineageText = useMemo(() => {
+    const raw = (hydrate as { lineage?: unknown } | null)?.lineage ?? (selected as { lineage?: unknown } | null)?.lineage;
+    if (!raw) return "";
+    if (typeof raw === "string") return raw;
+    if (Array.isArray(raw)) return raw.map((p) => (typeof p === "string" ? p : String((p as { name?: unknown })?.name ?? ""))).filter(Boolean).join(" × ");
+    if (typeof raw === "object") {
+      const o = raw as { parents?: unknown[]; mother?: unknown; father?: unknown };
+      const parts = [o.mother, o.father, ...(Array.isArray(o.parents) ? o.parents : [])]
+        .map((p) => (typeof p === "string" ? p : String((p as { name?: unknown })?.name ?? "")))
+        .filter(Boolean);
+      return parts.join(" × ");
+    }
+    return "";
+  }, [hydrate, selected]);
   const mediaUrls = useMemo(
     () => licensedMediaUrls(hydrate, catalogMediaBase(state)),
     [hydrate, state],
@@ -235,7 +251,7 @@ export function CatalogResearch() {
     } else {
       applyCatalogPick(kind, item, callService, state);
     }
-    navigate("/grow/compose");
+    navigate("/plants/compose");
   };
 
   return (
@@ -255,19 +271,23 @@ export function CatalogResearch() {
             {d.label}
           </button>
         ))}
-        <StatusChip label={sourceNote || "Catalog"} tone={sourceNote.includes("local") ? "warn" : "ok"} />
+        <StatusTag
+          label={!sourceNote ? "CATALOG" : sourceNote.includes("local") ? "LOCAL CATALOG" : "BRAIN CATALOG"}
+          tone={sourceNote.includes("local") ? "warn" : "ok"}
+          title={sourceNote || undefined}
+        />
         {recent.length ? (
-          <StatusChip label={`Recent: ${recent.map((r) => r.name).slice(0, 2).join(", ")}`} tone="muted" />
+          <StatusTag label={`Recent: ${recent.map((r) => r.name).slice(0, 2).join(", ")}`} tone="muted" />
         ) : null}
       </div>
       <div className="dsc-grid">
         <div className="dsc-col-6">
-          <Card className="dsc-glass" title="Browse" icon="research">
+          <Panel legend="BROWSE" className="dsc-catalog-panel">
             <CatalogPicker kind={kind} onPick={(item) => setSelected(item)} />
-          </Card>
+          </Panel>
         </div>
         <div className="dsc-col-6">
-          <Card className="dsc-glass" title="Detail" icon="roster">
+          <Panel legend={selected ? `DETAIL · ${String(kind).toUpperCase()}` : "DETAIL"} className="dsc-catalog-panel">
             {!selected ? (
               <p className="dsc-muted">Pick an item to see its details. Fields without data stay blank.</p>
             ) : (
@@ -325,7 +345,7 @@ export function CatalogResearch() {
                   </div>
                 ) : null}
                 {kind === "nutrient" ? (
-                  <StatusChip
+                  <StatusTag
                     label={chemistryTier(selected, sourceNote).label}
                     tone={chemistryTier(selected, sourceNote).tone}
                   />
@@ -337,7 +357,14 @@ export function CatalogResearch() {
                       <dd>{fieldValue(selected, f.key)}</dd>
                     </div>
                   ))}
+                  {kind === "strain" && lineageText ? (
+                    <div>
+                      <dt>Lineage</dt>
+                      <dd>{lineageText}</dd>
+                    </div>
+                  ) : null}
                 </dl>
+                {kind === "strain" ? <StrainRuns item={selected} /> : null}
                 <div className="dsc-row-actions">
                   <Button primary onClick={() => sendToCompose(selected)}>
                     Use in Compose
@@ -356,11 +383,11 @@ export function CatalogResearch() {
                 </div>
               </>
             )}
-          </Card>
+          </Panel>
         </div>
         {compare.length ? (
           <div className="dsc-col-12">
-            <Card className="dsc-glass" title="Compare" icon="analytics">
+            <Panel legend="COMPARE" className="dsc-catalog-panel">
               <table className="dsc-table">
                 <thead>
                   <tr>
@@ -382,7 +409,7 @@ export function CatalogResearch() {
                 </tbody>
               </table>
               <Button onClick={() => setCompare([])}>Clear compare</Button>
-            </Card>
+            </Panel>
           </div>
         ) : null}
       </div>

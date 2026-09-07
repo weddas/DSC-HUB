@@ -80,7 +80,8 @@ export function ParallaxStars({
 export function DscRoot({ children }: { children: ReactNode }) {
   return (
     <div className="dsc-root">
-      <ParallaxStars />
+      {/* v2: grid wash (CSS on .dsc-root) replaces the star field on operator surfaces;
+          ParallaxStars stays mountable for public/help pages. */}
       <div className="dsc-root-body">{children}</div>
     </div>
   );

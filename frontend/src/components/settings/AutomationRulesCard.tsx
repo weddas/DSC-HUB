@@ -103,7 +103,7 @@ function condSummary(c: AutomationCondition): string {
   return `${short} ${op}${String(c.value)}${hyst}${age}`.replace(/\s+/g, " ").trim();
 }
 
-function whenSummary(r: AutomationRule): string {
+export function whenSummary(r: AutomationRule): string {
   const conds = conditionsOf(r);
   const head = conds.length > 1 ? `${groupMode(r)} of ${conds.length}: ` : "";
   const parts = [head + conds.map(condSummary).join(conds.length > 1 ? " · " : "")];
@@ -113,7 +113,7 @@ function whenSummary(r: AutomationRule): string {
   return parts.join(" · ");
 }
 
-function thenSummary(r: AutomationRule, targets: AutomationTargets | null): string {
+export function thenSummary(r: AutomationRule, targets: AutomationTargets | null): string {
   const p = r.action.params;
   switch (r.action.type) {
     case "banner":
