@@ -65,3 +65,22 @@ when one is absent, and that file is gitignored so it is never in the repo or th
 tar. A naive bake therefore mints a new key set and the baked firmware stops matching the
 live fleet's OTA keys. Always copy the live set from `/opt/dsc-hub-repo/firmware/v4/secrets.yaml`
 into `/opt/dsc-hub-bake-src/firmware/v4/secrets.yaml` before baking, and check the md5s match.
+
+**Trap — hollow kit `.bin` files:** `bake-firmware.sh` writes **0-byte placeholders** when
+the ESPHome CLI is missing, secrets are missing, or (historically) when
+`dsc_fleet_setup` failed to compile on the pinned ESPHome. The live hub
+(`dsc-hub-v4_0.yaml`) does **not** pull that SoftAP component, so fleet OTA can stay
+green while the card cannot USB-flash a kit. Tip `0b06f58` restored SoftAP compile on
+2026.6.5 and made `bake-on-linux.sh` abort under `DSC_RELEASE=1` if any staged
+`firmware/kit/*.bin` is empty. For a shippable card:
+
+```bash
+export DSC_RELEASE=1 DSC_VERSION=8.1.0
+bash services/dsc-hub/image/bake-on-linux.sh
+# after bake:
+find services/dsc-hub/firmware/kit -name '*.bin' -printf '%s %p\n' | awk '$1==0{bad=1;print} END{exit bad}'
+```
+
+`.audit/kit-linux-bake.ps1` does **not** set `DSC_RELEASE=1` today — set it on the
+remote bake command, or verify sizes before flashing SD. Toolchain detail:
+[`docs/ops/ESPHOME-TOOLCHAIN.md`](../../../docs/ops/ESPHOME-TOOLCHAIN.md) § Kit SoftAP.

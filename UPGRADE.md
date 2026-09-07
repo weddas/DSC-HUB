@@ -1,8 +1,11 @@
 # DSC-HUB — Upgrade (8.x, Pi-only)
 
 **New installs:** [`INSTALL.md`](INSTALL.md). **Unboxing a kit:** [`SETUP.md`](SETUP.md).
+**Release notes:** [`RELEASE.md`](RELEASE.md) · [`CHANGELOG.md`](CHANGELOG.md).
 
-Repo: https://github.com/weddas/DSC-HUB · branch **`master`** · releases are tagged (`v8.0.0-AlphaPi`, …).
+Repo: https://github.com/weddas/DSC-HUB · branch **`master`** · tree tip **8.1.0**
+(`4d73cfc` — SoftAP kit bake compile fix on ESPHome 2026.6.5). Published download
+tags may lag the tree — see [Kit update honesty](#kit-update-honesty).
 
 There is no Home Assistant in the upgrade path. Everything below happens in the
 Pi SPA (`http://dsc-brain.local:8787`, or `http://10.42.0.1:8787` on the kit
@@ -14,28 +17,82 @@ hotspot) or, as a fallback, over SSH on the Pi.
 
 | Layer | Where it lives | How it moves |
 |---|---|---|
-| DSC-Brain + SPA | `dsc-hub-brain` container (compose) | **Settings → Server → Kit update** (Ethernet-gated pull + restart), or `pi/deploy-brain-remote.sh` from a dev box |
-| ESPHome build toolchain | host venv `/opt/dsc-esphome-venv` (`dsc-esphome-dashboard.service` on `:6052`) | **Settings → Device → ESPHome → Update ESPHome** (host helper runs `pip`, restarts the dashboard); **Roll back to X** if a bump misbehaves |
-| Device firmware (hub, panel, probes, Sonoffs) | compiled from `firmware/v4/` on the Pi, flashed OTA | **Settings → Device → ESPHome → Canary … first → Release the rest** (or **Reflash whole fleet**), one job at a time, **hub last** |
+| DSC-Brain + SPA | `dsc-hub-brain` container (compose) | **Settings → Devices → Firmware → Updates** (`#/settings/devices#kit-update`) — Ethernet-gated Check + Update, or `pi/deploy-brain-remote.sh` / hotpatch from a dev box |
+| ESPHome build toolchain | host venv `/opt/dsc-esphome-venv` (`dsc-esphome-dashboard.service` on `:6052`) | **Settings → Devices → Firmware** → **Update ESPHome** (host helper runs `pip`, restarts the dashboard); **Roll back to X** if a bump misbehaves |
+| Device firmware (hub, panel, probes, Sonoffs) | compiled from `firmware/v4/` on the Pi, flashed OTA | **Settings → Devices → Firmware** → **Canary … first → Release the rest** (or **Reflash whole fleet**), one job at a time, **hub last** |
 
 Firmware train **8.0.0.0** pins ESPHome `min_version: "2026.6.5"`; a toolchain
 below that refuses to build. Details: [`docs/ops/ESPHOME-TOOLCHAIN.md`](docs/ops/ESPHOME-TOOLCHAIN.md).
+
+Legacy deep link `#/settings/server` redirects to `#/settings/devices#firmware`.
+
+---
+
+## AlphaPi (`v8.0.0-AlphaPi`) → **8.1.0**
+
+**Brain / SPA only.** Expected firmware stays **8.0.0.0** — do **not** reflash the
+fleet for this bump (`CHANGELOG.md` / `RELEASE.md`).
+
+```mermaid
+flowchart LR
+  alpha["AlphaPi brain 8.0.0"] --> check{"GitHub tag v8.1.0 published?"}
+  check -->|yes + eth0| kit["Devices › Firmware › Updates → Check → Update"]
+  check -->|not yet| deploy["deploy-brain-remote / hotpatch / rebake SD"]
+  kit --> verify["/health version + surface = 8.1.0"]
+  deploy --> verify
+  verify --> fleet["Fleet firmware still 8.0.0.0 — skip OTA"]
+```
+
+1. Prefer Ethernet. Open **Settings → Devices → Firmware → Updates**.
+2. **Check for updates.** When GitHub’s latest release numeric core is strictly
+   greater than the running brain (`kit_update._is_newer`), **Update DSC-Brain**
+   runs `brain_update_cmd` (or shows the manual deploy hint if unset).
+3. If Check still shows AlphaPi as latest (no `v8.1.0` GitHub release yet),
+   pull `master` / tip `4d73cfc` via workstation deploy or
+   [`docs/ops/PI-HOTPATCH.md`](docs/ops/PI-HOTPATCH.md) — do not invent a Kit
+   Update button that is not offered.
+4. Verify: `GET /health` → `version` and `surface` **8.1.0**,
+   `expected_firmware` **8.0.0.0**; Overview fleet chip **ok**.
+5. Skip canary / reflash unless you are also bumping ESPHome or rebuilding
+   firmware YAML. SoftAP kit-bake compile fixes (`dsc_fleet_setup`) do **not**
+   require a live-fleet reflash — they only matter for the **next** SD / USB
+   flash bake.
+
+Compose image tags on tip: `dsc-hub-brain:8.1.0` / `dsc-hub-cannalib:8.1.0`.
+SD bake: [`services/dsc-hub/image/README.md`](services/dsc-hub/image/README.md)
+(`DSC_VERSION=8.1.0`, **copy live** `firmware/v4/secrets.yaml`, set
+`DSC_RELEASE=1`, confirm kit `.bin` files are non-empty — hollow 8.0.0 lesson).
+
+---
+
+## Kit update honesty
+
+`GET|POST /settings/update*` (`brain/dsc_brain/kit_update.py`):
+
+- Compares GitHub `releases/latest` to running `__version__` by **numeric core**
+  (`v8.0.0-AlphaPi` → `(8,0,0)`). Labels alone never count as newer.
+- Ethernet-gated, ~1 h cache, never raises offline — offline kits keep the baked
+  version.
+- Fleet rows compare each seat’s product firmware to `EXPECTED_FIRMWARE`
+  (`8.0.0.0`). Reflash is a separate confirm on the same Firmware tab.
+- Until a `v8.1.0` (or newer) GitHub release exists, a kit still on AlphaPi will
+  **not** see an in-SPA brain update for this cut — use deploy/hotpatch/rebake.
 
 ---
 
 ## Routine upgrade (brain first, then firmware)
 
-1. **Brain / SPA.** Settings → Server → Kit update → **Check** → **Update** (needs
-   the Pi on Ethernet). The brain restarts; the page reloads on the new bundle.
-   The Settings → System card shows the running version.
+1. **Brain / SPA.** Settings → Devices → Firmware → Updates → **Check** →
+   **Update** (needs Ethernet). The brain restarts; the page reloads on the new
+   bundle. Settings → System → About shows the running version.
 2. **ESPHome toolchain** (only when the card says *Update available*). Settings →
-   Device → ESPHome → **Update ESPHome → x.y.z**. Watch the log; the card flips to
+   Devices → Firmware → **Update ESPHome → x.y.z**. Watch the log; the card flips to
    the new *Installed* and offers the rollout.
 3. **Firmware.** Same card → **Canary Probe 2 first**. Wait for *Canary OK*
    (the probe reports the new ESPHome version), then **Release the rest (N, hub
    last)**. Each device is compiled and flashed in turn through the build worker.
    Live/Overview keep serving the last-known values while a device reboots.
-4. **Verify.** Settings → Device: every row shows the expected firmware
+4. **Verify.** Settings → Devices: every row shows the expected firmware
    (`8.0.0.0`) and *online*; Overview fleet chip **ok**.
 
 Nothing flashes without a confirm click. A failed job stops the queue at that
@@ -48,7 +105,8 @@ and re-queue just that seat.
 
 Do this deliberately, not on every ESPHome release. Steps live in
 [`docs/ops/ESPHOME-TOOLCHAIN.md`](docs/ops/ESPHOME-TOOLCHAIN.md#bump-the-pinned-min_version):
-update the venv, `esphome config` every entry point, run `scripts/run_sim_gates`,
+update the venv, `esphome config` **and** a real `esphome compile` per family
+(`config` alone misses lambda C++), run `scripts/run_sim_gates`,
 bump the four `esphome:` blocks + `PIN=` in `dsc-esphome-venv-setup.sh` +
 `PINNED_MIN_VERSION` in `esphome_toolchain.py`, changelog line, reflash.
 
@@ -71,13 +129,14 @@ All of these need `firmware/v4/secrets.yaml` on the Pi (baked kits ship it at
 
 ## Rollback
 
-- **Toolchain:** Settings → Device → ESPHome → **Roll back to X** (the version the
-  last successful change came from), or the pip command above.
+- **Toolchain:** Settings → Devices → Firmware → **Roll back to X** (from a
+  `done` job, or a failed update that still moved the venv), or the pip command above.
+  Never offered onto a dashboard-less ESPHome ≥ 2026.8 until a Device Builder adapter exists.
 - **Firmware:** re-queue the affected seats after rolling the toolchain back; the
   YAML is the same, so a rebuild on the previous ESPHome reproduces the previous
   binary. Hub and panel must keep a matching `espnow_cmd_tag` (**54727**).
 - **Brain:** `docker compose … up -d brain` on the previous image tag, or
-  Settings → Backup → import the last export.
+  Settings → System → profile import / last backup.
 
 ---
 
@@ -90,7 +149,7 @@ the old HA ESPHome add-on keep working — they are just behind:
 1. Bring the Pi up on 8.x ([`INSTALL.md`](INSTALL.md) / factory image).
 2. Copy your `firmware/v4/secrets.yaml` to the Pi (keys are compiled in; keep the
    same set or plan to reflash everything over USB).
-3. Settings → Device → ESPHome → **Reflash whole fleet** (hub last). The 8.0.0.0
+3. Settings → Devices → Firmware → **Reflash whole fleet** (hub last). The 8.0.0.0
    build drops every `platform: homeassistant` entity (SNTP-only clock, native-API
    plant names, ESP-NOW-only root-zone), so the fleet no longer waits on an HA
    that is not there.
