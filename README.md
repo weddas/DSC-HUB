@@ -168,6 +168,7 @@ Factory image bake lives under [`services/dsc-hub/image/`](services/dsc-hub/imag
 | [`docs/ops/ESPHOME-TOOLCHAIN.md`](docs/ops/ESPHOME-TOOLCHAIN.md) | Host venv / dashboard OTA / ceiling / canary |
 | [`docs/cameras.md`](docs/cameras.md) | Zone cameras + timelapse |
 | [`docs/ops/SPA-PROD-BUNDLE.md`](docs/ops/SPA-PROD-BUNDLE.md) | SPA chunk graph / vite preview gate |
+| [`docs/ops/PI-HOTPATCH.md`](docs/ops/PI-HOTPATCH.md) | Windows plink/pscp hotpatch + stop/start |
 | [`brain/README.md`](brain/README.md) | Brain CLI / API / catalogs |
 | [`docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md`](docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md) | Kit SD installer design (8.0.0) |
 | [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md) | Living engineering backlog |

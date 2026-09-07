@@ -41,4 +41,4 @@ If `createContext` / blank root appears only in preview or on the Pi, check for 
 ## Related
 
 - Twin architecture: [`../brain/TWIN.md`](../brain/TWIN.md)
-- Hotpatch habit: `.cursor/rules/dsc-pi-hotpatch.mdc` (`docker stop -t 20` + `start`)
+- Pi hotpatch runbook: [`PI-HOTPATCH.md`](PI-HOTPATCH.md) · rule `.cursor/rules/dsc-pi-hotpatch.mdc` (`docker stop -t 20` + `start`)
