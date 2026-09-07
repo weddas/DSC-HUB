@@ -80,6 +80,8 @@ class DscFleetSetup : public Component, public AsyncWebHandler {
         return true;
     return false;
   }
+  std::string hub_mac_str() const;
+  std::string panel_mac_str() const;
   std::string bridge_mac_str() const;
   std::string setup_status_json() const;
 

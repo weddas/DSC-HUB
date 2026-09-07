@@ -364,16 +364,25 @@ std::string DscFleetSetup::setup_status_json() const {
     o["name"] = p.name;
     char m[18];
     mac_to_str_(p.mac, m);
-    o["mac"] = m;
+    // std::string, not the char buffer: ArduinoJson stores a raw const char* by
+    // pointer, and `m` dies at the end of this iteration — well before serialize().
+    o["mac"] = std::string(m);
   }
   JsonArray aps = root["aps"].to<JsonArray>();
   if (wifi::global_wifi_component != nullptr) {
-    wifi::ScanResultsLock lock(wifi::global_wifi_component);
+    // ESPHome 2026.x removed wifi::ScanResultsLock; results are instead held for
+    // us because setup() asks for set_keep_scan_results(true). get_ssid() is a
+    // StringRef now — take .str() so the length is honoured (it is not
+    // guaranteed NUL-terminated), and hand ArduinoJson a std::string so it
+    // COPIES the text rather than storing a pointer into a dead local.
     for (const auto &scan : wifi::global_wifi_component->get_scan_result()) {
       if (scan.get_is_hidden())
         continue;
+      std::string ssid = scan.get_ssid().str();
+      if (ssid.empty())
+        continue;
       JsonObject o = aps.add<JsonObject>();
-      o["ssid"] = scan.get_ssid();
+      o["ssid"] = ssid;
       o["rssi"] = scan.get_rssi();
     }
   }
@@ -581,9 +590,9 @@ bool DscFleetSetup::satellite_join_setup_ap_() {
   delay(50);
   std::string match;
   {
-    wifi::ScanResultsLock lock(wifi::global_wifi_component);
+    // ESPHome 2026.x: no ScanResultsLock, and get_ssid() returns a StringRef.
     for (const auto &scan : wifi::global_wifi_component->get_scan_result()) {
-      std::string ssid = scan.get_ssid();
+      std::string ssid = scan.get_ssid().str();
       if (ssid.rfind(this->setup_ap_prefix_, 0) == 0) {
         match = ssid;
         break;
@@ -714,6 +723,13 @@ void DscFleetSetup::setup() {
     }
     return;
   }
+
+  // ESPHome 2026.x releases scan results as soon as a connect attempt finishes,
+  // and the old ScanResultsLock that used to hold them is gone. Both the hub
+  // portal AP list and the satellite's DSC-Setup-* search read get_scan_result()
+  // outside a scan, so ask WiFi to keep the last results around.
+  if (wifi::global_wifi_component != nullptr)
+    wifi::global_wifi_component->set_keep_scan_results(true);
 
   this->load_nvs_();
 
