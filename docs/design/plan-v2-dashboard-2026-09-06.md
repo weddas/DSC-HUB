@@ -3,11 +3,13 @@
 > Drafted 2026-09-06. Source design: Claude Design project **DSC-HUB UI Mockups**,
 > file `DSC-HUB v2.dc.html` (https://claude.ai/design/p/bd2c2bea-660f-4181-b342-db0095914dab?file=DSC-HUB+v2.dc.html).
 > Local copies of the design source and its reference assets live in [`mockups/`](./mockups/) —
-> see [What was imported](#what-was-imported). Pass A is implemented (see Status); nothing is committed.
+> see [What was imported](#what-was-imported). **Merged to master** as PR #199 (`8f95ff6`, 2026-09-07).
+> Developer SoT (concise): [`docs/brain/WEBUI.md`](../brain/WEBUI.md) · [`docs/brain/ZONE-MODEL.md`](../brain/ZONE-MODEL.md).
 
 ## Status
 
-- **2026-09-07 — Pass A landed** on branch `feat/dashboard-v2` (uncommitted, not hotpatched to the Pi): navigation rebuild, tokens + Fira type + grid wash, the reveal-language primitives, Overview 2a on live data, first derived-metric slice. Evidence and deferred items: `docs/FOLLOWUPS.md` § 2026-09-07. Dev against the live brain: `npm run dev` in `frontend/` proxies every non-Vite path to `dsc-brain.local:8787` (`DSC_BRAIN_ORIGIN` overrides).
+- **2026-09-07 — Pass A–I spike + interaction pass merged** via PR #199 (`feat/dashboard-v2` → `master`). Evidence and deferred items: `docs/FOLLOWUPS.md` § 2026-09-07. Dev against the live brain: `npm run dev` in `frontend/` proxies every non-Vite path to `dsc-brain.local:8787` (`DSC_BRAIN_ORIGIN` overrides).
+- **2026-09-07 — Pass A landed** on branch `feat/dashboard-v2`: navigation rebuild, tokens + Fira type + grid wash, the reveal-language primitives, Overview 2a on live data, first derived-metric slice.
 - **2026-09-07 — Pass B landed** (same branch): Climate desk in the 1d layout — VPD · MASTER hero with band track and in-band time, setpoints by phase, the per-zone VPD chart with history (band, lights-off shade, stage/alert markers, compare ghosts, 24 h → 7 d), equipment tiles with direction of pull and slope-based ETAs, heat lines and fan glyphs. `MultiLineChart` gained `shades`. Evidence: `docs/FOLLOWUPS.md` § Pass B.
 - **2026-09-07 — Pass C landed** (same branch): brain `zone_model.py` + `GET/PATCH /zones` (roles in `space.extra_json`, system journal entry per flip, honest effects list, 5 tests, suite 331 green); SPA `useZoneMeta` + role-aware `useZones` (Dry rail / no band), Settings › Zones with the 3b before/after confirm, role chip + "not enforced" lamp tag on Overview. The flip records and re-bands; actuator enforcement is the control-pass follow-up. Evidence: `docs/FOLLOWUPS.md` § Pass C.
 - **2026-09-07 — Pass D landed** (same branch): Alerts desk in the 1j layout — active-now cards with "what the hub did" from the grow log, 24 h history with zone + ALERT/HUB/NOTE tags, the automation-v2 rules table with live state and an enabled switch. Evidence: `docs/FOLLOWUPS.md` § Pass D.
