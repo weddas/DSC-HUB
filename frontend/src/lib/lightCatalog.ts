@@ -72,6 +72,25 @@ export const BANDS: Array<{ key: BandKey; label: string; nm: [number, number] }>
   { key: "far_red_700_780", label: "Far red", nm: [700, 780] },
 ];
 
+/**
+ * Which CannaLib record a fixture-table lamp is. `extra.catalog_id` set by the
+ * operator wins; otherwise a name hint for the kit lamps the catalog already
+ * holds. Null means "no record", and the card says so instead of guessing.
+ */
+export function catalogIdForDevice(device: { device_id: string; label?: string; extra?: Record<string, unknown> }): string | null {
+  const explicit = device.extra?.catalog_id;
+  if (typeof explicit === "string" && explicit.trim()) return explicit.trim();
+  const hay = `${device.device_id} ${device.label ?? ""}`.toLowerCase();
+  const hints: Array<[RegExp, string]> = [
+    [/sf[\s_-]?1000/, "spider_farmer_sf1000"],
+    [/sf[\s_-]?600/, "spider_farmer_sf600"],
+    [/fc[\s_-]?3000/, "mars_hydro_fc3000_evo"],
+    [/ts[\s_-]?1000/, "mars_hydro_ts1000_v2"],
+  ];
+  for (const [re, id] of hints) if (re.test(hay)) return id;
+  return null;
+}
+
 export type LightDetailResult =
   | { status: "ok"; record: LightRecord }
   | { status: "missing" }
