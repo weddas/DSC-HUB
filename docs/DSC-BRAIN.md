@@ -26,6 +26,7 @@ Notion (canonical Wiki): [Product layers](https://app.notion.com/p/3b52b4cda3708
 | [`docs/HA-SCAFFOLD.md`](HA-SCAFFOLD.md) | Promote-don't-deepen rules |
 | [`docs/brain/`](brain/) | Specs: desks/WEBUI, zone model, automation rules, decision loop |
 | [`docs/ops/RELAY-HONESTY.md`](ops/RELAY-HONESTY.md) | Sonoff observed vs commanded vs hub demand |
+| [`docs/ops/PI-HOTPATCH.md`](ops/PI-HOTPATCH.md) | Windows plink/pscp hotpatch + container lifecycle |
 
 ## Phases
 
@@ -51,4 +52,4 @@ Notion (canonical Wiki): [Product layers](https://app.notion.com/p/3b52b4cda3708
 
 The path to brain-driven demand is a firmware change, not a flag: a hub *brain-owned demand* mode in which the ladder yields the `*_demand` switches while the brain is fresh (and takes them back on staleness), plus symmetric on/off proposals with hysteresis. Tracked as a Suggested Feature. Until then the honest wording is "brain proposes, hub applies".
 
-Relay entity honesty (device-observed vs commanded vs demand): [`docs/ops/RELAY-HONESTY.md`](ops/RELAY-HONESTY.md). Dashboard desks + zone roles: [`docs/brain/WEBUI.md`](brain/WEBUI.md) · [`docs/brain/ZONE-MODEL.md`](brain/ZONE-MODEL.md). Settings / hub tunables / System cards: [`docs/brain/SETTINGS.md`](brain/SETTINGS.md). Tuya Wi-Fi local lane: [`docs/brain/TUYA-LOCAL.md`](brain/TUYA-LOCAL.md) · [`docs/ops/TUYA-LOCAL-SETUP.md`](ops/TUYA-LOCAL-SETUP.md). Composed twin: [`docs/brain/TWIN.md`](brain/TWIN.md). Maker PPFD fields: [`docs/brain/PPFD-FIELD.md`](brain/PPFD-FIELD.md). Zone cameras: [`docs/cameras.md`](cameras.md). SPA prod chunk rule: [`docs/ops/SPA-PROD-BUNDLE.md`](ops/SPA-PROD-BUNDLE.md).
+Relay entity honesty (device-observed vs commanded vs demand): [`docs/ops/RELAY-HONESTY.md`](ops/RELAY-HONESTY.md). Dashboard desks + zone roles: [`docs/brain/WEBUI.md`](brain/WEBUI.md) · [`docs/brain/ZONE-MODEL.md`](brain/ZONE-MODEL.md). Settings / hub tunables / System cards: [`docs/brain/SETTINGS.md`](brain/SETTINGS.md). Tuya Wi-Fi local lane: [`docs/brain/TUYA-LOCAL.md`](brain/TUYA-LOCAL.md) · [`docs/ops/TUYA-LOCAL-SETUP.md`](ops/TUYA-LOCAL-SETUP.md). Composed twin: [`docs/brain/TWIN.md`](brain/TWIN.md). Maker PPFD fields: [`docs/brain/PPFD-FIELD.md`](brain/PPFD-FIELD.md). Zone cameras: [`docs/cameras.md`](cameras.md). SPA prod chunk rule: [`docs/ops/SPA-PROD-BUNDLE.md`](ops/SPA-PROD-BUNDLE.md). Pi hotpatch (Windows): [`docs/ops/PI-HOTPATCH.md`](ops/PI-HOTPATCH.md).
