@@ -1,5 +1,5 @@
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Button, Icon, PageHeader, Spinner, StatusTag } from "./components/ui";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { FleetFreshnessTag, HonestyRail, useHonestyGaps } from "./components/Honesty";
@@ -28,7 +28,8 @@ import {
 import {
   DESKS,
   SETTINGS_PATH,
-  SETTINGS_TABS,
+  bottomBarDesks,
+  orderDesks,
   deskById,
   deskFromPath,
   deskOwnsZone,
@@ -38,12 +39,22 @@ import {
   CalibratePage,
 } from "./routes";
 import { paths } from "./lib/paths";
-import { SettingsPage } from "./pages/SettingsPage";
+import { SettingsLayout } from "./pages/settings/SettingsLayout";
+import { PreferencesRoot } from "./components/PreferencesRoot";
+import { AlertNotifier } from "./components/AlertNotifier";
+import { usePreferences } from "./hooks/usePreference";
+import { setPreference } from "./lib/preferences";
 import { OverviewPage } from "./pages/OverviewPage";
 import { GrowLogsPage } from "./pages/GrowLogsPage";
 import { SetupPage } from "./pages/SetupPage";
-import { TwinSpikePage } from "./pages/TwinSpikePage";
 import dscCss from "./styles/dsc.css?inline";
+
+// The twin (three.js + the composed scene) is its own chunk and must load lazily: a static
+// import made `twin-three` and `tune-fleet` import each other, and the production bundle
+// died at boot with `createContext of undefined` (Pi hotpatch, 2026-09-07). Dev never
+// chunks, so only `vite preview` / the Pi shows it.
+const TwinSpikePage = lazy(() => import("./pages/TwinSpikePage").then((m) => ({ default: m.TwinSpikePage })));
+const TwinPage = lazy(() => import("./pages/TwinPage").then((m) => ({ default: m.TwinPage })));
 
 
 export const DSC_PANEL_CSS = dscCss;
@@ -132,10 +143,20 @@ function TopStatus({
   );
 }
 
+/** `/` → the operator's landing desk (Preferences › Home), or the last desk they visited. */
+function LandingRedirect() {
+  const prefs = usePreferences();
+  const id = prefs.landingDesk === "last" ? prefs.lastDesk ?? "overview" : prefs.landingDesk;
+  const desk = DESKS.find((d) => d.id === id) ?? DESKS[0];
+  return <Navigate to={desk.path} replace />;
+}
+
 function DeskNav() {
+  const prefs = usePreferences();
+  const desks = orderDesks(prefs.deskOrder, prefs.hiddenDesks);
   return (
     <nav className="dsc-desk-nav" aria-label="Desks">
-      {DESKS.map((desk) => (
+      {desks.map((desk) => (
         <NavLink
           key={desk.id}
           to={desk.path}
@@ -174,7 +195,9 @@ function BottomBar() {
   const [moreOpen, setMoreOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const primary = DESKS.filter((d) => d.mobile);
+  const prefs = usePreferences();
+  const primary = bottomBarDesks(prefs.bottomBar, prefs.hiddenDesks);
+  const allDesks = orderDesks(prefs.deskOrder, prefs.hiddenDesks);
   const current = deskFromPath(location.pathname);
   const moreActive = current != null && !primary.some((d) => d.id === current);
   return (
@@ -204,7 +227,7 @@ function BottomBar() {
       </nav>
       <SlideDrawer open={moreOpen} onClose={() => setMoreOpen(false)} title="All desks">
         <div className="dsc-more-sheet">
-          {DESKS.map((desk) => (
+          {allDesks.map((desk) => (
             <button
               key={desk.id}
               type="button"
@@ -247,6 +270,10 @@ function Shell({ surfaceVersion = "8.0.0" }: { surfaceVersion?: string }) {
   const [gapsOpen, setGapsOpen] = useState(false);
   const isTentCockpit = location.pathname === "/climate/tent";
 
+  useEffect(() => {
+    if (deskId && deskId !== "settings") setPreference("lastDesk", deskId);
+  }, [deskId]);
+
   // `?zone=` / `?tent=` belong to the desks that own zone context; strip elsewhere so a
   // stale param can never re-focus a desk that does not read it.
   useEffect(() => {
@@ -281,15 +308,13 @@ function Shell({ surfaceVersion = "8.0.0" }: { surfaceVersion?: string }) {
         </div>
       </header>
 
+      <PreferencesRoot />
+      <AlertNotifier />
       <DemoBanner />
 
       {gapsOpen ? <HonestyRail /> : null}
 
-      {deskId === "settings" ? (
-        <SubTabs tabs={SETTINGS_TABS.map((t) => ({ ...t, end: true }))} />
-      ) : desk?.sub ? (
-        <SubTabs tabs={desk.sub} />
-      ) : null}
+      {desk?.sub ? <SubTabs tabs={desk.sub} /> : null}
 
       {desk?.zone ? (
         <ZoneStrip
@@ -303,7 +328,7 @@ function Shell({ surfaceVersion = "8.0.0" }: { surfaceVersion?: string }) {
       <ErrorBoundary>
         <Suspense fallback={<RouteFallback />}>
           <Routes>
-            <Route path="/" element={<Navigate to={paths.overview()} replace />} />
+            <Route path="/" element={<LandingRedirect />} />
             <Route path="/overview" element={<OverviewPage />} />
             <Route path="/climate" element={<LiveClimatePage />} />
             <Route path="/climate/tent" element={<LiveTentPage key={focus} />} />
@@ -319,9 +344,10 @@ function Shell({ surfaceVersion = "8.0.0" }: { surfaceVersion?: string }) {
             <Route path="/kit/learning" element={<TuneLearningPage />} />
             <Route path="/kit/calibrate" element={<CalibratePage />} />
             <Route path="/settings" element={<Navigate to={SETTINGS_PATH} replace />} />
-            <Route path="/settings/:section" element={<SettingsPage />} />
+            <Route path="/settings/:section" element={<SettingsLayout />} />
             <Route path="/setup" element={<SetupPage />} />
             <Route path="/twin-spike" element={<TwinSpikePage />} />
+            <Route path="/twin" element={<TwinPage />} />
             {/* Every pre-v2 path (7.x live/grow/fleet, older ops/plant/tune/advanced) lands on its desk. */}
             <Route path="/live" element={<LegacyRedirect />} />
             <Route path="/live/*" element={<LegacyRedirect />} />

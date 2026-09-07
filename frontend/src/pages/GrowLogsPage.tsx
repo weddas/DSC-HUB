@@ -195,6 +195,7 @@ export function GrowLogsPage() {
       { key: "space-2x4", label: "2×4", scope: { kind: "space", id: "2x4" } },
       { key: "room", label: "Room", scope: { kind: "room", id: "grow_room" } },
       { key: "core", label: "Core", scope: { kind: "core" } },
+      { key: "core-settings", label: "Settings changes", scope: { kind: "core", id: "settings" }, indent: true },
       { key: "grow_log", label: "Grow log", scope: { kind: "grow_log" } },
     ],
     [],
@@ -398,7 +399,7 @@ export function GrowLogsPage() {
               Spaces &amp; facility
             </p>
             <LogsScopeNav
-              items={navItems.filter((i) => i.key !== "grow_log" && !i.indent)}
+              items={navItems.filter((i) => i.key !== "grow_log")}
               activeScope={scope}
               compareScopeMode={compareScopeMode}
               compareScopeA={compareScopeA}

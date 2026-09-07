@@ -1214,6 +1214,14 @@ globals:
     type: bool
     restore_value: true
     initial_value: 'false'
+  # S2 (brain-owned stage presets): when true AND the API client is connected,
+  # apply_stage leaves the five numeric targets to the brain's stage_rail table
+  # (it still relabels + sets light hours). The baked table below stays the
+  # fallback for a hub with no brain — a panel-side stage change stays sane.
+  - id: brain_stage_targets
+    type: bool
+    restore_value: true
+    initial_value: 'false'
   # light_write_guard_until: re-entrancy guard so the device's OWN light
   # writes (ramp/adjust/failsafe) don't trip the HA-touch auto-latch.
   # millis() deadline; on_state ignores changes while now < this.
@@ -1666,6 +1674,19 @@ switch:
       - logger.log:
           level: INFO
           format: "WiFi AP lock OFF — preferred BSSID kept but not enforced"
+
+  # S2: brain-owned stage presets gate (see globals.brain_stage_targets).
+  - platform: template
+    name: "Brain Stage Targets"
+    id: brain_stage_targets_switch
+    icon: "mdi:brain"
+    lambda: 'return id(brain_stage_targets);'
+    turn_on_action:
+      - globals.set: {id: brain_stage_targets, value: 'true'}
+      - lambda: 'ESP_LOGI("grow", "Brain owns stage presets: ON (falls back to baked table when the API is down)");'
+    turn_off_action:
+      - globals.set: {id: brain_stage_targets, value: 'false'}
+      - lambda: 'ESP_LOGI("grow", "Brain owns stage presets: OFF (hub applies its baked table)");'
 
   - platform: template
     name: "Auto Photoperiod"
@@ -3823,17 +3844,26 @@ script:
           else if (s == "Late Flowering")          { tt=22; vmin=1.3f; vmax=1.5f; rmin=40; rmax=45; lh=12; sh="Late Flwr"; }
           else if (s == "Final 48-72h Flowering")  { tt=21; vmin=1.4f; vmax=1.6f; rmin=35; rmax=45; lh=12; sh="Flush"; }
           else /* Dry Mode */                      { tt=19; vmin=0.8f; vmax=1.0f; rmin=55; rmax=62; lh=0;  sh="Dry"; }
-          id(stage_preset_write) = true;
-          id(num_target_temp).make_call().set_value(tt).perform();
-          id(num_vpd_min).make_call().set_value(vmin).perform();
-          id(num_vpd_max).make_call().set_value(vmax).perform();
-          id(num_rh_min).make_call().set_value(rmin).perform();
-          id(num_rh_max).make_call().set_value(rmax).perform();
-          id(stage_preset_write) = false;
+          // S2: with the brain owning presets (switch on + API connected) the numeric
+          // targets are the brain's to write from its stage_rail table; the hub only
+          // relabels and sets light hours. No brain -> baked table, as before.
+          bool brain_owns = id(brain_stage_targets) && id(ha_connected).state;
+          if (brain_owns) {
+            ESP_LOGI("grow", "Stage '%s': brain owns presets - numeric targets left to the brain", s.c_str());
+          } else {
+            id(stage_preset_write) = true;
+            id(num_target_temp).make_call().set_value(tt).perform();
+            id(num_vpd_min).make_call().set_value(vmin).perform();
+            id(num_vpd_max).make_call().set_value(vmax).perform();
+            id(num_rh_min).make_call().set_value(rmin).perform();
+            id(num_rh_max).make_call().set_value(rmax).perform();
+            id(stage_preset_write) = false;
+          }
           id(stage_light_hours) = lh;
           id(stage_short) = sh;
-          ESP_LOGI("grow", "Stage '%s': VPD %.1f-%.1f, RH %.0f-%.0f, %dh light",
-                   s.c_str(), vmin, vmax, (float)rmin, (float)rmax, lh);
+          ESP_LOGI("grow", "Stage '%s': VPD %.1f-%.1f, RH %.0f-%.0f, %dh light%s",
+                   s.c_str(), vmin, vmax, (float)rmin, (float)rmax, lh,
+                   brain_owns ? " (targets: brain)" : "");
 
   # ---- BOOT variant: label + light hours ONLY. Never touches the
   # numeric targets, so reboots keep your fine-tuning intact. ----

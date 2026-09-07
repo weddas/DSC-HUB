@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { formatCost } from "../lib/units";
 import { useNavigate } from "react-router-dom";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useTentLightSchedule } from "../hooks/useTentLightSchedule";
@@ -92,7 +93,7 @@ export function TentClock({ tent, showEyebrow = true }: { tent: TentPhotoperiodI
   const cost = energy?.total_cost;
   const energyText =
     energy?.ok && kwh != null && Number.isFinite(kwh)
-      ? `draw ${kwh.toFixed(2)} kWh/d${cost != null && Number.isFinite(cost) ? ` · $${cost.toFixed(2)}` : ""} · tariff × local watts, not a bill`
+      ? `draw ${kwh.toFixed(2)} kWh/d${cost != null && Number.isFinite(cost) ? ` · ${formatCost(cost)}` : ""} · tariff × local watts, not a bill`
       : "energy estimate unavailable";
 
   return (

@@ -3,15 +3,9 @@ import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import type { TwinModel } from "./manifest";
+import { toWire, type TwinPalette, type WireStats } from "./wire";
 
-/** Palette handed in from CSS tokens — the scene never hard-codes a colour. */
-export interface TwinPalette {
-  accent: string;
-  teal: string;
-  dim: string;
-  bad: string;
-  background: string;
-}
+export type { TwinPalette } from "./wire";
 
 export interface TwinPerf {
   /** GLB fetch + parse, from viewport mount to the model's first render. */
@@ -25,11 +19,6 @@ export interface TwinPerf {
   drawCalls: number;
   /** Triangles the renderer actually drew last frame (after culling). */
   renderedTriangles: number;
-}
-
-interface WireStats {
-  meshes: number;
-  triangles: number;
 }
 
 /** Result of a synchronous frame bench — works even when the tab is hidden (no rAF). */
@@ -82,52 +71,16 @@ function Bench() {
 const FPS_CAP = 30;
 
 /**
- * Restyle a loaded GLB into the holographic wire look (plan § 3D twin rule 3): a faint
- * translucent fill per material role plus edge lines in the same tone. Materials are
- * mapped through the manifest, so a model never carries its own colours.
+ * The spike view of one model: the shared wire restyle (`wire.ts`), then normalised so the
+ * model stands on y = 0 centred on x/z whatever its authored origin (hook, mount face).
  */
-function toWire(scene: THREE.Group, model: TwinModel, palette: TwinPalette): { root: THREE.Group; stats: WireStats } {
-  const root = scene.clone(true);
-  const meshes: THREE.Mesh[] = [];
-  root.traverse((o) => {
-    if ((o as THREE.Mesh).isMesh) meshes.push(o as THREE.Mesh);
-  });
-  let triangles = 0;
-  for (const m of meshes) {
-    const g = m.geometry as THREE.BufferGeometry;
-    triangles += Math.round((g.index ? g.index.count : g.attributes.position.count) / 3);
-    const mat = Array.isArray(m.material) ? m.material[0] : m.material;
-    const role = model.materials[mat?.name ?? ""] ?? "shell";
-    const color =
-      role === "accent" ? palette.accent : role === "glass" ? palette.teal : role === "frame" ? palette.dim : palette.dim;
-    const fillOpacity = role === "glass" ? 0.14 : role === "accent" ? 0.16 : role === "shell" ? 0.05 : 0.08;
-    const edgeOpacity = role === "accent" ? 0.9 : role === "glass" ? 0.7 : role === "shell" ? 0.28 : 0.55;
-    m.material = new THREE.MeshBasicMaterial({
-      color,
-      transparent: true,
-      opacity: fillOpacity,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
-    const edges = new THREE.LineSegments(
-      new THREE.EdgesGeometry(g, 25),
-      new THREE.LineBasicMaterial({ color, transparent: true, opacity: edgeOpacity }),
-    );
-    edges.name = `${m.name}__edges`;
-    m.add(edges);
-  }
-  // Normalise: 1 unit = 1 m, model standing on y = 0, centred on x/z.
-  const box = new THREE.Box3().setFromObject(root);
-  const size = new THREE.Vector3();
-  box.getSize(size);
-  const targetH = model.dims_cm[2] / 100;
-  const s = size.y > 0 ? targetH / size.y : 1;
-  root.scale.setScalar(s);
-  const box2 = new THREE.Box3().setFromObject(root);
+function toSpikeWire(scene: THREE.Group, model: TwinModel, palette: TwinPalette): { root: THREE.Group; stats: WireStats } {
+  const b = toWire(scene, model, palette);
+  const box = new THREE.Box3().setFromObject(b.root);
   const c = new THREE.Vector3();
-  box2.getCenter(c);
-  root.position.set(-c.x, -box2.min.y, -c.z);
-  return { root, stats: { meshes: meshes.length, triangles } };
+  box.getCenter(c);
+  b.root.position.set(-c.x, -box.min.y, -c.z);
+  return { root: b.root, stats: b.stats };
 }
 
 function WireModel({
@@ -140,7 +93,7 @@ function WireModel({
   onStats: (s: WireStats) => void;
 }) {
   const gltf = useGLTF(model.file);
-  const built = useMemo(() => toWire(gltf.scene, model, palette), [gltf, model, palette]);
+  const built = useMemo(() => toSpikeWire(gltf.scene, model, palette), [gltf, model, palette]);
   useEffect(() => {
     onStats(built.stats);
   }, [built, onStats]);

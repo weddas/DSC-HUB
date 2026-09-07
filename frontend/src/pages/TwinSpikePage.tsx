@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Panel } from "../components/Panel";
 import { TwinPanel, type TwinPanelPerf } from "../components/TwinPanel";
-import { ANCHOR_ICON, findModel, type TwinModel } from "../twin/manifest";
+import { ANCHOR_ICON, findModel, loadManifest, type TwinModel } from "../twin/manifest";
 import type { IconName } from "../iconSvg";
 import { Button, StatusTag } from "../components/ui";
 import type { TwinBench } from "../twin/TwinViewport";
 
-const SLUG = "grow-tent-120x60x210";
+const DEFAULT_SLUG = "grow-tent-120x60x210";
 
 declare global {
   interface Window {
@@ -29,11 +29,17 @@ export function TwinSpikePage() {
   const [perf, setPerf] = useState<TwinPanelPerf | null>(null);
   const [bench, setBench] = useState<TwinBench | null>(null);
   const [model, setModel] = useState<TwinModel | null>(null);
+  const [slugs, setSlugs] = useState<string[]>([]);
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const force3d = params.get("force3d") === "1";
+  const SLUG = params.get("model") || DEFAULT_SLUG;
   useEffect(() => {
     void findModel(SLUG).then(setModel).catch(() => setModel(null));
+  }, [SLUG]);
+  useEffect(() => {
+    void loadManifest().then((m) => setSlugs(m.models.map((x) => x.slug))).catch(() => setSlugs([]));
   }, []);
-  const location = useLocation();
-  const force3d = new URLSearchParams(location.search).get("force3d") === "1";
   const runBench = () => {
     const fn = window.__twinBench;
     if (!fn) return;
@@ -63,8 +69,28 @@ export function TwinSpikePage() {
       </header>
 
       <div className="dsc-twin-spike-grid">
-        <Panel legendIcon="twin-3d" legend={`${SLUG.toUpperCase()} · 2×4 · WIRE`} tone="teal" className="dsc-twin-spike-panel">
-          <TwinPanel slug={SLUG} height={420} onPerf={setPerf} force={force3d} />
+        <Panel legendIcon="twin-3d" legend={`${SLUG.toUpperCase()} · ${model?.kind?.toUpperCase() ?? "MODEL"} · WIRE`} tone="teal" className="dsc-twin-spike-panel">
+          {slugs.length ? (
+            <label className="dsc-twin-picker">
+              <span className="dsc-legend">MODEL</span>
+              <select
+                value={SLUG}
+                onChange={(e) => {
+                  const next = new URLSearchParams(location.search);
+                  next.set("model", e.target.value);
+                  window.location.hash = `#/twin-spike?${next.toString()}`;
+                }}
+              >
+                {slugs.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+              <span className="dsc-muted">{slugs.length} built · {model ? `${model.dims_cm.join("×")} cm · ${model.meshes ?? "—"} meshes · ${model.triangles ?? "—"} tris` : ""}</span>
+            </label>
+          ) : null}
+          <TwinPanel key={SLUG} slug={SLUG} height={420} onPerf={setPerf} force={force3d} />
           {model ? (
             <div className="dsc-tagrow" style={{ marginTop: 10 }} aria-label="Model anchors">
               {Object.entries(model.anchors).map(([node, role]) => (

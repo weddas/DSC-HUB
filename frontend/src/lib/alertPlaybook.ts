@@ -297,6 +297,10 @@ export function playbookFor(
 export const ALERT_ENTITY_IDS = Object.keys(ALERTS);
 
 /** Alert entities currently `on` and not snoozed — the Overview / Alerts fault list. */
-export function activeAlertIds(state: (id: string, fb?: string) => string, isSnoozed: (id: string) => boolean): string[] {
-  return ALERT_ENTITY_IDS.filter((id) => state(id) === "on" && !isSnoozed(id));
+export function activeAlertIds(
+  state: (id: string, fb?: string) => string,
+  isSnoozed: (id: string) => boolean,
+  isEnabled: (id: string) => boolean = () => true,
+): string[] {
+  return ALERT_ENTITY_IDS.filter((id) => state(id) === "on" && !isSnoozed(id) && isEnabled(id));
 }

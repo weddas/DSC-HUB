@@ -256,6 +256,10 @@ def retire_roster_slot(slot_num: int) -> dict[str, Any]:
     if status in ("empty", "", "unknown", "unavailable"):
         raise ValueError(f"Slot {sn} is already empty")
     pot = str(slot.get("pot") or "none")
+    # S3: freeze the grow record before the slot is cleared (never blocks the retire).
+    from .journal_storage import archive_roster_slot
+
+    archived = archive_roster_slot(slot, reason="retired")
     removed_seat: str | None = None
     if pot in ("1", "2", "3", "4") and _find_slot_for_pot(int(pot)) == sn:
         seat_id = f"pot{pot}"
@@ -279,7 +283,7 @@ def retire_roster_slot(slot_num: int) -> dict[str, Any]:
             "plant_uuid": "",
         },
     )
-    return {"slot": sn, "retired": True, "removed_seat": removed_seat}
+    return {"slot": sn, "retired": True, "removed_seat": removed_seat, "archive": archived}
 
 
 def retire_plant(pot: str | None = None) -> dict[str, Any]:

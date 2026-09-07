@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { getPreference } from "../lib/preferences";
 
 /**
  * True for `ms` after `value` actually changes — never on the first render, never on an
@@ -14,6 +15,7 @@ export function useFreshFlag(value: number | string | null | undefined, ms = 600
     prev.current = value;
     // A NaN → number transition is a first reading, not a refresh.
     if (!wasNumber && typeof value === "number") return;
+    if (!getPreference("freshPulse")) return;
     setFresh(true);
     const t = window.setTimeout(() => setFresh(false), ms);
     return () => window.clearTimeout(t);

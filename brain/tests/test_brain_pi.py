@@ -320,7 +320,11 @@ def test_hub_ingest_informational_oids_mapped() -> None:
     # ingest-only: informational entities gain no write/control-proxy rows
     assert "switch.dsc_hub_pot3_in_service" not in HUB_SWITCH_ENTITY_TO_OID
     assert "switch.dsc_hub_heater_auto" not in HUB_SWITCH_ENTITY_TO_OID
-    assert "number.dsc_hub_ladder_wait_hum" not in HUB_NUMBER_ENTITY_TO_OID
+    # S2 (2026-09-07): hub numbers are brain-owned tunables now -- every number has a
+    # write row keyed by its firmware slug so hub_tunables can push desired values.
+    assert HUB_NUMBER_ENTITY_TO_OID["number.dsc_hub_ladder_wait_hum"] == "ladder_wait_hum"
+    assert HUB_NUMBER_ENTITY_TO_OID["number.dsc_hub_sunrise_duration"] == "sunrise_duration"
+    assert HUB_SWITCH_ENTITY_TO_OID["switch.dsc_hub_brain_stage_targets"] == "brain_stage_targets"
 
 
 def test_hub_ingest_informational_states_flow() -> None:
@@ -1751,3 +1755,31 @@ def test_demo_rejects_private_inventory_host(temp_db: Path, monkeypatch: pytest.
     upsert_inventory("hub", {"host": "192.168.1.10"})
     with pytest.raises(RuntimeError, match="unsafe"):
         assert_demo_safe_config()
+
+
+def test_settings_manifest_rows_and_masking(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from fastapi.testclient import TestClient
+
+    from dsc_brain.api import app
+    from dsc_brain.settings import DEFAULT_SETTINGS, set_setting
+
+    set_setting("cannalib_api_key", "k-123", temp_db)
+    set_setting("leaf_offset_c", "1.5", temp_db)
+    client = TestClient(app)
+    resp = client.get("/settings/manifest")
+    assert resp.status_code == 200
+    body = resp.json()
+    rows = {r["key"]: r for r in body["rows"]}
+    # Every tier-N row's default matches settings.py so the SPA can trust it.
+    for key, row in rows.items():
+        if row["tier"] == "brain" and "." not in key:
+            assert row["default"] == DEFAULT_SETTINGS[key], key
+    assert rows["leaf_offset_c"]["unit"] == "°C"
+    assert rows["global_modifiers.fan_demand_scale"]["min"] == 0.5
+    assert rows["hub_failover.DEFAULT_TTL_SEC"]["tier"] == "firmware"
+    # Live values ride along; secrets are masked with a *_set flag.
+    assert body["values"]["leaf_offset_c"] == "1.5"
+    assert body["values"]["cannalib_api_key"] == ""
+    assert body["values"]["cannalib_api_key_set"] is True

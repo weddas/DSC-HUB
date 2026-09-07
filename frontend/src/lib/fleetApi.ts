@@ -104,6 +104,35 @@ export async function get_settings(): Promise<{
   return resp.json();
 }
 
+export interface SettingsManifestRow {
+  key: string;
+  tier: "brain" | "firmware" | "hub" | "browser";
+  kind: string;
+  default: unknown;
+  section: string;
+  label: string;
+  description: string;
+  consumers: string[];
+  unit?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  secret?: boolean;
+  source?: string;
+}
+
+/** Brain-owned settings described by the brain itself — defaults, ranges, units, consumers. */
+export async function get_settings_manifest(): Promise<{
+  rows: SettingsManifestRow[];
+  values: Record<string, unknown>;
+}> {
+  const resp = await fetch("/settings/manifest");
+  if (!resp.ok) throw new Error("settings manifest unavailable");
+  const ctype = resp.headers.get("content-type") ?? "";
+  if (!ctype.includes("json")) throw new Error("brain predates the settings manifest");
+  return resp.json();
+}
+
 export async function patch_settings(settings: Record<string, string>): Promise<void> {
   const resp = await fetch("/settings", {
     method: "PATCH",

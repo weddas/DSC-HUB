@@ -57,8 +57,26 @@ class SeatState:
 
 
 # Keys on a zigbee_by_role row that describe the binding, not a device datapoint.
+# Tuya-lane rows share the bucket and add lane / link / write metadata.
 ZIGBEE_ROW_META_KEYS = frozenset(
-    {"friendly_name", "updated_at", "role", "zone", "ieee", "bound_stub", "kind", "last_topic", "last_seen"}
+    {
+        "friendly_name",
+        "updated_at",
+        "role",
+        "zone",
+        "ieee",
+        "bound_stub",
+        "kind",
+        "last_topic",
+        "last_seen",
+        "lane",
+        "device_id",
+        "link",
+        "link_reason",
+        "write_state",
+        "write_error",
+        "commanded",
+    }
 )
 _ZIGBEE_FALLBACK_UNITS = {
     "temperature": "°C",
@@ -74,37 +92,55 @@ def zigbee_role_slug(role: Any) -> str:
     return str(role).lower().replace(" ", "_").replace("/", "_")[:48]
 
 
-def _zigbee_unit_for(key: str) -> str | None:
+def _zigbee_unit_for(key: str, lane: str = "zigbee") -> str | None:
+    unit = None
     try:
-        from .zigbee_catalog import datapoint_unit
+        if lane == "tuya":
+            from .tuya_catalog import datapoint_unit as tuya_unit
 
-        unit = datapoint_unit(key)
+            unit = tuya_unit(key)
+        if not unit:
+            from .zigbee_catalog import datapoint_unit
+
+            unit = datapoint_unit(key)
     except Exception:  # noqa: BLE001 - reference data only
         unit = None
     return unit or _ZIGBEE_FALLBACK_UNITS.get(key)
 
 
+def row_lane(row: dict[str, Any]) -> str:
+    """Which local lane produced a role row — names the entity prefix (dsc_zigbee_ / dsc_tuya_)."""
+    lane = str(row.get("lane") or "zigbee").lower()
+    return lane if lane in ("zigbee", "tuya") else "zigbee"
+
+
 def zigbee_row_entities(slug: str, row: dict[str, Any]) -> list[tuple[str, Any, dict[str, Any] | None]]:
-    """(entity_id, value, attributes) for every datapoint on a zigbee_by_role row."""
+    """(entity_id, value, attributes) for every datapoint on a zigbee_by_role row.
+
+    Rows from the Tuya lane carry ``lane: "tuya"`` and export as ``dsc_tuya_<role>_<key>``
+    so an entity id never claims a radio the device does not have.
+    """
     out: list[tuple[str, Any, dict[str, Any] | None]] = []
     role = str(row.get("role") or slug)
+    lane = row_lane(row)
+    prefix = f"dsc_{lane}_"
     for key, value in row.items():
         k = str(key).lower()
         if k in ZIGBEE_ROW_META_KEYS or value is None or isinstance(value, (dict, list, tuple)):
             continue
-        base: dict[str, Any] = {"zigbee_role": role, "zigbee_key": k}
+        base: dict[str, Any] = {"zigbee_role": role, "zigbee_key": k, "lane": lane}
         if row.get("friendly_name"):
             base["friendly_name"] = row.get("friendly_name")
         if isinstance(value, bool):
-            out.append((f"binary_sensor.dsc_zigbee_{slug}_{k}", "on" if value else "off", base))
+            out.append((f"binary_sensor.{prefix}{slug}_{k}", "on" if value else "off", base))
         elif isinstance(value, (int, float)):
-            unit = _zigbee_unit_for(k)
+            unit = _zigbee_unit_for(k, lane)
             attrs = dict(base)
             if unit:
                 attrs["unit_of_measurement"] = unit
-            out.append((f"sensor.dsc_zigbee_{slug}_{k}", value, attrs))
+            out.append((f"sensor.{prefix}{slug}_{k}", value, attrs))
         elif isinstance(value, str):
-            out.append((f"sensor.dsc_zigbee_{slug}_{k}", value, base))
+            out.append((f"sensor.{prefix}{slug}_{k}", value, base))
     return out
 
 

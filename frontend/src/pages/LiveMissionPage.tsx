@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useAlertPrefs } from "../hooks/useAlertPrefs";
 import { useNavigate } from "react-router-dom";
 import { Button, Icon, StatusTag } from "../components/ui";
 import { Panel } from "../components/Panel";
@@ -106,8 +107,10 @@ export function LiveMissionPage() {
   const honesty = String(entity("sensor.dsc_keepup_gaps")?.attributes?.full_auto_honesty ?? "");
   const fleetOk = fleet.version === fleet.expected_firmware;
 
-  const activeIds = ALERT_ENTITY_IDS.filter((id) => state(id) === "on" && !isSnoozed(id));
-  const snoozedIds = ALERT_ENTITY_IDS.filter((id) => state(id) === "on" && isSnoozed(id));
+  const alertPrefs = useAlertPrefs();
+  const activeIds = ALERT_ENTITY_IDS.filter((id) => state(id) === "on" && !isSnoozed(id) && alertPrefs.isEnabled(id));
+  const snoozedIds = ALERT_ENTITY_IDS.filter((id) => state(id) === "on" && isSnoozed(id) && alertPrefs.isEnabled(id));
+  const disabledActive = ALERT_ENTITY_IDS.filter((id) => state(id) === "on" && !alertPrefs.isEnabled(id)).length;
   const sinceOf = useAlertSince(activeIds);
 
   // Rules — read-only view of automation v2 with an enabled toggle; the editor stays in Settings.
@@ -228,7 +231,12 @@ export function LiveMissionPage() {
                 const since = sinceOf(id);
                 return (
                   <article key={id} className="dsc-alert-card">
-                    <span className="dsc-alert-zone">{zoneOfText(id)}</span>
+                    <span className="dsc-alert-zone">
+                      {zoneOfText(id)}
+                      {alertPrefs.severityOf(id) !== "critical" ? (
+                        <span className="dsc-alert-sev">{alertPrefs.severityOf(id).toUpperCase()}</span>
+                      ) : null}
+                    </span>
                     <div className="dsc-alert-body">
                       <div className="dsc-alert-title">{pb.title}</div>
                       <div className="dsc-alert-did">
@@ -259,6 +267,11 @@ export function LiveMissionPage() {
               })}
             </div>
           )}
+          {disabledActive ? (
+            <p className="dsc-panel-foot">
+              {disabledActive} active alert{disabledActive === 1 ? "" : "s"} hidden by <a href="#/settings/alerts">Settings › Alerts</a>.
+            </p>
+          ) : null}
           {snoozedIds.length && activeIds.length ? (
             <p className="dsc-panel-foot">{snoozedIds.length} more acknowledged until the next hub boot.</p>
           ) : null}
@@ -338,7 +351,7 @@ export function LiveMissionPage() {
           <p className="dsc-panel-foot">Loading rules…</p>
         )}
         <div className="dsc-row-actions">
-          <Button onClick={() => navigate(paths.settings("brain"))}>Edit rules in Settings</Button>
+          <Button onClick={() => navigate(paths.settings("automation"))}>Edit rules in Settings</Button>
           <Button onClick={() => navigate(paths.climate())}>Open Climate command</Button>
         </div>
         <p className="dsc-panel-foot">

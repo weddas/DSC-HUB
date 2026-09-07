@@ -25,7 +25,7 @@ from .catalog import get_strain, init_db, reload_catalogs, search
 from .computed_ops import build_computed_hass_states
 from .control_ops import call_service_proxy, sync_inventory_in_service_to_hub
 from .history_ops import ENTITY_METRIC_MAP, is_tracked, query_entity_history
-from .event_log import list_grow_log
+from .event_log import list_grow_log, record_grow_log
 from .decision_loop import decision_tick
 from .appliance_driver import start_appliance_driver, stop_appliance_driver
 from .esphome_client import start_esphome_ingest, stop_esphome_ingest
@@ -103,6 +103,20 @@ from .zigbee_policies import (
     load_zigbee_policies,
     save_custom_recipes,
     save_zigbee_policies,
+)
+from .tuya_local import (
+    actuatable_tuya_devices,
+    delete_tuya_device,
+    get_tuya_devices,
+    get_tuya_health,
+    import_devices_json,
+    load_tuya_bindings,
+    probe_tuya_device,
+    save_tuya_bindings,
+    set_tuya_state,
+    start_tuya_lane,
+    stop_tuya_lane,
+    update_tuya_device,
 )
 from .automation_rules import (
     automation_rules_summary,
@@ -204,6 +218,39 @@ class AutomationRulesBody(BaseModel):
     rules: list[dict[str, Any]] = Field(default_factory=list)
 
 
+class TuyaImportBody(BaseModel):
+    """The ``tinytuya wizard`` devices.json — a list, or ``{"devices": [...]}``."""
+
+    devices: list[dict[str, Any]] | dict[str, Any] = Field(default_factory=list)
+
+
+class TuyaDevicePatch(BaseModel):
+    name: str | None = None
+    ip: str | None = None
+    version: str | None = None
+    type: str | None = None
+    enabled: bool | None = None
+    local_key: str | None = None
+    dps_map: dict[str, int] | None = None
+    scales: dict[str, float] | None = None
+
+
+class TuyaBindingsBody(BaseModel):
+    bindings: dict[str, dict[str, Any]] = Field(default_factory=dict)
+
+
+class TuyaSetBody(BaseModel):
+    on: bool
+
+
+class TuyaProbeBody(BaseModel):
+    """Probe a registered device (by id) or an unregistered ip + key before import."""
+
+    ip: str = ""
+    local_key: str = ""
+    version: str = "3.3"
+
+
 class EsphomeJobBody(BaseModel):
     seat_id: str
     action: str = "ota"
@@ -302,6 +349,41 @@ class SpaceDeviceBody(BaseModel):
     duty_source: str | None = None
     enabled: bool | None = None
     extra: dict[str, Any] | None = None
+
+
+class CameraBody(BaseModel):
+    space_id: str | None = None
+    label: str | None = None
+    source_kind: str | None = None
+    source: str | None = None
+    username: str | None = None
+    # Stored in the settings KV (`camera_password:<id>`), never echoed. Empty keeps the
+    # existing one; `clear_password` removes it.
+    password: str | None = None
+    clear_password: bool | None = None
+    enabled: bool | None = None
+    interval_s: int | None = None
+    lights_on_only: bool | None = None
+    keep_days: int | None = None
+    cap_gb: float | None = None
+    extra: dict[str, Any] | None = None
+
+
+class CameraTestBody(BaseModel):
+    source_kind: str
+    source: str = ""
+    username: str = ""
+    password: str = ""
+    extra: dict[str, Any] | None = None
+    # When testing an already-saved camera without retyping its password.
+    camera_id: str | None = None
+
+
+class TimelapseBody(BaseModel):
+    day_from: str
+    day_to: str
+    fps: int = 12
+    height: int = 720
 
 
 class TariffBandBody(BaseModel):
@@ -410,6 +492,8 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
     from .computed_history import start_computed_recorder, stop_computed_recorder
 
     start_computed_recorder()
+    from .cameras import start_camera_poller, stop_camera_poller
+
     if is_demo_mode():
         prepare_demo_settings()
         assert_demo_safe_config()
@@ -419,9 +503,13 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
         start_esphome_worker()
         start_appliance_driver()
         start_zigbee_ingest()
+        start_tuya_lane()
         start_follow_plants_job()
+        # Cameras are LAN/USB fetches — software-only demo mode never captures.
+        start_camera_poller()
     yield
     stop_computed_recorder()
+    stop_camera_poller()
     if is_demo_mode():
         await stop_demo_simulator()
     else:
@@ -430,6 +518,7 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
         await stop_esphome_ingest()
         stop_esphome_worker()
         stop_zigbee_ingest()
+        stop_tuya_lane()
 
 
 app = FastAPI(title="DSC Brain", version=__version__, lifespan=lifespan)
@@ -506,6 +595,7 @@ def health() -> dict[str, Any]:
         payload["detail"] = "Software simulation only — no hardware connected"
     else:
         payload["zigbee"] = get_zigbee_health()
+        payload["tuya"] = get_tuya_health()
     return payload
 
 
@@ -678,6 +768,351 @@ def settings_automations_put(body: AutomationRulesBody) -> dict[str, Any]:
     return automation_rules_summary()
 
 
+class HubTunablePatch(BaseModel):
+    entity_id: str
+    value: Any
+
+
+class StageRailPatch(BaseModel):
+    stage: str
+    fields: dict[str, Any] = Field(default_factory=dict)
+
+
+class RootSteeringTargetsPatch(BaseModel):
+    targets: dict[str, float] = Field(default_factory=dict)
+
+
+@app.get("/settings/hub-tunables")
+def settings_hub_tunables_get() -> dict[str, Any]:
+    """Brain-owned desired values for hub numbers / selects / policy switches with sync state."""
+    from .hub_tunables import list_tunables
+
+    return list_tunables()
+
+
+@app.patch("/settings/hub-tunables")
+async def settings_hub_tunables_patch(body: HubTunablePatch) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .hub_tunables import push_now, set_desired
+
+    try:
+        set_desired(body.entity_id, body.value)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return {"row": await push_now(body.entity_id)}
+
+
+@app.post("/settings/hub-tunables/{entity_id}/adopt")
+def settings_hub_tunables_adopt(entity_id: str) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .hub_tunables import adopt
+
+    try:
+        return {"row": adopt(entity_id)}
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.post("/settings/hub-tunables/{entity_id}/push")
+async def settings_hub_tunables_push(entity_id: str) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .hub_tunables import mark_for_push, push_now
+
+    try:
+        mark_for_push(entity_id)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return {"row": await push_now(entity_id, force=True)}
+
+
+@app.get("/settings/stage-rail")
+def settings_stage_rail_get() -> dict[str, Any]:
+    from .hub_tunables import brain_owns_stage_targets
+    from .stage_rail import STAGE_TARGET_ENTITIES, list_stage_rail
+
+    return {"rows": list_stage_rail(), "brain_owns": brain_owns_stage_targets(), "targets": STAGE_TARGET_ENTITIES}
+
+
+@app.patch("/settings/stage-rail")
+def settings_stage_rail_patch(body: StageRailPatch) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .stage_rail import patch_stage_rail
+
+    from .settings_journal import journal_setting_change
+    from .stage_rail import targets_for_stage
+
+    before = targets_for_stage(body.stage) or {}
+    try:
+        row = patch_stage_rail(body.stage, body.fields)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    for key in body.fields:
+        journal_setting_change(f"Stage preset {body.stage} {key}", before.get(key), row.get(key), domain="climate", tags=["stage-rail"])
+    return {"row": row}
+
+
+@app.post("/settings/stage-rail/reset")
+def settings_stage_rail_reset(stage: str | None = Query(None)) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .stage_rail import reset_stage_rail
+
+    return {"rows": reset_stage_rail(stage)}
+
+
+@app.post("/settings/stage-rail/apply")
+async def settings_stage_rail_apply(stage: str = Query(...)) -> dict[str, Any]:
+    """Stamp a preset onto the hub now (the operator's 'apply this stage' action)."""
+    if _demo_mode():
+        _demo_forbidden()
+    from .hub_tunables import apply_stage_targets
+
+    out = await apply_stage_targets(stage)
+    if out is None:
+        raise HTTPException(400, f"unknown stage {stage!r}")
+    return out
+
+
+@app.get("/settings/root-steering-targets")
+def settings_root_steering_targets_get() -> dict[str, Any]:
+    from .root_steering import DEFAULT_TARGETS, _load_targets
+
+    return {"targets": _load_targets(), "defaults": dict(DEFAULT_TARGETS)}
+
+
+@app.patch("/settings/root-steering-targets")
+def settings_root_steering_targets_patch(body: RootSteeringTargetsPatch) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .root_steering import DEFAULT_TARGETS, _load_targets
+
+    current = _load_targets()
+    for key, val in body.targets.items():
+        if key not in DEFAULT_TARGETS:
+            raise HTTPException(400, f"unknown target {key!r}")
+        try:
+            f = float(val)
+        except (TypeError, ValueError) as exc:
+            raise HTTPException(400, f"{key} must be numeric") from exc
+        lo, hi = (0.0, 10.0) if key == "ec_target_ms" else (0.0, 100.0)
+        if f < lo or f > hi:
+            raise HTTPException(400, f"{key} must be within {lo:g}-{hi:g}")
+        current[key] = f
+    from .settings_journal import journal_setting_change
+
+    before_targets = _load_targets()
+    set_setting("root_steering_targets", json.dumps(current))
+    for key, val in current.items():
+        journal_setting_change(f"Root steering {key}", before_targets.get(key), val, domain="root")
+    return {"targets": _load_targets(), "defaults": dict(DEFAULT_TARGETS)}
+
+
+class AlertPrefsPatch(BaseModel):
+    alerts: dict[str, dict[str, Any]] | None = None
+    quiet_hours: dict[str, str] | None = None
+    clear_quiet_hours: bool = False
+
+
+class AutomationDefaultsPatch(BaseModel):
+    debounce_s: int | None = None
+    release_s: int | None = None
+    window: dict[str, str] | None = None
+    clear_window: bool = False
+
+
+class JournalRetentionPatch(BaseModel):
+    retention: dict[str, int] = Field(default_factory=dict)
+    confirm: bool = False
+
+
+class ArchiveBody(BaseModel):
+    plant_id: str
+    reason: str = "manual"
+
+
+@app.get("/settings/alerts")
+def settings_alerts_get() -> dict[str, Any]:
+    from .alert_prefs import BASELINE_SEVERITY, DEFAULT_SEVERITY, FAILSAFE_ID, get_alert_prefs
+
+    return {**get_alert_prefs(), "default_severity": DEFAULT_SEVERITY, "baseline_severity": BASELINE_SEVERITY, "failsafe_id": FAILSAFE_ID}
+
+
+@app.patch("/settings/alerts")
+def settings_alerts_patch(body: AlertPrefsPatch) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .alert_prefs import BASELINE_SEVERITY, DEFAULT_SEVERITY, FAILSAFE_ID, get_alert_prefs, patch_alert_prefs
+    from .settings_journal import journal_setting_change
+
+    before = get_alert_prefs()
+    patch: dict[str, Any] = {}
+    if body.alerts is not None:
+        patch["alerts"] = body.alerts
+    if body.clear_quiet_hours:
+        patch["quiet_hours"] = None
+    elif body.quiet_hours is not None:
+        patch["quiet_hours"] = body.quiet_hours
+    try:
+        after = patch_alert_prefs(patch)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    for eid, pref in (body.alerts or {}).items():
+        b, a = before["alerts"].get(eid, {}), after["alerts"].get(eid, {})
+        if "enabled" in pref:
+            journal_setting_change(f"Alert {eid.split('.')[-1]} enabled", b.get("enabled", True), a.get("enabled", True), domain="alerts")
+        if "severity" in pref:
+            journal_setting_change(f"Alert {eid.split('.')[-1]} severity", b.get("severity"), a.get("severity"), domain="alerts")
+    if "quiet_hours" in patch:
+        journal_setting_change("Alert quiet hours", before.get("quiet_hours"), after.get("quiet_hours"), domain="alerts")
+    return {**after, "default_severity": DEFAULT_SEVERITY, "baseline_severity": BASELINE_SEVERITY, "failsafe_id": FAILSAFE_ID}
+
+
+@app.get("/settings/automation-defaults")
+def settings_automation_defaults_get() -> dict[str, Any]:
+    from .automation_defaults import get_automation_defaults
+    from .automation_rules import MAX_CONDITIONS
+
+    return {"defaults": get_automation_defaults(), "max_conditions": MAX_CONDITIONS}
+
+
+@app.patch("/settings/automation-defaults")
+def settings_automation_defaults_patch(body: AutomationDefaultsPatch) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .automation_defaults import get_automation_defaults, patch_automation_defaults
+    from .automation_rules import MAX_CONDITIONS
+    from .settings_journal import journal_setting_change
+
+    before = get_automation_defaults()
+    patch: dict[str, Any] = {}
+    if body.debounce_s is not None:
+        patch["debounce_s"] = body.debounce_s
+    if body.release_s is not None:
+        patch["release_s"] = body.release_s
+    if body.clear_window:
+        patch["window"] = None
+    elif body.window is not None:
+        patch["window"] = body.window
+    try:
+        after = patch_automation_defaults(patch)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    for key, label in (("debounce_s", "New-rule debounce"), ("release_s", "New-rule release"), ("window", "New-rule window")):
+        if key in patch:
+            journal_setting_change(label, before.get(key), after.get(key), domain="automation")
+    return {"defaults": after, "max_conditions": MAX_CONDITIONS}
+
+
+@app.get("/settings/journals")
+def settings_journals_get() -> dict[str, Any]:
+    from .journal_storage import storage_stats
+
+    return storage_stats()
+
+
+@app.patch("/settings/journals")
+def settings_journals_patch(body: JournalRetentionPatch) -> dict[str, Any]:
+    """Preview first: without `confirm` nothing is stored or deleted — the answer says what
+    a cut would remove so the SPA can offer the download. With `confirm`, store + prune."""
+    if _demo_mode():
+        _demo_forbidden()
+    from .journal_storage import get_retention, preview_retention, prune_journals, set_retention, storage_stats
+    from .settings_journal import journal_setting_change
+
+    before = get_retention()
+    previews = []
+    try:
+        for kind, days in body.retention.items():
+            previews.append(preview_retention(kind, int(days)))
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    would = sum(int(p["would_delete"]) for p in previews)
+    if not body.confirm and would > 0:
+        return {"stored": False, "would_delete": would, "previews": previews, "retention": before}
+    try:
+        after = set_retention(body.retention)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    for kind in body.retention:
+        journal_setting_change(f"Journal retention {kind}", before.get(kind), after.get(kind), domain="journals")
+    removed = prune_journals(kinds=list(body.retention.keys())) if would > 0 else {}
+    return {"stored": True, "would_delete": would, "removed": removed, "retention": after, "stats": storage_stats()}
+
+
+@app.get("/journals/export")
+def journals_export(kind: str = Query(...), id: str | None = Query(None), format: str = Query("json")) -> Response:
+    from .journal_storage import export_journal
+
+    try:
+        name, ctype, body = export_journal(kind, id, format)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return Response(content=body, media_type=ctype, headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+
+@app.get("/journals/export.zip")
+def journals_export_zip(kinds: str = Query("")) -> Response:
+    from .journal_storage import JOURNALS, export_bundle
+
+    wanted = [k for k in kinds.split(",") if k] or list(JOURNALS.keys())
+    name, body = export_bundle(wanted)
+    return Response(content=body, media_type="application/zip", headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+
+@app.get("/journals/archive")
+def journals_archive_list() -> dict[str, Any]:
+    from .journal_storage import list_archives
+
+    return {"archives": list_archives()}
+
+
+@app.post("/journals/archive")
+def journals_archive_create(body: ArchiveBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .compose_store import get_roster_slots
+    from .journal_storage import archive_plant, archive_roster_slot
+
+    slot = next((s for s in get_roster_slots() if str(s.get("plant_uuid") or "") == body.plant_id), None)
+    out = archive_roster_slot(slot, reason=body.reason) if slot else archive_plant(body.plant_id, reason=body.reason)
+    if out is None:
+        raise HTTPException(400, "archive failed")
+    return {"archive": out}
+
+
+@app.get("/journals/archive/{archive_id}")
+def journals_archive_get(archive_id: int) -> dict[str, Any]:
+    from .journal_storage import get_archive
+
+    a = get_archive(archive_id)
+    if a is None:
+        raise HTTPException(404, "no such archive")
+    return a
+
+
+@app.get("/journals/archive/{archive_id}/export")
+def journals_archive_export(archive_id: int, format: str = Query("zip")) -> Response:
+    from .journal_storage import export_archive
+
+    try:
+        name, ctype, body = export_archive(archive_id, format)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    return Response(content=body, media_type=ctype, headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+
+@app.get("/settings/manifest")
+def settings_manifest_get() -> dict[str, Any]:
+    """Every brain-owned setting with tier, default, range, unit and consumers (plan-settings § Part 2)."""
+    from .settings_manifest import settings_manifest
+
+    return settings_manifest()
+
+
 @app.get("/settings")
 def settings_get() -> dict[str, Any]:
     return {"settings": public_settings(), "inventory": list_inventory()}
@@ -685,8 +1120,12 @@ def settings_get() -> dict[str, Any]:
 
 @app.patch("/settings")
 def settings_patch(body: SettingsPatch) -> dict[str, Any]:
+    from .settings_journal import journal_kv_patch
+
+    before = get_all_settings()
     for key, value in body.settings.items():
         set_setting(key, value)
+    journal_kv_patch(before, dict(body.settings))
     return public_settings()
 
 
@@ -1013,6 +1452,118 @@ def settings_zigbee_health() -> dict[str, Any]:
     return get_zigbee_health()
 
 
+# ---- Tuya (SmartLife Wi-Fi) local lane — plan-tuya-local § 2.5 ----------------
+
+
+@app.get("/settings/devices/actuatable")
+def settings_devices_actuatable() -> dict[str, Any]:
+    """Lane-tagged switch targets across every local lane (zigbee + tuya)."""
+    from .zigbee_mqtt import actuatable_zigbee_devices
+
+    zigbee = [
+        {"lane": "zigbee", "id": d["friendly_name"], **d} for d in actuatable_zigbee_devices()
+    ]
+    return {"devices": [*zigbee, *actuatable_tuya_devices()]}
+
+
+@app.get("/settings/tuya/devices")
+def settings_tuya_devices() -> dict[str, Any]:
+    return {"devices": get_tuya_devices(), "health": get_tuya_health()}
+
+
+@app.get("/settings/tuya/device-types")
+def settings_tuya_device_types() -> dict[str, Any]:
+    from .tuya_catalog import get_tuya_device_types
+
+    return {"device_types": get_tuya_device_types()}
+
+
+@app.get("/settings/tuya/health")
+def settings_tuya_health() -> dict[str, Any]:
+    return get_tuya_health()
+
+
+@app.post("/settings/tuya/devices/import")
+def settings_tuya_import(body: TuyaImportBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    try:
+        result = import_devices_json(body.devices)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    record_grow_log(f"tuya import: {len(result['imported'])} device(s) from devices.json")
+    return result
+
+
+@app.post("/settings/tuya/probe")
+def settings_tuya_probe_new(body: TuyaProbeBody) -> dict[str, Any]:
+    """Probe an unregistered ip + key (add-by-hand path)."""
+    if _demo_mode():
+        _demo_forbidden()
+    return probe_tuya_device(None, ip=body.ip, local_key=body.local_key, version=body.version)
+
+
+@app.post("/settings/tuya/devices/{device_id}/probe")
+def settings_tuya_probe(device_id: str, body: TuyaProbeBody | None = None) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    b = body or TuyaProbeBody()
+    return probe_tuya_device(device_id, ip=b.ip, local_key=b.local_key, version=b.version if b.ip or b.local_key else "")
+
+
+@app.put("/settings/tuya/devices/{device_id}")
+def settings_tuya_device_put(device_id: str, body: TuyaDevicePatch) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    try:
+        return update_tuya_device(device_id, body.model_dump(exclude_none=True))
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=f"unknown Tuya device {device_id}") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.delete("/settings/tuya/devices/{device_id}")
+def settings_tuya_device_delete(device_id: str) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    try:
+        delete_tuya_device(device_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=f"unknown Tuya device {device_id}") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    record_grow_log(f"tuya device removed: {device_id}")
+    return {"ok": True, "device_id": device_id}
+
+
+@app.post("/settings/tuya/devices/{device_id}/set")
+def settings_tuya_device_set(device_id: str, body: TuyaSetBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    result = set_tuya_state(device_id, body.on)
+    if not result.get("ok"):
+        raise HTTPException(status_code=503, detail=str(result.get("error") or "tuya write failed"))
+    record_grow_log(f"tuya {device_id} set {'ON' if body.on else 'OFF'} by operator")
+    return result
+
+
+@app.get("/settings/tuya/bindings")
+def settings_tuya_bindings_get() -> dict[str, Any]:
+    return {"bindings": load_tuya_bindings()}
+
+
+@app.put("/settings/tuya/bindings")
+def settings_tuya_bindings_put(body: TuyaBindingsBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    try:
+        cleaned = save_tuya_bindings(body.bindings)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"bindings": cleaned}
+
+
 @app.get("/settings/global-modifiers")
 def settings_global_modifiers_get() -> dict[str, Any]:
     return {"modifiers": get_global_modifiers()}
@@ -1020,8 +1571,19 @@ def settings_global_modifiers_get() -> dict[str, Any]:
 
 @app.patch("/settings/global-modifiers")
 def settings_global_modifiers_patch(body: GlobalModifiersPatch) -> dict[str, Any]:
+    from .settings_journal import journal_setting_change
+
+    before = get_global_modifiers()
     patch = body.model_dump(exclude_none=True)
-    return {"modifiers": set_global_modifiers(patch)}
+    saved = set_global_modifiers(patch)
+    for key, label in (("fan_demand_scale", "Fan demand scale"), ("light_brightness_scale", "Light brightness scale"), ("moisture_dry_pct", "Probe dry reference line")):
+        if key in patch:
+            journal_setting_change(label, before.get(key), saved.get(key), domain="brain")
+    for key, label in (("temp_offset_c", "temperature offset"), ("rh_offset_pct", "RH offset")):
+        if isinstance(patch.get(key), dict):
+            for zone in patch[key]:
+                journal_setting_change(f"{zone} {label}", (before.get(key) or {}).get(zone), (saved.get(key) or {}).get(zone), domain="sensors")
+    return {"modifiers": saved}
 
 
 @app.get("/settings/probe-stations")
@@ -1503,6 +2065,24 @@ async def strain_detail_proxy(strain_id: str) -> dict[str, Any]:
     raise HTTPException(404, "strain not found")
 
 
+@app.get("/v1/catalogs/lights/{light_id}")
+async def light_detail_proxy(light_id: str) -> dict[str, Any]:
+    """Full light record from the CannaLib lights store (maps, spectra, control).
+    No local fallback: the on-Pi corpus only has name/brand rows, and the card
+    must not draw a map that was never transcribed."""
+    from .integrations import catalog_light_detail
+
+    try:
+        detail = await catalog_light_detail(light_id)
+    except CatalogSearchError as exc:
+        raise HTTPException(503, exc.detail) from exc
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(502, f"CannaLib light detail failed: {exc}") from exc
+    if not detail:
+        raise HTTPException(404, "light not in the CannaLib lights catalog")
+    return detail
+
+
 @app.get("/v1/media/assets/{asset_id}")
 async def media_asset_proxy(asset_id: str) -> Response:
     """Proxy CannaLib licensed strain media for Pi same-origin Research cards."""
@@ -1692,10 +2272,13 @@ def journal_space_delete(space_id: str, entry_id: int) -> dict[str, Any]:
 def spaces_get() -> dict[str, Any]:
     from .space_model import ensure_kit_spaces, list_space_devices, list_spaces
 
+    from .cameras import cameras_for_space
+
     spaces = ensure_kit_spaces()
     return {
         "spaces": [
-            {**s, "devices": list_space_devices(s["space_id"])} for s in spaces
+            {**s, "devices": list_space_devices(s["space_id"]), "cameras": cameras_for_space(s["space_id"])}
+            for s in spaces
         ]
     }
 
@@ -1744,6 +2327,152 @@ def spaces_device_put(space_id: str, device_id: str, body: SpaceDeviceBody) -> d
     try:
         return upsert_space_device(space_id, patch)
     except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+# ---- cameras (plan-settings § S7) --------------------------------------------------------
+# A camera is a brain-owned device bound to a zone: USB webcam on the Pi, HTTP snapshot,
+# MJPEG, RTSP, or a satellite Pi running motionEye. Frames land on disk under
+# DSC_DATA/media/camera/<id>/ on the brain's cadence; the SPA reads latest.jpg.
+
+
+@app.get("/cameras")
+def cameras_get() -> dict[str, Any]:
+    from .cameras import cameras_summary
+
+    return cameras_summary()
+
+
+@app.get("/cameras/storage")
+def cameras_storage() -> dict[str, Any]:
+    from .cameras import camera_storage, list_cameras, media_root
+
+    rows = [{"camera_id": c["camera_id"], "label": c["label"], "space_id": c["space_id"], **camera_storage(c["camera_id"])} for c in list_cameras()]
+    return {"cameras": rows, "total_bytes": sum(r["bytes"] for r in rows), "media_root": str(media_root())}
+
+
+@app.post("/cameras/test")
+def cameras_test(body: CameraTestBody) -> dict[str, Any]:
+    """Grab one frame from an unsaved spec — nothing stored, preview returned inline."""
+    if _demo_mode():
+        _demo_forbidden()
+    from .cameras import CaptureError, password_for, test_source
+
+    password = body.password or (password_for(body.camera_id) if body.camera_id else "")
+    try:
+        return test_source(body.model_dump(), password)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except CaptureError as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+@app.put("/cameras/{camera_id}")
+def cameras_put(camera_id: str, body: CameraBody) -> dict[str, Any]:
+    from .cameras import public_camera, upsert_camera
+
+    try:
+        cam = upsert_camera(camera_id, body.model_dump(exclude_none=True))
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return public_camera(cam)
+
+
+@app.delete("/cameras/{camera_id}")
+def cameras_delete(camera_id: str, delete_media: bool = Query(False)) -> dict[str, Any]:
+    from .cameras import delete_camera
+
+    return {"deleted": delete_camera(camera_id, delete_media=delete_media)}
+
+
+@app.post("/cameras/{camera_id}/capture")
+async def cameras_capture(camera_id: str) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    import asyncio
+
+    from .cameras import capture_now, get_camera, public_camera
+
+    if get_camera(camera_id) is None:
+        raise HTTPException(404, f"unknown camera {camera_id}")
+    res = await asyncio.to_thread(capture_now, camera_id, note="operator")
+    cam = get_camera(camera_id)
+    return {**res, "camera": public_camera(cam) if cam else None}
+
+
+@app.get("/cameras/{camera_id}/latest.jpg")
+def cameras_latest(camera_id: str) -> FileResponse:
+    from .cameras import get_camera, latest_frame_path
+
+    if get_camera(camera_id) is None:
+        raise HTTPException(404, f"unknown camera {camera_id}")
+    path = latest_frame_path(camera_id)
+    if path is None:
+        raise HTTPException(404, "no frame captured yet")
+    return FileResponse(path, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
+
+
+@app.get("/cameras/{camera_id}/days")
+def cameras_days(camera_id: str) -> dict[str, Any]:
+    from .cameras import get_camera, list_days
+
+    if get_camera(camera_id) is None:
+        raise HTTPException(404, f"unknown camera {camera_id}")
+    return {"days": list_days(camera_id)}
+
+
+@app.get("/cameras/{camera_id}/frames")
+def cameras_frames(camera_id: str, day: str | None = Query(None), limit: int = Query(200, ge=1, le=2000)) -> dict[str, Any]:
+    from .cameras import DAY_RE, get_camera, list_frames
+
+    if get_camera(camera_id) is None:
+        raise HTTPException(404, f"unknown camera {camera_id}")
+    if day is not None and not DAY_RE.match(day):
+        raise HTTPException(400, "day must be YYYY-MM-DD")
+    return {"frames": list_frames(camera_id, day, limit=limit)}
+
+
+@app.get("/cameras/{camera_id}/frames/{day}/{name}")
+def cameras_frame(camera_id: str, day: str, name: str) -> FileResponse:
+    from .cameras import frame_path
+
+    path = frame_path(camera_id, f"{day}/{name}")
+    if path is None:
+        raise HTTPException(404, "no such frame")
+    return FileResponse(path, media_type="image/jpeg", headers={"Cache-Control": "private, max-age=86400"})
+
+
+@app.get("/cameras/{camera_id}/timelapses")
+def cameras_timelapses(camera_id: str) -> dict[str, Any]:
+    from .cameras import get_camera, list_timelapses
+
+    if get_camera(camera_id) is None:
+        raise HTTPException(404, f"unknown camera {camera_id}")
+    return {"timelapses": list_timelapses(camera_id)}
+
+
+@app.get("/cameras/{camera_id}/timelapses/{name}")
+def cameras_timelapse_file(camera_id: str, name: str) -> FileResponse:
+    from .cameras import timelapse_path
+
+    path = timelapse_path(camera_id, name)
+    if path is None:
+        raise HTTPException(404, "no such timelapse")
+    return FileResponse(path, media_type="video/mp4", headers={"Cache-Control": "private, max-age=86400"})
+
+
+@app.post("/cameras/{camera_id}/timelapse")
+async def cameras_timelapse_assemble(camera_id: str, body: TimelapseBody) -> dict[str, Any]:
+    """Assemble frames in a day range into an mp4 (ffmpeg on the Pi, runs off the loop)."""
+    import asyncio
+
+    from .cameras import CaptureError, assemble_timelapse, get_camera
+
+    if get_camera(camera_id) is None:
+        raise HTTPException(404, f"unknown camera {camera_id}")
+    try:
+        return await asyncio.to_thread(assemble_timelapse, camera_id, body.day_from, body.day_to, fps=body.fps, height=body.height)
+    except CaptureError as exc:
         raise HTTPException(400, str(exc)) from exc
 
 
@@ -1957,11 +2686,16 @@ def journal_room_delete(room_id: str, entry_id: int) -> dict[str, Any]:
 def journal_core_get(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
+    tag: str | None = Query(None),
 ) -> dict[str, Any]:
-    from .dsc_core_journal import count_core_journal, list_core_journal
+    from .dsc_core_journal import count_core_journal, list_core_journal, list_core_native
     from .room_model import ensure_kit_rooms
 
     ensure_kit_rooms()
+    if tag:
+        # Tagged view (e.g. settings changes): facility-native rows only, filtered by tag.
+        native = [r for r in list_core_native(limit=5000) if tag in (r.get("tags") or [])]
+        return {"entries": native[offset : offset + limit], "total": len(native), "limit": limit, "offset": offset, "tag": tag}
     return {
         "entries": list_core_journal(limit=limit, offset=offset),
         "total": count_core_journal(),
@@ -2047,7 +2781,7 @@ _ASSET_EXTS = (
 # clean "route missing". Hash-routed SPA paths (#/…) never reach the server.
 _API_FIRST_SEGMENTS = frozenset(
     {
-        "api", "v1", "admin", "ai", "catalogs", "control", "decision", "energy", "fleet",
+        "api", "v1", "admin", "ai", "cameras", "catalogs", "control", "decision", "energy", "fleet",
         "grow-log", "health", "history", "journal", "learning", "rooms", "roster",
         "settings", "setup", "soft-cal", "soil-tests", "spaces", "want", "ws",
     }

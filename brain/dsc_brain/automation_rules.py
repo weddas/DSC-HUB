@@ -48,7 +48,7 @@ _NUMERIC_OPS = frozenset({"gt", "lt", "gte", "lte"})
 _STRING_OPS = frozenset({"eq", "ne"})
 _BOOL_OPS = frozenset({"is", "is_not"})
 VALID_OPS = _NUMERIC_OPS | _STRING_OPS | _BOOL_OPS
-VALID_ACTIONS = frozenset({"banner", "oos_seat", "zigbee_switch", "relay", "setpoint"})
+VALID_ACTIONS = frozenset({"banner", "oos_seat", "zigbee_switch", "tuya_switch", "relay", "setpoint"})
 VALID_TONES = frozenset({"critical", "warn", "info"})
 MAX_CONDITIONS = 8
 
@@ -199,14 +199,17 @@ _HUB_AGE_PREFIXES = (
     "time.dsc_hub_",
 )
 _PROBE_AGE_RE = re.compile(r"^(?:sensor|binary_sensor)\.dsc_probe([1-4])_")
-# Any datapoint of a bound Zigbee device: sensor./binary_sensor.dsc_zigbee_<role>_<key>.
-_ZIGBEE_AGE_RE = re.compile(r"^(?:sensor|binary_sensor)\.dsc_zigbee_(.+)$")
+# Any datapoint of a bound Zigbee or Tuya device: sensor./binary_sensor.dsc_<lane>_<role>_<key>.
+# Both lanes share the role buckets (zigbee_by_role), so one age lookup serves both.
+_ZIGBEE_AGE_RE = re.compile(r"^(?:sensor|binary_sensor)\.dsc_(?:zigbee|tuya)_(.+)$")
 AGE_PREFIXES: list[str] = [
     *_HUB_AGE_PREFIXES,
     "sensor.dsc_probe",
     "binary_sensor.dsc_probe",
     "sensor.dsc_zigbee_",
     "binary_sensor.dsc_zigbee_",
+    "sensor.dsc_tuya_",
+    "binary_sensor.dsc_tuya_",
     *_SONOFF_RELAY_SEAT.keys(),
 ]
 
@@ -262,7 +265,7 @@ def live_zigbee_entities() -> list[dict[str, Any]]:
         return []
     out: list[dict[str, Any]] = []
     for eid in sorted(states):
-        if ".dsc_zigbee_" not in eid:
+        if ".dsc_zigbee_" not in eid and ".dsc_tuya_" not in eid:
             continue
         st = states[eid]
         attrs = st.get("attributes") if isinstance(st.get("attributes"), dict) else {}
@@ -449,6 +452,14 @@ def _normalize_action(action: Any) -> dict[str, Any]:
         clean_params = {
             "friendly_name": fn,
             # ON while the trigger holds, OFF when it clears (invert to flip).
+            "on_when_firing": bool(params.get("on_when_firing", True)),
+        }
+    elif atype == "tuya_switch":
+        did = str(params.get("device_id") or "").strip()
+        if not did:
+            raise ValueError("tuya_switch action needs params.device_id")
+        clean_params = {
+            "device_id": did,
             "on_when_firing": bool(params.get("on_when_firing", True)),
         }
     elif atype == "relay":
@@ -890,6 +901,19 @@ def _apply_effect(rule: dict[str, Any], fleet: FleetState, view: dict[str, dict[
             _logger.warning("automation zigbee_switch %s -> %s failed: %s", fn, on, exc)
             owned["last_error"] = f"zigbee write failed: {exc}"
         owned["owned_switch"] = {"friendly_name": fn, "on_when_firing": on}
+    elif action["type"] == "tuya_switch":
+        did = params["device_id"]
+        on = bool(params.get("on_when_firing", True))
+        try:
+            from .tuya_local import set_tuya_state
+
+            result = set_tuya_state(did, on)
+            if not result.get("ok"):
+                owned["last_error"] = f"tuya write failed: {result.get('error')}"
+        except Exception as exc:  # noqa: BLE001
+            _logger.warning("automation tuya_switch %s -> %s failed: %s", did, on, exc)
+            owned["last_error"] = f"tuya write failed: {exc}"
+        owned["owned_switch"] = {"lane": "tuya", "device_id": did, "on_when_firing": on}
     elif action["type"] == "relay":
         eid = params["entity_id"]
         meta = RELAY_TARGETS.get(eid) or {}
@@ -945,7 +969,14 @@ def _clear_effect(rid: str, owned: dict[str, Any], fleet: FleetState) -> None:
     if seat:
         upsert_inventory(str(seat), {"in_service": True})
     sw = owned.get("owned_switch")
-    if isinstance(sw, dict) and sw.get("friendly_name"):
+    if isinstance(sw, dict) and sw.get("lane") == "tuya" and sw.get("device_id"):
+        try:
+            from .tuya_local import set_tuya_state
+
+            set_tuya_state(str(sw["device_id"]), not bool(sw.get("on_when_firing", True)))
+        except Exception as exc:  # noqa: BLE001
+            _logger.warning("automation tuya_switch clear failed: %s", exc)
+    elif isinstance(sw, dict) and sw.get("friendly_name"):
         try:
             from .zigbee_mqtt import set_zigbee_state
 

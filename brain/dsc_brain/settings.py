@@ -195,6 +195,11 @@ _SETTINGS_RESPONSE_STRIP = frozenset(
         # served via /settings/automations, not the generic settings blob
         "automation_rules",
         "automation_rules_state",
+        # S3 blobs — each has its own route
+        "alert_prefs_json",
+        "automation_defaults_json",
+        "journal_retention_json",
+        "hub_tunables_json",
     }
 )
 

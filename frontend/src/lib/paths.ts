@@ -1,4 +1,5 @@
 import type { ZoneFocus } from "../hooks/useZoneFocus";
+import type { SettingsSectionId } from "../routes";
 
 /**
  * Typed route builders — the only place a desk path is spelled. Call sites use
@@ -30,6 +31,10 @@ export const paths = {
   kit: () => "/kit",
   learning: () => "/kit/learning",
   calibrate: () => "/kit/calibrate",
-  settings: (section = "device") => `/settings/${section}`,
+  /** Settings section, optionally scrolled to a row or card anchor: `settings("light", "tariff")`. */
+  settings: (section: SettingsSectionId = "preferences", anchor?: string) =>
+    anchor ? `/settings/${section}#${anchor}` : `/settings/${section}`,
   setup: () => "/setup",
+  /** Kit · 3D twin — the whole rig live; `zone` picks the opening camera. */
+  twin: (opts?: { zone?: ZoneFocus }) => withZone("/twin", opts?.zone),
 } as const;

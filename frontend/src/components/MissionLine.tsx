@@ -18,6 +18,8 @@ export type MissionStory =
 export function buildMissionStory(opts: {
   criticalBanners: string[];
   activeAlertTitles: string[];
+  /** Enabled alerts the operator downgraded to warn / info — mentioned, never red. */
+  warnAlertTitles?: string[];
   recentAlert: DisplayGrowLogEvent | null;
 }): MissionStory {
   if (opts.criticalBanners.length) {
@@ -29,6 +31,14 @@ export function buildMissionStory(opts: {
       tone: "bad",
       title: `${n} critical alert${n === 1 ? "" : "s"} active`,
       detail: opts.activeAlertTitles.slice(0, 4).join(" · "),
+    };
+  }
+  if (opts.warnAlertTitles && opts.warnAlertTitles.length) {
+    const n = opts.warnAlertTitles.length;
+    return {
+      tone: "warn",
+      title: `${n} alert${n === 1 ? "" : "s"} to look at`,
+      detail: opts.warnAlertTitles.slice(0, 4).join(" · "),
     };
   }
   if (opts.recentAlert) {

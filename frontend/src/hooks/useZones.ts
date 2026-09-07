@@ -15,6 +15,7 @@ import { inventoryInService } from "../lib/fleetModel";
 import { dliFromPpfdHours, readCalibratedPpfd } from "../lib/dliEstimate";
 import { buildCloneLightDesk } from "../lib/lightViewModel";
 import { leafVpdKpa, vpdKpa } from "../lib/derived/climate";
+import { useBrainNumber } from "./useBrainSettings";
 import { defaultBandMargin, zoneTone, type ToneBand, type ZoneTone } from "../lib/zoneTone";
 import type { PhaseKey } from "../components/Panel";
 import { BRAIN_ZONE_ID, useZoneMeta } from "./useZoneMeta";
@@ -157,6 +158,7 @@ function dayOf(probes: PlantProbeModel[]): number | null {
 }
 
 export function useZones(): { main: ZoneModel; clone: ZoneModel; room: ZoneModel } {
+  const leafOffsetC = useBrainNumber("leaf_offset_c", 2);
   const bus = useEntityBus();
   const { state, num, entity, available, tick } = bus;
   const fleet = useFleet();
@@ -229,7 +231,8 @@ export function useZones(): { main: ZoneModel; clone: ZoneModel; room: ZoneModel
         "kPa",
         band(rail.vpd),
       );
-      const leaf = leafVpdKpa(t.value, rh.value);
+      // Same assumption the brain uses (leaf = air - leaf_offset_c), read from the brain.
+      const leaf = leafVpdKpa(t.value, rh.value, -leafOffsetC);
 
       // Lamp — 2×4 has the dimmable SF1000; 4×8 has the Twin SF1000 when wired, else only
       // the schedule window is known (that is not a lamp, and is labelled as such).
@@ -443,6 +446,7 @@ export function useZones(): { main: ZoneModel; clone: ZoneModel; room: ZoneModel
     return { main, clone, room };
     // tick: the bus re-renders us when a tracked entity changes; held readings carry their own identity.
   }, [
+    leafOffsetC,
     state,
     num,
     entity,

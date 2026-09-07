@@ -116,7 +116,19 @@ class EsphomeIngest:
                 # Zigbee MQTT may have advanced canopy during this long poll —
                 # stamp ingest cache so we never clobber role-bound climate.
                 apply_zigbee_cache_to_state(state)
+                # Tuya lane rows ride the same role buckets; its own keys are stamped here.
+                from .tuya_local import apply_tuya_cache_to_state
+
+                apply_tuya_cache_to_state(state)
                 update_fleet_state(state)
+                # Brain-owned hub tunables: adopt new entities, confirm echoes, push what is
+                # queued (never while takeover / reconnect override holds). Never raises.
+                from .hub_tunables import on_fleet_poll
+
+                await on_fleet_poll(state)
+                from .journal_storage import maybe_prune_journals
+
+                maybe_prune_journals()
             except Exception as exc:  # noqa: BLE001
                 _logger.warning("ESPHome ingest poll failed: %s", exc)
             await asyncio.sleep(5.0)
@@ -596,10 +608,24 @@ def _hub_controls_from_states(
 ) -> dict[str, dict[str, Any]]:
     """Build HA-shaped control readback for hub switches/numbers/fans/selects/light."""
     select_options: dict[str, list[str]] = {}
+    number_meta: dict[str, dict[str, Any]] = {}
     for ent in entities:
         oid = str(getattr(ent, "object_id", ""))
         if oid in HUB_SELECT_OID_TO_ENTITY and hasattr(ent, "options"):
             select_options[oid] = list(getattr(ent, "options", []) or [])
+        elif oid in HUB_NUMBER_OID_TO_ENTITY and hasattr(ent, "min_value"):
+            # Native range so the brain validates desired values against the firmware's own
+            # bounds (hub_tunables) and the SPA never hardcodes a min/max again.
+            meta: dict[str, Any] = {}
+            for src, dst in (("min_value", "min"), ("max_value", "max"), ("step", "step")):
+                try:
+                    meta[dst] = float(getattr(ent, src))
+                except (TypeError, ValueError):
+                    pass
+            unit = getattr(ent, "unit_of_measurement", None)
+            if unit:
+                meta["unit_of_measurement"] = str(unit)
+            number_meta[oid] = meta
 
     controls: dict[str, dict[str, Any]] = {}
 
@@ -618,10 +644,11 @@ def _hub_controls_from_states(
             put(entity_id, "on" if on else "off")
         elif object_id in HUB_NUMBER_OID_TO_ENTITY:
             entity_id = HUB_NUMBER_OID_TO_ENTITY[object_id]
+            meta = number_meta.get(object_id, {})
             try:
-                put(entity_id, str(float(st.state)))
+                put(entity_id, str(float(st.state)), **meta)
             except (TypeError, ValueError):
-                put(entity_id, str(getattr(st, "state", "")))
+                put(entity_id, str(getattr(st, "state", "")), **meta)
         elif object_id in HUB_FAN_OID_TO_ENTITY:
             entity_id = HUB_FAN_OID_TO_ENTITY[object_id]
             on = bool(getattr(st, "state", False))

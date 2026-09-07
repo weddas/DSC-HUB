@@ -1,7 +1,10 @@
 import { cloneElement, isValidElement, useCallback, useEffect, useId, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
-const OPEN_DELAY_MS = 300;
+import { getPreference } from "../lib/preferences";
+
+/** Default open delay — Preferences › Home › Tooltip open delay. */
+const openDelayMs = () => getPreference("tooltipDelayMs");
 
 /**
  * Hover / focus tooltip (plan § Interaction): opens after 300 ms of hover, at once on
@@ -13,7 +16,7 @@ const OPEN_DELAY_MS = 300;
 export function Tooltip({
   content,
   children,
-  delay = OPEN_DELAY_MS,
+  delay = openDelayMs(),
 }: {
   content: ReactNode;
   children: ReactElement<Record<string, unknown>>;

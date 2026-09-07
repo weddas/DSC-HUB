@@ -9,8 +9,11 @@ export interface SeriesPoint {
   v: number;
 }
 
-const HOLD_GAP_MS = 2000;
-const MAX_HOLD_TO_NOW_MS = 5 * 60 * 1000;
+import { getPreference } from "../lib/preferences";
+
+/** Hold gap and hold-to-now are operator preferences (Preferences › Charts › Advanced). */
+const holdGapMs = () => getPreference("holdGapMs");
+const maxHoldToNowMs = () => getPreference("maxHoldToNowMs");
 
 /** Recorder stores on change. Hold last good across short gaps; stop at now unless stale-marked. */
 export function stepHoldSeries(
@@ -20,6 +23,8 @@ export function stepHoldSeries(
 ): SeriesPoint[] {
   if (!points.length) return [];
   const sorted = [...points].sort((a, b) => a.t - b.t);
+  const HOLD_GAP_MS = holdGapMs();
+  const MAX_HOLD_TO_NOW_MS = maxHoldToNowMs();
   const out: SeriesPoint[] = [];
   for (let i = 0; i < sorted.length; i++) {
     const p = sorted[i];
@@ -259,7 +264,7 @@ export function MultiLineChart({
     if (!all.length) return false;
     const lastDataT = Math.max(...all.map((p) => p.t));
     const syncAge = lastSyncAt != null ? Date.now() - lastSyncAt : Date.now() - lastDataT;
-    return syncAge > MAX_HOLD_TO_NOW_MS;
+    return syncAge > maxHoldToNowMs();
   }, [named, lastSyncAt]);
 
   const option = useMemo<EChartsCoreOption>(() => {

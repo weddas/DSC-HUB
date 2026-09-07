@@ -1,40 +1,22 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
+import { usePreference } from "./usePreference";
 
 export type ChartHours = number;
 export const CHART_HOUR_OPTIONS = [1, 6, 24, 48] as const;
 
-const STORAGE_KEY = "dsc_chart_hours";
-
-function readStored(): ChartHours {
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    const n = Number(raw);
-    if (Number.isFinite(n) && n > 0 && n <= 48) return n;
-  } catch {
-    /* ignore */
-  }
-  return 6;
-}
-
+/**
+ * Default chart range — an operator preference (Preferences › Charts) that survives a
+ * reload and is shared by every desk chart in this browser. Each chart may still change
+ * it in place; the change becomes the new default.
+ */
 export function useChartHours(defaultHours: ChartHours = 6): {
   hours: ChartHours;
   setHours: (h: ChartHours) => void;
   maxPoints: number;
 } {
-  const [hours, setHoursState] = useState<ChartHours>(() => {
-    const stored = readStored();
-    return stored || defaultHours;
-  });
-
-  const setHours = useCallback((h: ChartHours) => {
-    setHoursState(h);
-    try {
-      sessionStorage.setItem(STORAGE_KEY, String(h));
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
+  const [stored, setStored] = usePreference("chartHours");
+  const hours = Number.isFinite(stored) && stored > 0 && stored <= 48 ? stored : defaultHours;
+  const setHours = useCallback((h: ChartHours) => setStored(h), [setStored]);
   const maxPoints = hours <= 1 ? 60 : hours <= 6 ? 96 : hours <= 24 ? 144 : 192;
   return { hours, setHours, maxPoints };
 }
