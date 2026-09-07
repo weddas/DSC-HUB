@@ -188,7 +188,7 @@ if [[ ! -e /opt/dsc-hub-repo ]]; then
   ln -sfn "${REPO_ROOT}" /opt/dsc-hub-repo
 fi
 
-echo "Bootstrap complete (8.0.0 Ethernet-first). Next:"
+echo "Bootstrap complete (8.1.0 Ethernet-first). Next:"
 echo "  1. Edit ${COMPOSE_DIR}/.env (API keys, AP PSK, SkyConnect by-id)"
 echo "  2. Optional thin catalog: docker compose --profile thin-catalog up -d"
 echo "  3. systemctl start dsc-hub-net-policy.service  # SoftAP only if no Ethernet"

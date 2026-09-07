@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# DSC-HUB 8.0.0 — Linux bake (payload + docker images).
+# DSC-HUB 8.1.0 — Linux bake (payload + docker images).
 # Run on aarch64 Linux with Docker (kit Pi is fine).
-# Produces: deploy/dsc-hub-8.0.0-{payload,docker}.tar.gz
+# Produces: deploy/dsc-hub-8.1.0-{payload,docker}.tar.gz
 set -euo pipefail
 
-VERSION="${DSC_VERSION:-8.0.0}"
+VERSION="${DSC_VERSION:-8.1.0}"
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 OUT="${DSC_BAKE_OUT:-${ROOT}/deploy}"
 STAGE="${OUT}/stage-${VERSION}"

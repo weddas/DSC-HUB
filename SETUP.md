@@ -1,6 +1,6 @@
 # DSC-HUB — standalone SoftAP setup (Pi brain; no Home Assistant)
 
-**Product unbox path (8.0.0):** Flash the kit SD image → Pi boots → open SPA Setup (`#/setup`) on LAN/`dsc-brain.local` or Pi SoftAP → USB-flash devices on the Pi → fleet SoftAP join → Zigbee bind. See [`docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md`](docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md).
+**Product unbox path (8.1.0):** Flash the kit SD image → Pi boots → open SPA Setup (`#/setup`) on LAN/`dsc-brain.local` or Pi SoftAP → USB-flash devices on the Pi → fleet SoftAP join → Zigbee bind. See [`docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md`](docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md).
 
 **Legacy detail below** still describes hub/device SoftAP membership (hub `DSC-Setup-*`, bridge `DSC-Anchor`) — that remains the **fleet** Wi‑Fi story and is distinct from the **Pi operator** SoftAP used only when Ethernet is absent.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# DSC-HUB 8.0.0 — Ethernet-first operator network policy.
+# DSC-HUB 8.1.0 — Ethernet-first operator network policy.
 # eth0 carrier up → stop Pi SoftAP (operator uses LAN/mDNS).
 # No carrier → start dsc-hub-ap (operator Setup SoftAP). Distinct from hub/bridge SoftAP.
 set -euo pipefail

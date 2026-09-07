@@ -2,6 +2,33 @@
 
 ## Unreleased
 
+## Hub — **v8.1.0** (2026-09-07)
+
+First full cut of the 8.x line after the `v8.0.0-AlphaPi` alpha (102 commits).
+**Brain / SPA 8.1.0 · expected firmware 8.0.0.0** (unchanged — the fleet stays on the
+8.0.0.0 ESPHome-only train; no reflash is required by this release).
+
+### Major changes
+
+| Area | What landed |
+|---|---|
+| **Dashboard v2** | Desks, zone model, icon set v5, gauge hover readout, motion + type-scale pass |
+| **3D twin** | Composed live scene at `#/twin`, 134-GLB model pipeline, twin field model |
+| **Settings & preferences** | Passes S1–S5 — ~190 knobs over a 12-section IA (You / The grow / The kit) |
+| **Cameras** | Fixed-mount IP camera per tent, timelapse, plant regions (S7 core) |
+| **Light / PPFD** | Maker PPFD map + 3D surface, per-fixture CannaLib catalog binding |
+| **Automation** | Rule engine v2 — compound triggers, window/debounce/hysteresis/max-age, relay + setpoint actions |
+| **Zigbee** | UX phases 0–4, device-type catalog, every bound datapoint becomes a fleet entity |
+| **Tuya** | Local lane T1 |
+| **ESPHome toolchain** | Host update helper, rollback, canary-first fleet rollout, in-app toolchain management, capped below ESPHome 2026.8 |
+| **HA removal** | Legacy Lovelace card loader, HA connection scaffolding and Twin IIFE path deleted; SNTP-only time; hub glass no longer feeds off HA |
+| **Naming** | SPA identifiers Seat/POT → Probe/Plant |
+| **System / network** | Diagnostics section (logs, verbosity, power), internet reachability check, LAN ethernet auto/static |
+| **Fixes** | ~45 live-audit tracker items, Sonoff relay honesty, history bucketing, calibration bounds, and the 2026-09-06/07 Pi gate findings |
+
+### Detail
+
+
 - **ESPHome toolchain — update works on the shipping topology** — the brain runs
   in `dsc-hub-brain` and could not `pip` the host venv, so "Update ESPHome"
   silently rewrote a profile-disabled compose service. New host helper
