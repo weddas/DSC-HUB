@@ -5031,3 +5031,29 @@ Resolution: S5 structure kept; master's toolchain body and the toolchain / rollb
 transplanted verbatim (re-indented). `FOLLOWUPS.md` kept both appended sections. Verified: `tsc` clean,
 `npm run build` ok, brain suite 419 passed. The `eth0-dhcpcd.conf` untracked copy was identical to master's
 tracked file and was dropped. Pi still to be hotpatched with S4/S5 + T1.
+
+## 2026-09-07 — Docs SoT: Settings S4/S5 + Tuya T1 (tip `c3958ff`)
+
+Engineering-docs automation after #208 merge + tip advance `c3958ff` (`.gitignore` for `.claude` only; product identical to `1082ea3`). Durable brain/ops SoT on docs branch
+`cursor/engineering-documentation-a116` (PR #210; supersedes open #209 tip-`1082ea3` and #207 tip-`7837693`):
+
+- [`docs/brain/SETTINGS.md`](brain/SETTINGS.md) — S1–S5 (Devices hash sub-tabs + drawers; System cards)
+- [`docs/brain/TUYA-LOCAL.md`](brain/TUYA-LOCAL.md) + corrections to [`docs/ops/TUYA-LOCAL-SETUP.md`](ops/TUYA-LOCAL-SETUP.md)
+- Carried forward: ZONE / TWIN / PPFD / AUTOMATION / RELAY / SPA-PROD-BUNDLE / ESPHOME-TOOLCHAIN
+- New: [`docs/ops/PI-HOTPATCH.md`](ops/PI-HOTPATCH.md) — Windows `plink`/`pscp`, `stop -t 20` + `start`, prove flakes
+- Notion tip blurbs on Pi offline brain + Local webserver UI → `c3958ff`
+
+Not a product code change. Residual: merge #210; close #207/#209; Pi product hotpatch still open for S4/S5 + T1.
+Source-verify pass on `c3958ff`: fixed Automation “Settings › Brain” → Automation; SettingsDrawer Cancel-while-saving honesty; ESPHome “Device” → Devices › Firmware.
+
+## 2026-09-07 — Docs SoT: Hub 8.1.0 release tip `0d3d7f0`
+
+Engineering-docs automation after master merge `0d3d7f0` (**DSC-HUB 8.1.0** — brain/SPA bump; expected firmware **8.0.0.0** unchanged). Carries #210 durable SoT onto the release tip and closes the upgrade/bake gaps the release introduced:
+
+- [`UPGRADE.md`](../UPGRADE.md) — AlphaPi → 8.1.0 (brain-only), Kit Update honesty (`kit_update._is_newer` + GitHub tag lag), Settings → **Devices → Firmware** paths
+- [`docs/ops/ESPHOME-TOOLCHAIN.md`](ops/ESPHOME-TOOLCHAIN.md) — bake secrets trap (copy live `secrets.yaml`, md5)
+- [`docs/ops/DSC-HUB-DOCKER.md`](ops/DSC-HUB-DOCKER.md) — 8.1.0 stamp + Devices nav
+- Tip stamps on [`PI-HOTPATCH.md`](ops/PI-HOTPATCH.md) / [`SPA-PROD-BUNDLE.md`](ops/SPA-PROD-BUNDLE.md) → `0d3d7f0`
+- Notion Pi offline brain + Local webserver UI tip blurbs → `0d3d7f0`
+
+Docs branch `cursor/engineering-documentation-9207` (supersedes #210). Residual: publish GitHub `v8.1.0` so Kit Update Check offers the cut; Pi product hotpatch of S4/S5 + T1 + 8.1.0 still open; close superseded docs PRs #200–#210.

@@ -23,6 +23,7 @@ Hub still owns the **client**:
 - Compose env default: `CANNALIB_API_URL=http://cannalib:8790` (local sidecar). Gateway URL is for Unraid / studio LAN only.
 - **Local fallback:** when remote fails and **Use on-Pi sqlite fallback** is checked, brain reads `CANNALIB_DB_PATH` (default `/cannalib/dsc_brain.sqlite3`, volume-shared with the `cannalib` service). If no DB is mounted, `/v1/catalogs/*` returns **503** with an explicit message — no silent empty results.
 - Slim Want YAML (`/catalogs/*`) remains the last tier inside the brain proxy when the corpus DB is absent.
+- **Lights detail (Light desk maker PPFD):** SPA `fetchLightDetail` → brain `GET /v1/catalogs/lights/{light_id}` (proxied to CannaLib). Returns the structured light record (`ppfd_maps`, spectra, provenance). Binding + field model: [`../brain/PPFD-FIELD.md`](../brain/PPFD-FIELD.md).
 
 Pull capped offline indexes (from this repo):
 

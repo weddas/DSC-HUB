@@ -61,7 +61,8 @@ every device needs a stable IP:
 
 ## 3. Import, probe, bind (in DSC-HUB)
 
-Settings › **Devices** › **Tuya / SmartLife (Wi-Fi, local)** → **Add devices (import keys)**.
+Settings › **Devices** › **Zigbee** › card **Tuya / SmartLife (Wi-Fi, local)**
+(`#/settings/devices#tuya`) → **Add devices (import keys)**.
 
 1. **Get the keys** — paste the contents of `devices.json`, press **Import**. Devices without an IP are
    listed; you type the IP in the next step.
@@ -76,20 +77,23 @@ Settings › **Devices** › **Tuya / SmartLife (Wi-Fi, local)** → **Add devic
 
 The line under each device is its honesty state:
 
-- **LIVE** a report within 30 s · **STALE** older · **OFFLINE** unreachable for 60 s · **KEY CHANGED**
-  the device was re-paired — export and import again.
+- **LIVE** a report within 30 s · **STALE** older · **OFFLINE** unreachable (60 s silence, or
+  immediately after a socket/key error) · **KEY CHANGED** the device was re-paired — export and
+  import again.
 - After a write: **PENDING** commanded, echo not yet seen · **SYNCED** device agrees · **DIFFERS**
   someone changed it elsewhere (the app, the button) · **FAILED** the write did not land.
 
 ## 4. Use it
 
-- **Rules** (Settings › Automation): action *Tuya plug* — ON or OFF while the rule fires, restored on
-  clear. The picker lists bound plugs from both lanes.
+- **Rules** (Settings › Automation): action **Tuya plug** (`tuya_switch`) — ON or OFF while the
+  rule fires, restored on clear. The picker lists **Tuya** plugs only; Zigbee uses a separate
+  **Zigbee switch** action. Architecture: [`docs/brain/TUYA-LOCAL.md`](../brain/TUYA-LOCAL.md).
 - **Tasks / recipes** work the same as for Zigbee devices (tank-full → appliance OOS, flood → banner).
 - Every datapoint of a bound device is an entity the rule engine can trigger on:
   `sensor.dsc_tuya_<role>_<key>` / `binary_sensor.dsc_tuya_<role>_<key>` (e.g.
   `sensor.dsc_tuya_reservoir_4x8_ph`, `binary_sensor.dsc_tuya_plug_pump_state`).
-- A tester bound to a **Reservoir** role reports under Climate › Other sensors.
+- A tester bound to a **Reservoir** role appears in the shared Zigbee-by-role buckets (Climate
+  Other sensors path). Entity ids use the `dsc_tuya_*` prefix above.
 
 ## Troubleshooting
 
