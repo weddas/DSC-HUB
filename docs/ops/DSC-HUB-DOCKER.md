@@ -45,6 +45,14 @@ npm install && npm run build:spa
 - Uptime Kuma: `GET http://dsc-brain.local:8787/health`
 - Fleet WS: `ws://dsc-brain.local:8787/ws/fleet`
 
+## Cameras (S7 core)
+
+Brain images install **ffmpeg**. Compose maps `${DSC_CAMERA_DEVICE:-/dev/null}` → container `/dev/video0` so kits without a webcam still start. Set `DSC_CAMERA_DEVICE=/dev/video0` in `services/dsc-hub/.env` and recreate the brain container when a USB webcam is on the Pi. Operator guide: [`docs/cameras.md`](../cameras.md). Hotpatch helper: `.audit/cameras-pi-hotpatch.ps1`.
+
+## SPA production builds
+
+Before hotpatching a SPA that touches twin / Three.js / lazy routes, run `vite preview` — Vite **dev** does not reproduce the Rollup chunk graph. See [`SPA-PROD-BUNDLE.md`](SPA-PROD-BUNDLE.md).
+
 ## Honesty boundaries
 
 - Pi power-off → AP dies; Sonoffs failsafe OFF.
