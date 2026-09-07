@@ -460,6 +460,10 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
             info = await client.device_info()
             if info and getattr(info, "esphome_version", None):
                 fw = str(info.esphome_version)
+                # Keep the ESPHome framework release for every role — `fw` is
+                # overwritten below by the product train (8.0.0.0), and the
+                # toolchain card / canary check compare against THIS.
+                values["esphome_version"] = str(info.esphome_version)
             states: dict[int, Any] = {}
 
             def on_state(state: Any) -> None:

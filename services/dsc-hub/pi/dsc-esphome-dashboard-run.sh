@@ -27,6 +27,10 @@ if [[ -z "${DIR}" || ! -d "${DIR}" ]]; then
   exit 0
 fi
 
+# Refresh the host capabilities file the brain reads (venv version, secrets, disk).
+HELPER="$(dirname "$0")/dsc-esphome-host.sh"
+[[ -x "${HELPER}" ]] && DSC_ESPHOME_PROJECT_DIR="${DIR}" "${HELPER}" capabilities || true
+
 cd "${DIR}"
 echo "dsc-esphome-dashboard: serving ${DIR} on 0.0.0.0:6052 (PLATFORMIO_CORE_DIR=${PLATFORMIO_CORE_DIR})"
 exec "${VENV}/bin/esphome" dashboard "${DIR}" --address 0.0.0.0 --port 6052

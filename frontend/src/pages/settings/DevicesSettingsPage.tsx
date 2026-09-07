@@ -37,8 +37,10 @@ import {
   put_zigbee_bindings,
   put_zigbee_policies,
   queue_esphome_job,
+  rollback_esphome_toolchain,
   start_esphome_rollout,
   update_esphome_toolchain,
+  type EsphomeRolloutMode,
   type ProbeStation,
   type ZigbeeRecipe,
   type ZigbeeRole,
@@ -147,7 +149,8 @@ export function DevicesSettingsPage() {
   const [rollout, setRollout] = useState<Record<string, unknown> | null>(null);
   const [toolchainMsg, setToolchainMsg] = useState<string>("");
   const [pendingToolchain, setPendingToolchain] = useState(false);
-  const [pendingRollout, setPendingRollout] = useState(false);
+  const [pendingRollout, setPendingRollout] = useState<EsphomeRolloutMode | null>(null);
+  const [pendingRollback, setPendingRollback] = useState(false);
   const [zigbeeDevices, setZigbeeDevices] = useState<Array<Record<string, unknown>>>([]);
   const [zigbeeHealth, setZigbeeHealth] = useState<Record<string, unknown> | null>(null);
   const [zigbeeRoles, setZigbeeRoles] = useState<ZigbeeRole[]>([]);
@@ -800,44 +803,105 @@ export function DevicesSettingsPage() {
                 <>
                   <p className="dsc-muted" style={{ margin: "4px 0" }}>
                     Installed <b>{String(toolchain.installed ?? "—")}</b>
-                    {" · "}Latest <b>{toolchain.latest_ok ? String(toolchain.latest ?? "—") : "offline"}</b>
-                    {" · "}Pinned min <b>{String(toolchain.min_version ?? "—")}</b> {toolchain.meets_min === false ? <StatusChip label="BELOW PINNED MIN" tone="bad" /> : null}
+                    {" · "}Latest{" "}
+                    <b>{toolchain.latest_ok ? String(toolchain.latest_supported ?? toolchain.latest ?? "—") : "offline"}</b>
+                    {toolchain.latest_ok && toolchain.latest_blocked_reason ? ` (PyPI has ${String(toolchain.latest)})` : ""}
+                    {" · "}Pinned min <b>{String(toolchain.min_version ?? "—")}</b>{" "}
+                    {toolchain.meets_min === false ? <StatusChip label="BELOW PINNED MIN" tone="bad" /> : null}
                   </p>
+                  {toolchain.latest_blocked_reason ? (
+                    <p className="dsc-muted" style={{ margin: "4px 0", fontSize: "var(--dsc-fs-sm)" }}>
+                      <StatusChip label="Newer ESPHome held back" tone="muted" /> {String(toolchain.latest_blocked_reason)}.
+                    </p>
+                  ) : null}
                   {toolchain.latest_ok === false ? (
-                    <p className="dsc-muted" style={{ margin: "4px 0", fontSize: "var(--dsc-fs-sm)" }} title={toolchain.latest_error ? String(toolchain.latest_error) : undefined}>
-                      {toolchain.eth_up === false ? "Can't check for a newer ESPHome — the Pi has no network uplink." : "Can't reach PyPI to check for a newer ESPHome (no internet / DNS). Installed + pinned checks still work."}
+                    <p
+                      className="dsc-muted"
+                      style={{ margin: "4px 0", fontSize: "var(--dsc-fs-sm)" }}
+                      title={toolchain.latest_error ? String(toolchain.latest_error) : undefined}
+                    >
+                      {toolchain.eth_up === false
+                        ? "Can't check for a newer ESPHome — the Pi has no network uplink."
+                        : "Can't reach PyPI to check for a newer ESPHome (no internet / DNS). Installed + pinned checks still work."}
                     </p>
                   ) : null}
                   <p style={{ margin: "6px 0", display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                    <Button onClick={() => setPendingToolchain(true)} disabled={toolchain.update_available !== true || toolchain.eth_up !== true}>
+                    <Button
+                      onClick={() => setPendingToolchain(true)}
+                      disabled={
+                        toolchain.update_available !== true || toolchain.eth_up !== true || toolchain.disk_free_ok === false
+                      }
+                    >
                       {toolchain.update_available === true
-                        ? `Update ESPHome → ${String(toolchain.latest)}`
+                        ? `Update ESPHome → ${String(toolchain.latest_supported ?? toolchain.latest)}`
                         : toolchain.installed == null
                           ? "ESPHome not installed"
                           : toolchain.meets_min === false
                             ? "ESPHome below pinned minimum"
                             : "ESPHome up to date"}
                     </Button>
+                    {toolchain.rollback_target ? (
+                      <Button onClick={() => setPendingRollback(true)} disabled={toolchain.eth_up !== true}>
+                        Roll back to {String(toolchain.rollback_target)}
+                      </Button>
+                    ) : null}
                     <a href={String(toolchain.dashboard_url ?? "http://dsc-brain.local:6052")} target="_blank" rel="noreferrer">
                       Open ESPHome Dashboard ↗
                     </a>
                   </p>
                   <p className="dsc-muted" style={{ margin: "4px 0", fontSize: "var(--dsc-fs-sm)" }}>
                     Build backend:{" "}
-                    {toolchain.build_backend === "dashboard"
-                      ? `ESPHome dashboard (${String(toolchain.dashboard_api ?? "")})`
-                      : toolchain.build_backend === "venv"
-                        ? `local venv (${String(toolchain.esphome_bin ?? "")})`
-                        : "none — compile/OTA unavailable; use pi/flash-*-remote.sh"}
+                    {toolchain.build_backend === "venv-host"
+                      ? toolchain.dashboard_up === false
+                        ? `host ESPHome venv — dashboard DOWN on ${String(toolchain.dashboard_api ?? "")} (compile/OTA unavailable; update / roll back still work)`
+                        : `host ESPHome venv via dsc-esphome-dashboard (${String(toolchain.dashboard_api ?? "")})`
+                      : toolchain.build_backend === "dashboard"
+                        ? toolchain.dashboard_legacy === true
+                          ? `legacy dsc-hub-esphome container (${String(toolchain.dashboard_api ?? "")})`
+                          : `host ESPHome dashboard, update helper not installed (${String(toolchain.dashboard_api ?? "")})`
+                        : toolchain.build_backend === "venv"
+                          ? `local venv (${String(toolchain.esphome_bin ?? "")})`
+                          : "none — compile/OTA unavailable; use pi/flash-fleet-remote.sh"}
+                    {typeof toolchain.disk_free_gb === "number" ? ` · ${String(toolchain.disk_free_gb)} GB free` : ""}
                   </p>
-                  {toolchain.build_backend === "dashboard" ? (
+                  {toolchain.dashboard_legacy === true ? (
                     <p style={{ margin: "4px 0", fontSize: "var(--dsc-fs-sm)" }}>
-                      <StatusChip label="Deprecated backend" tone="warn" /> The <code>dsc-hub-esphome</code> container backend is being retired in 8.x — the host ESPHome venv is the supported path.
+                      <StatusChip label="Deprecated backend" tone="warn" /> The <code>dsc-hub-esphome</code> container backend
+                      is being retired in 8.x — the host ESPHome venv is the supported path. Re-run the deploy or bake to
+                      switch.
+                    </p>
+                  ) : null}
+                  {toolchain.build_backend === "venv-host" && toolchain.dashboard_up === false ? (
+                    <p style={{ margin: "4px 0", fontSize: "var(--dsc-fs-sm)" }}>
+                      <StatusChip label="Dashboard down" tone="bad" /> The build service is not answering on :6052. If this
+                      followed an ESPHome update, <b>Roll back</b>; otherwise check{" "}
+                      <code>journalctl -u dsc-esphome-dashboard</code> on the Pi.
+                    </p>
+                  ) : null}
+                  {toolchain.build_backend === "dashboard" && toolchain.dashboard_legacy !== true ? (
+                    <p style={{ margin: "4px 0", fontSize: "var(--dsc-fs-sm)" }}>
+                      <StatusChip label="Helper missing" tone="warn" /> Compile and OTA work, but Update ESPHome can&apos;t
+                      reach the host venv. On the Pi: <code>sudo systemctl enable --now dsc-esphome-update.path</code> (or
+                      re-run the deploy).
+                    </p>
+                  ) : null}
+                  {toolchain.secrets_present === false ? (
+                    <p style={{ margin: "4px 0", fontSize: "var(--dsc-fs-sm)" }}>
+                      <StatusChip label="No firmware secrets" tone="bad" /> <code>secrets.yaml</code> is missing from{" "}
+                      <code>{String(toolchain.project_dir ?? "firmware/v4")}</code> — every compile and OTA will fail. A baked
+                      kit ships it; otherwise run <code>generate-secrets.sh</code> there.
+                    </p>
+                  ) : null}
+                  {toolchain.disk_free_ok === false ? (
+                    <p style={{ margin: "4px 0", fontSize: "var(--dsc-fs-sm)" }}>
+                      <StatusChip label="Low disk" tone="warn" /> Under 1.5 GB free — the toolchain update is blocked until
+                      the SD card has room (the PlatformIO cache lives under /var/lib/dsc-hub).
                     </p>
                   ) : null}
                   {Array.isArray(toolchain.devices_behind) && (toolchain.devices_behind as string[]).length > 0 ? (
                     <p className="dsc-muted" style={{ margin: "4px 0" }}>
-                      Running an ESPHome other than {String(toolchain.installed ?? "installed")}: {(toolchain.devices_behind as string[]).join(", ")}
+                      Running an ESPHome other than {String(toolchain.installed ?? "installed")}:{" "}
+                      {(toolchain.devices_behind as string[]).join(", ")}
                     </p>
                   ) : null}
                   {toolchain.update_job ? (
@@ -846,11 +910,64 @@ export function DevicesSettingsPage() {
                       {String((toolchain.update_job as Record<string, unknown>).detail ?? "")}
                     </pre>
                   ) : null}
-                  {rollout && rollout.needed === true && Array.isArray(rollout.seats) && (rollout.seats as unknown[]).length > 0 ? (
-                    <p className="dsc-honesty" style={{ margin: "6px 0" }}>
-                      Toolchain changed — {(rollout.seats as unknown[]).length} device(s) can be reflashed on the new ESPHome (serialised, hub last). <Button onClick={() => setPendingRollout(true)}>Reflash fleet</Button>
-                    </p>
-                  ) : null}
+                  {rollout && rollout.needed === true && Array.isArray(rollout.seats) && (rollout.seats as unknown[]).length > 0
+                    ? (() => {
+                        const canary = (rollout.canary as Record<string, unknown> | null) ?? null;
+                        const canarySeat = rollout.canary_seat ? String(rollout.canary_seat) : null;
+                        const restCount = Array.isArray(rollout.rest) ? (rollout.rest as unknown[]).length : 0;
+                        const allCount = (rollout.seats as unknown[]).length;
+                        if (!canary) {
+                          return (
+                            <p className="dsc-honesty" style={{ margin: "6px 0" }}>
+                              Toolchain changed — {allCount} device(s) can be reflashed on ESPHome{" "}
+                              {String(rollout.installed ?? "")} (serialised, hub last).{" "}
+                              {canarySeat ? (
+                                <Button onClick={() => setPendingRollout("canary")}>
+                                  Canary {probeLabel(Number(canarySeat.replace("pot", "")))} first
+                                </Button>
+                              ) : null}{" "}
+                              <Button onClick={() => setPendingRollout("all")}>Reflash whole fleet</Button>
+                            </p>
+                          );
+                        }
+                        const st = String(canary.job_status ?? "");
+                        const seatName = probeLabel(Number(String(canary.seat).replace("pot", "")));
+                        if (st === "queued" || st === "running") {
+                          return (
+                            <p className="dsc-honesty" style={{ margin: "6px 0" }}>
+                              <StatusChip label={`Canary ${st}`} tone="muted" /> {seatName} is being flashed on ESPHome{" "}
+                              {String(rollout.installed ?? "")}. The rest waits until it rejoins.
+                            </p>
+                          );
+                        }
+                        if (st === "failed") {
+                          return (
+                            <p className="dsc-honesty" style={{ margin: "6px 0" }}>
+                              <StatusChip label="Canary failed" tone="bad" /> {seatName} OTA failed — see the job log below.
+                              Fix and <Button onClick={() => setPendingRollout("canary")}>re-run the canary</Button> before
+                              releasing the fleet.
+                            </p>
+                          );
+                        }
+                        return (
+                          <p className="dsc-honesty" style={{ margin: "6px 0" }}>
+                            {canary.ok === true ? (
+                              <>
+                                <StatusChip label="Canary OK" tone="ok" /> {seatName} rejoined on ESPHome{" "}
+                                {String(canary.running ?? "")}.{" "}
+                              </>
+                            ) : (
+                              <>
+                                <StatusChip label="Canary unconfirmed" tone="warn" /> {seatName} flashed but reports{" "}
+                                {canary.running ? String(canary.running) : canary.online ? "no version yet" : "offline"} —
+                                check it before releasing.{" "}
+                              </>
+                            )}
+                            <Button onClick={() => setPendingRollout("rest")}>Release the rest ({restCount}, hub last)</Button>
+                          </p>
+                        );
+                      })()
+                    : null}
                 </>
               ) : (
                 <p className="dsc-muted" style={{ margin: "4px 0" }}>
@@ -921,11 +1038,20 @@ export function DevicesSettingsPage() {
               onDismiss={() => setPendingToolchain(false)}
               onConfirm={async () => {
                 setPendingToolchain(false);
-                setToolchainMsg(toolchain?.build_backend === "dashboard" ? "Bumping the ESPHome container image…" : "Updating ESPHome venv…");
+                setToolchainMsg(
+                  toolchain?.build_backend === "dashboard"
+                    ? "Bumping the ESPHome container image…"
+                    : toolchain?.build_backend === "venv-host"
+                      ? "Handing the update to the Pi host helper…"
+                      : "Updating ESPHome venv…",
+                );
                 try {
                   const r = await update_esphome_toolchain();
-                  if (r && r.status === "manual") setToolchainMsg(String(r.detail ?? "Redeploy the ESPHome container on the Pi."));
-                  else setToolchainMsg(`Update started → ${String(r.target ?? "latest")}. Watch the log below.`);
+                  if (r && r.status === "manual") {
+                    setToolchainMsg(String(r.detail ?? "Redeploy the ESPHome container on the Pi."));
+                  } else {
+                    setToolchainMsg(`Update started → ${String(r.target ?? "latest")}. Watch the log below.`);
+                  }
                 } catch (e) {
                   setToolchainMsg(String((e as Error).message || e));
                 }
@@ -937,35 +1063,104 @@ export function DevicesSettingsPage() {
             >
               {toolchain?.build_backend === "dashboard" ? (
                 <p>
-                  Bumps <code>image: esphome/esphome</code> to <b>{String(toolchain?.latest ?? "latest")}</b> in <code>{String(toolchain?.compose_file ?? "docker-compose.yml")}</code> and redeploys the <code>esphome</code> service. No devices are touched. After it finishes you&apos;ll be offered a fleet reflash.
+                  Bumps <code>image: esphome/esphome</code> to <b>{String(toolchain?.latest ?? "latest")}</b> in{" "}
+                  <code>{String(toolchain?.compose_file ?? "docker-compose.yml")}</code> and redeploys the <code>esphome</code>{" "}
+                  service (<code>docker compose up -d esphome</code>). If this host can&apos;t run <code>docker</code>,
+                  you&apos;ll get the exact steps to run on the Pi. No devices are touched. After it finishes you&apos;ll be
+                  offered a fleet reflash.
+                </p>
+              ) : toolchain?.build_backend === "venv-host" ? (
+                <p>
+                  Asks the Pi host helper to run{" "}
+                  <code>pip install esphome=={String(toolchain?.latest_supported ?? toolchain?.latest ?? "latest")}</code> in{" "}
+                  <code>/opt/dsc-esphome-venv</code> and restart the dashboard service; the log streams below. No devices are
+                  touched. After it finishes you&apos;ll be offered a canary, then a fleet reflash.
                 </p>
               ) : (
                 <p>
-                  Runs <code>pip install -U esphome</code> in the Pi venv, then restarts the dashboard service. No devices are touched. After it finishes you&apos;ll be offered a fleet reflash.
+                  Runs <code>pip install -U esphome</code> in the Pi venv, then restarts the dashboard service. No devices are
+                  touched. After it finishes you&apos;ll be offered a fleet reflash.
                 </p>
               )}
             </DecisionLayer>
             <DecisionLayer
-              open={pendingRollout}
-              onDismiss={() => setPendingRollout(false)}
+              open={pendingRollback}
+              onDismiss={() => setPendingRollback(false)}
               onConfirm={async () => {
-                setPendingRollout(false);
+                setPendingRollback(false);
+                setToolchainMsg(`Rolling ESPHome back to ${String(toolchain?.rollback_target ?? "")}…`);
                 try {
-                  const r = await start_esphome_rollout();
-                  const q = Array.isArray(r.queued) ? (r.queued as string[]).length : 0;
-                  setToolchainMsg(`Queued ${q} OTA job(s). They run one at a time; the hub is flashed last.`);
+                  const r = await rollback_esphome_toolchain();
+                  setToolchainMsg(`Rollback started → ${String(r.target ?? "")}. Watch the log below.`);
                 } catch (e) {
                   setToolchainMsg(String((e as Error).message || e));
                 }
                 await refresh();
               }}
-              title="Reflash the fleet on the new ESPHome"
-              confirmLabel="Queue fleet OTA"
+              title="Roll the ESPHome toolchain back"
+              confirmLabel={`Roll back to ${String(toolchain?.rollback_target ?? "")}`}
               help={null}
             >
               <p>
-                Enqueues one OTA per in-service device{Array.isArray(rollout?.seats) ? ` (${(rollout!.seats as unknown[]).length})` : ""}. Jobs run serialised through the existing build worker, with the hub flashed last.
+                Reinstalls <code>esphome=={String(toolchain?.rollback_target ?? "")}</code> — the version the last successful
+                change came from — and restarts the dashboard. Devices already flashed on the newer build keep running it
+                until you reflash them.
               </p>
+            </DecisionLayer>
+            <DecisionLayer
+              open={pendingRollout != null}
+              onDismiss={() => setPendingRollout(null)}
+              onConfirm={async () => {
+                const mode = pendingRollout ?? "all";
+                setPendingRollout(null);
+                try {
+                  const r = await start_esphome_rollout(mode);
+                  const queued = Array.isArray(r.queued) ? (r.queued as string[]) : [];
+                  setToolchainMsg(
+                    mode === "canary"
+                      ? `Canary OTA queued for ${queued[0] ?? "the probe"}. Release the rest once it rejoins.`
+                      : `Queued ${queued.length} OTA job(s). They run one at a time; the hub is flashed last.`,
+                  );
+                } catch (e) {
+                  setToolchainMsg(String((e as Error).message || e));
+                }
+                await refresh();
+              }}
+              title={
+                pendingRollout === "canary"
+                  ? "Flash the canary probe first"
+                  : pendingRollout === "rest"
+                    ? "Release the rest of the fleet"
+                    : "Reflash the fleet on the new ESPHome"
+              }
+              confirmLabel={
+                pendingRollout === "canary" ? "Queue canary OTA" : pendingRollout === "rest" ? "Queue remaining OTAs" : "Queue fleet OTA"
+              }
+              help={null}
+            >
+              {pendingRollout === "canary" ? (
+                <p>
+                  Flashes only{" "}
+                  <strong>
+                    {rollout?.canary_seat ? probeLabel(Number(String(rollout.canary_seat).replace("pot", ""))) : "one probe"}
+                  </strong>{" "}
+                  on ESPHome {String(rollout?.installed ?? "")}. Nothing else is touched until you confirm it rejoined and
+                  release the rest.
+                </p>
+              ) : pendingRollout === "rest" ? (
+                <p>
+                  Enqueues one OTA per remaining in-service device
+                  {Array.isArray(rollout?.rest) ? ` (${(rollout!.rest as unknown[]).length})` : ""}, hub last. The canary
+                  probe is skipped — it is already on the new build.
+                </p>
+              ) : (
+                <p>
+                  Enqueues one OTA per in-service device
+                  {Array.isArray(rollout?.seats) ? ` (${(rollout!.seats as unknown[]).length})` : ""}. Jobs run serialised
+                  through the existing build worker, with the hub flashed last so a mid-rollout failure doesn&apos;t drop
+                  everything at once.
+                </p>
+              )}
             </DecisionLayer>
 
             <h4 style={{ marginTop: 16 }} id="jobs">
@@ -1013,6 +1208,10 @@ export function DevicesSettingsPage() {
               Full Update pull requires Ethernet. Offline kits stay on the baked card version — no silent &ldquo;updated&rdquo; without matching digests. Kit USB flash + commission live under <a href={`#${paths.setup()}`}>Setup</a>.
             </p>
           </section>
+
+          <div id="kit-update" style={{ scrollMarginTop: 80 }}>
+            <KitUpdateCard />
+          </div>
 
           <div id="kit-update" style={{ scrollMarginTop: 80 }}>
             <KitUpdateCard />

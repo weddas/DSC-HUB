@@ -6,13 +6,23 @@ set -eu
 PASS="${1:-Digital}"
 SEATS="${2:-heater heatmat humidifier dehumidifier}"
 AP_WAIT="${3:-120}"
-REPO="/opt/dsc-hub-repo/firmware/v4"
+REPO="${DSC_ESPHOME_PROJECT_DIR:-/opt/dsc-hub-repo/firmware/v4}"
 SECRETS="${REPO}/secrets.yaml"
 BRAIN_MDNS="${BRAIN_MDNS:-dsc-brain.local}"
 BRAIN_ETH_IP="${BRAIN_ETH_IP:-192.168.86.48}"
 IW_SCAN_TIMEOUT="${IW_SCAN_TIMEOUT:-30}"
 
 run_sudo() { echo "$PASS" | sudo -S "$@"; }
+
+# --- ESPHome from the host venv (the dsc-hub-esphome container is retired) ---
+[ -f /etc/dsc-hub/esphome.env ] && . /etc/dsc-hub/esphome.env
+ESPHOME="${DSC_ESPHOME_BIN:-/opt/dsc-esphome-venv/bin/esphome}"
+[ -x "$ESPHOME" ] || ESPHOME="$(command -v esphome || true)"
+[ -n "$ESPHOME" ] || { echo "FAIL: no esphome CLI — sudo systemctl start dsc-esphome-venv-setup" >&2; exit 1; }
+export PLATFORMIO_CORE_DIR="${PLATFORMIO_CORE_DIR:-/var/lib/dsc-hub/platformio}"
+PROJECT_DIR="${DSC_ESPHOME_PROJECT_DIR:-/opt/dsc-hub-repo/firmware/v4}"
+[ -d "$PROJECT_DIR" ] || PROJECT_DIR=/opt/dsc-hub/firmware/v4
+run_esphome() { (cd "$PROJECT_DIR" && "$ESPHOME" "$@"); }
 
 declare -A YAML=(
   [heater]=dsc-heater.yaml
@@ -140,12 +150,12 @@ try_pi_ota() {
     echo "Pi AP OTA/API closed on $ip"
     return 1
   fi
-  run_sudo docker exec -w /config dsc-hub-esphome esphome run "$yaml" --device "$ip" --no-logs
+  run_esphome run "$yaml" --device "$ip" --no-logs
 }
 
 flash_fallback_ota() {
   local yaml="$1"
-  run_sudo docker exec -w /config dsc-hub-esphome esphome run "$yaml" --device 192.168.4.1 --no-logs
+  run_esphome run "$yaml" --device 192.168.4.1 --no-logs
 }
 
 if [ -f /tmp/dsc-firmware-v4.tgz ]; then

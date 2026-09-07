@@ -2,6 +2,101 @@
 
 ## Unreleased
 
+- **ESPHome toolchain — update works on the shipping topology** — the brain runs
+  in `dsc-hub-brain` and could not `pip` the host venv, so "Update ESPHome"
+  silently rewrote a profile-disabled compose service. New host helper
+  `pi/dsc-esphome-host.sh` + `dsc-esphome-update.path/.service`: the brain drops
+  `<ops>/esphome-host/request.json`, the host runs `pip install esphome==<target>`
+  as `dsc` (1.5 GiB free-space guard), restarts `dsc-esphome-dashboard`, and
+  answers with `result.json`; the brain streams `progress.log` into the job row.
+  `build_backend()` now reports `venv` / **`venv-host`** / `dashboard`
+  (+ `dashboard_legacy`) / `none`; the "Deprecated backend" chip only fires on the
+  real legacy container, a host unit without the helper gets a "Helper missing"
+  chip with the enable command. The helper publishes `capabilities.json`
+  (venv version, `secrets_present`, disk free) so the card is honest from inside
+  the container. `esphome_dashboard_api` default is now empty → env →
+  `host.docker.internal:6052`. All bakers + `deploy-brain-remote.sh` install and
+  enable the new units. `docs/ops/ESPHOME-TOOLCHAIN.md`.
+- **ESPHome toolchain — roll back + disk guard** — `POST
+  /settings/esphome/toolchain/rollback` (Settings → **Roll back to X**) reinstalls
+  the `from_version` of the last successful change; updates refuse downgrades
+  otherwise, refuse when the target is already installed, and refuse under 1.5 GiB
+  free (`disk_free_gb` / `disk_free_ok` in status).
+- **Fleet rollout — canary first** — `POST /settings/esphome/rollout?mode=canary`
+  flashes one probe (`pot2`, else the first in-service probe); the card tracks the
+  job and the probe's reported ESPHome version, then **Release the rest (N, hub
+  last)** → `?mode=rest`. `mode=all` keeps the one-click whole-fleet path.
+- **Fix: probe OTAs targeted `DSC-Probe{n}.yaml`, which never existed** — the job
+  map now points at `dsc-pot{n}.yaml`; a test pins every `SEAT_YAML` entry to a
+  real file in `firmware/v4`.
+- **Manual fallbacks off Docker** — `pi/flash-fleet-remote.sh` (hosts from the
+  brain inventory, canary-first / hub-last order, secrets check),
+  `flash-hub-fallback-remote.sh`, `flash-sonoff-fallback-remote.sh`,
+  `flash-sonoff-lan-remote.sh` and `image/bake-firmware.sh` all use the host venv
+  (`/etc/dsc-hub/esphome.env`, `PLATFORMIO_CORE_DIR`); the `dsc-hub-esphome`
+  container is gone from every script. `bake-firmware.sh` now really compiles the
+  kit YAMLs (factory image for ESP32, plain for ESP8266), writes `kit-build.json`,
+  and refuses placeholders under `DSC_RELEASE=1`.
+- **Kit secrets ship with the bake** — `image/bake-on-linux.sh` requires (or
+  generates) `firmware/v4/secrets.yaml`, compiles the kit binaries from it and
+  installs the same file into the image at `0600 dsc:dsc`; without it every
+  `!secret` compile on an SD kit failed. The Settings card shows **No firmware
+  secrets** when the helper reports it missing.
+- **Firmware 8.0.0.0** — `project: version` bumped in `dsc-hub-v4_0`,
+  `dsc-control-common`, `dsc-pot-common`, `dsc-sonoff-common` (ESPHome-only train:
+  SNTP-only clock, native-API `set_plant_name`, ESP-NOW-only rootzone,
+  `min_version` pin); brain `EXPECTED_FIRMWARE` and the compose default follow.
+  HA-era `homeassistant/esphome/ (git-pull)` header comments scrubbed. Validated
+  with an `esphome config` sweep over every `firmware/v4` entry point on ESPHome
+  2026.8.0 and `scripts/run_sim_gates` (20/20) — see the fleet-reflash gate in
+  `docs/FOLLOWUPS.md`.
+- **Pi gate findings (2026-09-06, live grow)** — the first real pass through the
+  new path surfaced and fixed: (1) probe/compile jobs fell through to the local
+  CLI on the `venv-host` backend (`esphome CLI not found`) — routed to the
+  dashboard WebSocket; (2) `deploy-brain-remote.sh` wrote the sudo **password**
+  into `/etc/dsc-hub/esphome.env` (`… | run_sudo tee`) — now `install`ed from a
+  temp file; (3) the Pi host had an empty `/etc/resolv.conf` (dhcpcd, no
+  resolvconf) so host `pip` could not reach PyPI while containers could —
+  `bring-up-eth0.sh` pins eth0 DNS in `dhcpcd.conf`, the helper refuses up front
+  when `pypi.org` does not resolve; (4) the helper left `request.json` behind and
+  the `.path` unit re-fired pip in a loop — request consumed first; (5) the
+  helper crashed on non-UTF-8 pip output before writing its result — decoded
+  with `replace`, plus a failure result from the EXIT trap so the brain never
+  waits 20 min; (6) the helper dir was root-only so the `dsc` dashboard wrapper
+  could not refresh capabilities — `dsc:dsc 0775`; (7) per-seat "running ESPHome"
+  compared the product train (7.0.0.0) to an ESPHome release — now from
+  `device_info.esphome_version` for every role, product firmware exposed
+  separately; (8) **ESPHome 2026.8 removed the built-in dashboard** — a live bump
+  to 2026.8.2 crash-looped `dsc-esphome-dashboard`; rolled back via the brain, and
+  the toolchain is now capped below `DASHBOARD_REMOVED_FROM = 2026.8.0`
+  (`latest_supported`, *Newer ESPHome held back* on the card) until a Device
+  Builder adapter lands; rollback stays available with the dashboard down
+  (`venv-host` + `dashboard_up: false`) and is offered for a failed update that
+  still moved the venv; (9) **DSC-CONTROL did not compile on the pinned
+  toolchain** — its LVGL lambdas used `lv_color_to32` (LVGL 8); ESPHome 2026.6.5
+  bundles LVGL 9.5 → `lv_color_eq`. `esphome config` cannot see lambda C++; the
+  re-cut checklist now requires a real `esphome compile` per family; (10) the
+  dashboard OTA path is **`/compile` then `/upload`** — `/upload` alone ships an
+  existing binary (FileNotFoundError on never-compiled seats), `/run` compiles +
+  uploads but then tails the device log forever and the job never exits; (11)
+  `queue_job` refused every seat after the first during a rollout ("flash already
+  running") — the worker is serial, only exact duplicates are refused; the worker
+  also fails jobs left `running` by a brain restart; (12) `deploy-brain-remote.sh`
+  restarted the dashboard mid-flash (every queued job failed "Connection
+  refused") — it now leaves a busy dashboard alone; (13) `static
+  domain_name_servers` was not enough — dhcpcd's hook emptied the resolver again
+  on the next renewal mid-reflash; the host resolver is now static with `nohook
+  resolv.conf`; (14) **the hub did not compile either** — `select.current_option()`
+  returns a `StringRef` since ESPHome 2026.x; four `const char *` sites take
+  `.str()`, ten `ESP_LOG` `%s` sites take `.c_str()`. **Fleet result:** all eight
+  live seats (hub, panel, Probe 1–2, four Sonoffs) rebooted onto firmware
+  8.0.0.0 / ESPHome 2026.6.5 through the SPA path (canary → rest, hub last).
+  Gate evidence in `docs/FOLLOWUPS.md`.
+- **Tests** — new `brain/tests/test_esphome_toolchain.py` (venv runner argv / cwd /
+  env / timeout / hostless, dashboard WebSocket runner incl. the "too old" hint,
+  backend detection, host-helper handshake success + failure, disk guard,
+  downgrade / rollback, PyPI-offline safety, default-fleet order, canary → rest).
+
 - **ESPHome build backend defaults to the host venv dashboard unit** — the
   `esphome` service in `services/dsc-hub/docker-compose.yml` moved behind
   `profiles: ["legacy-esphome"]` (it and the host unit both bind `:6052`), so it

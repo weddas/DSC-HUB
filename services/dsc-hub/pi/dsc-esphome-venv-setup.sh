@@ -27,3 +27,9 @@ fi
 chown -R dsc:dsc "$VENV" "$PIO_DIR"
 PLATFORMIO_CORE_DIR="$PIO_DIR" "$VENV/bin/esphome" version
 echo "esphome venv ready: $VENV  (PLATFORMIO_CORE_DIR=$PIO_DIR)"
+
+# Tell the (containerised) brain what this host can do — venv version, secrets,
+# disk free — so Settings → ESPHome is honest without shelling anything.
+HELPER="$(dirname "$0")/dsc-esphome-host.sh"
+[[ -x "$HELPER" ]] || HELPER=/opt/dsc-hub/pi/dsc-esphome-host.sh
+[[ -x "$HELPER" ]] && "$HELPER" capabilities || true

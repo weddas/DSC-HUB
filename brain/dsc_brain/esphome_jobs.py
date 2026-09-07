@@ -31,8 +31,9 @@ CREATE TABLE IF NOT EXISTS esphome_jobs (
 SEAT_YAML: dict[str, str] = {
     "hub": "dsc-hub.yaml",
     "control": "dsc-control.yaml",
-    # Probe devices renamed to dsc_probeN but the YAML files stay dsc-potN.yaml
-    # (same map as services/dsc-hub/pi/flash-fleet-remote.sh).
+    # Probe devices renamed to dsc_probeN on the wire; the YAML filenames stayed
+    # dsc-potN.yaml (firmware/v4). DSC-ProbeN.yaml never existed — every pot OTA
+    # 404'd inside the dashboard until this was corrected.
     "pot1": "dsc-pot1.yaml",
     "pot2": "dsc-pot2.yaml",
     "pot3": "dsc-pot3.yaml",
@@ -84,78 +85,107 @@ def _local_esphome_available() -> bool:
     return bool(eb and (Path(eb).exists() or shutil.which(eb)))
 
 
+def _dashboard_ws_url(endpoint: str) -> str:
+    base = dashboard_api().rstrip("/")
+    return ("wss://" if base.startswith("https://") else "ws://") + base.split("://", 1)[-1] + "/" + endpoint
+
+
+def _dashboard_spawn(
+    job_id: str,
+    endpoint: str,
+    yaml_name: str,
+    port: str | None,
+    head: str,
+    db_path: Path | None,
+) -> tuple[int | None, str]:
+    """One dashboard command over its WebSocket (/compile, /upload, …).
+
+    Send {"type":"spawn","configuration":<yaml>[,"port":…]}, stream {"event":"line"}
+    into the job row, return (exit_code, log) on {"event":"exit","code":N}.
+    """
+    from websockets.sync.client import connect as ws_connect
+
+    ws_url = _dashboard_ws_url(endpoint)
+    lines: list[str] = [f"ws {ws_url}  spawn configuration={yaml_name}" + (f" port={port}" if port else "") + "\n"]
+    code: int | None = None
+    last = 0.0
+    with ws_connect(ws_url, open_timeout=10, close_timeout=5) as ws:
+        spawn: dict[str, Any] = {"type": "spawn", "configuration": yaml_name}
+        if port:
+            spawn["port"] = port
+        ws.send(json.dumps(spawn))
+        deadline = time.time() + 1800
+        while time.time() < deadline:
+            try:
+                raw = ws.recv(timeout=60)
+            except TimeoutError:
+                continue
+            try:
+                msg = json.loads(raw)
+            except (TypeError, ValueError):
+                continue
+            ev = msg.get("event")
+            if ev == "line":
+                lines.append(str(msg.get("data", "")))
+                if time.time() - last >= 2.0:
+                    _update_job(job_id, "running", (head + "".join(lines))[-2500:], db_path)
+                    last = time.time()
+            elif ev == "exit":
+                code = int(msg.get("code", 1))
+                break
+    return code, "".join(lines)
+
+
 def _run_job_via_dashboard(job: dict[str, Any], db_path: Path | None = None) -> None:
-    """No local CLI, but the ESPHome dashboard is reachable — it IS the build
-    service. Drive its WebSocket command endpoint (/compile, /upload):
-    connect, send {"type":"spawn","configuration":<yaml>}, stream {"event":"line"}
-    messages, finish on {"event":"exit","code":N}.
+    """No local CLI, but the ESPHome dashboard is reachable — it IS the build service.
+
+    compile → one `/compile` command. OTA → `/compile` then `/upload` (port OTA).
+    Not `/run`: that is `esphome run`, which after a successful upload attaches to
+    the device log stream and never exits — the job then sits `running` until its
+    30-min deadline and blocks the serial queue (dehumidifier, live 2026-09-07).
+    And not `/upload` alone: it only ships an already-built binary and fails with
+    FileNotFoundError on a seat never compiled on this Pi.
     """
     job_id = str(job["job_id"])
     action = str(job["action"])
     yaml_name = str(job["yaml_name"])
-    endpoint = "compile" if action == "compile" else "upload"
-    base = dashboard_api().rstrip("/")
-    ws_url = ("wss://" if base.startswith("https://") else "ws://") + base.split("://", 1)[-1] + "/" + endpoint
-
     try:
-        from websockets.sync.client import connect as ws_connect
+        import websockets.sync.client  # noqa: F401
     except ImportError:
         _update_job(
             job_id,
             "failed",
             "no local esphome CLI and `websockets` unavailable — set esphome_bin to a "
-            "venv CLI, or flash via pi/flash-*-remote.sh.",
+            "venv CLI, or flash via pi/flash-fleet-remote.sh.",
             db_path,
         )
         return
 
-    _update_job(job_id, "running", f"ws {ws_url}  spawn configuration={yaml_name}\n", db_path)
-    lines: list[str] = []
-    code: int | None = None
-    last = 0.0
+    steps: list[tuple[str, str | None]] = [("compile", None)]
+    if action != "compile":
+        steps.append(("upload", "OTA"))
+    head = ""
+    _update_job(job_id, "running", f"{action} via dashboard: {' → '.join(e for e, _ in steps)}\n", db_path)
     try:
-        with ws_connect(ws_url, open_timeout=10, close_timeout=5) as ws:
-            spawn: dict[str, Any] = {"type": "spawn", "configuration": yaml_name}
-            if endpoint == "upload":
-                spawn["port"] = "OTA"
-            ws.send(json.dumps(spawn))
-            deadline = time.time() + 1800
-            while time.time() < deadline:
-                try:
-                    raw = ws.recv(timeout=60)
-                except TimeoutError:
-                    continue
-                try:
-                    msg = json.loads(raw)
-                except (TypeError, ValueError):
-                    continue
-                ev = msg.get("event")
-                if ev == "line":
-                    lines.append(str(msg.get("data", "")))
-                    if time.time() - last >= 2.0:
-                        _update_job(job_id, "running", "".join(lines)[-2500:], db_path)
-                        last = time.time()
-                elif ev == "exit":
-                    code = int(msg.get("code", 1))
-                    break
-        tail = "".join(lines)[-3600:]
-        if code == 0:
-            _update_job(job_id, "done", tail or f"{action} via dashboard OK (exit 0)", db_path)
-        else:
-            _update_job(
-                job_id,
-                "failed",
-                (tail or f"{action} via dashboard") + f"\n\nesphome exited {code}."
-                + ("\n(dashboard ESPHome is below the pinned min_version — bump the "
-                   "dsc-hub-esphome image / venv.)" if code and "too old" in tail.lower() else ""),
-                db_path,
-            )
+        for endpoint, port in steps:
+            code, log = _dashboard_spawn(job_id, endpoint, yaml_name, port, head, db_path)
+            head = (head + log)[-3600:]
+            if code != 0:
+                hint = ""
+                if code and "too old" in log.lower():
+                    hint = (
+                        "\n(dashboard ESPHome is below the pinned min_version — update the "
+                        "toolchain from Settings → ESPHome.)"
+                    )
+                _update_job(job_id, "failed", head + f"\n\n{endpoint} via dashboard exited {code}." + hint, db_path)
+                return
+        _update_job(job_id, "done", head or f"{action} via dashboard OK", db_path)
     except Exception as exc:  # noqa: BLE001
         _update_job(
             job_id,
             "failed",
-            "".join(lines)[-2000:] + f"\n\ndashboard ws {endpoint} failed: {exc}\n"
-            "Fallbacks: set esphome_bin to a venv CLI, or use pi/flash-*-remote.sh.",
+            head[-2000:] + f"\n\ndashboard ws failed: {exc}\n"
+            "Fallbacks: set esphome_bin to a venv CLI, or use pi/flash-fleet-remote.sh.",
             db_path,
         )
 
@@ -168,7 +198,9 @@ def _run_job(job: dict[str, Any], db_path: Path | None = None) -> None:
     host = _inventory_host(seat_id)
     _update_job(job_id, "running", f"Running {action} for {seat_id}…", db_path)
     eb = esphome_bin()
-    if not _local_esphome_available() and build_backend() == "dashboard":
+    # No local CLI (the brain container): the dashboard IS the build service —
+    # whether it is the host venv unit (venv-host) or the legacy container (dashboard).
+    if not _local_esphome_available() and build_backend() in {"dashboard", "venv-host"}:
         _run_job_via_dashboard(job, db_path)
         return
     if action == "compile":
@@ -239,10 +271,33 @@ def _worker_loop(db_path: Path | None = None) -> None:
         _worker_wake.clear()
 
 
+def _reap_stale_running(db_path: Path | None = None) -> int:
+    """A job still `running` when the worker starts belonged to a previous brain
+    process (restart / redeploy mid-flash). It will never finish: fail it so the
+    queue, the rollout banner and the toolchain-update guard are not blocked."""
+    conn = connect(db_path)
+    _ensure_jobs(conn)
+    cur = conn.execute(
+        "UPDATE esphome_jobs SET status='failed', updated_at=?, "
+        "detail=detail || char(10) || char(10) || "
+        "'(brain restarted while this job was running — check the device, re-queue if needed)' "
+        "WHERE status='running'",
+        (time.time(),),
+    )
+    n = cur.rowcount
+    conn.commit()
+    conn.close()
+    return n
+
+
 def start_esphome_worker(db_path: Path | None = None) -> None:
     global _worker_thread, _worker_running
     if _worker_thread and _worker_thread.is_alive():
         return
+    try:
+        _reap_stale_running(db_path)
+    except Exception:  # noqa: BLE001 — never block startup on bookkeeping
+        pass
     _worker_running = True
     _worker_thread = threading.Thread(
         target=_worker_loop,
@@ -292,37 +347,21 @@ def queue_job(seat_id: str, action: str, db_path: Path | None = None) -> dict[st
         raise ValueError(f"{yaml_name} not found in {pd} (have: {', '.join(have)} ...)")
     conn = connect(db_path)
     _ensure_jobs(conn)
-    running = conn.execute(
-        "SELECT job_id FROM esphome_jobs WHERE status='running' LIMIT 1"
+    # The worker is strictly serial, so queueing behind a running job is safe —
+    # a fleet rollout enqueues seven seats in one call and the first is already
+    # `running` by the time the second arrives (the old "flash already running"
+    # guard rejected five of seven live on 2026-09-06). Only exact duplicates
+    # (same seat, same action, still queued/running) are refused.
+    dup = conn.execute(
+        """
+        SELECT job_id FROM esphome_jobs
+        WHERE seat_id=? AND action=? AND status IN ('queued','running') LIMIT 1
+        """,
+        (seat_id, action),
     ).fetchone()
-    if running:
+    if dup:
         conn.close()
-        raise RuntimeError("flash already running — wait for current job")
-    if action == "ota":
-        dup = conn.execute(
-            """
-            SELECT job_id FROM esphome_jobs
-            WHERE seat_id=? AND action='ota' AND status IN ('queued','running') LIMIT 1
-            """,
-            (seat_id,),
-        ).fetchone()
-        if dup:
-            conn.close()
-            raise RuntimeError(f"OTA already queued or running for {seat_id}")
-    active = conn.execute(
-        """
-        SELECT job_id, seat_id, action FROM esphome_jobs
-        WHERE status IN ('queued','running')
-        """
-    ).fetchall()
-    if action == "compile" and active:
-        conn.close()
-        raise RuntimeError("compile already queued or running — one job at a time on Pi")
-    if action == "ota":
-        for row in active:
-            if row["seat_id"] == seat_id and row["action"] == "ota":
-                conn.close()
-                raise RuntimeError("OTA already queued for this seat")
+        raise RuntimeError(f"{'OTA' if action == 'ota' else 'compile'} already queued or running for {seat_id}")
     now = time.time()
     job_id = str(uuid.uuid4())
     detail = f"Queued — worker will run: {esphome_bin()} {action} {yaml_name}"

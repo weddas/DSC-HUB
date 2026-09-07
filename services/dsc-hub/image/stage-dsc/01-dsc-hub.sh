@@ -5,6 +5,12 @@ set -euo pipefail
 : "${DSC_RELEASE_DIR:?set DSC_RELEASE_DIR to staged release payload}"
 install -d /opt/dsc-hub /var/lib/dsc-hub /etc/dsc-hub
 cp -a "${DSC_RELEASE_DIR}/." /opt/dsc-hub/
+# Kit firmware secrets (baked in by bake-on-linux.sh): owner-only, dsc-owned once
+# the user exists (pi-bootstrap creates it; chown again there is harmless).
+if [[ -f /opt/dsc-hub/firmware/v4/secrets.yaml ]]; then
+  chmod 0600 /opt/dsc-hub/firmware/v4/secrets.yaml
+  chown dsc:dsc /opt/dsc-hub/firmware/v4/secrets.yaml 2>/dev/null || true
+fi
 install -m 0755 /opt/dsc-hub/pi/dsc-hub-net-policy.sh /etc/dsc-hub/net-policy.sh
 install -m 0755 /opt/dsc-hub/pi/dsc-hub-ap-run.sh /etc/dsc-hub/ap-run.sh
 install -m 0644 /opt/dsc-hub/pi/dsc-hub-ap.service /etc/systemd/system/dsc-hub-ap.service
@@ -12,12 +18,18 @@ install -m 0644 /opt/dsc-hub/pi/dsc-hub-net-policy.service /etc/systemd/system/d
 install -m 0644 /opt/dsc-hub/pi/dsc-hub-compose.service /etc/systemd/system/dsc-hub-compose.service
 # ESPHome venv dashboard unit (default build backend; dsc-hub-esphome container is
 # opt-in via `--profile legacy-esphome`). Self-disables until venv + firmware/v4 exist.
-chmod 0755 /opt/dsc-hub/pi/dsc-esphome-dashboard-run.sh /opt/dsc-hub/pi/dsc-esphome-venv-setup.sh || true
+chmod 0755 /opt/dsc-hub/pi/dsc-esphome-dashboard-run.sh /opt/dsc-hub/pi/dsc-esphome-venv-setup.sh /opt/dsc-hub/pi/dsc-esphome-host.sh || true
 install -m 0644 /opt/dsc-hub/pi/dsc-esphome-venv-setup.service /etc/systemd/system/dsc-esphome-venv-setup.service
 install -m 0644 /opt/dsc-hub/pi/dsc-esphome-dashboard.service /etc/systemd/system/dsc-esphome-dashboard.service
+# Host update helper (brain-in-container → pip on the host venv via request.json).
+install -m 0644 /opt/dsc-hub/pi/dsc-esphome-update.service /etc/systemd/system/dsc-esphome-update.service
+install -m 0644 /opt/dsc-hub/pi/dsc-esphome-update.path /etc/systemd/system/dsc-esphome-update.path
 install -d /etc/dsc-hub
-echo "DSC_ESPHOME_PROJECT_DIR=/opt/dsc-hub/firmware/v4" > /etc/dsc-hub/esphome.env
+{
+  echo "DSC_ESPHOME_PROJECT_DIR=/opt/dsc-hub/firmware/v4"
+  echo "DSC_ESPHOME_OPS_DIR=/var/lib/dsc-hub/ops"
+} > /etc/dsc-hub/esphome.env
 systemctl enable dsc-hub-net-policy.service
 systemctl enable dsc-hub-compose.service
-systemctl enable dsc-esphome-venv-setup.service dsc-esphome-dashboard.service || true
+systemctl enable dsc-esphome-venv-setup.service dsc-esphome-dashboard.service dsc-esphome-update.path || true
 hostnamectl set-hostname dsc-brain || true

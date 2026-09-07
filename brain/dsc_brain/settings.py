@@ -99,9 +99,10 @@ DEFAULT_SETTINGS: dict[str, str] = {
     "esphome_project_dir": "",
     # Browser link shown in Settings (operator's LAN view of the dashboard).
     "esphome_dashboard_url": "http://dsc-brain.local:6052",
-    # brain -> dashboard HTTP base (container DNS). The dashboard is the build
-    # service: version/devices/compile/upload. Empty falls back to the venv CLI.
-    "esphome_dashboard_api": "http://dsc-hub-esphome:6052",
+    # brain -> dashboard HTTP base. Empty = DSC_ESPHOME_DASHBOARD_API env, else the
+    # host `dsc-esphome-dashboard` unit at http://host.docker.internal:6052 (the
+    # legacy dsc-hub-esphome container name is only a runtime fallback now).
+    "esphome_dashboard_api": "",
     "esphome_fleet_ota_prompt": "true",
     "last_built_esphome": "",
     # fleet_history grows ~1 row per numeric metric per seat per poll (~2s).

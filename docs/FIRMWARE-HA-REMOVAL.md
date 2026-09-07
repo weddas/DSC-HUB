@@ -33,9 +33,14 @@ panel → hub command channel over the native API) is **kept** — it is the liv
 command path the brain consumes; the HA-shaped dialect on the brain is
 sanctioned (AGENTS.md).
 
-**Still requires a firmware re-cut + fleet reflash** — see rollout below. Not
-compile-verified here (no ESPHome toolchain on the dev box); `esphome config`
-per seat is the gate before rollout.
+**Compile-verified 2026-09-06:** `esphome config` passes for every `firmware/v4`
+entry point (hub, hub-kit, control, control-kit, pot1–4 + kits, four Sonoffs) on
+ESPHome 2026.8.0 as train **8.0.0.0** (`project: version` + `firmware_version`
+sensors bumped; `EXPECTED_FIRMWARE` follows). The kit hub stub had to gain the
+`fleet_heal` package — `dsc-hub-espnow-primary.yaml` reads `ota_blocked` /
+`fix_active` / `emit_evt` from it and the stub had not built since those globals
+moved. **Fleet reflash still pending** — the on-device checks below run at the
+Pi gate (`docs/FOLLOWUPS.md`).
 
 ### Verify on device (phase 2)
 - `esphome config firmware/v4/dsc-hub.yaml` (+ `dsc-hub-kit.yaml`) → exit 0.
@@ -93,7 +98,7 @@ channel. If ESP-NOW TX is later un-parked, revisit it then.
 
 ## Rollout
 
-Stage the reflash through the existing ESPHome OTA rollout
-(`/settings/esphome/rollout`, serialised, **hub last**) after `esphome config`
-passes for every seat. Bump the firmware `project: version` and add a
-`DSC-HUB-*-CHANGELOG.md` line.
+Stage the reflash through the ESPHome rollout (Settings → Device → ESPHome →
+**Canary Probe 2 first** → **Release the rest**, serialised, **hub last**;
+`/settings/esphome/rollout?mode=canary|rest|all`). `project: version` is
+**8.0.0.0** and the `CHANGELOG.md` line is in place; what remains is the gate.

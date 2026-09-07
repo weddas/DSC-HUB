@@ -69,7 +69,7 @@ ln -sfn /etc/systemd/system/dsc-hub-compose.service \
 # ESPHome venv dashboard (default build backend; the dsc-hub-esphome container is
 # now opt-in via `--profile legacy-esphome`). Units no-op cleanly until the venv
 # and firmware/v4 are present.
-for u in dsc-esphome-venv-setup.service dsc-esphome-dashboard.service; do
+for u in dsc-esphome-venv-setup.service dsc-esphome-dashboard.service dsc-esphome-update.path; do
   if [[ -f "${MNT}/etc/systemd/system/${u}" ]]; then
     ln -sfn "/etc/systemd/system/${u}" "${MNT}/etc/systemd/system/multi-user.target.wants/${u}"
   fi

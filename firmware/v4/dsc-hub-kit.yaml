@@ -18,5 +18,10 @@ substitutions:
 packages:
   wifi: !include dsc-hub-wifi-kit.yaml
   hub: !include dsc-hub-v4_0.yaml
+  # fleet_heal defines ota_blocked / fix_active / emit_evt / rf_fleet_jump_arm,
+  # which dsc-hub-espnow-primary.yaml reads (0xD1 flags, EVT ring). Without it
+  # this stub failed `esphome config` — the kit hub had not built since the
+  # fleet-heal globals moved out of the ESP-NOW package.
+  fleet_heal: !include dsc-hub-fleet-heal.yaml
   espnow_control: !include dsc-hub-espnow-primary.yaml
   fleet: !include dsc-fleet-setup-hub.yaml

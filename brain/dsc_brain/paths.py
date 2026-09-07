@@ -11,7 +11,7 @@ BRAIN_DATA = Path(os.environ.get("DSC_DATA", str(_default_brain)))
 DEFAULT_DB = BRAIN_DATA / "dsc_ops.sqlite3"
 CANNALIB_ROOT = REPO_ROOT.parent / "CannaLib"
 CANNALIB_DB = CANNALIB_ROOT / "brain" / "data" / "dsc_brain.sqlite3"
-EXPECTED_FIRMWARE = os.environ.get("DSC_EXPECTED_FIRMWARE", "7.0.0.0")
+EXPECTED_FIRMWARE = os.environ.get("DSC_EXPECTED_FIRMWARE", "8.0.0.0")
 
 # The served UI/API "surface" version IS the brain version. Only an explicit
 # non-empty DSC_SURFACE_VERSION overrides it — otherwise it can never drift from

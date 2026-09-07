@@ -1,0 +1,13 @@
+[Unit]
+Description=DSC-HUB ESPHome host update (pip in /opt/dsc-esphome-venv + dashboard restart)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# esphome.env carries DSC_ESPHOME_PROJECT_DIR (+ optional DSC_ESPHOME_OPS_DIR /
+# DSC_ESPHOME_VENV overrides). Same file the dashboard unit reads.
+EnvironmentFile=-/etc/dsc-hub/esphome.env
+Environment=PLATFORMIO_CORE_DIR=/var/lib/dsc-hub/platformio
+ExecStart=/opt/dsc-hub/pi/dsc-esphome-host.sh update
+TimeoutStartSec=1500

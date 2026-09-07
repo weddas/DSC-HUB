@@ -1,0 +1,11 @@
+[Unit]
+Description=DSC-HUB ESPHome host update trigger (brain writes esphome-host/request.json)
+# The brain container has no pip for the host venv and no systemd; it drops a
+# request file in the ops dir it already bind-mounts, and this fires the oneshot.
+
+[Path]
+PathExists=/var/lib/dsc-hub/ops/esphome-host/request.json
+Unit=dsc-esphome-update.service
+
+[Install]
+WantedBy=multi-user.target

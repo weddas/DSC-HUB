@@ -66,6 +66,32 @@ sleep 2
 ip -4 addr show "$IFACE" || true
 ip route | head -5 || true
 
+# Host DNS: dhcpcd on this Pi writes an EMPTY /etc/resolv.conf on eth0 renewals
+# (no resolvconf, lease carries no DNS) — containers still resolved through the
+# Docker pin below, but host pip/apt/PlatformIO could not (seen live 2026-09-06:
+# "Update ESPHome" failed on 'pypi.org' name resolution). Pin the same servers
+# for the host via dhcpcd so a renewal keeps them.
+# `static domain_name_servers` was NOT enough: dhcpcd still emptied resolv.conf on the
+# next renewal (00:39, mid fleet-reflash — hub + probe builds failed resolving
+# github.com). Take dhcpcd out of resolver management and keep a static file.
+if ! grep -q '^nohook resolv.conf' /etc/dhcpcd.conf 2>/dev/null; then
+  printf '
+# DSC-HUB: dhcpcd rewrote an empty resolv.conf on renewals; the resolver is static (bring-up-eth0.sh).
+nohook resolv.conf
+' > /tmp/dsc-dhcpcd-dns.conf
+  run_sudo bash -c "cat /tmp/dsc-dhcpcd-dns.conf >> /etc/dhcpcd.conf"
+  rm -f /tmp/dsc-dhcpcd-dns.conf
+fi
+if ! grep -q 'DSC-HUB static resolver' /etc/resolv.conf 2>/dev/null || ! getent hosts pypi.org >/dev/null 2>&1; then
+  printf '# DSC-HUB static resolver (dhcpcd nohook resolv.conf). Same servers as /etc/docker/daemon.json.
+nameserver 192.168.86.1
+nameserver 8.8.8.8
+nameserver 1.1.1.1
+' > /tmp/dsc-resolv.conf
+  run_sudo install -m 0644 /tmp/dsc-resolv.conf /etc/resolv.conf
+  rm -f /tmp/dsc-resolv.conf
+fi
+
 # Docker: prefer IPv4 DNS (AP-only Pi had broken IPv6 resolver). Only meaningful
 # now that eth0 actually has an uplink.
 if [ ! -f /etc/docker/daemon.json ] || ! grep -q '"dns"' /etc/docker/daemon.json 2>/dev/null; then

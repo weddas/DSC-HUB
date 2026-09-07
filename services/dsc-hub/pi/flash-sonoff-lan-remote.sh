@@ -1,10 +1,20 @@
 #!/bin/bash
-# Flash Sonoffs on the Pi AP island (10.42.0.x) from the ESPHome container.
+# Flash Sonoffs on the Pi AP island (10.42.0.x) with the host ESPHome venv.
 set -eu
 PASS="${1:-Digital}"
 SEATS="${2:-heater heatmat humidifier dehumidifier}"
 
 run_sudo() { echo "$PASS" | sudo -S "$@"; }
+
+# --- ESPHome from the host venv (the dsc-hub-esphome container is retired) ---
+[ -f /etc/dsc-hub/esphome.env ] && . /etc/dsc-hub/esphome.env
+ESPHOME="${DSC_ESPHOME_BIN:-/opt/dsc-esphome-venv/bin/esphome}"
+[ -x "$ESPHOME" ] || ESPHOME="$(command -v esphome || true)"
+[ -n "$ESPHOME" ] || { echo "FAIL: no esphome CLI — sudo systemctl start dsc-esphome-venv-setup" >&2; exit 1; }
+export PLATFORMIO_CORE_DIR="${PLATFORMIO_CORE_DIR:-/var/lib/dsc-hub/platformio}"
+PROJECT_DIR="${DSC_ESPHOME_PROJECT_DIR:-/opt/dsc-hub-repo/firmware/v4}"
+[ -d "$PROJECT_DIR" ] || PROJECT_DIR=/opt/dsc-hub/firmware/v4
+run_esphome() { (cd "$PROJECT_DIR" && "$ESPHOME" "$@"); }
 
 declare -A YAML=(
   [heater]=dsc-heater.yaml
@@ -35,7 +45,7 @@ for seat in $SEATS; do
     echo "SKIP: $ip offline"
     continue
   fi
-  if ! run_sudo docker exec -w /config dsc-hub-esphome esphome run "$yaml" --device "$ip" --no-logs; then
+  if ! run_esphome run "$yaml" --device "$ip" --no-logs; then
     echo "FAIL: $seat"
     continue
   fi
