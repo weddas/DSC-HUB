@@ -15,8 +15,8 @@ hotspot) or, as a fallback, over SSH on the Pi.
 | Layer | Where it lives | How it moves |
 |---|---|---|
 | DSC-Brain + SPA | `dsc-hub-brain` container (compose) | **Settings → Server → Kit update** (Ethernet-gated pull + restart), or `pi/deploy-brain-remote.sh` from a dev box |
-| ESPHome build toolchain | host venv `/opt/dsc-esphome-venv` (`dsc-esphome-dashboard.service` on `:6052`) | **Settings → Device → ESPHome → Update ESPHome** (host helper runs `pip`, restarts the dashboard); **Roll back to X** if a bump misbehaves |
-| Device firmware (hub, panel, probes, Sonoffs) | compiled from `firmware/v4/` on the Pi, flashed OTA | **Settings → Device → ESPHome → Canary … first → Release the rest** (or **Reflash whole fleet**), one job at a time, **hub last** |
+| ESPHome build toolchain | host venv `/opt/dsc-esphome-venv` (`dsc-esphome-dashboard.service` on `:6052`) | **Settings → Device → Firmware (ESPHome) → Update ESPHome** (host helper runs `pip`, restarts the dashboard); **Roll back to X** if a bump misbehaves |
+| Device firmware (hub, panel, probes, Sonoffs) | compiled from `firmware/v4/` on the Pi, flashed OTA | **Settings → Device → Firmware (ESPHome) → Canary … first → Release the rest** (or **Reflash whole fleet**), one job at a time, **hub last** |
 
 Firmware train **8.0.0.0** pins ESPHome `min_version: "2026.6.5"`; a toolchain
 below that refuses to build. Details: [`docs/ops/ESPHOME-TOOLCHAIN.md`](docs/ops/ESPHOME-TOOLCHAIN.md).
@@ -29,7 +29,7 @@ below that refuses to build. Details: [`docs/ops/ESPHOME-TOOLCHAIN.md`](docs/ops
    the Pi on Ethernet). The brain restarts; the page reloads on the new bundle.
    The Settings → System card shows the running version.
 2. **ESPHome toolchain** (only when the card says *Update available*). Settings →
-   Device → ESPHome → **Update ESPHome → x.y.z**. Watch the log; the card flips to
+   Device → Firmware (ESPHome) → **Update ESPHome → x.y.z**. Watch the log; the card flips to
    the new *Installed* and offers the rollout.
 3. **Firmware.** Same card → **Canary Probe 2 first**. Wait for *Canary OK*
    (the probe reports the new ESPHome version), then **Release the rest (N, hub
@@ -48,7 +48,8 @@ and re-queue just that seat.
 
 Do this deliberately, not on every ESPHome release. Steps live in
 [`docs/ops/ESPHOME-TOOLCHAIN.md`](docs/ops/ESPHOME-TOOLCHAIN.md#bump-the-pinned-min_version):
-update the venv, `esphome config` every entry point, run `scripts/run_sim_gates`,
+update the venv, `esphome config` **and** a real `esphome compile` per family
+(`config` alone misses lambda C++), run `scripts/run_sim_gates`,
 bump the four `esphome:` blocks + `PIN=` in `dsc-esphome-venv-setup.sh` +
 `PINNED_MIN_VERSION` in `esphome_toolchain.py`, changelog line, reflash.
 
@@ -71,8 +72,9 @@ All of these need `firmware/v4/secrets.yaml` on the Pi (baked kits ship it at
 
 ## Rollback
 
-- **Toolchain:** Settings → Device → ESPHome → **Roll back to X** (the version the
-  last successful change came from), or the pip command above.
+- **Toolchain:** Settings → Device → Firmware (ESPHome) → **Roll back to X** (from a
+  `done` job, or a failed update that still moved the venv), or the pip command above.
+  Never offered onto a dashboard-less ESPHome ≥ 2026.8 until a Device Builder adapter exists.
 - **Firmware:** re-queue the affected seats after rolling the toolchain back; the
   YAML is the same, so a rebuild on the previous ESPHome reproduces the previous
   binary. Hub and panel must keep a matching `espnow_cmd_tag` (**54727**).
@@ -90,7 +92,7 @@ the old HA ESPHome add-on keep working — they are just behind:
 1. Bring the Pi up on 8.x ([`INSTALL.md`](INSTALL.md) / factory image).
 2. Copy your `firmware/v4/secrets.yaml` to the Pi (keys are compiled in; keep the
    same set or plan to reflash everything over USB).
-3. Settings → Device → ESPHome → **Reflash whole fleet** (hub last). The 8.0.0.0
+3. Settings → Device → Firmware (ESPHome) → **Reflash whole fleet** (hub last). The 8.0.0.0
    build drops every `platform: homeassistant` entity (SNTP-only clock, native-API
    plant names, ESP-NOW-only root-zone), so the fleet no longer waits on an HA
    that is not there.
