@@ -155,3 +155,6 @@ data/*.html
 # Kit firmware placeholders may be empty; keep manifest
 !services/dsc-hub/firmware/kit-manifest.json
 !services/dsc-hub/firmware/kit/.gitkeep
+
+# Local Claude Code session assets (slash commands, settings) — not shared
+.claude/
