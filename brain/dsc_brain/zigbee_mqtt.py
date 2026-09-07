@@ -10,6 +10,8 @@ import threading
 import time
 from typing import Any, Callable
 
+from .device_bindings import CLASS_ROLE_KINDS as _CLASS_ROLE_KINDS
+from .device_bindings import VALID_ZONES as _VALID_ZONES
 from .fleet_state import FleetState, get_fleet_state, update_fleet_state
 from .settings import get_setting, list_inventory, set_setting
 
@@ -32,32 +34,72 @@ ZIGBEE_ROLE_CATALOG: list[dict[str, Any]] = [
     {"id": "exhaust", "label": "Exhaust", "consume": True, "kind": "climate"},
     {"id": "room", "label": "Room / ambient", "consume": True, "kind": "climate"},
     {"id": "clone_dome", "label": "Clone dome", "consume": True, "kind": "climate"},
-    {"id": "plug_pump", "label": "Pump plug", "consume": False, "kind": "plug"},
-    {"id": "plug_dosing", "label": "Dosing plug", "consume": False, "kind": "plug"},
-    {"id": "plug_backup_dehum", "label": "Backup dehumidifier", "consume": False, "kind": "plug"},
-    {"id": "plug_fan_aux", "label": "Aux fan plug", "consume": False, "kind": "plug"},
-    {"id": "meter_wall", "label": "Power meter", "consume": False, "kind": "meter"},
-    {"id": "button_override", "label": "Override button", "consume": False, "kind": "button"},
-    {"id": "co2_tent", "label": "CO₂", "consume": False, "kind": "gas"},
-    {"id": "lux_canopy", "label": "Lux / illuminance", "consume": False, "kind": "light"},
+    # Non-climate roles are consumed generically: every datapoint of a bound device
+    # becomes a fleet entity (sensor./binary_sensor.dsc_zigbee_<role>_<key>) that the
+    # automation rule engine can trigger on and Climate lists under "Other sensors".
+    {"id": "plug_pump", "label": "Pump plug", "consume": True, "kind": "plug"},
+    {"id": "plug_dosing", "label": "Dosing plug", "consume": True, "kind": "plug"},
+    {"id": "plug_backup_dehum", "label": "Backup dehumidifier", "consume": True, "kind": "plug"},
+    {"id": "plug_fan_aux", "label": "Aux fan plug", "consume": True, "kind": "plug"},
+    {"id": "meter_wall", "label": "Power meter", "consume": True, "kind": "meter"},
+    {"id": "button_override", "label": "Override button", "consume": True, "kind": "button"},
+    {"id": "co2_tent", "label": "CO₂", "consume": True, "kind": "gas"},
+    {"id": "lux_canopy", "label": "Lux / illuminance", "consume": True, "kind": "light"},
     {"id": "leak_floor", "label": "Water leak (floor)", "consume": False, "kind": "safety"},
     {"id": "leak_floor_room", "label": "Water leak (floor · room)", "consume": False, "kind": "safety"},
     {"id": "leak_floor_4x8", "label": "Water leak (floor · 4×8)", "consume": False, "kind": "safety"},
     {"id": "leak_floor_2x4", "label": "Water leak (floor · 2×4)", "consume": False, "kind": "safety"},
     {"id": "leak_tank", "label": "Tank / reservoir leak", "consume": True, "kind": "safety"},
-    {"id": "door_tent", "label": "Tent door", "consume": False, "kind": "safety"},
+    {"id": "door_tent", "label": "Tent door", "consume": True, "kind": "safety"},
+    # Water-quality roles (Tuya Wi-Fi testers today; any lane tomorrow). One per
+    # reservoir, like canopy roles are one per space.
+    {"id": "reservoir_4x8", "label": "Reservoir · 4×8", "consume": True, "kind": "water"},
+    {"id": "reservoir_2x4", "label": "Reservoir · 2×4", "consume": True, "kind": "water"},
+    {"id": "reservoir_room", "label": "Reservoir · shared", "consume": True, "kind": "water"},
 ]
 
 _BASE_ROLE_IDS = frozenset(str(r["id"]) for r in ZIGBEE_ROLE_CATALOG)
 _CANOPY_ROLES = ("canopy_4x8", "canopy_2x4")
-_VALID_ZONES = frozenset({"4x8", "2x4", "room", "shared"})
+
+# Other local device lanes (Tuya) hand their bound rows in here so every consumer of
+# zigbee_by_role — Climate, Overview, canopy, the rule engine's entities and ages —
+# sees one set of bound roles regardless of radio. Zigbee rows win a role tie at
+# runtime; the save paths flag the conflict so the operator fixes the binding.
+_ROLE_PROVIDERS: list[Callable[[], dict[str, dict[str, Any]]]] = []
+
+
+def register_role_provider(provider: Callable[[], dict[str, dict[str, Any]]]) -> None:
+    if provider not in _ROLE_PROVIDERS:
+        _ROLE_PROVIDERS.append(provider)
+
+
+def _merged_by_role() -> dict[str, dict[str, Any]]:
+    merged: dict[str, dict[str, Any]] = {}
+    for provider in _ROLE_PROVIDERS:
+        try:
+            merged.update(provider())
+        except Exception as exc:  # noqa: BLE001 - a foreign lane must never break Zigbee
+            _logger.debug("role provider skipped: %s", exc)
+    merged.update(_ingest._by_role)
+    return merged
+
+
+def stamp_role_buckets(fleet_state: FleetState) -> None:
+    """Write the merged role buckets + canopy onto a fleet snapshot (all lanes)."""
+    merged = _merged_by_role()
+    fleet_state.system = dict(fleet_state.system)
+    fleet_state.system["zigbee_by_role"] = dict(merged)
+    fleet_state.system["zigbee_by_placement"] = dict(merged)
+    fleet_state.canopy = _recompute_canopy(merged)
+    if _ingest._canopy.get("last_topic") and fleet_state.canopy:
+        fleet_state.canopy.setdefault("last_topic", _ingest._canopy.get("last_topic"))
 
 # Operator-defined roles (Phase 4). Roles are pure routing labels — a custom
 # role only needs a `kind` to slot into climate / safety fleet handling; it wires
 # no new Python behaviour. Stored as a JSON list of {id,label,kind,consume}.
 _CUSTOM_ROLES_SETTING = "zigbee_custom_roles"
 _CUSTOM_ROLE_KINDS = frozenset(
-    {"climate", "safety", "plug", "meter", "gas", "light", "button", "other"}
+    {"climate", "safety", "plug", "meter", "gas", "light", "button", "water", "other"}
 )
 _ROLE_ID_RE = re.compile(r"^[a-z][a-z0-9_]{1,47}$")
 
@@ -138,16 +180,25 @@ def get_zigbee_role_catalog() -> list[dict[str, Any]]:
     return list(_effective_role_catalog())
 
 
-_CLASS_ROLE_KINDS: dict[str, frozenset[str]] = {
-    "climate": frozenset({"climate"}),
-    "liquid": frozenset({"safety"}),
-    "plug": frozenset({"plug"}),
-    "motion": frozenset(),
-    "other": frozenset(),
-}
-
 _STATE_META_KEYS = frozenset(
-    {"friendly_name", "updated_at", "role", "zone", "active", "wet", "linkquality", "last_seen"}
+    {
+        "friendly_name",
+        "updated_at",
+        "role",
+        "zone",
+        "active",
+        "wet",
+        "linkquality",
+        "last_seen",
+        # Tuya lane row metadata (never a datapoint)
+        "lane",
+        "device_id",
+        "link",
+        "link_reason",
+        "write_state",
+        "write_error",
+        "commanded",
+    }
 )
 
 
@@ -375,10 +426,31 @@ def save_zigbee_bindings(bindings: dict[str, Any]) -> dict[str, dict[str, Any]]:
 
 
 def _fleet_role_kinds() -> frozenset[str]:
-    """Roles that populate zigbee_by_role for Climate (climate + safety Wet/Dry)."""
+    """Roles that populate zigbee_by_role: every bound role except `unbound`.
+
+    Climate rows feed canopy/Climate, safety rows carry Wet/Dry, and everything else
+    (gas, light, meter, button, plug) is exposed generically as fleet entities so the
+    rule engine can trigger on it — a bound role is never a dead end.
+    """
     return frozenset(
-        str(r["id"]) for r in _effective_role_catalog() if r.get("kind") in ("climate", "safety")
+        str(r["id"])
+        for r in _effective_role_catalog()
+        if str(r.get("id")) != "unbound" and str(r.get("kind") or "none") != "none"
     )
+
+
+def _role_kind(role: str) -> str:
+    for r in _effective_role_catalog():
+        if str(r.get("id")) == role:
+            return str(r.get("kind") or "none")
+    return "none"
+
+
+_SAFETY_LEAK_KEYS = frozenset({"water_leak", "leak", "moisture", "occupancy"})
+
+
+def _is_leak_role(role: str) -> bool:
+    return role == "leak_tank" or role == "leak_floor" or role.startswith("leak_floor_")
 
 
 def _reapply_bindings_to_fleet() -> None:
@@ -403,7 +475,9 @@ def _reapply_bindings_to_fleet() -> None:
         updated["friendly_name"] = friendly_name
         _ingest._device_states[friendly_name] = updated
         if enabled and role != "unbound" and role in fleet_roles:
-            if role in {str(r["id"]) for r in _effective_role_catalog() if r.get("kind") == "safety"}:
+            kind = _role_kind(role)
+            updated["kind"] = kind
+            if kind == "safety" and _is_leak_role(role):
                 from .zigbee_policies import normalize_binary_active
 
                 wet = normalize_binary_active(updated)
@@ -427,6 +501,7 @@ def _reapply_bindings_to_fleet() -> None:
             continue
         stub = {
             "role": role,
+            "kind": _role_kind(role),
             "zone": str(binding.get("zone") or "shared"),
             "friendly_name": str(binding.get("friendly_name") or ieee),
             "ieee": str(ieee),
@@ -438,11 +513,9 @@ def _reapply_bindings_to_fleet() -> None:
     _ingest._by_placement = by_placement
     _ingest._canopy = _recompute_canopy(by_role)
     fleet_state = get_fleet_state()
-    fleet_state.canopy = dict(_ingest._canopy)
     fleet_state.system = dict(fleet_state.system)
     fleet_state.system["zigbee_device_states"] = dict(_ingest._device_states)
-    fleet_state.system["zigbee_by_placement"] = dict(_ingest._by_placement)
-    fleet_state.system["zigbee_by_role"] = dict(_ingest._by_role)
+    stamp_role_buckets(fleet_state)
     fleet_state.system["zigbee_placements"] = _placement_map()
     fleet_state.system["zigbee_device_bindings"] = load_zigbee_bindings()
     # Seed policies so Climate Problem/Clear can resolve recipe_id without waiting for MQTT.
@@ -707,24 +780,25 @@ class ZigbeeMqttIngest:
         }
         self._device_states[friendly_name] = state_row
 
-        if enabled and role != "unbound" and role in {
-            str(r["id"]) for r in _effective_role_catalog() if r.get("kind") == "climate"
-        }:
-            self._by_role[role] = dict(state_row)
-            # Keep placement alias for older SPA/tests
-            self._by_placement[role] = dict(state_row)
-        elif enabled and role != "unbound" and role in {
-            str(r["id"]) for r in _effective_role_catalog() if r.get("kind") == "safety"
-        }:
-            from .zigbee_policies import normalize_binary_active
+        if enabled and role != "unbound" and role in _fleet_role_kinds():
+            kind = _role_kind(role)
+            state_row["kind"] = kind
+            if kind == "safety" and _is_leak_role(role):
+                from .zigbee_policies import normalize_binary_active
 
-            wet = normalize_binary_active(payload_work)
-            safety_row = dict(state_row)
-            if wet is not None:
-                safety_row["active"] = wet
-                safety_row["wet"] = wet
-            self._by_role[role] = safety_row
-            self._by_placement[role] = safety_row
+                wet = normalize_binary_active(payload_work)
+                safety_row = dict(state_row)
+                if wet is not None:
+                    safety_row["active"] = wet
+                    safety_row["wet"] = wet
+                self._by_role[role] = safety_row
+                self._by_placement[role] = safety_row
+            else:
+                # Climate rows feed canopy; every other bound kind (gas / light /
+                # meter / button / plug / contact) is exposed generically.
+                self._by_role[role] = dict(state_row)
+                # Keep placement alias for older SPA/tests
+                self._by_placement[role] = dict(state_row)
 
         # Canopy only from canopy roles — never first-sensor-wins
         self._canopy = _recompute_canopy(self._by_role)
@@ -732,11 +806,9 @@ class ZigbeeMqttIngest:
             self._canopy["last_topic"] = topic
 
         fleet_state = get_fleet_state()
-        fleet_state.canopy = dict(self._canopy)
         fleet_state.system = dict(fleet_state.system)
         fleet_state.system["zigbee_device_states"] = dict(self._device_states)
-        fleet_state.system["zigbee_by_placement"] = dict(self._by_placement)
-        fleet_state.system["zigbee_by_role"] = dict(self._by_role)
+        stamp_role_buckets(fleet_state)
         fleet_state.system["zigbee_placements"] = _placement_map()
         fleet_state.system["zigbee_device_bindings"] = load_zigbee_bindings()
         update_fleet_state(fleet_state)
@@ -992,11 +1064,9 @@ def apply_zigbee_cache_to_state(state: FleetState) -> None:
             _reapply_bindings_to_fleet()
         except Exception as exc:  # noqa: BLE001
             _logger.debug("zigbee stub reapply skipped: %s", exc)
-    state.canopy = dict(_ingest._canopy)
     state.system = dict(state.system)
     state.system["zigbee_device_states"] = dict(_ingest._device_states)
-    state.system["zigbee_by_placement"] = dict(_ingest._by_placement)
-    state.system["zigbee_by_role"] = dict(_ingest._by_role)
+    stamp_role_buckets(state)
     state.system["zigbee_placements"] = _placement_map()
     state.system["zigbee_device_bindings"] = bindings
     if _ingest._devices:

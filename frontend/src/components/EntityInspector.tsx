@@ -139,7 +139,7 @@ export function EntityInspector({
 
       <div className="dsc-chip-row" style={{ margin: "12px 0" }}>
         <TimespanControl hours={hours} setHours={setHours} extras={CYCLE_TIMESPAN_EXTRAS} />
-        {thin ? <StatusChip label="Limited history" tone="warn" /> : null}
+        {series.tracked === false ? <StatusChip label="Not recorded by the brain" tone="warn" /> : thin ? <StatusChip label="Limited history" tone="warn" /> : null}
         {ghost.length > 1 ? <StatusChip label="Previous period (faded)" tone="muted" /> : null}
       </div>
 
@@ -148,7 +148,7 @@ export function EntityInspector({
         unit={binary ? "" : target.unit || ""}
         lastSyncAt={series.lastSyncAt}
         yDomain={binary ? { left: { min: 0, max: 1 } } : undefined}
-        emptyLabel="no history yet"
+        emptyLabel={series.tracked === false ? "the brain does not record this entity" : "no history in this window"}
         series={[
           {
             id: target.entityId,

@@ -16,7 +16,7 @@ import {
   parseLogsScopeFromSearchParams,
 } from "../lib/journalApi";
 import { probeAssignedPlantId, shortPlantId } from "../lib/probeAssignment";
-import { rosterSlots } from "../lib/seatModel";
+import { rosterSlots } from "../lib/probeModel";
 import type { JournalEntry, JournalScope, JournalScopeKind } from "../types/journal";
 
 type ScopeNavItem = {
@@ -47,10 +47,10 @@ function plantIdForSlot(
 ): string {
   const fromUuid = String(slot.plant_uuid ?? "").trim();
   if (fromUuid) return fromUuid;
-  const potRaw = String(slot.pot ?? "");
-  const pot = Number(potRaw.replace(/^pot/, ""));
-  if (Number.isFinite(pot) && pot >= 1) {
-    const fromProbe = probeAssignedPlantId(pot, fleet, state);
+  const probeRaw = String(slot.pot ?? "");
+  const probe = Number(probeRaw.replace(/^pot/, ""));
+  if (Number.isFinite(probe) && probe >= 1) {
+    const fromProbe = probeAssignedPlantId(probe, fleet, state);
     if (fromProbe) return fromProbe;
   }
   const slotNum = Number(slot.slot ?? 0);
@@ -105,11 +105,11 @@ function LogsScopeNav({
           item.scope.kind === compareScopeB.kind &&
           String(item.scope.id ?? "") === String(compareScopeB.id ?? "");
         // HashRouter app — hand `<Link>` a route-relative target so it renders a
-        // correct `#/grow/logs?…` href (copy-link / middle-click / open-in-new-tab
-        // now work) instead of the raw-path `<a href="/grow/logs?…">` that only
+        // correct `#/logs?…` href (copy-link / middle-click / open-in-new-tab
+        // now work) instead of the raw-path `<a href="/logs?…">` that only
         // navigated because onClick preventDefault'd it. Plain clicks still route
         // through onSelect so compare-picking + anchor carry-through are unchanged.
-        const to = `/grow/logs?${buildLogsSearchParams(item.scope, view).toString()}`;
+        const to = `/logs?${buildLogsSearchParams(item.scope, view).toString()}`;
 
         return (
           <Link
@@ -195,6 +195,7 @@ export function GrowLogsPage() {
       { key: "space-2x4", label: "2×4", scope: { kind: "space", id: "2x4" } },
       { key: "room", label: "Room", scope: { kind: "room", id: "grow_room" } },
       { key: "core", label: "Core", scope: { kind: "core" } },
+      { key: "core-settings", label: "Settings changes", scope: { kind: "core", id: "settings" }, indent: true },
       { key: "grow_log", label: "Grow log", scope: { kind: "grow_log" } },
     ],
     [],
@@ -348,7 +349,7 @@ export function GrowLogsPage() {
   const showScopeCompareTrends = compareScopeMode && scopeCompareReady && view === "trends";
 
   if (!params.get("scope")) {
-    return <Navigate to="/grow/logs?scope=room&id=grow_room" replace />;
+    return <Navigate to="/logs?scope=room&id=grow_room" replace />;
   }
 
   return (
@@ -398,7 +399,7 @@ export function GrowLogsPage() {
               Spaces &amp; facility
             </p>
             <LogsScopeNav
-              items={navItems.filter((i) => i.key !== "grow_log" && !i.indent)}
+              items={navItems.filter((i) => i.key !== "grow_log")}
               activeScope={scope}
               compareScopeMode={compareScopeMode}
               compareScopeA={compareScopeA}

@@ -1,0 +1,43 @@
+# Exported by three-d-stage
+newmtl shell_black
+Kd 0.0116 0.0137 0.0194
+Ks 0.2000 0.2000 0.2000
+Ns 20
+d 1.0000
+
+newmtl foil_lining
+Kd 0.7011 0.7379 0.7758
+Ks 0.2000 0.2000 0.2000
+Ns 136
+d 1.0000
+
+newmtl trim_green
+Kd 0.2051 0.5333 0.0545
+Ks 0.2000 0.2000 0.2000
+Ns 100
+d 1.0000
+
+newmtl roller_silver
+Kd 0.5841 0.6172 0.6584
+Ks 0.2000 0.2000 0.2000
+Ns 140
+d 1.0000
+
+newmtl window_acrylic
+Kd 0.7379 0.7913 0.8228
+Ks 0.2000 0.2000 0.2000
+Ns 188
+d 0.1400
+
+newmtl frame_steel
+Kd 0.7913 0.8070 0.8228
+Ks 0.2000 0.2000 0.2000
+Ns 116
+d 1.0000
+
+newmtl tray_pvc
+Kd 0.0252 0.0284 0.0356
+Ks 0.2000 0.2000 0.2000
+Ns 80
+d 1.0000
+

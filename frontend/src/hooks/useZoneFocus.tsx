@@ -8,7 +8,10 @@ import {
   type ReactNode,
 } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
+import { deskOwnsZone } from "../routes";
+import { getPreference, setPreference } from "../lib/preferences";
 
+/** Zone context: the two tents, the room (umbrella lung), or all side by side. */
 export type ZoneFocus = "main" | "clone" | "compare" | "room";
 
 type ZoneFocusApi = {
@@ -18,38 +21,45 @@ type ZoneFocusApi = {
 
 const ZoneFocusContext = createContext<ZoneFocusApi | null>(null);
 
-function parseFocus(raw: string | null): ZoneFocus {
-  if (raw === "clone" || raw === "compare" || raw === "room" || raw === "main") return raw;
-  if (raw === "tent") return "main";
-  return "main";
+/** The zone a desk opens on when the URL carries none — Preferences › Home › Default zone. */
+export function defaultZoneFocus(): ZoneFocus {
+  const pref = getPreference("defaultZone");
+  if (pref === "last") return getPreference("lastZone") ?? "main";
+  return pref;
 }
 
-/** Routes that own `?tent=` / `?zone=` in the URL (Shell strips elsewhere). */
-function pathOwnsTentQuery(pathname: string): boolean {
-  return pathname === "/live/climate" || pathname === "/ops/home";
+export function parseZoneFocus(raw: string | null): ZoneFocus {
+  if (raw === "clone" || raw === "compare" || raw === "room" || raw === "main") return raw;
+  if (raw === "tent" || raw === "4x8") return "main";
+  if (raw === "2x4") return "clone";
+  if (raw === "all") return "compare";
+  return defaultZoneFocus();
 }
 
 export function ZoneFocusProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [params, setParams] = useSearchParams();
-  const urlOwned = pathOwnsTentQuery(location.pathname);
-  const tentRaw = params.get("tent") ?? params.get("zone");
-  const [focus, setFocusState] = useState<ZoneFocus>(() => parseFocus(tentRaw));
+  const urlOwned = deskOwnsZone(location.pathname);
+  // `?zone=` is canonical; `?tent=` is the 7.x spelling and still read.
+  const zoneRaw = params.get("zone") ?? params.get("tent");
+  const [focus, setFocusState] = useState<ZoneFocus>(() => parseZoneFocus(zoneRaw));
 
-  // Sync from URL only when tent/zone is present — bare Climate entry must keep in-memory focus.
+  // Sync from URL only when a zone is present — bare desk entry keeps in-memory focus,
+  // so walking Climate → Root → Light keeps the zone you were looking at.
   useEffect(() => {
-    if (!urlOwned || tentRaw == null) return;
-    setFocusState(parseFocus(tentRaw));
-  }, [urlOwned, tentRaw]);
+    if (!urlOwned || zoneRaw == null) return;
+    setFocusState(parseZoneFocus(zoneRaw));
+  }, [urlOwned, zoneRaw]);
 
   const setFocus = useCallback(
     (next: ZoneFocus) => {
       setFocusState(next);
-      // Never write ?tent= on routes Shell will strip — that fight sticks Live tabs.
+      if (next !== "compare") setPreference("lastZone", next);
+      // Never write ?zone= on routes the Shell strips — that fight stuck the old tabs.
       if (!urlOwned) return;
       const nextParams = new URLSearchParams(params);
-      nextParams.set("tent", next);
-      nextParams.delete("zone");
+      nextParams.set("zone", next);
+      nextParams.delete("tent");
       setParams(nextParams, { replace: true });
     },
     [params, setParams, urlOwned],
@@ -63,9 +73,14 @@ export function useZoneFocus(): ZoneFocusApi {
   const ctx = useContext(ZoneFocusContext);
   if (!ctx) {
     return {
-      focus: "main",
+      focus: defaultZoneFocus(),
       setFocus: () => undefined,
     };
   }
   return ctx;
+}
+
+/** The tent a zone focus resolves to when a surface is strictly per-tent. */
+export function tentFromFocus(focus: ZoneFocus): "main" | "clone" {
+  return focus === "clone" ? "clone" : "main";
 }

@@ -1,5 +1,5 @@
 import { resolveCfm } from "./cfmProvenance";
-import { KIT_PROBE_NUMBERS, isPotInServiceWithFleet } from "./seatModel";
+import { KIT_PROBE_NUMBERS, isProbeInServiceWithFleet } from "./probeModel";
 import type { FleetSnapshot } from "./fleetModel";
 
 export type HonestyTone = "ok" | "warn" | "bad" | "muted";
@@ -39,8 +39,8 @@ export function collectHonestyGaps(
       label: "Hub link down",
       detail: "The hub link is down — readings are held at their last known values.",
       tone: "bad",
-      href: "/fleet",
-      cta: "Open Fleet",
+      href: "/kit",
+      cta: "Open Kit",
       priority: 9,
     });
   }
@@ -60,8 +60,8 @@ export function collectHonestyGaps(
       label: "Hub offline",
       detail: `Showing last good vitals${off}. Reconnect snaps to live.`,
       tone: "bad",
-      href: "/fleet",
-      cta: "Open Fleet",
+      href: "/kit",
+      cta: "Open Kit",
       priority: 10,
     });
   }
@@ -72,8 +72,8 @@ export function collectHonestyGaps(
       label: "Heartbeat missing",
       detail: "The hub's heartbeat has stopped arriving — readings stay held until it returns.",
       tone: "bad",
-      href: "/fleet",
-      cta: "Open Fleet",
+      href: "/kit",
+      cta: "Open Kit",
       priority: 12,
     });
   }
@@ -87,8 +87,8 @@ export function collectHonestyGaps(
         ? "Panel Wi‑Fi RSSI is present but panel link is off — treat as limited, not a full outage."
         : "The control panel link is down — check Fleet link chips for how long.",
       tone: "warn",
-      href: "/fleet",
-      cta: "Open Fleet",
+      href: "/kit",
+      cta: "Open Kit",
       priority: 14,
     });
   }
@@ -101,7 +101,7 @@ export function collectHonestyGaps(
       label: "Capacity offline",
       detail: off || "A device that should be running is temporarily out of service or locked out.",
       tone: "warn",
-      href: "/fleet",
+      href: "/kit",
       cta: "Review kit",
       priority: 20,
     });
@@ -113,7 +113,7 @@ export function collectHonestyGaps(
       label: "Keep-up gaps",
       detail: honesty,
       tone: "warn",
-      href: "/live/climate",
+      href: "/climate",
       cta: "Fix Climate",
       priority: 30,
     });
@@ -121,16 +121,16 @@ export function collectHonestyGaps(
 
   // Live omits OOS kit probes (no fake Got) — never nag about retired 3/4.
   // Prefer fleet inventory when present so Root / Settings / honesty agree.
-  const oosPots = [...KIT_PROBE_NUMBERS].filter(
-    (n) => !isPotInServiceWithFleet(n, st, fleet ?? null),
+  const oosProbes = [...KIT_PROBE_NUMBERS].filter(
+    (n) => !isProbeInServiceWithFleet(n, st, fleet ?? null),
   );
-  if (oosPots.length) {
+  if (oosProbes.length) {
     gaps.push({
       id: "oos-pots",
-      label: oosPots.length === 1 ? `Probe ${oosPots[0]} OOS` : `${oosPots.length} probes OOS`,
-      detail: `Probe${oosPots.length === 1 ? "" : "s"} ${oosPots.join(", ")} out of service — omitted from Live on purpose. Open Root or Settings to put back in service.`,
+      label: oosProbes.length === 1 ? `Probe ${oosProbes[0]} OOS` : `${oosProbes.length} probes OOS`,
+      detail: `Probe${oosProbes.length === 1 ? "" : "s"} ${oosProbes.join(", ")} out of service — omitted from Live on purpose. Open Root or Settings to put back in service.`,
       tone: "muted",
-      href: "/live/root",
+      href: "/root",
       cta: "Open Root",
       priority: 50,
     });
@@ -142,7 +142,7 @@ export function collectHonestyGaps(
       label: "2×4 dark violation",
       detail: "The lamp is on during the dark period — check Light.",
       tone: "bad",
-      href: "/live/light",
+      href: "/light",
       cta: "Open Light",
       priority: 25,
     });
@@ -154,7 +154,7 @@ export function collectHonestyGaps(
       label: "Light missing in window",
       detail: "The lamp did not deliver its hours in the open window.",
       tone: "bad",
-      href: "/live/light",
+      href: "/light",
       cta: "Open Light",
       priority: 24,
     });
@@ -166,7 +166,7 @@ export function collectHonestyGaps(
       label: "Light catch-up",
       detail: "Light catch-up is running — the hours gauge shows what was actually delivered.",
       tone: "warn",
-      href: "/live/light",
+      href: "/light",
       cta: "Open Light",
       priority: 28,
     });
@@ -178,7 +178,7 @@ export function collectHonestyGaps(
       label: "Climate sensor fault",
       detail: "A climate sensor cannot be trusted right now — its readings are held.",
       tone: "bad",
-      href: "/live/climate",
+      href: "/climate",
       cta: "Open Climate",
       priority: 15,
     });
@@ -190,7 +190,7 @@ export function collectHonestyGaps(
       label: "Emergency failsafe",
       detail: "Hub failsafe active — Overview shows Next Recommended; Climate owns command.",
       tone: "bad",
-      href: "/live/overview",
+      href: "/overview",
       cta: "Open Overview",
       priority: 5,
     });
@@ -218,7 +218,7 @@ export function collectHonestyGaps(
         label: "CFM nameplate",
         detail: "One or more ducts still guess CFM from fan % × nameplate — Learning measures real flow.",
         tone: "warn",
-        href: "/fleet/learning",
+        href: "/kit/learning",
         cta: "Open Learning",
         priority: 40,
       });
@@ -240,8 +240,8 @@ export function collectHonestyGapsFromFleet(
       label: "Hub offline",
       detail: "The hub is offline — readings are held at their last known values. Reconnect snaps to live.",
       tone: "bad",
-      href: "/fleet",
-      cta: "Open Fleet",
+      href: "/kit",
+      cta: "Open Kit",
       priority: 9,
     });
   }
@@ -252,8 +252,8 @@ export function collectHonestyGapsFromFleet(
       label: "Heartbeat missing",
       detail: "The hub's heartbeat has stopped arriving — readings stay held until it returns.",
       tone: "bad",
-      href: "/fleet",
-      cta: "Open Fleet",
+      href: "/kit",
+      cta: "Open Kit",
       priority: 12,
     });
   }
@@ -267,8 +267,8 @@ export function collectHonestyGapsFromFleet(
         ? "Panel Wi‑Fi is up but the panel link binary is off — treat as limited, not a full outage."
         : "The control panel link is down — check Fleet link chips for how long.",
       tone: "warn",
-      href: "/fleet",
-      cta: "Open Fleet",
+      href: "/kit",
+      cta: "Open Kit",
       priority: 14,
     });
   }
@@ -279,7 +279,7 @@ export function collectHonestyGapsFromFleet(
       label: "Capacity offline",
       detail: "A device that should be running is temporarily out of service or locked out.",
       tone: "warn",
-      href: "/fleet",
+      href: "/kit",
       cta: "Review kit",
       priority: 20,
     });

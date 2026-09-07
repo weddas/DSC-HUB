@@ -1,22 +1,22 @@
 import { STAGE_ORDER, tentStageRailLabel } from "../lib/tentWant";
 import {
   KIT_PROBE_NUMBERS,
-  buildPlantSeat,
+  buildPlantProbe,
   daysSinceSproutIso,
-  isPotInService,
+  isProbeInService,
   normalizeTent,
   probeLabel,
   rosterSlots,
   tentLabel,
   type TentId,
-} from "../lib/seatModel";
+} from "../lib/probeModel";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { Card, StatusChip } from "./ui";
 import { VesselGlyph } from "./VesselGlyph";
 import { TentLightClock } from "./TentLightClock";
-import { readPotVessel } from "../lib/vesselSpec";
+import { readProbeVessel } from "../lib/vesselSpec";
 
-type PlantSeat = ReturnType<typeof buildPlantSeat>;
+type PlantProbe = ReturnType<typeof buildPlantProbe>;
 type HassBits = {
   state: (id: string, fallback?: string) => string;
   entity: (id: string) => { attributes?: Record<string, unknown> } | undefined;
@@ -35,11 +35,11 @@ function stageIndex(stage: string): number {
   return -1;
 }
 
-function stageTrackForSeats(seats: { seat: PlantSeat }[]) {
-  const idxs = seats.map((s) => stageIndex(s.seat.stage)).filter((i) => i >= 0);
+function stageTrackForProbes(probes: { plant: PlantProbe }[]) {
+  const idxs = probes.map((s) => stageIndex(s.plant.stage)).filter((i) => i >= 0);
   const mixed = new Set(idxs).size > 1;
   const cur = idxs.length ? Math.max(...idxs) : -1;
-  return { mixed, cur, live: seats };
+  return { mixed, cur, live: probes };
 }
 
 function StageTrack({ cur }: { cur: number }) {
@@ -67,30 +67,30 @@ function daysSinceSprout(sprout: string | undefined): number | null {
 
 function TentCropColumn({
   tent,
-  seats,
+  probes,
   hass,
   compact,
   stockSlots,
 }: {
   tent: Exclude<TentId, "unassigned">;
-  seats: { seat: PlantSeat; oos: boolean }[];
+  probes: { plant: PlantProbe; oos: boolean }[];
   hass: HassBits;
   compact?: boolean;
   stockSlots: { slot: number; nickname?: string; strain?: string; sprout?: string; status?: string; tent?: string }[];
 }) {
-  const tentSeats = seats.filter(({ seat, oos }) => !oos && seat.tent === tent);
+  const tentProbes = probes.filter(({ plant, oos }) => !oos && plant.tent === tent);
   const stockInTent = stockSlots.filter((s) => normalizeTent(s.tent) === tent);
-  const stockAsSeats = stockInTent.map((s) => ({
-    seat: {
-      pot: 0,
+  const stockAsProbes = stockInTent.map((s) => ({
+    plant: {
+      probe: 0,
       plantName: s.nickname || s.strain || "Stock plant",
       stage: s.status === "stock" ? "Expected (stock)" : String(s.status || "—"),
       days: String(daysSinceSprout(s.sprout) ?? "—"),
       need: "—",
-    } as PlantSeat,
+    } as PlantProbe,
     oos: false,
   }));
-  const { mixed, cur, live } = stageTrackForSeats([...tentSeats, ...stockAsSeats]);
+  const { mixed, cur, live } = stageTrackForProbes([...tentProbes, ...stockAsProbes]);
   const title = tentLabel(tent);
 
   return (
@@ -106,23 +106,23 @@ function TentCropColumn({
         <StatusChip icon="seat" label="No plants in tent" tone="muted" />
       ) : null}
       <div className={`dsc-scheduler-lanes${compact ? " is-compact" : ""}`}>
-        {tentSeats.map(({ seat }) => {
-          const days = Number(seat.days);
+        {tentProbes.map(({ plant }) => {
+          const days = Number(plant.days);
           const week = Number.isFinite(days) ? Math.max(1, Math.ceil(days / 7)) : null;
           return (
             <button
-              key={seat.pot}
+              key={plant.probe}
               type="button"
               className="dsc-scheduler-lane"
               onClick={() =>
-                window.dispatchEvent(new CustomEvent("dsc-dash-select-pot", { detail: { pot: seat.pot } }))
+                window.dispatchEvent(new CustomEvent("dsc-dash-select-probe", { detail: { probe: plant.probe } }))
               }
             >
-              <VesselGlyph spec={readPotVessel(seat.pot, hass.state, hass.entity)} size={16} />
-              <strong>{probeLabel(seat.pot)}</strong>
-              <span>{seat.plantName}</span>
+              <VesselGlyph spec={readProbeVessel(plant.probe, hass.state, hass.entity)} size={16} />
+              <strong>{probeLabel(plant.probe)}</strong>
+              <span>{plant.plantName}</span>
               <span className="dsc-muted">
-                W{week ?? "—"} · {Number.isFinite(days) ? `${days}d` : "—"} · {seat.stage} · Need {seat.need}
+                W{week ?? "—"} · {Number.isFinite(days) ? `${days}d` : "—"} · {plant.stage} · Need {plant.need}
               </span>
             </button>
           );
@@ -148,9 +148,9 @@ function TentCropColumn({
 
 export function CropScheduler({ compact }: { compact?: boolean }) {
   const hass = useEntityBus();
-  const seats = KIT_PROBE_NUMBERS.map((n) => ({
-    seat: buildPlantSeat(n, hass),
-    oos: !isPotInService(n, hass.state),
+  const probes = KIT_PROBE_NUMBERS.map((n) => ({
+    plant: buildPlantProbe(n, hass),
+    oos: !isProbeInService(n, hass.state),
   }));
   const stockSlots = rosterSlots(hass.entity).filter((s) => {
     const st = String(s.status || "");
@@ -158,7 +158,7 @@ export function CropScheduler({ compact }: { compact?: boolean }) {
   });
   const catchup = hass.state("binary_sensor.dsc_hub_light_catchup_active") === "on";
   const darkViol = hass.state("binary_sensor.dsc_clone_dark_period_violation") === "on";
-  const unassigned = seats.filter(({ seat, oos }) => !oos && seat.tent === "unassigned");
+  const unassigned = probes.filter(({ plant, oos }) => !oos && plant.tent === "unassigned");
 
   return (
     <Card className="dsc-glass" title="Crop scheduler" icon="roster">
@@ -166,8 +166,8 @@ export function CropScheduler({ compact }: { compact?: boolean }) {
         Each tent tracks its own stage rail and plants — 4×8 and 2×4 are separate grow environments.
       </p>
       <div className="dsc-scheduler-tents-split">
-        <TentCropColumn tent="main" seats={seats} hass={hass} compact={compact} stockSlots={stockSlots} />
-        <TentCropColumn tent="clone" seats={seats} hass={hass} compact={compact} stockSlots={stockSlots} />
+        <TentCropColumn tent="main" probes={probes} hass={hass} compact={compact} stockSlots={stockSlots} />
+        <TentCropColumn tent="clone" probes={probes} hass={hass} compact={compact} stockSlots={stockSlots} />
       </div>
       <div className="dsc-chip-row" style={{ margin: "8px 0" }}>
         {catchup ? <StatusChip icon="lighting" motion="breathe" label="Catch-up" tone="warn" /> : null}
@@ -179,18 +179,18 @@ export function CropScheduler({ compact }: { compact?: boolean }) {
             Unassigned probes
           </p>
           <div className={`dsc-scheduler-lanes${compact ? " is-compact" : ""}`}>
-            {unassigned.map(({ seat }) => (
+            {unassigned.map(({ plant }) => (
               <button
-                key={seat.pot}
+                key={plant.probe}
                 type="button"
                 className="dsc-scheduler-lane"
                 onClick={() =>
-                  window.dispatchEvent(new CustomEvent("dsc-dash-select-pot", { detail: { pot: seat.pot } }))
+                  window.dispatchEvent(new CustomEvent("dsc-dash-select-probe", { detail: { probe: plant.probe } }))
                 }
               >
-                <VesselGlyph spec={readPotVessel(seat.pot, hass.state, hass.entity)} size={16} />
-                <strong>{probeLabel(seat.pot)}</strong>
-                <span>{seat.plantName}</span>
+                <VesselGlyph spec={readProbeVessel(plant.probe, hass.state, hass.entity)} size={16} />
+                <strong>{probeLabel(plant.probe)}</strong>
+                <span>{plant.plantName}</span>
                 <StatusChip label="Unassigned" icon="seat" tone="muted" />
               </button>
             ))}

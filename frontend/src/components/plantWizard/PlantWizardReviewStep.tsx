@@ -2,13 +2,13 @@ import { DecisionLayer } from "../DecisionLayer";
 import { Button, Card, EntitySelect, StatusChip } from "../ui";
 import { clearComposeDraft } from "../../lib/composePlantLogic";
 import { DEFAULT_VESSEL } from "../../lib/vesselSpec";
-import { KIT_PROBE_NUMBERS } from "../../lib/seatModel";
+import { KIT_PROBE_NUMBERS } from "../../lib/probeModel";
 import type { VesselSpec } from "../../lib/vesselSpec";
 import type { CallService } from "./plantWizardSteps";
 
 export type PlantWizardReviewStepProps = {
   plantTitle: string;
-  potLabel: string;
+  assignLabel: string;
   tent: string;
   vessel: VesselSpec;
   mixLabel: string;
@@ -25,7 +25,7 @@ export type PlantWizardReviewStepProps = {
   showAdvanced: boolean;
   setShowAdvanced: (open: boolean) => void;
   callService: CallService;
-  copyVesselToPot: (pot: string) => void;
+  copyVesselToProbe: (probe: string) => void;
   retireConfirm: boolean;
   setRetireConfirm: (open: boolean) => void;
   refreshBrain: () => Promise<void>;
@@ -36,7 +36,7 @@ export type PlantWizardReviewStepProps = {
 
 export function PlantWizardReviewStep({
   plantTitle,
-  potLabel,
+  assignLabel,
   tent,
   vessel,
   mixLabel,
@@ -53,7 +53,7 @@ export function PlantWizardReviewStep({
   showAdvanced,
   setShowAdvanced,
   callService,
-  copyVesselToPot,
+  copyVesselToProbe,
   retireConfirm,
   setRetireConfirm,
   refreshBrain,
@@ -71,7 +71,7 @@ export function PlantWizardReviewStep({
         <div>
           <dt>Probe</dt>
           <dd>
-            {potLabel}
+            {assignLabel}
             {tent && tent !== "unknown" && tent !== "unavailable" ? ` · ${tent}` : ""}
           </dd>
         </div>
@@ -103,7 +103,7 @@ export function PlantWizardReviewStep({
       </dl>
       <div className="dsc-row-actions">
         <Button variant="primary" disabled={!strainLabel} icon="compose" iconMotion="glow" onClick={() => setConfirmAdd(true)}>
-          {assign === "none" ? "Add to roster (stock)" : `Add plant to ${potLabel}`}
+          {assign === "none" ? "Add to roster (stock)" : `Add plant to ${assignLabel}`}
         </Button>
       </div>
       {commitErr ? (
@@ -129,7 +129,7 @@ export function PlantWizardReviewStep({
           <Button
             variant="secondary"
             onClick={() => {
-              copyVesselToPot(assign);
+              copyVesselToProbe(assign);
               void callService("script", "turn_on", {
                 entity_id: "script.dsc_plant_assign_to_pot",
                 pot: assign,
@@ -172,7 +172,7 @@ export function PlantWizardReviewStep({
           help={null}
         >
           <p>
-            Retires {potLabel} on the hub and clears the compose draft (strain, nickname, assign probe).
+            Retires {assignLabel} on the hub and clears the compose draft (strain, nickname, assign probe).
           </p>
         </DecisionLayer>
         <EntitySelect

@@ -9,8 +9,11 @@ export interface SeriesPoint {
   v: number;
 }
 
-const HOLD_GAP_MS = 2000;
-const MAX_HOLD_TO_NOW_MS = 5 * 60 * 1000;
+import { getPreference } from "../lib/preferences";
+
+/** Hold gap and hold-to-now are operator preferences (Preferences › Charts › Advanced). */
+const holdGapMs = () => getPreference("holdGapMs");
+const maxHoldToNowMs = () => getPreference("maxHoldToNowMs");
 
 /** Recorder stores on change. Hold last good across short gaps; stop at now unless stale-marked. */
 export function stepHoldSeries(
@@ -20,6 +23,8 @@ export function stepHoldSeries(
 ): SeriesPoint[] {
   if (!points.length) return [];
   const sorted = [...points].sort((a, b) => a.t - b.t);
+  const HOLD_GAP_MS = holdGapMs();
+  const MAX_HOLD_TO_NOW_MS = maxHoldToNowMs();
   const out: SeriesPoint[] = [];
   for (let i = 0; i < sorted.length; i++) {
     const p = sorted[i];
@@ -70,6 +75,15 @@ export interface ChartTimeMarker {
   color?: string;
 }
 
+/** Vertical x-range shade (lights-off window, dry-back, alert span). Epoch ms. */
+export interface ChartShade {
+  from: number;
+  to: number;
+  color?: string;
+  opacity?: number;
+  label?: string;
+}
+
 const HEX = {
   neon: "#66bb6a",
   teal: "#26c6da",
@@ -98,6 +112,13 @@ const TOKEN_HEX: Record<string, string> = {
   "var(--dsc-teal-dim)": "rgba(38, 198, 218, 0.45)",
   "var(--dsc-blue-dim)": "rgba(38, 198, 218, 0.4)",
   "var(--dsc-purple-dim)": "rgba(167, 139, 250, 0.35)",
+  "var(--dsc-lamp)": "#f5c26b",
+  "var(--dsc-black)": "#0b0e14",
+  "var(--dsc-phase-veg)": "#66bb6a",
+  "var(--dsc-phase-gen)": "#26c6da",
+  "var(--dsc-phase-bulk)": "#a78bfa",
+  "var(--dsc-phase-finish)": "#ff8a65",
+  "var(--dsc-phase-dry)": "#ffb74d",
 };
 
 export function hexColor(c?: string, fallback: string = HEX.teal): string {
@@ -216,6 +237,7 @@ export function MultiLineChart({
   lastSyncAt,
   targets = [],
   timeMarkers = [],
+  shades = [],
   xDomain,
   yDomain,
   chartHours,
@@ -228,6 +250,8 @@ export function MultiLineChart({
   lastSyncAt?: number;
   targets?: ChartTarget[];
   timeMarkers?: ChartTimeMarker[];
+  /** x-range shades drawn behind every trace (e.g. lights-off windows). */
+  shades?: ChartShade[];
   xDomain?: { min: number; max: number };
   yDomain?: { left?: { min: number; max: number }; right?: { min: number; max: number } };
   chartHours?: number;
@@ -240,7 +264,7 @@ export function MultiLineChart({
     if (!all.length) return false;
     const lastDataT = Math.max(...all.map((p) => p.t));
     const syncAge = lastSyncAt != null ? Date.now() - lastSyncAt : Date.now() - lastDataT;
-    return syncAge > MAX_HOLD_TO_NOW_MS;
+    return syncAge > maxHoldToNowMs();
   }, [named, lastSyncAt]);
 
   const option = useMemo<EChartsCoreOption>(() => {
@@ -298,6 +322,19 @@ export function MultiLineChart({
           lineStyle: { color, type: "dashed", width: 1.2 },
         });
       }
+    }
+
+    for (const sh of shades) {
+      if (!Number.isFinite(sh.from) || !Number.isFinite(sh.to) || sh.to <= sh.from) continue;
+      (leftMarks.markArea as { data: object[][] }).data.push([
+        {
+          xAxis: sh.from,
+          name: sh.label,
+          itemStyle: { color: hexColor(sh.color, "#0b0e14"), opacity: sh.opacity ?? 0.5 },
+          label: sh.label ? { show: true, position: "insideTop", color: HEX.gray5, fontSize: 9 } : { show: false },
+        },
+        { xAxis: sh.to },
+      ]);
     }
 
     for (const mk of timeMarkers) {
@@ -419,7 +456,7 @@ export function MultiLineChart({
         };
       }),
     };
-  }, [named, height, unit, live, emptyLabel, lastSyncAt, targets, timeMarkers, xDomain, yDomain, chartHours, hasRight, chartStale]);
+  }, [named, height, unit, live, emptyLabel, lastSyncAt, targets, timeMarkers, shades, xDomain, yDomain, chartHours, hasRight, chartStale]);
 
   const lastPrimary = named[0]?.series.length
     ? named[0].series[named[0].series.length - 1]?.v

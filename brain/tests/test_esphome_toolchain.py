@@ -19,6 +19,15 @@ import pytest
 from dsc_brain.settings import connect, get_setting
 
 
+@pytest.fixture(autouse=True)
+def _fresh_dashboard_probe() -> None:
+    """The dashboard /version probe is memoised for 10 s; every test here mocks its
+    own dashboard, so start each one from a cold probe."""
+    from dsc_brain import esphome_toolchain as tc
+
+    tc.reset_dashboard_probe_cache()
+
+
 # --------------------------------------------------------------------------- #
 # helpers
 # --------------------------------------------------------------------------- #
@@ -83,6 +92,8 @@ def test_venv_run_job_compile_argv_cwd_env(temp_db: Path, monkeypatch: pytest.Mo
     monkeypatch.setattr(ej, "_local_esphome_available", lambda: True)
     monkeypatch.setattr(ej, "esphome_bin", lambda: "/opt/dsc-esphome-venv/bin/esphome")
     monkeypatch.setattr(ej, "project_dir", lambda: tmp_path)
+    for _n in ("dsc-hub.yaml", "dsc-pot2.yaml"):  # queue_job checks the mapped file exists
+        (tmp_path / _n).touch()
     monkeypatch.setenv("PLATFORMIO_CORE_DIR", "/var/lib/dsc-hub/platformio")
     monkeypatch.setattr(ej.subprocess, "Popen", fake_popen)
 
@@ -112,6 +123,8 @@ def test_venv_run_job_ota_uses_inventory_host_and_no_logs(
     monkeypatch.setattr(ej, "_local_esphome_available", lambda: True)
     monkeypatch.setattr(ej, "esphome_bin", lambda: "esphome")
     monkeypatch.setattr(ej, "project_dir", lambda: tmp_path)
+    for _n in ("dsc-hub.yaml", "dsc-pot2.yaml"):  # queue_job checks the mapped file exists
+        (tmp_path / _n).touch()
     monkeypatch.setattr(ej.subprocess, "Popen", fake_popen)
 
     job = ej.queue_job("pot2", "ota", temp_db)
@@ -151,6 +164,8 @@ def test_venv_run_job_timeout_kills_and_fails(temp_db: Path, monkeypatch: pytest
     proc = _FakeProc([], 0, hang=True)
     monkeypatch.setattr(ej, "_local_esphome_available", lambda: True)
     monkeypatch.setattr(ej, "project_dir", lambda: tmp_path)
+    for _n in ("dsc-hub.yaml", "dsc-pot2.yaml"):  # queue_job checks the mapped file exists
+        (tmp_path / _n).touch()
     monkeypatch.setattr(ej.subprocess, "Popen", lambda *a, **k: proc)
     job = ej.queue_job("hub", "compile", temp_db)
     ej._run_job(job, temp_db)

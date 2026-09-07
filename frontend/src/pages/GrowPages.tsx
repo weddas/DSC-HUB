@@ -9,22 +9,22 @@ import { HelpTip } from "../components/HelpTip";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
 import { useBrainRefresh } from "../hooks/useBrain";
-import { PlantSeatPanel } from "../components/PlantSeatPanel";
+import { PlantProbePanel } from "../components/PlantProbePanel";
 import {
-  isPotInService,
+  isProbeInService,
   KIT_PROBE_NUMBERS,
   probeLabel,
   readTent,
   rosterSlots,
   tentLabel,
   normalizeTent,
-} from "../lib/seatModel";
-import { readPotVessel } from "../lib/vesselSpec";
+} from "../lib/probeModel";
+import { readProbeVessel } from "../lib/vesselSpec";
 import { VesselGlyph } from "../components/VesselGlyph";
 import { CropScheduler } from "../components/CropScheduler";
 import { assignPlantToProbe, detachPlantFromProbe, retireRosterSlot } from "../lib/fleetApi";
 
-export { PlantSeatPanel } from "../components/PlantSeatPanel";
+export { PlantProbePanel } from "../components/PlantProbePanel";
 
 export function GrowComposePage() {
   const navigate = useNavigate();
@@ -35,7 +35,7 @@ export function GrowComposePage() {
         title="Compose"
         subtitle="Step through strain, probe, soil, and optional feed — one confirm to add."
         primaryAction={
-          <Button teal onClick={() => navigate("/grow/roster")}>
+          <Button teal onClick={() => navigate("/plants/roster")}>
             Open Roster
           </Button>
         }
@@ -48,7 +48,7 @@ export function GrowComposePage() {
               </p>
               <p>Example: delete plant on Probe 2 → reopen Compose → strain/probe steps should be blank.</p>
             </HelpTip>
-            <Button primary onClick={() => navigate("/grow/research")}>
+            <Button primary onClick={() => navigate("/cannalib")}>
               Browse Catalog
             </Button>
           </>
@@ -67,35 +67,24 @@ export function GrowResearchPage() {
   const navigate = useNavigate();
   return (
     <div className="dsc-page">
-      <PageHeader
-        icon="research"
-        title="Research"
-        subtitle="Live CannaLib catalog — strains, mediums, nutrients, and lights."
-        actions={
-          <>
-            <HelpTip title="Catalog honesty">
-              <p>
-                Research only shows chips the catalog actually has. Missing chem or height is a blank — never invented
-                filler.
-              </p>
-              <p>
-                <b>Use in Compose</b> drafts helpers for a new plant; <b>Open Roster</b> jumps to a plant already on the
-                roster.
-              </p>
-            </HelpTip>
-            <Button primary onClick={() => navigate("/grow/compose")}>
-              Use in Compose
-            </Button>
-            <Button teal onClick={() => navigate("/grow/roster")}>
-              Open Roster
-            </Button>
-          </>
-        }
-      />
-      <p className="dsc-honesty" style={{ marginTop: 0 }}>
-        Height, flowering, and chemistry chips appear only when the catalog has real data — gaps are shown as gaps.
-        Use in Compose to draft a plant, or Open Roster to work with a plant already assigned.
-      </p>
+      <header className="dsc-ov-head">
+        <div>
+          <div className="dsc-eyebrow">Grow · CannaLib</div>
+          <h1 className="dsc-headline">A live catalog behind the grow.</h1>
+          <p className="dsc-subline">
+            Strains, mediums, nutrients and lights — searchable, then pushed into Compose. Height, flowering and chemistry
+            chips appear only when the catalog has real data; gaps are shown as gaps.
+          </p>
+        </div>
+        <div className="dsc-tagrow dsc-ov-tags">
+          <Button primary onClick={() => navigate("/plants/compose")}>
+            Use in Compose
+          </Button>
+          <Button teal onClick={() => navigate("/plants/roster")}>
+            Open Roster
+          </Button>
+        </div>
+      </header>
       <CatalogResearch />
     </div>
   );
@@ -106,13 +95,13 @@ export function GrowRosterPage() {
   const { callService } = useFleetActions();
   const refreshBrain = useBrainRefresh();
   const [params, setParams] = useSearchParams();
-  const [retirePot, setRetirePot] = useState<number | null>(null);
+  const [retireProbe, setRetireProbe] = useState<number | null>(null);
   const [retireSlot, setRetireSlot] = useState<number | null>(null);
   const [retireErr, setRetireErr] = useState<string | null>(null);
-  const [detachPot, setDetachPot] = useState<number | null>(null);
+  const [detachProbe, setDetachProbe] = useState<number | null>(null);
   const [lifecycleErr, setLifecycleErr] = useState<string | null>(null);
   const [assignSlot, setAssignSlot] = useState<number | null>(null);
-  const [assignPot, setAssignPot] = useState<number>(KIT_PROBE_NUMBERS[0] ?? 1);
+  const [assignProbe, setAssignProbe] = useState<number>(KIT_PROBE_NUMBERS[0] ?? 1);
   void tick;
   const allSlots = rosterSlots(entity);
   const slots = allSlots.filter((s) => {
@@ -120,7 +109,7 @@ export function GrowRosterPage() {
     return !["empty", "", "unknown", "unavailable"].includes(st);
   });
   const vacantProbes = KIT_PROBE_NUMBERS.filter((n) => {
-    if (!isPotInService(n, state)) return false;
+    if (!isProbeInService(n, state)) return false;
     const claimedOnRoster = allSlots.some((s) => {
       const p = Number(s.pot);
       return Number.isFinite(p) && p === n;
@@ -130,21 +119,21 @@ export function GrowRosterPage() {
     return !name;
   });
   const raw = Number(params.get("pot") || 0);
-  const pot =
+  const probe =
     raw >= 1 &&
     (KIT_PROBE_NUMBERS as readonly number[]).includes(raw) &&
-    isPotInService(raw, state)
+    isProbeInService(raw, state)
       ? raw
       : null;
 
-  const openPot = (n: number) => {
-    if (!(KIT_PROBE_NUMBERS as readonly number[]).includes(n) || !isPotInService(n, state)) return;
+  const openProbe = (n: number) => {
+    if (!(KIT_PROBE_NUMBERS as readonly number[]).includes(n) || !isProbeInService(n, state)) return;
     const next = new URLSearchParams(params);
     next.set("pot", String(n));
     setParams(next, { replace: true });
   };
 
-  const closePot = () => {
+  const closeProbe = () => {
     const next = new URLSearchParams(params);
     next.delete("pot");
     setParams(next, { replace: true });
@@ -156,38 +145,38 @@ export function GrowRosterPage() {
       try {
         await retireRosterSlot(retireSlot);
         await refreshBrain();
-        if (retirePot != null && pot === retirePot) closePot();
+        if (retireProbe != null && probe === retireProbe) closeProbe();
         setRetireSlot(null);
-        setRetirePot(null);
+        setRetireProbe(null);
       } catch (exc) {
         setRetireErr(exc instanceof Error ? exc.message : "Delete failed");
       }
       return;
     }
-    if (retirePot == null) return;
+    if (retireProbe == null) return;
     setRetireErr(null);
     try {
       await callService("script", "turn_on", {
         entity_id: "script.dsc_plant_retire",
-        pot: String(retirePot),
-        variables: { pot: String(retirePot) },
+        pot: String(retireProbe),
+        variables: { pot: String(retireProbe) },
       });
       await refreshBrain();
-      if (pot === retirePot) closePot();
-      setRetirePot(null);
+      if (probe === retireProbe) closeProbe();
+      setRetireProbe(null);
     } catch (exc) {
       setRetireErr(exc instanceof Error ? exc.message : "Delete failed");
     }
   };
 
   const confirmDetach = async () => {
-    if (detachPot == null) return;
+    if (detachProbe == null) return;
     setLifecycleErr(null);
     try {
-      await detachPlantFromProbe(detachPot);
+      await detachPlantFromProbe(detachProbe);
       await refreshBrain();
-      if (pot === detachPot) closePot();
-      setDetachPot(null);
+      if (probe === detachProbe) closeProbe();
+      setDetachProbe(null);
     } catch (exc) {
       setLifecycleErr(exc instanceof Error ? exc.message : "Detach failed");
     }
@@ -197,7 +186,7 @@ export function GrowRosterPage() {
     if (assignSlot == null) return;
     setLifecycleErr(null);
     try {
-      await assignPlantToProbe(assignSlot, assignPot);
+      await assignPlantToProbe(assignSlot, assignProbe);
       await refreshBrain();
       setAssignSlot(null);
     } catch (exc) {
@@ -212,7 +201,7 @@ export function GrowRosterPage() {
         title="Roster"
         subtitle="Detach frees a probe without deleting the plant; Delete retires the plant."
         primaryAction={
-          <Link to="/grow/compose">
+          <Link to="/plants/compose">
             <Button primary>Use in Compose</Button>
           </Link>
         }
@@ -252,15 +241,15 @@ export function GrowRosterPage() {
               {slots.map((s) => {
                 const p = Number(s.pot);
                 const joined = p >= 1 && p <= 4;
-                const potLive = joined && isPotInService(p, state);
-                const potTent = joined ? readTent(state, p) : "unassigned";
-                const tent = tentLabel(potTent !== "unassigned" ? potTent : normalizeTent(s.tent));
+                const probeLive = joined && isProbeInService(p, state);
+                const probeTent = joined ? readTent(state, p) : "unassigned";
+                const tent = tentLabel(probeTent !== "unassigned" ? probeTent : normalizeTent(s.tent));
                 const need = joined ? state(`sensor.dsc_probe${p}_need_summary`, "—") : "—";
-                const vessel = joined ? readPotVessel(p, state, entity) : null;
+                const vessel = joined ? readProbeVessel(p, state, entity) : null;
                 return (
                   <tr
                     key={s.slot}
-                    className={potLive ? "dsc-table-row--pot-live" : undefined}
+                    className={probeLive ? "dsc-table-row--pot-live" : undefined}
                   >
                     <td>#{s.slot}</td>
                     <td>{s.nickname || "—"}</td>
@@ -271,7 +260,7 @@ export function GrowRosterPage() {
                         <span className="dsc-chip-row">
                           {vessel ? <VesselGlyph spec={vessel} size={22} /> : null}
                           {probeLabel(p)}
-                          {!potLive ? <StatusChip label="Out of service" tone="warn" /> : null}
+                          {!probeLive ? <StatusChip label="Out of service" tone="warn" /> : null}
                         </span>
                       ) : (
                         "—"
@@ -283,14 +272,14 @@ export function GrowRosterPage() {
                     </td>
                     <td>
                       <div className="dsc-chip-row" style={{ flexWrap: "wrap", gap: 6 }}>
-                        {potLive ? (
-                          <Button onClick={() => openPot(p)}>Edit</Button>
+                        {probeLive ? (
+                          <Button onClick={() => openProbe(p)}>Edit</Button>
                         ) : null}
                         {joined ? (
                           <Button
                             onClick={() => {
                               setLifecycleErr(null);
-                              setDetachPot(p);
+                              setDetachProbe(p);
                             }}
                           >
                             Detach
@@ -300,7 +289,7 @@ export function GrowRosterPage() {
                           <Button
                             onClick={() => {
                               setLifecycleErr(null);
-                              setAssignPot(vacantProbes[0] ?? 1);
+                              setAssignProbe(vacantProbes[0] ?? 1);
                               setAssignSlot(Number(s.slot));
                             }}
                           >
@@ -312,7 +301,7 @@ export function GrowRosterPage() {
                             variant="danger"
                             onClick={() => {
                               setRetireErr(null);
-                              setRetirePot(p);
+                              setRetireProbe(p);
                               setRetireSlot(Number(s.slot));
                             }}
                           >
@@ -323,7 +312,7 @@ export function GrowRosterPage() {
                             variant="danger"
                             onClick={() => {
                               setRetireErr(null);
-                              setRetirePot(null);
+                              setRetireProbe(null);
                               setRetireSlot(Number(s.slot));
                             }}
                           >
@@ -351,24 +340,24 @@ export function GrowRosterPage() {
       </Card>
 
       <RosterLifecycleDialogs
-        detachPot={detachPot}
-        onDismissDetach={() => setDetachPot(null)}
+        detachProbe={detachProbe}
+        onDismissDetach={() => setDetachProbe(null)}
         onConfirmDetach={() => {
           void confirmDetach();
         }}
         assignSlot={assignSlot}
-        assignPot={assignPot}
-        onAssignPotChange={setAssignPot}
+        assignProbe={assignProbe}
+        onAssignProbeChange={setAssignProbe}
         vacantProbes={vacantProbes}
         onDismissAssign={() => setAssignSlot(null)}
         onConfirmAssign={() => {
           void confirmAssign();
         }}
         retireSlot={retireSlot}
-        retirePot={retirePot}
+        retireProbe={retireProbe}
         onDismissRetire={() => {
           setRetireSlot(null);
-          setRetirePot(null);
+          setRetireProbe(null);
         }}
         onConfirmRetire={() => {
           void confirmRetire();
@@ -376,13 +365,13 @@ export function GrowRosterPage() {
       />
 
       <SlideDrawer
-        open={pot != null}
-        onClose={closePot}
-        title={pot != null ? `${probeLabel(pot)} · plant` : "Plant"}
+        open={probe != null}
+        onClose={closeProbe}
+        title={probe != null ? `${probeLabel(probe)} · plant` : "Plant"}
         wide
       >
-        {pot != null ? (
-          <PlantSeatPanel pot={pot} onSelectPot={openPot} onRetired={closePot} />
+        {probe != null ? (
+          <PlantProbePanel probe={probe} onSelectProbe={openProbe} onRetired={closeProbe} />
         ) : null}
       </SlideDrawer>
     </div>

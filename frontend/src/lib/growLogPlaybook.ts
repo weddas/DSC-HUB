@@ -12,19 +12,19 @@ export function growLogPlaybook(message: string): GrowLogPlaybookLink | null {
   const lower = message.toLowerCase();
 
   if (LIGHT.test(message)) {
-    return { href: "/live/light", cta: "Open Light" };
+    return { href: "/light", cta: "Open Light" };
   }
   if (CLIMATE.test(lower)) {
-    return { href: "/live/climate", cta: "Open Climate" };
+    return { href: "/climate", cta: "Open Climate" };
   }
   if (ROOT.test(lower)) {
-    return { href: "/live/root", cta: "Open Root" };
+    return { href: "/root", cta: "Open Root" };
   }
   if (STAGE.test(lower)) {
-    return { href: "/live/overview", cta: "Overview" };
+    return { href: "/overview", cta: "Overview" };
   }
   if (growLogSeverity(message) === "alert") {
-    return { href: "/live/overview", cta: "Overview" };
+    return { href: "/overview", cta: "Overview" };
   }
   return null;
 }

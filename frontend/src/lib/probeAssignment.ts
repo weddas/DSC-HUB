@@ -1,5 +1,5 @@
 import type { FleetSnapshot } from "./fleetModel";
-import { rosterSlots } from "./seatModel";
+import { rosterSlots } from "./probeModel";
 
 /** Short plant id for chips (plant:uuid… → plant:abcd…). */
 export function shortPlantId(raw: string): string {
@@ -16,33 +16,33 @@ export function shortPlantId(raw: string): string {
  * Returns empty string when unassigned.
  */
 export function probeAssignedPlantId(
-  pot: number,
+  probe: number,
   fleet: FleetSnapshot | null | undefined,
   state: (id: string, fallback?: string) => string,
 ): string {
-  const row = fleet?.inventory?.find((r) => r.seat_id === `pot${pot}`);
+  const row = fleet?.inventory?.find((r) => r.seat_id === `pot${probe}`);
   const fromInv = String((row?.extra as Record<string, unknown> | undefined)?.assigned_plant_id ?? "").trim();
   if (fromInv) return fromInv;
-  const fromHelper = state(`text.dsc_probe${pot}_assigned_plant_id`, "").trim();
+  const fromHelper = state(`text.dsc_probe${probe}_assigned_plant_id`, "").trim();
   if (fromHelper && fromHelper !== "unknown" && fromHelper !== "unavailable") return fromHelper;
   return "";
 }
 
 /** Display label: nickname / plant name / short id, or empty when unassigned. */
 export function probeAssignmentDisplay(
-  pot: number,
+  probe: number,
   fleet: FleetSnapshot | null | undefined,
   state: (id: string, fallback?: string) => string,
   entity: (id: string) => { attributes?: Record<string, unknown> } | undefined,
 ): string {
-  const plantId = probeAssignedPlantId(pot, fleet, state);
+  const plantId = probeAssignedPlantId(probe, fleet, state);
   if (!plantId) return "";
 
-  const plantName = state(`text.dsc_probe${pot}_plant_name`, "").trim();
+  const plantName = state(`text.dsc_probe${probe}_plant_name`, "").trim();
   if (plantName && plantName !== "unknown" && plantName !== "unavailable") return plantName;
 
   const slots = rosterSlots(entity);
-  const match = slots.find((s) => String(s.pot) === `pot${pot}` || String(s.pot) === String(pot));
+  const match = slots.find((s) => String(s.pot) === `pot${probe}` || String(s.pot) === String(probe));
   const nick = String(match?.nickname || match?.strain || "").trim();
   if (nick) return nick;
 
@@ -51,12 +51,12 @@ export function probeAssignmentDisplay(
 
 /** SoftCal / Soil / lab chip body after Probe N · */
 export function softCalAssignmentChipLabel(
-  pot: number,
+  probe: number,
   fleet: FleetSnapshot | null | undefined,
   state: (id: string, fallback?: string) => string,
   entity: (id: string) => { attributes?: Record<string, unknown> } | undefined,
 ): string {
-  const label = probeAssignmentDisplay(pot, fleet, state, entity);
+  const label = probeAssignmentDisplay(probe, fleet, state, entity);
   return label ? `${label} · SoftCal OK` : "Unassigned · SoftCal OK";
 }
 

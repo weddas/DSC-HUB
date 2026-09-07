@@ -57,7 +57,7 @@ export function rootSegments(lo: number, hi: number): GaugeSegment[] {
   return bandGuideSegments(lo, hi, "°C");
 }
 
-/** Pot moisture — dry below 30% is the narrator warning threshold on HA Home. */
+/** Probe moisture — dry below 30% is the narrator warning threshold on HA Home. */
 export function moistureSegments(dry = 30, wet = 75): GaugeSegment[] {
   return bandGuideSegments(dry, wet);
 }

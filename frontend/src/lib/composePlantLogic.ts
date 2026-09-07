@@ -172,11 +172,11 @@ export function activeNutrientNames(state: EntityState): string[] {
 export function hasComposeDraft(state: EntityState): boolean {
   const strain = state("input_text.dsc_build_strain", "");
   const nick = state("input_text.dsc_build_nickname", "");
-  const pot = state("input_select.dsc_build_assign_pot", "none");
+  const assignProbe = state("input_select.dsc_build_assign_pot", "none");
   return Boolean(
     (strain && strain !== "unknown" && strain !== "unavailable") ||
       (nick && nick !== "unknown" && nick !== "unavailable") ||
-      (pot && pot !== "none" && pot !== "unknown"),
+      (assignProbe && assignProbe !== "none" && assignProbe !== "unknown"),
   );
 }
 

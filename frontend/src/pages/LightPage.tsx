@@ -1,23 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Button,
-  Card,
   EntitySelect,
   EntityTime,
   EntityToggle,
   Kpi,
-  PageHeader,
-  StatusChip,
+  StatusTag,
 } from "../components/ui";
+import { Panel } from "../components/Panel";
+import { TentClock } from "../components/TwoClocks";
+import { getSpaces, type SpaceDevice } from "../lib/fleetApi";
+import { paths } from "../lib/paths";
 import { CropScheduler, tentStageRailLabel } from "../components/CropScheduler";
 import { DutyStrip } from "../components/DutyStrip";
 import { PhotoperiodTimeline } from "../components/PhotoperiodTimeline";
-import { TentLightClock } from "../components/TentLightClock";
 import { TargetNumber } from "../components/TentTargets";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useInspector } from "../components/InspectorHost";
-import { HelpTip } from "../components/HelpTip";
 import { ArcGauge } from "../viz/charts";
 import { draftTone, tentWantRail } from "../lib/tentWant";
 import { readTentPhotoperiodInput } from "../lib/lightSchedule";
@@ -25,6 +25,7 @@ import { dliFromPpfdHours, fmtDli, readCalibratedPpfd } from "../lib/dliEstimate
 import { buildCloneLightDesk } from "../lib/lightViewModel";
 import { LightEnergyPanel } from "../components/energy/LightEnergyPanel";
 import { JournalScopePanel } from "../components/journal/JournalScopePanel";
+import { PpfdMapCard } from "../components/PpfdMapCard";
 
 function fmt(n: number, digits = 1): string {
   return Number.isFinite(n) ? n.toFixed(digits) : "—";
@@ -114,87 +115,80 @@ export function LiveLightPage() {
   const open = (id: string, label: string, kind?: "alert" | "binary" | "numeric") =>
     inspector.open({ entityId: id, label, kind: kind || "numeric" });
 
+  // Fixtures per space — the brain's nameplate/duty table (Settings › Brain edits it).
+  const [fixtures, setFixtures] = useState<Array<{ space_id: string; devices: SpaceDevice[] }> | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    getSpaces()
+      .then((sp) => {
+        if (!cancelled) setFixtures(sp.map((x) => ({ space_id: x.space_id, devices: x.devices })));
+      })
+      .catch(() => {
+        if (!cancelled) setFixtures([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  // SF1000 calibration curve — the only PPFD the kit can honestly claim.
+  const calSteps = [25, 50, 75, 100].map((step) => ({ step, ppfd: num(`input_number.dsc_cal_ppfd_${step}`, NaN) }));
+  const calibrated = calSteps.some((c) => Number.isFinite(c.ppfd) && c.ppfd > 0);
+  const tone4 = mainScheduleMissing ? "warn" : mainLit ? "ok" : "muted";
+  const tone2 = darkViolation || missing ? "bad" : lightOn ? "ok" : "muted";
+
   return (
     <div className="dsc-page">
-      <PageHeader
-        icon="lighting"
-        title="Light"
-        subtitle="Separate 4×8 and 2×4 desks — each tent has its own schedule and clocks."
-        primaryAction={
-          <Button teal onClick={() => navigate("/live/climate")}>
-            Climate Want →
-          </Button>
-        }
-      />
-      <div className="dsc-status-strip">
-        <HelpTip title="Photoperiod Want">
-          <p>
-            Each tent keeps its own on-window and dark floor. Stage rails tint the hour drafts — amber means the draft
-            fights the crop stage, not that the lamp failed.
-          </p>
-          <p>
-            Example: flower Want 12/12 → set min dark near 12h; a 18h clone draft on the 4×8 rail should look wrong on
-            purpose.
-          </p>
-        </HelpTip>
-        {darkViolation ? (
-          <StatusChip
-            icon="alert"
-            label="2×4 DARK VIOLATION"
-            tone="bad"
-            pulse
+      <header className="dsc-ov-head">
+        <div>
+          <div className="dsc-eyebrow">Live · Light</div>
+          <h1 className="dsc-headline">Two desks, two clocks.</h1>
+          <p className="dsc-subline">Each tent keeps its own window and dark floor. The 2×4 follows the 4×8 unless set independent.</p>
+        </div>
+        <div className="dsc-tagrow dsc-ov-tags">
+          <StatusTag
+            label={darkViolation ? "2×4 DARK PERIOD BROKEN" : "DARK PERIOD OK"}
+            tone={darkViolation ? "bad" : "ok"}
+            live={darkViolation}
             onClick={() => open("binary_sensor.dsc_clone_dark_period_violation", "2×4 dark violation", "alert")}
           />
-        ) : (
-          <StatusChip icon="ok" label="Dark period OK" tone="ok" />
-        )}
-        {missing ? (
-          <StatusChip
-            icon="alert"
-            label="2×4 missing in window"
-            tone="bad"
-            pulse
-            onClick={() => open("binary_sensor.dsc_clone_light_missing_in_window", "Light missing in window", "alert")}
-          />
-        ) : null}
-        {catchup ? (
-          <StatusChip
-            icon="lighting"
-            motion="breathe"
-            label="Catch-up active"
-            tone="warn"
-            onClick={() => open("binary_sensor.dsc_hub_light_catchup_active", "Light catch-up", "alert")}
-          />
-        ) : null}
-        {lightsBuying ? (
-          <StatusChip icon="climate" motion="breathe" label="Lit window buying heat" tone="warn" onClick={() => navigate("/live/climate")} />
-        ) : null}
-      </div>
+          {missing ? (
+            <StatusTag label="2×4 MISSING IN WINDOW" tone="bad" live onClick={() => open("binary_sensor.dsc_clone_light_missing_in_window", "Light missing in window", "alert")} />
+          ) : null}
+          {catchup ? <StatusTag icon="stopwatch" label="CATCH-UP ACTIVE" tone="warn" onClick={() => open("binary_sensor.dsc_hub_light_catchup_active", "Light catch-up", "alert")} /> : null}
+          <StatusTag label={autoPhoto ? "AUTO PHOTOPERIOD ON" : "AUTO PHOTOPERIOD OFF"} tone={autoPhoto ? "ok" : "warn"} onClick={() => open("switch.dsc_hub_auto_photoperiod", "Auto photoperiod", "binary")} />
+          {manualHold ? <StatusTag icon="pause-hold" label="MANUAL HOLD ON" tone="warn" onClick={() => open("switch.dsc_hub_manual_light_hold", "Manual light hold", "binary")} /> : null}
+          {lightsBuying ? <StatusTag label="LIT WINDOW BUYING HEAT" tone="warn" onClick={() => navigate(paths.climate())} title="The lamp is on while heat is being bought or dumped — see Climate" /> : null}
+        </div>
+      </header>
 
       {mainScheduleMissing ? (
-        <div className="dsc-banner dsc-banner--warn" style={{ marginBottom: 12 }}>
-          <strong>4×8 lights-on time is not set — both tent schedules are dead until you set it.</strong>
-          <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: "var(--dsc-fs-md)" }}>
-            Set <strong>Lights on</strong> on the 4×8 card below. 2×4 can mirror that window or run independent hours.
-          </p>
+        <div className="dsc-mission dsc-mission--bad" role="alert">
+          <span className="dsc-mission-dot" aria-hidden="true" />
+          <span className="dsc-mission-title">4×8 lights-on time is not set</span>
+          <span className="dsc-mission-detail">— both tent schedules are dead until you set it. Set Lights on below; the 2×4 mirrors that window or runs independent hours.</span>
         </div>
       ) : null}
 
       {(manualHold || !autoPhoto) && (darkViolation || catchup || missing) ? (
-        <div className="dsc-banner dsc-banner--warn" style={{ marginBottom: 12 }}>
-          <strong>Manual photoperiod override active</strong>
-          <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: "var(--dsc-fs-md)" }}>
-            {manualHold ? "Manual light hold is on. " : ""}
-            {!autoPhoto ? "Auto photoperiod is off. " : ""}
-            Catch-up and dark alerts may reflect operator intent — confirm before clearing holds.
-          </p>
+        <div className="dsc-mission dsc-mission--warn" role="status">
+          <span className="dsc-mission-dot" aria-hidden="true" />
+          <span className="dsc-mission-title">Manual photoperiod override active</span>
+          <span className="dsc-mission-detail">
+            — {manualHold ? "manual light hold is on. " : ""}{!autoPhoto ? "auto photoperiod is off. " : ""}Catch-up and dark alerts may reflect operator intent; confirm before clearing holds.
+          </span>
         </div>
       ) : null}
 
       <div className="dsc-grid">
         <div className="dsc-col-6">
-          <Card className="dsc-glass dsc-light-hero dsc-tent-card dsc-tent-card--main" title="4×8 photoperiod" icon="tent">
-            <TentLightClock tent="main" />
+          <Panel
+            tone={tone4}
+            legendIcon="grow-light"
+            legend={`4×8 · ${tentStageRailLabel(rail4, "main").toUpperCase()}`}
+            legendRight={mainLit ? (twinAvailable ? "TWIN ON" : "WINDOW OPEN") : "DARK"}
+            className="dsc-light-panel"
+          >
+            <TentClock tent="main" showEyebrow={false} />
             <p className="dsc-honesty" style={{ marginTop: 0 }}>
               {twinAvailable ? (
                 <>
@@ -209,36 +203,34 @@ export function LiveLightPage() {
             </p>
             <div className="dsc-chip-row">
               {twinAvailable ? (
-                <StatusChip
+                <StatusTag
                   icon="lighting"
-                  motion={twinOn ? "glow" : undefined}
                   label={twinOn ? "TWIN SF1000 ON" : "TWIN SF1000 OFF"}
                   tone={twinOn ? "ok" : "muted"}
                   onClick={() => open(twinEntity, "Twin SF1000", "binary")}
                 />
               ) : null}
               {twinAvailable && got4Source ? (
-                <StatusChip
+                <StatusTag
                   icon="analytics"
                   label={got4Source === "twin" ? "Got · Twin" : "Got · Window"}
                   tone={got4Source === "twin" ? "ok" : "warn"}
                   onClick={() => open("sensor.dsc_lights_on_today_4x8", "4×8 hours today", "numeric")}
                 />
               ) : null}
-              <StatusChip
+              <StatusTag
                 icon="tent"
-                motion={windowOpen ? "glow" : undefined}
                 label={windowOpen ? "WINDOW OPEN" : "DARK"}
                 tone={windowOpen ? "ok" : "muted"}
                 onClick={() => open("binary_sensor.dsc_hub_4x8_window_open", "4×8 window", "binary")}
               />
-              <StatusChip
+              <StatusTag
                 icon="lighting"
                 label={hoursDraft4.label}
                 tone={railTone(hoursDraft4.tone)}
                 onClick={() => open("sensor.dsc_expected_light_hours", "4×8 expected hours", "numeric")}
               />
-              <StatusChip icon="roster" label={tentStageRailLabel(rail4, "main")} tone={rail4.mixed ? "warn" : "muted"} />
+              <StatusTag icon="roster" label={tentStageRailLabel(rail4, "main")} tone={rail4.mixed ? "warn" : "muted"} />
             </div>
             <ArcGauge
               label="Got / Want h"
@@ -314,39 +306,44 @@ export function LiveLightPage() {
                 DLI estimate needs SF1000 PPFD calibration — Fleet → Calibrate.
               </p>
             )}
-          </Card>
+          </Panel>
         </div>
 
         <div className="dsc-col-6">
-          <Card className="dsc-glass dsc-light-hero dsc-tent-card dsc-tent-card--clone" title="2×4 photoperiod" icon="lighting">
-            <TentLightClock tent="clone" />
+          <Panel
+            tone={tone2}
+            legendIcon="grow-light"
+            legend={`2×4 · ${followsMain ? "FOLLOWS 4×8" : "INDEPENDENT"} · ${Number.isFinite(hours2) ? `${Math.round(hours2)}H RAIL` : "NO RAIL"}`}
+            legendRight={lightOn ? cloneDesk.headerLabel.toUpperCase() : "SF1000 OFF"}
+            className="dsc-light-panel"
+          >
+            <TentClock tent="clone" showEyebrow={false} />
             <p className="dsc-honesty" style={{ marginTop: 0 }}>
               Clone tent — SF1000 is the live lamp. <strong>Schedule follow</strong> is below; climate follow is on the
               Climate desk ({cloneClimateMode}).
             </p>
             <div className="dsc-chip-row">
-              <StatusChip icon="clone" label={`Climate · ${cloneClimateMode}`} tone="muted" onClick={() => navigate("/live/climate")} />
-              <StatusChip
+              <StatusTag icon="clone" label={`Climate · ${cloneClimateMode}`} tone="muted" onClick={() => navigate("/climate")} />
+              <StatusTag
                 icon="lighting"
                 label={followsMain ? "Schedule · Follow 4×8" : "Schedule · Independent"}
                 tone={followsMain ? "ok" : "warn"}
               />
             </div>
             <div className="dsc-chip-row">
-              <StatusChip
+              <StatusTag
                 icon="lighting"
-                motion={lightOn ? "glow" : undefined}
                 label={cloneDesk.headerLabel}
                 tone={lightOn ? "ok" : "muted"}
                 onClick={() => open("light.dsc_hub_sf1000_dimmer", "SF1000", "binary")}
               />
-              <StatusChip
+              <StatusTag
                 icon="lighting"
                 label={hoursDraft2.label}
                 tone={railTone(hoursDraft2.tone)}
                 onClick={() => open("sensor.dsc_clone_expected_light_hours", "2×4 expected hours", "numeric")}
               />
-              <StatusChip icon="roster" label={tentStageRailLabel(rail2, "clone")} tone={rail2.mixed ? "warn" : "muted"} />
+              <StatusTag icon="roster" label={tentStageRailLabel(rail2, "clone")} tone={rail2.mixed ? "warn" : "muted"} />
             </div>
             <ArcGauge
               label="Got / Want h"
@@ -417,12 +414,12 @@ export function LiveLightPage() {
             <EntitySelect entityId="select.dsc_hub_clone_photoperiod" label="Schedule source" icon="clone" />
             {followsMain ? (
               <div className="dsc-tent-follow-banner">
-                <StatusChip icon="tent" label="Schedule follows 4×8" tone="ok" />
+                <StatusTag icon="tent" label="Schedule follows 4×8" tone="ok" />
                 <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: "var(--dsc-fs-md)" }}>
                   Opens at <strong>{mainOnTime}</strong> · <strong>{fmt(hours2, 0)} h</strong> window (mirrored from
                   4×8). Edit the 4×8 card to change timing, or switch Schedule source to Independent.
                 </p>
-                <Button onClick={() => navigate("/live/climate")} style={{ marginTop: 8 }}>
+                <Button onClick={() => navigate("/climate")} style={{ marginTop: 8 }}>
                   Climate mode ({cloneClimateMode}) →
                 </Button>
               </div>
@@ -456,7 +453,68 @@ export function LiveLightPage() {
                 Independent — 2×4 schedule does not track 4×8.
               </p>
             ) : null}
-          </Card>
+          </Panel>
+        </div>
+
+        <div className="dsc-col-6">
+          <Panel legendIcon="light-hanger" legend="FIXTURES · NAMEPLATE WATTS · DUTY SOURCE">
+            {fixtures == null ? (
+              <p className="dsc-panel-foot">Loading fixtures…</p>
+            ) : fixtures.length === 0 ? (
+              <p className="dsc-panel-foot">Fixture table unavailable from this brain.</p>
+            ) : (
+              <div className="dsc-fixture-grid">
+                {fixtures.flatMap((sp) =>
+                  sp.devices.map((d) => (
+                    <div key={`${sp.space_id}-${d.device_id}`} className={`dsc-fixture-row${d.enabled === false ? " is-off" : ""}`}>
+                      <span className="dsc-fixture-space">{sp.space_id === "4x8" ? "4×8" : sp.space_id === "2x4" ? "2×4" : sp.space_id}</span>
+                      <span className="dsc-fixture-label">{d.label || d.device_id}</span>
+                      <span className="dsc-fixture-watts">{Number.isFinite(Number(d.watts)) ? `${Math.round(Number(d.watts))} W` : "— W"}</span>
+                      <span className="dsc-fixture-duty">{String(d.duty_source || "photoperiod")}{d.enabled === false ? " · off" : ""}</span>
+                    </div>
+                  )),
+                )}
+              </div>
+            )}
+            <p className="dsc-panel-foot">
+              Nameplate watts × photoperiod hours × tariff is the energy estimate below — not a meter, not a bill. Edit in Settings › Brain.
+              {twinAvailable ? "" : " The 4×8 fixture is not a driven lamp yet; its watts ride on the schedule window."}
+            </p>
+          </Panel>
+        </div>
+
+        <div className="dsc-col-6">
+          <Panel legendIcon="par-meter" legend="PPFD AT CANOPY · SF1000 CALIBRATION CURVE">
+            {calibrated ? (
+              <>
+                <div className="dsc-cal-strip">
+                  {calSteps.map((c) => (
+                    <div key={c.step} className={`dsc-cal-cell${Number.isFinite(c.ppfd) && c.ppfd > 0 ? "" : " is-empty"}`}>
+                      <span className="dsc-cal-step">{c.step} %</span>
+                      <span className="dsc-cal-val">{Number.isFinite(c.ppfd) && c.ppfd > 0 ? Math.round(c.ppfd) : "—"}</span>
+                      <span className="dsc-cal-unit">µmol</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="dsc-panel-foot">
+                  Operator-measured at the dimmer steps · live estimate {ppfd != null ? `${Math.round(ppfd)} µmol at the current level` : "needs the lamp on"}
+                  {dli2 != null ? ` · DLI ≈ ${fmtDli(dli2)} mol/m²/d over ${fmt(hours2, 0)} h` : ""}. Interpolated between steps, never extrapolated to a fixture without a curve.
+                </p>
+              </>
+            ) : (
+              <p className="dsc-panel-foot">
+                No calibration yet — PPFD shows as — until you measure the SF1000 at 25 / 50 / 75 / 100 % on Kit › Calibrate. A PAR sensor at the canopy would make this live.
+              </p>
+            )}
+            <div className="dsc-row-actions">
+              <Button onClick={() => navigate(paths.calibrate())}>Kit › Calibrate</Button>
+            </div>
+          </Panel>
+        </div>
+
+        <div className="dsc-col-6">
+          {/* Catalog id is the SF1000 until the fixture table carries a CannaLib id per lamp (Settings plan, The kit). */}
+          <PpfdMapCard catalogId="spider_farmer_sf1000" legend="SF1000 · MAKER PPFD MAP · CANNALIB" />
         </div>
 
         <div className="dsc-col-12">

@@ -16,7 +16,7 @@ import {
 } from "../lib/composePlantLogic";
 import { resolveVesselSpec, vesselEntityId, VESSEL_CATALOG } from "../lib/vesselSpec";
 import type { CatalogItem } from "../lib/catalog";
-import { KIT_PROBE_NUMBERS, probeLabel } from "../lib/seatModel";
+import { KIT_PROBE_NUMBERS, probeLabel } from "../lib/probeModel";
 import { STEPS, strainOk } from "./plantWizard/plantWizardSteps";
 import { PlantWizardPlantStep } from "./plantWizard/PlantWizardPlantStep";
 import { PlantWizardSoilStep } from "./plantWizard/PlantWizardSoilStep";
@@ -144,10 +144,10 @@ export function PlantWizard() {
     applyBlendLayers(preset.layers, guardedCallService);
   };
 
-  const copyVesselToPot = (pot: string) => {
-    const potN = Number(pot);
-    if (!Number.isFinite(potN) || pot === "none") return;
-    const id = vesselEntityId(potN);
+  const copyVesselToProbe = (probe: string) => {
+    const probeN = Number(probe);
+    if (!Number.isFinite(probeN) || probe === "none") return;
+    const id = vesselEntityId(probeN);
     if (!available(id)) return;
     void guardedCallService("input_select", "select_option", { entity_id: id, option: vessel.id });
   };
@@ -198,7 +198,7 @@ export function PlantWizard() {
     await flushEntityDrafts();
     try {
       if (assign !== "none") {
-        copyVesselToPot(assign);
+        copyVesselToProbe(assign);
         let result: unknown;
         if (available("script.dsc_build_plant_commit_and_assign")) {
           result = await callService("script", "turn_on", {
@@ -301,7 +301,7 @@ export function PlantWizard() {
   }, [tent]);
 
   const plantTitle = nick || strainLabel || "New plant";
-  const potLabel = assign === "none" ? "Roster stock (no probe)" : probeLabel(Number(assign));
+  const assignLabel = assign === "none" ? "Roster stock (no probe)" : probeLabel(Number(assign));
 
   const assignOptions = useMemo(() => {
     const raw = (entity("input_select.dsc_build_assign_pot")?.attributes?.options as string[]) || [];
@@ -430,7 +430,7 @@ export function PlantWizard() {
       {step.id === "review" ? (
         <PlantWizardReviewStep
           plantTitle={plantTitle}
-          potLabel={potLabel}
+          assignLabel={assignLabel}
           tent={tent}
           vessel={vessel}
           mixLabel={mixLabel}
@@ -447,7 +447,7 @@ export function PlantWizard() {
           showAdvanced={showAdvanced}
           setShowAdvanced={setShowAdvanced}
           callService={callService}
-          copyVesselToPot={copyVesselToPot}
+          copyVesselToProbe={copyVesselToProbe}
           retireConfirm={retireConfirm}
           setRetireConfirm={setRetireConfirm}
           refreshBrain={refreshBrain}
@@ -493,13 +493,13 @@ export function PlantWizard() {
             });
         }}
         title="Add plant"
-        confirmLabel={`Add to ${potLabel}`}
+        confirmLabel={`Add to ${assignLabel}`}
         busy={committing}
         help={null}
       >
         <p>
           Saves <strong>{plantTitle}</strong> with {vessel.label} and {mixLabel} to the roster, assigns{" "}
-          {potLabel} in {tent}, and copies the vessel to that probe.
+          {assignLabel} in {tent}, and copies the vessel to that probe.
           {expectedStage ? ` Calendar expected stage will be ${expectedStage}.` : ""}
         </p>
         {commitErr ? (

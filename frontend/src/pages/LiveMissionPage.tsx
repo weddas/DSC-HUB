@@ -1,351 +1,372 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useAlertPrefs } from "../hooks/useAlertPrefs";
 import { useNavigate } from "react-router-dom";
-import {
-  Button,
-  Card,
-  PageHeader,
-  StatusChip,
-} from "../components/ui";
-import { IconButton, OverflowMenu, SlideDrawer } from "../components/chrome";
+import { Button, Icon, StatusTag } from "../components/ui";
+import { Panel } from "../components/Panel";
 import { NextRecommendedCard } from "../components/Honesty";
-import { useEntityBus } from "../hooks/useEntityBus";
-import { useHeldReading, useHubOfflineMs, useBeatOfflineMs, usePanelOfflineMs } from "../hooks/useHeldReading";
-import { fmtDurationMs } from "../lib/formatDuration";
-import { buildPlantSeat, KIT_PROBE_NUMBERS, isPotInService } from "../lib/seatModel";
 import { HubLinkLine } from "../components/HubLinkLine";
-import { HelpTip } from "../components/HelpTip";
-import { VesselGlyph } from "../components/VesselGlyph";
-import { readPotVessel } from "../lib/vesselSpec";
-import { readPotTrust } from "../lib/potTrust";
-import { resolveCfm } from "../lib/cfmProvenance";
-import { CfmTrustLine } from "../components/CfmBadge";
-import { KitPulse } from "../components/KitPulse";
-import { buildKitNodesFromFleet, kitInServiceCount, type KitNode } from "../lib/kitInventory";
+import { useInspector } from "../components/InspectorHost";
+import { GrowLogCompact, growLogGlyph, useRecentGrowLog } from "../components/GrowLogCompact";
+import { thenSummary, whenSummary } from "../components/settings/AutomationRulesCard";
+import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleet } from "../hooks/useFleet";
+import { useHubOfflineMs, useBeatOfflineMs, usePanelOfflineMs } from "../hooks/useHeldReading";
 import { useSettledAvailability } from "../hooks/useSettledAvailability";
 import { useAlertSnooze } from "../hooks/useAlertSnooze";
-import { useInspector } from "../components/InspectorHost";
-import { ALERT_ENTITY_IDS } from "../lib/alertPlaybook";
+import { useAlertSince } from "../hooks/useAlertSince";
+import { fmtDurationMs } from "../lib/formatDuration";
+import { ALERT_ENTITY_IDS, alertRoute, playbookFor } from "../lib/alertPlaybook";
+import { growLogSeverity, type DisplayGrowLogEvent } from "../lib/growLogFilter";
+import {
+  get_automation_targets,
+  get_automations,
+  put_automations,
+  type AutomationRule,
+  type AutomationTargets,
+} from "../lib/fleetApi";
+import { paths } from "../lib/paths";
 
+/** Which zone a message or alert id is talking about — for the ZONE column. */
+export function zoneOfText(text: string): string {
+  const s = text.toLowerCase();
+  const probe = /probe\s?(\d)|pot(\d)/.exec(s);
+  if (probe) return `P${probe[1] ?? probe[2]}`;
+  if (/2[x×]4|clone|mat\b|mister/.test(s)) return "2×4";
+  if (/4[x×]8|\btent\b|main|twin/.test(s)) return "4×8";
+  if (/room|lung|exhaust|intake|recirc/.test(s)) return "ROOM";
+  if (/hub|panel|beat|heartbeat|fleet|firmware|failsafe/.test(s)) return "HUB";
+  return "—";
+}
+
+/** Grow-log lines that count as "what the hub did" for an alert theme. */
+function themeRegex(alertId: string): RegExp {
+  const s = alertId.toLowerCase();
+  if (/dark|light|photo|catchup/.test(s)) return /dark|light|sf1000|photoperiod|sunset|sunrise|lamp/i;
+  if (/vpd|climate|humid|heater|vent/.test(s)) return /vpd|humidifier|dehumidifier|heater|fans?|ladder|climate|rung/i;
+  if (/root|probe|pot|mat|tank/.test(s)) return /probe|mat|root|moisture|tank|pump|shot/i;
+  if (/failsafe|emergency/.test(s)) return /failsafe|emergency|safe/i;
+  if (/reduced_kit|nest/.test(s)) return /capacity|reduced|offline|relay/i;
+  return /demand|ladder|rung|banner/i;
+}
+
+function hubDidFor(alertId: string, events: DisplayGrowLogEvent[]): DisplayGrowLogEvent | null {
+  const re = themeRegex(alertId);
+  const cutoff = Date.now() / 1000 - 6 * 3600;
+  return events.find((ev) => ev.ts >= cutoff && re.test(ev.message)) ?? null;
+}
+
+function shortTime(ts: number): string {
+  return new Date(ts * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function ruleState(r: AutomationRule): { label: string; tone: "ok" | "warn" | "bad" | "muted"; live?: boolean } {
+  if (!r.enabled) return { label: "OFF", tone: "muted" };
+  if (r.last_error) return { label: "WRITE FAILED", tone: "bad", live: true };
+  if (r.firing) return { label: "FIRING", tone: "warn", live: true };
+  if (r.pending) return { label: "PENDING", tone: "warn" };
+  if (r.releasing) return { label: "RELEASING", tone: "ok" };
+  return { label: "ARMED", tone: "ok" };
+}
+
+function ruleScope(r: AutomationRule): string {
+  const ids = ("all" in r.trigger ? r.trigger.all : r.trigger.any) ?? [];
+  const zones = Array.from(new Set(ids.map((c) => zoneOfText(String(c.entity_id))))).filter((z) => z !== "—");
+  return zones.length ? zones.join(" · ") : "all";
+}
+
+/**
+ * Alerts desk (frame 1j): active now → what the hub did about it → history → the rules it
+ * follows before it calls you. Command stays on Climate; kit health lives on Kit.
+ */
 export function LiveMissionPage() {
-  const { state, num, available, entity, tick } = useEntityBus();
+  const { state, entity, tick } = useEntityBus();
   const fleet = useFleet();
   const navigate = useNavigate();
-  const [searchOpen, setSearchOpen] = useState(false);
   const settled = useSettledAvailability();
-  const { isSnoozed } = useAlertSnooze();
+  const { isSnoozed, snooze } = useAlertSnooze();
   const inspector = useInspector();
+  const log = useRecentGrowLog(24, 120);
   void tick;
 
   const hubOnline = fleet.hub.online || settled("sensor.dsc_hub_uptime");
   const offlineMs = useHubOfflineMs();
   const beatOfflineMs = useBeatOfflineMs();
   const panelOfflineMs = usePanelOfflineMs();
-  const alerts = num("sensor.dsc_active_alert_count", 0);
-
-  const tentT = useHeldReading("sensor.dsc_hub_tent_temperature");
-  const tentRh = useHeldReading("sensor.dsc_hub_tent_humidity");
-  const tentVpd = useHeldReading("sensor.dsc_hub_vpd_kpa");
-  const cloneT = useHeldReading("sensor.dsc_hub_clone_temperature");
-  const cloneRh = useHeldReading("sensor.dsc_hub_clone_humidity");
-  const cloneVpd = useHeldReading("sensor.dsc_hub_clone_vpd_kpa");
-  const potM1 = useHeldReading("sensor.dsc_probe1_got_moisture");
-  const potM2 = useHeldReading("sensor.dsc_probe2_got_moisture");
-  const potM3 = useHeldReading("sensor.dsc_probe3_got_moisture");
-  const potM4 = useHeldReading("sensor.dsc_probe4_got_moisture");
-  const potMoistureHeld = [potM1, potM2, potM3, potM4];
-
   const panelLink = fleet.panel.online ? "on" : state("binary_sensor.dsc_hub_panel_link");
   const panelOk = fleet.panel.online || panelLink === "on";
-  const heartbeat = fleet.hub.values.heartbeat != null
-    ? String(fleet.hub.values.heartbeat)
-    : state("sensor.dsc_hub_heartbeat", "NO BEAT");
-  const beatOk =
-    fleet.hub.online && fleet.hub.values.heartbeat != null
-      ? true
-      : settled("sensor.dsc_hub_heartbeat");
+  const panelSettled = settled("binary_sensor.dsc_hub_panel_link") || panelOk;
+  const panelHaOnly = !panelOk && state("sensor.dsc_control_wifi_rssi", "") !== "";
+  const panelOffline = !panelOk && !panelHaOnly && !panelSettled;
+  const heartbeat =
+    fleet.hub.values.heartbeat != null ? String(fleet.hub.values.heartbeat) : state("sensor.dsc_hub_heartbeat", "");
+  const beatOk = fleet.hub.online && fleet.hub.values.heartbeat != null ? true : settled("sensor.dsc_hub_heartbeat");
   const takeover = state("switch.dsc_hub_manual_takeover") === "on";
   const fanOverride = state("switch.dsc_hub_tent_manual_override") === "on";
   const fullAuto = state("switch.dsc_hub_tent_full_auto_mode") === "on";
   const reducedKit = !!fleet.system.reduced_kit;
   const honesty = String(entity("sensor.dsc_keepup_gaps")?.attributes?.full_auto_honesty ?? "");
-  const autoDriven = fullAuto && !takeover;
-  const fleetStatus = state("sensor.dsc_fleet_version_status", fleet.expected_firmware || "—");
-  const fleetLabel = fleet.version === fleet.expected_firmware ? "ok" : fleetStatus === "warn" ? "warn" : "drift";
+  const fleetOk = fleet.version === fleet.expected_firmware;
 
-  const activeFaults = ALERT_ENTITY_IDS.filter((id) => state(id) === "on" && !isSnoozed(id)).map((id) => ({
-    id,
-    label: id.split(".").pop()?.replace(/dsc_/, "").replace(/_/g, " ") || id,
-  }));
-  const seats = KIT_PROBE_NUMBERS.map((n) => buildPlantSeat(n, { state, entity }));
-  const kitNodes: KitNode[] = buildKitNodesFromFleet(fleet);
-  const svc = kitInServiceCount(kitNodes);
-  const outCfm = resolveCfm("sensor.dsc_cfm_exhaust_out_allocated", "sensor.dsc_cfm_exhaust_out", {
-    available,
-    num,
-  });
-  const panelSettled = settled("binary_sensor.dsc_hub_panel_link") || panelOk;
-  const panelHaOnly = !panelOk && available("sensor.dsc_control_wifi_rssi");
-  const panelOffline = !panelOk && !panelHaOnly && !panelSettled;
-  const anyHeld = tentT.stale || tentRh.stale || tentVpd.stale || cloneT.stale || cloneRh.stale || cloneVpd.stale;
-  const openNode = (node: KitNode) =>
-    inspector.open({
-      entityId: node.entityId,
-      label: node.label,
-      kind: "kit",
-      runtimeToday: node.runtimeToday,
-      cyclesToday: node.cyclesToday,
-      demandEntity: node.demandEntity,
-    });
+  const alertPrefs = useAlertPrefs();
+  const activeIds = ALERT_ENTITY_IDS.filter((id) => state(id) === "on" && !isSnoozed(id) && alertPrefs.isEnabled(id));
+  const snoozedIds = ALERT_ENTITY_IDS.filter((id) => state(id) === "on" && isSnoozed(id) && alertPrefs.isEnabled(id));
+  const disabledActive = ALERT_ENTITY_IDS.filter((id) => state(id) === "on" && !alertPrefs.isEnabled(id)).length;
+  const sinceOf = useAlertSince(activeIds);
+
+  // Rules — read-only view of automation v2 with an enabled toggle; the editor stays in Settings.
+  const [rules, setRules] = useState<AutomationRule[] | null>(null);
+  const [targets, setTargets] = useState<AutomationTargets | null>(null);
+  const [rulesErr, setRulesErr] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  // Rules and targets load independently: an older brain (the Pi today) serves the rules
+  // but not the targets route, and a missing targets list only loses the friendly labels.
+  const loadRules = async () => {
+    try {
+      const a = await get_automations();
+      setRules(a.rules);
+      setRulesErr(null);
+    } catch (e) {
+      setRulesErr(e instanceof Error ? `Rules unavailable — ${e.message}` : "rules unavailable");
+    }
+    try {
+      setTargets(await get_automation_targets());
+    } catch {
+      setTargets(null);
+    }
+  };
+  useEffect(() => {
+    void loadRules();
+    const timer = window.setInterval(() => void loadRules(), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const toggleRule = async (rule: AutomationRule) => {
+    if (!rules) return;
+    setSavingId(rule.id);
+    try {
+      const next = rules.map((r) => (r.id === rule.id ? { ...r, enabled: !r.enabled } : r));
+      const res = await put_automations(next);
+      setRules(res.rules);
+      setRulesErr(null);
+    } catch (e) {
+      setRulesErr(e instanceof Error ? e.message : "rule save failed");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const history = useMemo(() => log.events.slice(0, 40), [log.events]);
+  const firingCount = rules?.filter((r) => r.enabled && r.firing).length ?? 0;
 
   return (
-    <div className="dsc-page">
-      <PageHeader
-        icon="mission"
-        title="Mission"
-        subtitle="Triage glance — Next, faults, seats, lung. Command lives on Climate."
-        primaryAction={
-          <Button teal onClick={() => navigate("/live/root")}>
-            Open Root
-          </Button>
-        }
-        actions={
-          <>
-            <HelpTip title="Mission triage">
-              <p>
-                <b>HELD VITALS</b> are last-known readings while the link is soft. <b>PANEL LIMITED LINK</b> means Wi‑Fi
-                RSSI without a full panel link — different from <b>NO BEAT</b>.
-              </p>
-              <p>
-                Example: Hub up + NO BEAT → open Fleet for link chips. Command flips still live on Climate; Mission is
-                the triage glance.
-              </p>
-            </HelpTip>
-            <Button primary onClick={() => navigate("/live/climate")}>
-              Climate Want
-            </Button>
-            <IconButton label="Search" icon="search" onClick={() => setSearchOpen(true)} />
-            <OverflowMenu
-              label="Mission settings"
-              items={[
-                {
-                  id: "climate",
-                  label: "Open Climate",
-                  onSelect: () => navigate("/live/climate"),
-                },
-                { id: "main", label: "4×8 cockpit", onSelect: () => navigate("/live/4x8") },
-                { id: "clone", label: "2×4 cockpit", onSelect: () => navigate("/live/2x4") },
-                { id: "fleet", label: "Open Fleet", onSelect: () => navigate("/fleet") },
-              ]}
-            />
-          </>
-        }
-      />
-
-      <div className="dsc-status-strip">
-        <StatusChip
-          icon={hubOnline ? "ok" : "alert"}
-          label={hubOnline ? "HUB ONLINE" : "HUB OFFLINE"}
-          tone={hubOnline ? "ok" : "bad"}
-          onClick={() =>
-            inspector.open({ entityId: "binary_sensor.dsc_hub_link", label: "Hub", kind: "kit" })
-          }
-        />
-        {!hubOnline ? (
-          <StatusChip
-            label={`OFF ${offlineMs != null ? fmtDurationMs(offlineMs) : "—"}`}
-            tone="bad"
-            pulse
+    <div className="dsc-page dsc-alerts">
+      <header className="dsc-ov-head">
+        <div>
+          <div className="dsc-eyebrow">Live · Alerts</div>
+          <h1 className="dsc-headline">The hub acts before it calls you.</h1>
+          <p className="dsc-subline">
+            {activeIds.length
+              ? `${activeIds.length} active · ${rules?.length ?? "—"} rules · ${firingCount} firing now`
+              : `Nothing active · ${rules?.length ?? "—"} rules · ${firingCount} firing now`}
+            . Command lives on Climate; kit health on Kit.
+          </p>
+        </div>
+        <div className="dsc-tagrow dsc-ov-tags">
+          <StatusTag
+            label={hubOnline ? "HUB ONLINE" : `HUB OFF ${offlineMs != null ? fmtDurationMs(offlineMs) : "—"}`}
+            tone={hubOnline ? "ok" : "bad"}
+            live={!hubOnline}
+            onClick={() => inspector.open({ entityId: "binary_sensor.dsc_hub_link", label: "Hub", kind: "kit" })}
           />
-        ) : null}
-        {anyHeld ? <StatusChip label="HELD VITALS" tone="warn" /> : null}
-        <StatusChip
-          label={`${svc.inService} of ${svc.total} in service`}
-          tone={svc.dark > 0 ? "bad" : "ok"}
-          onClick={() => navigate("/fleet")}
-        />
-        <StatusChip
-          label={panelOk ? "PANEL LINKED" : panelHaOnly ? "PANEL LIMITED LINK" : panelOffline ? "PANEL OFFLINE" : "PANEL…"}
-          tone={panelOk ? "ok" : panelHaOnly ? "warn" : "bad"}
-          onClick={() =>
-            inspector.open({ entityId: "binary_sensor.dsc_hub_panel_link", label: "Panel link", kind: "kit" })
-          }
-        />
-        {panelOffline ? (
-          <StatusChip
-            label={`PANEL OFF ${panelOfflineMs != null ? fmtDurationMs(panelOfflineMs) : "—"}`}
-            tone="bad"
-            pulse
-          />
-        ) : null}
-        <StatusChip
-          icon={beatOk ? "ok" : "alert"}
-          label={beatOk ? `BEAT ${heartbeat}` : "NO BEAT"}
-          tone={beatOk ? "ok" : "bad"}
-          onClick={() =>
-            inspector.open({ entityId: "sensor.dsc_hub_heartbeat", label: "Heartbeat", kind: "kit" })
-          }
-        />
-        {!beatOk ? (
-          <StatusChip label={`BEAT OFF ${beatOfflineMs != null ? fmtDurationMs(beatOfflineMs) : "—"}`} tone="bad" pulse />
-        ) : null}
-        <StatusChip
-          icon={activeFaults.length === 0 ? "ok" : "alert"}
-          label={activeFaults.length === 0 ? "All clear" : `${activeFaults.length} alert(s)`}
-          tone={activeFaults.length === 0 ? "ok" : "bad"}
-          pulse={activeFaults.length > 0}
-          onClick={() => {
-            const first = activeFaults[0];
-            inspector.open({
-              entityId: first?.id || "sensor.dsc_active_alert_count",
-              label: first?.label || "Alerts",
-              kind: "alert",
-            });
-          }}
-        />
-        <StatusChip
-          label={fleetLabel === "ok" ? "FLEET OK" : fleetLabel === "warn" ? "FLEET WARN" : "FLEET DRIFT"}
-          tone={fleetLabel === "ok" ? "ok" : fleetLabel === "warn" ? "warn" : "bad"}
-          onClick={() =>
-            inspector.open({
-              entityId: "sensor.dsc_fleet_version_status",
-              label: `Fleet ${fleet.expected_firmware}`,
-              kind: "fleet",
-            })
-          }
-        />
-        {fullAuto ? <StatusChip icon="ok" label="FULL AUTO" tone="ok" pulse /> : null}
-        {autoDriven ? <StatusChip label="AUTO-DRIVEN" tone="ok" /> : null}
-        {takeover ? <StatusChip icon="alert" label="MANUAL TAKEOVER" tone="warn" pulse /> : null}
-        {fanOverride ? <StatusChip icon="alert" label="FAN OVERRIDE" tone="warn" pulse /> : null}
-        {fullAuto && reducedKit ? (
-          <StatusChip
-            icon="alert"
-            label={honesty || "CAPACITY OFFLINE"}
-            tone="warn"
-            pulse
-            onClick={() =>
-              inspector.open({
-                entityId: "binary_sensor.dsc_reduced_kit",
-                label: "Capacity offline",
-                kind: "alert",
-              })
+          <StatusTag
+            label={
+              panelOk
+                ? "PANEL LINKED"
+                : panelHaOnly
+                  ? "PANEL LIMITED LINK"
+                  : panelOffline
+                    ? `PANEL OFF ${panelOfflineMs != null ? fmtDurationMs(panelOfflineMs) : "—"}`
+                    : "PANEL…"
             }
+            tone={panelOk ? "ok" : panelHaOnly ? "warn" : "bad"}
+            live={panelOffline}
+            onClick={() => inspector.open({ entityId: "binary_sensor.dsc_hub_panel_link", label: "Panel link", kind: "kit" })}
           />
-        ) : null}
-      </div>
+          <StatusTag
+            label={beatOk ? `BEAT #${heartbeat}` : `NO BEAT ${beatOfflineMs != null ? fmtDurationMs(beatOfflineMs) : ""}`.trim()}
+            tone={beatOk ? "ok" : "bad"}
+            live={!beatOk}
+            onClick={() => inspector.open({ entityId: "sensor.dsc_hub_heartbeat", label: "Heartbeat", kind: "kit" })}
+          />
+          <StatusTag
+            label={fleetOk ? `FLEET ${fleet.expected_firmware}` : "FLEET DRIFT"}
+            tone={fleetOk ? "muted" : "warn"}
+            onClick={() => navigate(paths.kit())}
+          />
+          {fullAuto ? <StatusTag label="FULL AUTO" tone="ok" /> : <StatusTag label="FULL AUTO OFF" tone="warn" />}
+          {takeover ? <StatusTag label="MANUAL TAKEOVER" tone="bad" live /> : null}
+          {fanOverride ? <StatusTag label="FAN OVERRIDE" tone="warn" /> : null}
+          {fullAuto && reducedKit ? (
+            <StatusTag
+              label={honesty || "CAPACITY OFFLINE"}
+              tone="warn"
+              onClick={() => inspector.open({ entityId: "binary_sensor.dsc_reduced_kit", label: "Capacity offline", kind: "alert" })}
+            />
+          ) : null}
+        </div>
+      </header>
 
-      <div className="dsc-grid dsc-mission-modern">
-        <div className="dsc-col-12">
-          <NextRecommendedCard />
-        </div>
-        <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Hub link" icon="fleet">
-            <HubLinkLine />
-          </Card>
-        </div>
-        <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Kit pulse" icon="ok">
-            <KitPulse nodes={kitNodes} onSelect={openNode} />
-          </Card>
-        </div>
-
-        <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Lung CFM" icon="climate">
-            <CfmTrustLine readings={[outCfm]} />
-            <div className="dsc-chip-row">
-              <button type="button" className="dsc-chip" onClick={() => navigate("/live/climate")}>
-                OUT {Number.isFinite(outCfm.value) ? Math.round(outCfm.value) : "—"} cfm → Climate
-              </button>
-            </div>
-          </Card>
-        </div>
-
-        <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Plant seats" icon="seat">
-            <div className="dsc-chip-row">
-              {seats.map((s) => {
-                const oos = !isPotInService(s.pot, state);
-                const trust = readPotTrust(s.pot, state);
-                const held = potMoistureHeld[s.pot - 1];
-                const glow = !oos && !trust.blockNeedAct && s.need && s.need !== "—" && s.need !== "ok";
+      <div className="dsc-alerts-grid">
+        <Panel legendIcon="bell" legend={`ACTIVE NOW · ${activeIds.length}`} tone={activeIds.length ? "bad" : "ok"} live={activeIds.length > 0}>
+          {activeIds.length === 0 ? (
+            <p className="dsc-alerts-empty">
+              Nothing active. {snoozedIds.length ? `${snoozedIds.length} acknowledged until the next hub boot.` : "The hub has nothing to say."}
+            </p>
+          ) : (
+            <div className="dsc-alert-list">
+              {activeIds.map((id) => {
+                const pb = playbookFor(id, "alert");
+                const route = alertRoute(id);
+                const did = hubDidFor(id, log.events);
+                const since = sinceOf(id);
                 return (
-                  <button
-                    key={s.pot}
-                    type="button"
-                    className={`dsc-chip${oos ? "" : " dsc-chip--ok"}${glow ? " dsc-chip--pulse" : ""}`}
-                    onClick={() =>
-                      window.dispatchEvent(new CustomEvent("dsc-dash-select-pot", { detail: { pot: s.pot } }))
-                    }
-                    title={oos ? "Out of service — no data" : s.need}
-                  >
-                    <VesselGlyph spec={readPotVessel(s.pot, state, entity)} size={18} />
-                    P{s.pot} {s.plantName !== "—" ? s.plantName : "—"} · Got M{" "}
-                    {oos ? "—" : held.stale ? `${Number.isFinite(held.value) ? held.value.toFixed(0) : "—"}*` : s.moisture}
-                    {oos ? " · Out of service" : ` · Need ${s.need}`}
-                    {held.stale && !oos ? " · HELD" : ""}
-                    {trust.labels.length ? ` · ${trust.labels.join("/")}` : ""}
-                  </button>
+                  <article key={id} className="dsc-alert-card">
+                    <span className="dsc-alert-zone">
+                      {zoneOfText(id)}
+                      {alertPrefs.severityOf(id) !== "critical" ? (
+                        <span className="dsc-alert-sev">{alertPrefs.severityOf(id).toUpperCase()}</span>
+                      ) : null}
+                    </span>
+                    <div className="dsc-alert-body">
+                      <div className="dsc-alert-title">{pb.title}</div>
+                      <div className="dsc-alert-did">
+                        {did
+                          ? `Hub: ${did.message.replace(/^[▶■▲◆●○•]\s*/, "")} · ${shortTime(did.ts)}`
+                          : "No automatic action recorded in the last 6 h"}
+                      </div>
+                      <div className="dsc-alert-fix">{pb.fix}</div>
+                    </div>
+                    <div className="dsc-alert-side">
+                      <span className="dsc-alert-since" title="Since this screen first saw it — the hub does not stamp alert start times">
+                        {since != null ? `seen ${fmtDurationMs(Date.now() - since)}` : "seen just now"}
+                      </span>
+                      <button type="button" className="dsc-alert-cta" onClick={() => navigate(route.href)}>
+                        {route.cta.toUpperCase()} →
+                      </button>
+                      <button
+                        type="button"
+                        className="dsc-alert-ack"
+                        onClick={() => snooze(id)}
+                        title="Hide until the next hub boot — the condition itself is untouched"
+                      >
+                        <Icon name="snooze" size={11} /> acknowledge
+                      </button>
+                    </div>
+                  </article>
                 );
               })}
             </div>
-          </Card>
-        </div>
+          )}
+          {disabledActive ? (
+            <p className="dsc-panel-foot">
+              {disabledActive} active alert{disabledActive === 1 ? "" : "s"} hidden by <a href="#/settings/alerts">Settings › Alerts</a>.
+            </p>
+          ) : null}
+          {snoozedIds.length && activeIds.length ? (
+            <p className="dsc-panel-foot">{snoozedIds.length} more acknowledged until the next hub boot.</p>
+          ) : null}
+        </Panel>
 
-        <div className="dsc-col-6">
-          <Card className="dsc-glass" title="Faults / alerts" icon="alert">
-            {activeFaults.length === 0 && alerts === 0 ? (
-              <div className="dsc-empty dsc-empty--ok">No active faults — all clear.</div>
-            ) : (
-              <ul className="dsc-fault-list">
-                {activeFaults.map((f) => (
-                  <li key={f.id}>
-                    <StatusChip
-                      label={f.label}
-                      tone="bad"
-                      pulse
-                      icon="alert"
-                      onClick={() => inspector.open({ entityId: f.id, label: f.label, kind: "alert" })}
-                    />
-                  </li>
-                ))}
-                {alerts > 0 && activeFaults.length === 0 ? (
-                  <li>
-                    <StatusChip label={`${alerts} system alert(s)`} tone="bad" pulse icon="alert" />
-                    <span className="dsc-muted">See Fleet for details</span>
-                  </li>
-                ) : null}
-              </ul>
-            )}
-          </Card>
-        </div>
+        <Panel legend="HISTORY · 24 H">
+          {history.length ? (
+            <div className="dsc-hist-grid">
+              {history.map((ev) => {
+                const g = growLogGlyph(ev.message);
+                const sev = growLogSeverity(ev.message);
+                const tag = sev === "alert" ? "ALERT" : g.char === "▶" || g.char === "■" ? "HUB" : "NOTE";
+                return (
+                  <div key={ev.id} className="dsc-hist-row">
+                    <span className="dsc-hist-time">{shortTime(ev.ts)}</span>
+                    <span className="dsc-hist-zone">{zoneOfText(ev.message)}</span>
+                    <span className="dsc-hist-text">
+                      {ev.message.replace(/^[▶■▲◆●○•]\s*/, "")}
+                      {ev.repeatCount != null && ev.repeatCount > 1 ? <span className="dsc-log-repeat">×{ev.repeatCount}</span> : null}
+                    </span>
+                    <span className={`dsc-hist-tag dsc-hist-tag--${tag.toLowerCase()}`}>{tag}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <GrowLogCompact events={[]} loading={log.loading} rows={0} />
+          )}
+          <p className="dsc-panel-foot">
+            ALERT = a notable the hub flagged · HUB = something it switched · NOTE = stage or operator line. Full review on the Logs desk.
+          </p>
+        </Panel>
       </div>
 
-      <SlideDrawer open={searchOpen} onClose={() => setSearchOpen(false)} title="Quick jump">
-        <div className="dsc-chip-row">
-          {[
-            { path: "/live/climate", label: "Climate" },
-            { path: "/live/4x8", label: "4×8" },
-            { path: "/live/2x4", label: "2×4" },
-            { path: "/live/root", label: "Root" },
-            { path: "/live/light", label: "Light" },
-            { path: "/grow/compose", label: "Compose" },
-            { path: "/fleet", label: "Fleet" },
-          ].map((l) => (
-            <button
-              key={l.path}
-              type="button"
-              className="dsc-btn teal"
-              onClick={() => {
-                setSearchOpen(false);
-                navigate(l.path);
-              }}
-            >
-              {l.label}
-            </button>
-          ))}
+      <Panel legend="RULES · WHAT THE HUB DOES BEFORE IT CALLS YOU">
+        {rulesErr ? <p className="dsc-honesty">{rulesErr}</p> : null}
+        {rules && rules.length ? (
+          <div className="dsc-rules-grid">
+            <span className="dsc-legend">Condition</span>
+            <span className="dsc-legend">Scope</span>
+            <span className="dsc-legend">Hub action</span>
+            <span className="dsc-legend">State</span>
+            <span className="dsc-legend">On</span>
+            {rules.map((r) => {
+              const st = ruleState(r);
+              return (
+                <div key={r.id} className={`dsc-rule-row${r.enabled ? "" : " is-off"}`}>
+                  <span className="dsc-rule-cond">
+                    <strong>{r.name || r.id}</strong>
+                    <span>{whenSummary(r)}</span>
+                  </span>
+                  <span className="dsc-rule-scope">{ruleScope(r)}</span>
+                  <span className="dsc-rule-then">{thenSummary(r, targets)}</span>
+                  <span>
+                    <StatusTag label={st.label} tone={st.tone} live={st.live} title={r.last_error ?? undefined} />
+                  </span>
+                  <span>
+                    <button
+                      type="button"
+                      className={`dsc-switch${r.enabled ? " is-on" : ""}`}
+                      role="switch"
+                      aria-checked={r.enabled}
+                      aria-label={`${r.name || r.id} enabled`}
+                      disabled={savingId != null}
+                      onClick={() => void toggleRule(r)}
+                    >
+                      <span className="dsc-switch-thumb" />
+                    </button>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ) : rules ? (
+          <p className="dsc-alerts-empty">No rules yet. The escalation ladder runs on the hub regardless; rules add what happens on top.</p>
+        ) : (
+          <p className="dsc-panel-foot">Loading rules…</p>
+        )}
+        <div className="dsc-row-actions">
+          <Button onClick={() => navigate(paths.settings("automation"))}>Edit rules in Settings</Button>
+          <Button onClick={() => navigate(paths.climate())}>Open Climate command</Button>
         </div>
-      </SlideDrawer>
+        <p className="dsc-panel-foot">
+          Fired counts are not recorded yet — STATE is live: ARMED, PENDING (inside debounce), FIRING, RELEASING, or WRITE FAILED.
+        </p>
+      </Panel>
+
+      <div className="dsc-alerts-grid">
+        <Panel legend="LINK">
+          <HubLinkLine />
+        </Panel>
+        <Panel legend="DO THIS NEXT">
+          <NextRecommendedCard />
+        </Panel>
+      </div>
     </div>
   );
 }

@@ -115,7 +115,7 @@ export function SlideDrawer({
   onClose: () => void;
   title: string;
   side?: "left" | "right";
-  /** Wider panel for plant seats (~520px). History/inspector stay default. */
+  /** Wider panel for plant probes (~520px). History/inspector stay default. */
   wide?: boolean;
   children: ReactNode;
 }) {
@@ -221,7 +221,7 @@ export function parseBlendLayers(blend: string | undefined | null): SoilLayer[] 
 export function SoilCrossSection({
   layers,
   valid,
-  emptyLabel = "No blend on roster seat",
+  emptyLabel = "No blend on this plant yet",
   spec,
 }: {
   layers: SoilLayer[];

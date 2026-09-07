@@ -1,16 +1,27 @@
 import { formatApiError } from "./apiError";
 
-export async function get_entity_history(
-  entityId: string,
-  hours = 6,
-): Promise<Array<{ t: number; v: number }>> {
+export interface EntityHistory {
+  points: Array<{ t: number; v: number }>;
+  /** false = the brain's recorder has no series for this entity (not "no points in range"). */
+  tracked: boolean | null;
+}
+
+/**
+ * One entity's history from the brain's recorder. The brain buckets the *whole* window to
+ * `maxPoints`, so a 7-day or 30-day request spans the window instead of collapsing to the
+ * newest samples. `tracked` is the brain's word on whether it records this entity at all.
+ */
+export async function get_entity_history(entityId: string, hours = 6, maxPoints = 720): Promise<EntityHistory> {
   // Some channel resolvers can hand back "" before a series is bound — an unresolved
   // channel is an honest empty state, not a request worth sending (backend 422s on it anyway).
-  if (!entityId) return [];
-  const resp = await fetch(`/history?entity_id=${encodeURIComponent(entityId)}&hours=${hours}`);
-  if (!resp.ok) return [];
-  const data = (await resp.json()) as { points?: Array<{ t: number; v: number }> };
-  return data.points ?? [];
+  if (!entityId) return { points: [], tracked: null };
+  const mp = Math.max(8, Math.min(2000, Math.round(maxPoints)));
+  const resp = await fetch(`/history?entity_id=${encodeURIComponent(entityId)}&hours=${hours}&max_points=${mp}`);
+  if (!resp.ok) return { points: [], tracked: null };
+  const ctype = resp.headers.get("content-type") || "";
+  if (!ctype.includes("json")) return { points: [], tracked: null };
+  const data = (await resp.json()) as { points?: Array<{ t: number; v: number }>; tracked?: boolean };
+  return { points: data.points ?? [], tracked: typeof data.tracked === "boolean" ? data.tracked : null };
 }
 
 export type GrowLogEvent = { id: number; message: string; ts: number };
@@ -90,6 +101,35 @@ export async function get_settings(): Promise<{
 }> {
   const resp = await fetch("/settings");
   if (!resp.ok) throw new Error("settings fetch failed");
+  return resp.json();
+}
+
+export interface SettingsManifestRow {
+  key: string;
+  tier: "brain" | "firmware" | "hub" | "browser";
+  kind: string;
+  default: unknown;
+  section: string;
+  label: string;
+  description: string;
+  consumers: string[];
+  unit?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  secret?: boolean;
+  source?: string;
+}
+
+/** Brain-owned settings described by the brain itself — defaults, ranges, units, consumers. */
+export async function get_settings_manifest(): Promise<{
+  rows: SettingsManifestRow[];
+  values: Record<string, unknown>;
+}> {
+  const resp = await fetch("/settings/manifest");
+  if (!resp.ok) throw new Error("settings manifest unavailable");
+  const ctype = resp.headers.get("content-type") ?? "";
+  if (!ctype.includes("json")) throw new Error("brain predates the settings manifest");
   return resp.json();
 }
 
@@ -637,21 +677,88 @@ export async function save_calibration(
 }
 
 export type AutomationOp = "gt" | "lt" | "gte" | "lte" | "eq" | "ne" | "is" | "is_not";
-export type AutomationActionType = "banner" | "oos_seat";
+export type AutomationActionType = "banner" | "oos_seat" | "zigbee_switch" | "relay" | "setpoint";
+
+/** One condition. `hysteresis` only for numeric ops; `max_age_s` needs a device timestamp. */
+export type AutomationCondition = {
+  entity_id: string;
+  op: AutomationOp | string;
+  value: number | string | boolean;
+  hysteresis?: number | null;
+  max_age_s?: number | null;
+};
+
+/** v2 trigger group (one level). A v1 flat trigger is normalized server-side to `{all:[cond]}`. */
+export type AutomationTrigger = { all: AutomationCondition[]; any?: never } | { any: AutomationCondition[]; all?: never };
 
 export type AutomationRule = {
   id: string;
   name: string;
   enabled: boolean;
-  trigger: { entity_id: string; op: AutomationOp | string; value: number | string | boolean };
+  trigger: AutomationTrigger;
+  /** Local time-of-day gate, HH:MM; may wrap past midnight. Null = always. */
+  window?: { start: string; end: string } | null;
+  /** Condition must hold this long before firing. */
+  debounce_s?: number;
+  /** Condition must be clear this long before the effect is released. */
+  release_s?: number;
   action: { type: AutomationActionType | string; params: Record<string, unknown> };
   /** Server-computed: is this rule's condition met right now. */
   firing?: boolean;
+  /** Server-computed: condition true but still inside debounce. */
+  pending?: boolean;
+  /** Server-computed: condition clear but still inside release. */
+  releasing?: boolean;
+  /** Server-computed: last actuator write problem for this rule (null when clean). */
+  last_error?: string | null;
+};
+
+export type AutomationRelayTarget = {
+  entity_id: string;
+  label: string;
+  kind: "hub" | "sonoff" | string;
+  /** Loop-driven Sonoff relays: a rule may only hold them OFF while firing. */
+  cutout_only: boolean;
+  why: string;
+};
+
+export type AutomationSetpointTarget = {
+  entity_id: string;
+  label: string;
+  min: number;
+  max: number;
+  step: number;
+  unit: string;
+  /** "follow_plants" → Pi-owned while 2x4 mode is Follow Plants (write skipped then). */
+  pi_owned_when?: string | null;
+};
+
+export type AutomationEntityTarget = {
+  entity_id: string;
+  role?: string | null;
+  key?: string | null;
+  unit?: string | null;
+  kind?: "number" | "bool" | "string";
+};
+
+export type AutomationTargets = {
+  relays: AutomationRelayTarget[];
+  setpoints: AutomationSetpointTarget[];
+  /** Entity-id prefixes (or exact ids) that carry a device timestamp, so `max_age_s` can pass. */
+  age_prefixes: string[];
+  /** Entities currently exported for bound Zigbee devices (every datapoint, not just T/RH). */
+  entities?: AutomationEntityTarget[];
 };
 
 export async function get_automations(): Promise<{ rules: AutomationRule[] }> {
   const resp = await fetch("/settings/automations");
   if (!resp.ok) throw new Error("automations fetch failed");
+  return resp.json();
+}
+
+export async function get_automation_targets(): Promise<AutomationTargets> {
+  const resp = await fetch("/settings/automations/targets");
+  if (!resp.ok) throw new Error("automation targets fetch failed");
   return resp.json();
 }
 
@@ -671,6 +778,20 @@ export async function put_automations(rules: AutomationRule[]): Promise<{ rules:
     }
     throw new Error(msg);
   }
+  return resp.json();
+}
+
+/** IrrigAct manual shot — the brain withholds it (honest OOS payload) when no plug_pump is bound. */
+export async function post_irrigation_shot(
+  potId: string,
+  durationS = 2,
+): Promise<{ ok?: boolean; detail?: string; kind?: string }> {
+  const resp = await fetch("/control/irrigation/shot", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pot_id: potId, duration_s: durationS }),
+  });
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "irrigation shot failed"));
   return resp.json();
 }
 
@@ -749,7 +870,7 @@ export type ProbeStationPatch = {
   clear_role?: boolean;
 };
 
-export type PotPlantPatch = {
+export type ProbePlantPatch = {
   plant_name?: string;
   strain_display?: string;
   sprout_date?: string;
@@ -805,11 +926,11 @@ export async function patchProbeStation(
   return resp.json();
 }
 
-export async function patchPotPlant(
-  pot: number,
-  patch: PotPlantPatch,
+export async function patchProbePlant(
+  probe: number,
+  patch: ProbePlantPatch,
 ): Promise<Record<string, unknown>> {
-  const resp = await fetch(`/roster/pots/${pot}`, {
+  const resp = await fetch(`/roster/pots/${probe}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(patch),
@@ -820,8 +941,8 @@ export async function patchPotPlant(
   return resp.json();
 }
 
-export async function detachPlantFromProbe(pot: number): Promise<Record<string, unknown>> {
-  const resp = await fetch(`/roster/detach/${pot}`, { method: "POST" });
+export async function detachPlantFromProbe(probe: number): Promise<Record<string, unknown>> {
+  const resp = await fetch(`/roster/detach/${probe}`, { method: "POST" });
   if (!resp.ok) {
     throw new Error(formatApiError(await resp.text(), "detach failed"));
   }
@@ -836,11 +957,11 @@ export async function retireRosterSlot(slot: number): Promise<Record<string, unk
   return resp.json();
 }
 
-export async function assignPlantToProbe(slot: number, pot: number): Promise<Record<string, unknown>> {
+export async function assignPlantToProbe(slot: number, probe: number): Promise<Record<string, unknown>> {
   const resp = await fetch(`/roster/assign`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ slot, pot }),
+    body: JSON.stringify({ slot, pot: probe }),
   });
   if (!resp.ok) {
     throw new Error(formatApiError(await resp.text(), "assign failed"));
@@ -849,13 +970,13 @@ export async function assignPlantToProbe(slot: number, pot: number): Promise<Rec
 }
 
 export async function movePlantBetweenProbes(
-  fromPot: number,
-  toPot: number,
+  fromProbe: number,
+  toProbe: number,
 ): Promise<Record<string, unknown>> {
   const resp = await fetch(`/roster/move`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ from_pot: fromPot, to_pot: toPot }),
+    body: JSON.stringify({ from_pot: fromProbe, to_pot: toProbe }),
   });
   if (!resp.ok) {
     throw new Error(formatApiError(await resp.text(), "move failed"));

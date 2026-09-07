@@ -1,8 +1,8 @@
-import type { TentId } from "../lib/seatModel";
-import { tentLabel } from "../lib/seatModel";
+import type { TentId } from "../lib/probeModel";
+import { tentLabel } from "../lib/probeModel";
 
 const ITEMS = [
-  "Update pot tent assignment (Twin / Roster seat)",
+  "Update probe tent assignment (Overview / Roster)",
   "Confirm photoperiod matches stage (18h veg · 12h flower)",
   "Review Climate Want for destination tent",
   "Check light desk — independent 2×4 vs follow 4×8",

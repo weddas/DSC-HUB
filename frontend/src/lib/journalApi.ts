@@ -30,7 +30,7 @@ function journalBasePath(scope: JournalScope): string {
 
 /** Deep-link href for Grow → Logs (Task 5 page; footer uses this in Task 3). */
 export function journalScopeToLogsHref(scope: JournalScope, view?: "list" | "trends"): string {
-  return `/grow/logs?${buildLogsSearchParams(scope, view).toString()}`;
+  return `/logs?${buildLogsSearchParams(scope, view).toString()}`;
 }
 
 export type LogsView = "list" | "trends";
@@ -125,6 +125,8 @@ export async function fetchJournalScope(
     limit: String(limit),
     offset: String(offset),
   });
+  // Core scope with an id is a tagged view — `settings` lists every settings change.
+  if (scope.kind === "core" && scope.id) q.set("tag", String(scope.id));
   const resp = await fetch(`${base}?${q}`);
   if (!resp.ok) {
     throw new Error(formatApiError(await resp.text(), "journal fetch failed"));

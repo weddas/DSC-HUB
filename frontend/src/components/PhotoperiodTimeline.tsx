@@ -5,7 +5,7 @@ import {
   readTentPhotoperiodInput,
 } from "../lib/lightSchedule";
 import { railForStage } from "../lib/tentWant";
-import { potsInTent, isPotInService } from "../lib/seatModel";
+import { probesInTent, isProbeInService } from "../lib/probeModel";
 import { useEntityBus } from "../hooks/useEntityBus";
 
 /**
@@ -30,8 +30,8 @@ export function PhotoperiodTimeline({
   const scheduleValid = scheduleValidProp ?? schedule.valid;
   const sunriseMin = num("number.dsc_hub_sunrise_duration", 0);
   const sunsetMin = num("number.dsc_hub_sunset_duration", 0);
-  const seats = potsInTent(tent, state, entity).filter((s) => isPotInService(s.pot, state));
-  const stageHours = seats.reduce<number | null>((acc, s) => {
+  const probes = probesInTent(tent, state, entity).filter((s) => isProbeInService(s.probe, state));
+  const stageHours = probes.reduce<number | null>((acc, s) => {
     const rail = railForStage(s.stage);
     if (!rail) return acc;
     return acc == null ? rail.lightHours : Math.min(acc, rail.lightHours);

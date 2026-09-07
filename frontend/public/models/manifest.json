@@ -1,0 +1,3423 @@
+{
+  "version": 2,
+  "generated": "2026-09-07T10:22:30.951Z",
+  "models": [
+    {
+      "slug": "ac-minisplit-indoor",
+      "file": "/models/ac-minisplit-indoor.glb",
+      "kind": "device",
+      "dims_cm": [
+        80,
+        23,
+        30
+      ],
+      "bytes": 40092,
+      "origin_y": 0,
+      "meshes": 9,
+      "triangles": 344,
+      "anchors": {
+        "mount": "mount",
+        "outlet_face": "airflow",
+        "pipe_out": "hose"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "mesh_wire": "wire",
+        "plastic_dark": "shell",
+        "fan_blade": "accent",
+        "screen_glass": "emissive",
+        "led_status": "emissive"
+      }
+    },
+    {
+      "slug": "ac-minisplit-outdoor",
+      "file": "/models/ac-minisplit-outdoor.glb",
+      "kind": "device",
+      "dims_cm": [
+        81,
+        50,
+        58
+      ],
+      "bytes": 46248,
+      "origin_y": 0,
+      "meshes": 9,
+      "triangles": 402,
+      "anchors": {
+        "pipe_in": "hose",
+        "cable_out": "cable",
+        "mount": "mount"
+      },
+      "materials": {
+        "frame_steel": "frame",
+        "rubber_black": "shell",
+        "mesh_wire": "wire",
+        "fan_blade": "accent",
+        "roller_silver": "frame",
+        "plastic_dark": "shell",
+        "metal_brass": "frame"
+      }
+    },
+    {
+      "slug": "ac-portable-9000btu",
+      "file": "/models/ac-portable-9000btu.glb",
+      "kind": "device",
+      "dims_cm": [
+        44,
+        60,
+        73
+      ],
+      "bytes": 138872,
+      "origin_y": 0,
+      "meshes": 13,
+      "triangles": 1420,
+      "anchors": {
+        "duct_out": "duct",
+        "outlet_face": "airflow",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "plastic_dark": "shell",
+        "fan_blade": "accent",
+        "screen_glass": "emissive",
+        "led_status": "emissive",
+        "duct_foil": "frame"
+      }
+    },
+    {
+      "slug": "ac-window-unit",
+      "file": "/models/ac-window-unit.glb",
+      "kind": "device",
+      "dims_cm": [
+        80,
+        42,
+        35
+      ],
+      "bytes": 64828,
+      "origin_y": 0,
+      "meshes": 13,
+      "triangles": 614,
+      "anchors": {
+        "outlet_face": "airflow",
+        "mount": "mount",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "frame_steel": "frame",
+        "plastic_white": "dim",
+        "plastic_dark": "shell",
+        "fan_blade": "accent",
+        "screen_glass": "emissive",
+        "led_status": "emissive",
+        "mesh_wire": "wire"
+      }
+    },
+    {
+      "slug": "air-pump-dual",
+      "file": "/models/air-pump-dual.glb",
+      "kind": "device",
+      "dims_cm": [
+        18,
+        8,
+        7
+      ],
+      "bytes": 28036,
+      "origin_y": 0,
+      "meshes": 7,
+      "triangles": 272,
+      "anchors": {
+        "air_out_1": "air",
+        "air_out_2": "air",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "rubber_black": "shell",
+        "plastic_white": "dim",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "brain-rpi",
+      "file": "/models/brain-rpi.glb",
+      "kind": "device",
+      "dims_cm": [
+        12,
+        12,
+        4
+      ],
+      "bytes": 29188,
+      "origin_y": 0,
+      "meshes": 7,
+      "triangles": 268,
+      "anchors": {
+        "mount": "mount",
+        "cable_out": "cable",
+        "dongle_tip": "antenna"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "roller_silver": "frame",
+        "led_status": "emissive",
+        "plastic_white": "dim",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "camera-cube",
+      "file": "/models/camera-cube.glb",
+      "kind": "sensor",
+      "dims_cm": [
+        5,
+        8,
+        5
+      ],
+      "bytes": 20416,
+      "origin_y": 0,
+      "meshes": 7,
+      "triangles": 264,
+      "anchors": {
+        "mount": "mount",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "plastic_white": "dim",
+        "glass_clear": "glass",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "camera-ip-fixed",
+      "file": "/models/camera-ip-fixed.glb",
+      "kind": "sensor",
+      "dims_cm": [
+        5,
+        13,
+        7
+      ],
+      "bytes": 27184,
+      "origin_y": 0,
+      "meshes": 8,
+      "triangles": 268,
+      "anchors": {
+        "mount": "mount",
+        "aim": "aim",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "plastic_white": "dim",
+        "glass_clear": "glass",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "carbon-filter-4in",
+      "file": "/models/carbon-filter-4in.glb",
+      "kind": "device",
+      "dims_cm": [
+        20,
+        45,
+        22
+      ],
+      "bytes": 35916,
+      "origin_y": -0.101,
+      "meshes": 7,
+      "triangles": 624,
+      "anchors": {
+        "duct_out": "duct",
+        "hang_1": "hang",
+        "hang_2": "hang"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "frame_steel": "frame",
+        "plastic_white": "dim",
+        "roller_silver": "frame"
+      }
+    },
+    {
+      "slug": "clone-dome-tray",
+      "file": "/models/clone-dome-tray.glb",
+      "kind": "device",
+      "dims_cm": [
+        56,
+        30,
+        24
+      ],
+      "bytes": 102548,
+      "origin_y": 0,
+      "meshes": 6,
+      "triangles": 1056,
+      "anchors": {
+        "mat_under": "mat_under",
+        "lamp_over": "lamp",
+        "sensor_in": "probe"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "window_acrylic": "glass",
+        "plastic_white": "dim",
+        "leaf_green": "accent"
+      }
+    },
+    {
+      "slug": "co2-source--tank",
+      "file": "/models/co2-source--tank.glb",
+      "kind": "device",
+      "dims_cm": [
+        33,
+        20,
+        78
+      ],
+      "bytes": 58548,
+      "origin_y": 0,
+      "meshes": 14,
+      "triangles": 940,
+      "anchors": {
+        "tubing_end": "emitter",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "roller_silver": "frame",
+        "plastic_dark": "shell",
+        "metal_brass": "frame",
+        "screen_glass": "emissive",
+        "led_status": "emissive",
+        "rubber_black": "shell",
+        "window_acrylic": "glass"
+      }
+    },
+    {
+      "slug": "co2-source--bag",
+      "file": "/models/co2-source--bag.glb",
+      "kind": "device",
+      "dims_cm": [
+        30,
+        10,
+        22
+      ],
+      "bytes": 19916,
+      "origin_y": -0.22,
+      "meshes": 3,
+      "triangles": 192,
+      "anchors": {
+        "hang_point": "hang"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "plastic_dark": "shell",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "co2-source--generator",
+      "file": "/models/co2-source--generator.glb",
+      "kind": "device",
+      "dims_cm": [
+        40,
+        35,
+        65
+      ],
+      "bytes": 36220,
+      "origin_y": -0.65,
+      "meshes": 8,
+      "triangles": 324,
+      "anchors": {
+        "hang_point": "hang",
+        "gas_in": "hose",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "window_acrylic": "glass",
+        "heat_element": "emissive",
+        "frame_steel": "frame",
+        "metal_brass": "frame",
+        "led_status": "emissive"
+      }
+    },
+    {
+      "slug": "controller-fan-speed",
+      "file": "/models/controller-fan-speed.glb",
+      "kind": "device",
+      "dims_cm": [
+        8,
+        10,
+        7
+      ],
+      "bytes": 23224,
+      "origin_y": 0,
+      "meshes": 7,
+      "triangles": 188,
+      "anchors": {
+        "mount": "mount",
+        "cable_in": "cable",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "screen_glass": "emissive",
+        "led_status": "emissive",
+        "cable_black": "shell",
+        "plastic_white": "dim"
+      }
+    },
+    {
+      "slug": "curing-jars-tray",
+      "file": "/models/curing-jars-tray.glb",
+      "kind": "device",
+      "dims_cm": [
+        40,
+        28,
+        19
+      ],
+      "bytes": 116128,
+      "origin_y": 0,
+      "meshes": 31,
+      "triangles": 1692,
+      "anchors": {
+        "jar_1": "jar",
+        "jar_2": "jar",
+        "jar_3": "jar",
+        "jar_4": "jar",
+        "jar_5": "jar",
+        "jar_6": "jar"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "glass_clear": "glass",
+        "roller_silver": "frame",
+        "trim_green": "accent",
+        "screen_glass": "emissive",
+        "led_status": "emissive"
+      }
+    },
+    {
+      "slug": "dehumidifier-30l",
+      "file": "/models/dehumidifier-30l.glb",
+      "kind": "device",
+      "dims_cm": [
+        36,
+        30,
+        53
+      ],
+      "bytes": 81916,
+      "origin_y": 0,
+      "meshes": 15,
+      "triangles": 810,
+      "anchors": {
+        "intake_face": "airflow",
+        "outlet_face": "airflow",
+        "cable_out": "cable",
+        "drain_out": "hose"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "plastic_dark": "shell",
+        "fan_blade": "accent",
+        "window_acrylic": "glass",
+        "water": "glass",
+        "screen_glass": "emissive",
+        "led_status": "emissive"
+      }
+    },
+    {
+      "slug": "dehumidifier-compact-12l",
+      "file": "/models/dehumidifier-compact-12l.glb",
+      "kind": "device",
+      "dims_cm": [
+        30,
+        24,
+        49
+      ],
+      "bytes": 50644,
+      "origin_y": 0,
+      "meshes": 9,
+      "triangles": 464,
+      "anchors": {
+        "intake_face": "airflow",
+        "outlet_face": "airflow",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "plastic_dark": "shell",
+        "fan_blade": "accent",
+        "window_acrylic": "glass",
+        "water": "glass",
+        "led_status": "emissive"
+      }
+    },
+    {
+      "slug": "drip-manifold-8",
+      "file": "/models/drip-manifold-8.glb",
+      "kind": "device",
+      "dims_cm": [
+        127,
+        127,
+        11
+      ],
+      "bytes": 108172,
+      "origin_y": -0.001,
+      "meshes": 18,
+      "triangles": 992,
+      "anchors": {
+        "emitter_1": "emitter",
+        "emitter_2": "emitter",
+        "emitter_3": "emitter",
+        "emitter_4": "emitter",
+        "emitter_5": "emitter",
+        "emitter_6": "emitter",
+        "emitter_7": "emitter",
+        "emitter_8": "emitter",
+        "hose_in": "hose"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "rubber_black": "shell",
+        "water": "glass"
+      }
+    },
+    {
+      "slug": "drying-rack-mesh-6tier",
+      "file": "/models/drying-rack-mesh-6tier.glb",
+      "kind": "device",
+      "dims_cm": [
+        60,
+        60,
+        130
+      ],
+      "bytes": 94748,
+      "origin_y": -1.3,
+      "meshes": 12,
+      "triangles": 1040,
+      "anchors": {
+        "tier_1": "shelf",
+        "tier_2": "shelf",
+        "tier_3": "shelf",
+        "tier_4": "shelf",
+        "tier_5": "shelf",
+        "tier_6": "shelf",
+        "hang_point": "hang"
+      },
+      "materials": {
+        "roller_silver": "frame",
+        "cable_black": "shell",
+        "mesh_wire": "wire",
+        "trim_green": "accent"
+      }
+    },
+    {
+      "slug": "duct-4in-elbow-90",
+      "file": "/models/duct-4in-elbow-90.glb",
+      "kind": "device",
+      "dims_cm": [
+        20,
+        20,
+        11
+      ],
+      "bytes": 49772,
+      "origin_y": -0.053,
+      "meshes": 1,
+      "triangles": 504,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct"
+      },
+      "materials": {
+        "duct_foil": "frame"
+      }
+    },
+    {
+      "slug": "duct-4in-straight-1m",
+      "file": "/models/duct-4in-straight-1m.glb",
+      "kind": "device",
+      "dims_cm": [
+        11,
+        100,
+        11
+      ],
+      "bytes": 16004,
+      "origin_y": -0.054,
+      "meshes": 1,
+      "triangles": 600,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct"
+      },
+      "materials": {
+        "duct_foil": "frame"
+      }
+    },
+    {
+      "slug": "duct-6in-elbow-90",
+      "file": "/models/duct-6in-elbow-90.glb",
+      "kind": "device",
+      "dims_cm": [
+        23,
+        23,
+        15
+      ],
+      "bytes": 49772,
+      "origin_y": -0.077,
+      "meshes": 1,
+      "triangles": 504,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct"
+      },
+      "materials": {
+        "duct_foil": "frame"
+      }
+    },
+    {
+      "slug": "duct-6in-straight-1m",
+      "file": "/models/duct-6in-straight-1m.glb",
+      "kind": "device",
+      "dims_cm": [
+        16,
+        100,
+        16
+      ],
+      "bytes": 16004,
+      "origin_y": -0.079,
+      "meshes": 1,
+      "triangles": 600,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct"
+      },
+      "materials": {
+        "duct_foil": "frame"
+      }
+    },
+    {
+      "slug": "duct-fittings--y-4in",
+      "file": "/models/duct-fittings--y-4in.glb",
+      "kind": "device",
+      "dims_cm": [
+        33,
+        34,
+        10
+      ],
+      "bytes": 49532,
+      "origin_y": -0.051,
+      "meshes": 1,
+      "triangles": 500,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out_1": "duct",
+        "duct_out_2": "duct"
+      },
+      "materials": {
+        "duct_foil": "frame"
+      }
+    },
+    {
+      "slug": "duct-fittings--y-6in",
+      "file": "/models/duct-fittings--y-6in.glb",
+      "kind": "device",
+      "dims_cm": [
+        36,
+        36,
+        15
+      ],
+      "bytes": 49528,
+      "origin_y": -0.076,
+      "meshes": 1,
+      "triangles": 500,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out_1": "duct",
+        "duct_out_2": "duct"
+      },
+      "materials": {
+        "duct_foil": "frame"
+      }
+    },
+    {
+      "slug": "duct-fittings--reducer-6to4",
+      "file": "/models/duct-fittings--reducer-6to4.glb",
+      "kind": "device",
+      "dims_cm": [
+        15,
+        15,
+        15
+      ],
+      "bytes": 12900,
+      "origin_y": -0.076,
+      "meshes": 1,
+      "triangles": 120,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct"
+      },
+      "materials": {
+        "duct_foil": "frame"
+      }
+    },
+    {
+      "slug": "duct-fittings--reducer-8to6",
+      "file": "/models/duct-fittings--reducer-8to6.glb",
+      "kind": "device",
+      "dims_cm": [
+        20,
+        15,
+        20
+      ],
+      "bytes": 12896,
+      "origin_y": -0.101,
+      "meshes": 1,
+      "triangles": 120,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct"
+      },
+      "materials": {
+        "duct_foil": "frame"
+      }
+    },
+    {
+      "slug": "duct-fittings--collar-4in",
+      "file": "/models/duct-fittings--collar-4in.glb",
+      "kind": "device",
+      "dims_cm": [
+        15,
+        4,
+        15
+      ],
+      "bytes": 12160,
+      "origin_y": -0.075,
+      "meshes": 3,
+      "triangles": 256,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct"
+      },
+      "materials": {
+        "frame_steel": "frame",
+        "roller_silver": "frame"
+      }
+    },
+    {
+      "slug": "duct-fittings--collar-6in",
+      "file": "/models/duct-fittings--collar-6in.glb",
+      "kind": "device",
+      "dims_cm": [
+        20,
+        4,
+        20
+      ],
+      "bytes": 12156,
+      "origin_y": -0.1,
+      "meshes": 3,
+      "triangles": 256,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct"
+      },
+      "materials": {
+        "frame_steel": "frame",
+        "roller_silver": "frame"
+      }
+    },
+    {
+      "slug": "duct-flex--4in",
+      "file": "/models/duct-flex--4in.glb",
+      "kind": "device",
+      "dims_cm": [
+        51,
+        102,
+        28
+      ],
+      "bytes": 24096,
+      "origin_y": -0.062,
+      "meshes": 1,
+      "triangles": 920,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct"
+      },
+      "materials": {
+        "duct_foil": "frame"
+      }
+    },
+    {
+      "slug": "duct-flex--6in",
+      "file": "/models/duct-flex--6in.glb",
+      "kind": "device",
+      "dims_cm": [
+        56,
+        103,
+        33
+      ],
+      "bytes": 24092,
+      "origin_y": -0.087,
+      "meshes": 1,
+      "triangles": 920,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct"
+      },
+      "materials": {
+        "duct_foil": "frame"
+      }
+    },
+    {
+      "slug": "duct-silencer--4in",
+      "file": "/models/duct-silencer--4in.glb",
+      "kind": "device",
+      "dims_cm": [
+        20,
+        53,
+        24
+      ],
+      "bytes": 25872,
+      "origin_y": -0.1,
+      "meshes": 5,
+      "triangles": 392,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct",
+        "hang_1": "hang",
+        "hang_2": "hang"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "duct_foil": "frame",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "duct-silencer--6in",
+      "file": "/models/duct-silencer--6in.glb",
+      "kind": "device",
+      "dims_cm": [
+        25,
+        68,
+        29
+      ],
+      "bytes": 25852,
+      "origin_y": -0.125,
+      "meshes": 5,
+      "triangles": 392,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct",
+        "hang_1": "hang",
+        "hang_2": "hang"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "duct_foil": "frame",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "dwc-bucket-20l--empty",
+      "file": "/models/dwc-bucket-20l--empty.glb",
+      "kind": "device",
+      "dims_cm": [
+        32,
+        31,
+        42
+      ],
+      "bytes": 77268,
+      "origin_y": 0,
+      "meshes": 10,
+      "triangles": 976,
+      "anchors": {
+        "air_in": "air",
+        "probe_socket": "probe"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "mesh_wire": "wire",
+        "soil": "shell",
+        "rubber_black": "shell",
+        "plastic_white": "dim",
+        "window_acrylic": "glass",
+        "water": "glass"
+      }
+    },
+    {
+      "slug": "dwc-bucket-20l--veg",
+      "file": "/models/dwc-bucket-20l--veg.glb",
+      "kind": "device",
+      "dims_cm": [
+        36,
+        31,
+        83
+      ],
+      "bytes": 92828,
+      "origin_y": 0,
+      "meshes": 12,
+      "triangles": 1118,
+      "anchors": {
+        "air_in": "air",
+        "probe_socket": "probe",
+        "canopy_top": "canopy"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "mesh_wire": "wire",
+        "soil": "shell",
+        "rubber_black": "shell",
+        "plastic_white": "dim",
+        "window_acrylic": "glass",
+        "water": "glass",
+        "leaf_green": "accent"
+      }
+    },
+    {
+      "slug": "fan-clip-oscillating-6in",
+      "file": "/models/fan-clip-oscillating-6in.glb",
+      "kind": "device",
+      "dims_cm": [
+        16,
+        16,
+        29
+      ],
+      "bytes": 21948,
+      "origin_y": 0,
+      "meshes": 9,
+      "triangles": 222,
+      "anchors": {
+        "clip_point": "mount",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "mesh_wire": "wire",
+        "fan_blade": "accent",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "fan-floor-pedestal-40cm",
+      "file": "/models/fan-floor-pedestal-40cm.glb",
+      "kind": "device",
+      "dims_cm": [
+        45,
+        52,
+        143
+      ],
+      "bytes": 33156,
+      "origin_y": 0,
+      "meshes": 10,
+      "triangles": 414,
+      "anchors": {
+        "outlet_face": "airflow",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "roller_silver": "frame",
+        "mesh_wire": "wire",
+        "fan_blade": "accent",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "fan-inline-4in",
+      "file": "/models/fan-inline-4in.glb",
+      "kind": "device",
+      "dims_cm": [
+        14,
+        22,
+        17
+      ],
+      "bytes": 30512,
+      "origin_y": 0,
+      "meshes": 10,
+      "triangles": 406,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct",
+        "mount": "mount"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "fan_blade": "accent",
+        "roller_silver": "frame",
+        "plastic_white": "dim",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "fan-inline-6in",
+      "file": "/models/fan-inline-6in.glb",
+      "kind": "device",
+      "dims_cm": [
+        19,
+        25,
+        22
+      ],
+      "bytes": 30476,
+      "origin_y": 0,
+      "meshes": 10,
+      "triangles": 406,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct",
+        "mount": "mount"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "fan_blade": "accent",
+        "roller_silver": "frame",
+        "plastic_white": "dim",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "fan-inline--6in",
+      "file": "/models/fan-inline--6in.glb",
+      "kind": "device",
+      "dims_cm": [
+        20,
+        32,
+        25
+      ],
+      "bytes": 37056,
+      "origin_y": -0.007,
+      "meshes": 12,
+      "triangles": 458,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct",
+        "mount": "mount"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "fan_blade": "accent",
+        "roller_silver": "frame",
+        "plastic_white": "dim",
+        "screen_glass": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "fan-inline--8in",
+      "file": "/models/fan-inline--8in.glb",
+      "kind": "device",
+      "dims_cm": [
+        24,
+        30,
+        28
+      ],
+      "bytes": 37012,
+      "origin_y": 0,
+      "meshes": 12,
+      "triangles": 458,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct",
+        "mount": "mount"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "fan_blade": "accent",
+        "roller_silver": "frame",
+        "plastic_white": "dim",
+        "screen_glass": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "fan-tower-76cm",
+      "file": "/models/fan-tower-76cm.glb",
+      "kind": "device",
+      "dims_cm": [
+        28,
+        36,
+        78
+      ],
+      "bytes": 43152,
+      "origin_y": 0,
+      "meshes": 7,
+      "triangles": 456,
+      "anchors": {
+        "outlet_face": "airflow",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "mesh_wire": "wire",
+        "screen_glass": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "fan-wall-oscillating-40cm",
+      "file": "/models/fan-wall-oscillating-40cm.glb",
+      "kind": "device",
+      "dims_cm": [
+        45,
+        46,
+        53
+      ],
+      "bytes": 29796,
+      "origin_y": -0.11,
+      "meshes": 10,
+      "triangles": 330,
+      "anchors": {
+        "mount": "mount",
+        "outlet_face": "airflow",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "roller_silver": "frame",
+        "mesh_wire": "wire",
+        "fan_blade": "accent",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "flood-table-120x60",
+      "file": "/models/flood-table-120x60.glb",
+      "kind": "device",
+      "dims_cm": [
+        120,
+        60,
+        93
+      ],
+      "bytes": 45820,
+      "origin_y": 0,
+      "meshes": 6,
+      "triangles": 440,
+      "anchors": {
+        "hose_in": "hose",
+        "drain_out": "hose",
+        "pot_1": "pot",
+        "pot_2": "pot",
+        "pot_3": "pot",
+        "pot_4": "pot",
+        "pot_5": "pot",
+        "pot_6": "pot"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "plastic_dark": "shell",
+        "water": "glass",
+        "frame_steel": "frame"
+      }
+    },
+    {
+      "slug": "grow-room-shell",
+      "file": "/models/grow-room-shell.glb",
+      "kind": "room",
+      "dims_cm": [
+        366,
+        244,
+        244
+      ],
+      "zone": "grow_room",
+      "bytes": 25520,
+      "origin_y": -0.02,
+      "meshes": 11,
+      "triangles": 184,
+      "anchors": {
+        "tent_4x8": "tent",
+        "tent_2x4": "tent",
+        "fan_exhaust_room": "fan_exhaust",
+        "dehum_spot": "spot",
+        "ac_spot": "spot",
+        "tank_spot": "spot",
+        "hub_mount": "spot"
+      },
+      "materials": {
+        "tray_pvc": "frame",
+        "shell_black": "shell",
+        "window_acrylic": "glass",
+        "frame_steel": "frame",
+        "plastic_white": "dim",
+        "trim_green": "accent"
+      }
+    },
+    {
+      "slug": "grow-tent-120x60x210",
+      "file": "/models/grow-tent-120x60x210.glb",
+      "kind": "tent",
+      "dims_cm": [
+        137,
+        69,
+        219
+      ],
+      "zone": "2x4",
+      "bytes": 237208,
+      "origin_y": 0,
+      "meshes": 48,
+      "triangles": 3636,
+      "anchors": {
+        "lamp_main": "lamp",
+        "lamp_upper": "lamp",
+        "mat_spot": "spot",
+        "probe_1": "probe",
+        "probe_2": "probe",
+        "tray_upper": "tray",
+        "fan_intake": "fan_intake",
+        "fan_exhaust": "fan_exhaust",
+        "duct_passive_1": "duct_passive",
+        "duct_passive_2": "duct_passive",
+        "duct_upper": "duct_passive",
+        "canopy_sensor": "canopy",
+        "humidifier_spot": "spot",
+        "mister_spot": "spot",
+        "cable_1": "cable",
+        "cable_2": "cable"
+      },
+      "materials": {
+        "shell_black": "shell",
+        "window_acrylic": "glass",
+        "trim_green": "accent",
+        "mesh_wire": "wire",
+        "foil_lining": "dim",
+        "frame_steel": "frame",
+        "tray_pvc": "frame"
+      }
+    },
+    {
+      "slug": "grow-tent-240x120x210",
+      "file": "/models/grow-tent-240x120x210.glb",
+      "kind": "tent",
+      "dims_cm": [
+        257,
+        129,
+        219
+      ],
+      "zone": "4x8",
+      "bytes": 285012,
+      "origin_y": 0,
+      "meshes": 60,
+      "triangles": 6632,
+      "anchors": {
+        "lamp_main": "lamp",
+        "lamp_twin": "lamp",
+        "fan_exhaust": "fan_exhaust",
+        "fan_exhaust_2": "fan_exhaust",
+        "fan_intake": "fan_intake",
+        "duct_passive": "duct_passive",
+        "canopy_sensor": "canopy",
+        "probe_1": "probe",
+        "probe_2": "probe",
+        "probe_3": "probe",
+        "probe_4": "probe",
+        "cable_1": "cable",
+        "cable_2": "cable"
+      },
+      "materials": {
+        "shell_black": "shell",
+        "window_acrylic": "glass",
+        "trim_green": "accent",
+        "foil_lining": "dim",
+        "frame_steel": "frame",
+        "tray_pvc": "frame"
+      }
+    },
+    {
+      "slug": "grow-tent--60x60x140",
+      "file": "/models/grow-tent--60x60x140.glb",
+      "kind": "tent",
+      "dims_cm": [
+        69,
+        69,
+        149
+      ],
+      "bytes": 145208,
+      "origin_y": 0,
+      "meshes": 47,
+      "triangles": 2048,
+      "anchors": {
+        "lamp_main": "lamp",
+        "canopy_sensor": "canopy",
+        "fan_exhaust": "fan_exhaust",
+        "duct_passive": "duct_passive",
+        "probe_1": "probe",
+        "cable_1": "cable"
+      },
+      "materials": {
+        "shell_black": "shell",
+        "window_acrylic": "glass",
+        "trim_green": "accent",
+        "foil_lining": "dim",
+        "frame_steel": "frame",
+        "tray_pvc": "frame"
+      }
+    },
+    {
+      "slug": "grow-tent--80x80x160",
+      "file": "/models/grow-tent--80x80x160.glb",
+      "kind": "tent",
+      "dims_cm": [
+        89,
+        89,
+        169
+      ],
+      "bytes": 145072,
+      "origin_y": 0,
+      "meshes": 47,
+      "triangles": 2048,
+      "anchors": {
+        "lamp_main": "lamp",
+        "canopy_sensor": "canopy",
+        "fan_exhaust": "fan_exhaust",
+        "duct_passive": "duct_passive",
+        "probe_1": "probe",
+        "probe_2": "probe",
+        "cable_1": "cable"
+      },
+      "materials": {
+        "shell_black": "shell",
+        "window_acrylic": "glass",
+        "trim_green": "accent",
+        "foil_lining": "dim",
+        "frame_steel": "frame",
+        "tray_pvc": "frame"
+      }
+    },
+    {
+      "slug": "grow-tent--100x100x200",
+      "file": "/models/grow-tent--100x100x200.glb",
+      "kind": "tent",
+      "dims_cm": [
+        117,
+        109,
+        209
+      ],
+      "bytes": 191244,
+      "origin_y": 0,
+      "meshes": 56,
+      "triangles": 3128,
+      "anchors": {
+        "lamp_main": "lamp",
+        "canopy_sensor": "canopy",
+        "fan_exhaust": "fan_exhaust",
+        "fan_exhaust_2": "fan_exhaust",
+        "fan_intake": "fan_intake",
+        "duct_passive": "duct_passive",
+        "probe_1": "probe",
+        "probe_2": "probe",
+        "probe_3": "probe",
+        "probe_4": "probe",
+        "cable_1": "cable",
+        "cable_2": "cable"
+      },
+      "materials": {
+        "shell_black": "shell",
+        "window_acrylic": "glass",
+        "trim_green": "accent",
+        "foil_lining": "dim",
+        "frame_steel": "frame",
+        "tray_pvc": "frame"
+      }
+    },
+    {
+      "slug": "grow-tent--120x120x200",
+      "file": "/models/grow-tent--120x120x200.glb",
+      "kind": "tent",
+      "dims_cm": [
+        137,
+        129,
+        209
+      ],
+      "bytes": 193492,
+      "origin_y": 0,
+      "meshes": 57,
+      "triangles": 3140,
+      "anchors": {
+        "lamp_main": "lamp",
+        "canopy_sensor": "canopy",
+        "fan_exhaust": "fan_exhaust",
+        "fan_exhaust_2": "fan_exhaust",
+        "fan_intake": "fan_intake",
+        "duct_passive": "duct_passive",
+        "probe_1": "probe",
+        "probe_2": "probe",
+        "probe_3": "probe",
+        "probe_4": "probe",
+        "cable_1": "cable",
+        "cable_2": "cable"
+      },
+      "materials": {
+        "shell_black": "shell",
+        "window_acrylic": "glass",
+        "trim_green": "accent",
+        "foil_lining": "dim",
+        "frame_steel": "frame",
+        "tray_pvc": "frame"
+      }
+    },
+    {
+      "slug": "grow-tent--150x150x200",
+      "file": "/models/grow-tent--150x150x200.glb",
+      "kind": "tent",
+      "dims_cm": [
+        167,
+        159,
+        209
+      ],
+      "bytes": 196740,
+      "origin_y": 0,
+      "meshes": 59,
+      "triangles": 3164,
+      "anchors": {
+        "lamp_main": "lamp",
+        "lamp_2": "lamp",
+        "canopy_sensor": "canopy",
+        "fan_exhaust": "fan_exhaust",
+        "fan_exhaust_2": "fan_exhaust",
+        "fan_intake": "fan_intake",
+        "duct_passive": "duct_passive",
+        "probe_1": "probe",
+        "probe_2": "probe",
+        "probe_3": "probe",
+        "probe_4": "probe",
+        "probe_5": "probe",
+        "probe_6": "probe",
+        "cable_1": "cable",
+        "cable_2": "cable"
+      },
+      "materials": {
+        "shell_black": "shell",
+        "window_acrylic": "glass",
+        "trim_green": "accent",
+        "foil_lining": "dim",
+        "frame_steel": "frame",
+        "tray_pvc": "frame"
+      }
+    },
+    {
+      "slug": "grow-tent--300x150x200",
+      "file": "/models/grow-tent--300x150x200.glb",
+      "kind": "tent",
+      "dims_cm": [
+        317,
+        159,
+        209
+      ],
+      "bytes": 258416,
+      "origin_y": 0,
+      "meshes": 71,
+      "triangles": 4604,
+      "anchors": {
+        "lamp_2": "lamp",
+        "lamp_3": "lamp",
+        "canopy_sensor": "canopy",
+        "fan_exhaust": "fan_exhaust",
+        "fan_exhaust_2": "fan_exhaust",
+        "fan_intake": "fan_intake",
+        "duct_passive": "duct_passive",
+        "probe_1": "probe",
+        "probe_2": "probe",
+        "probe_3": "probe",
+        "probe_4": "probe",
+        "probe_5": "probe",
+        "probe_6": "probe",
+        "probe_7": "probe",
+        "probe_8": "probe",
+        "probe_9": "probe",
+        "probe_10": "probe",
+        "probe_11": "probe",
+        "probe_12": "probe",
+        "cable_1": "cable",
+        "cable_2": "cable"
+      },
+      "materials": {
+        "shell_black": "shell",
+        "window_acrylic": "glass",
+        "trim_green": "accent",
+        "foil_lining": "dim",
+        "frame_steel": "frame",
+        "tray_pvc": "frame"
+      }
+    },
+    {
+      "slug": "hanging-line-branches",
+      "file": "/models/hanging-line-branches.glb",
+      "kind": "device",
+      "dims_cm": [
+        122,
+        16,
+        38
+      ],
+      "bytes": 147432,
+      "origin_y": -0.375,
+      "meshes": 5,
+      "triangles": 1488,
+      "anchors": {
+        "hang_1": "hang",
+        "hang_2": "hang"
+      },
+      "materials": {
+        "cable_black": "shell",
+        "roller_silver": "frame",
+        "leaf_green": "accent",
+        "trim_green": "accent"
+      }
+    },
+    {
+      "slug": "harvest-bin-40l",
+      "file": "/models/harvest-bin-40l.glb",
+      "kind": "device",
+      "dims_cm": [
+        62,
+        42,
+        34
+      ],
+      "bytes": 13256,
+      "origin_y": 0,
+      "meshes": 3,
+      "triangles": 172,
+      "anchors": {
+        "lid_hinge": "spot",
+        "contents_top": "spot"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "trim_green": "accent"
+      }
+    },
+    {
+      "slug": "heat-mat-25x50",
+      "file": "/models/heat-mat-25x50.glb",
+      "kind": "device",
+      "dims_cm": [
+        25,
+        80,
+        4
+      ],
+      "bytes": 14080,
+      "origin_y": 0,
+      "meshes": 4,
+      "triangles": 140,
+      "anchors": {
+        "pot_1": "pot",
+        "pot_2": "pot",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "heat_element": "emissive",
+        "plastic_white": "dim"
+      }
+    },
+    {
+      "slug": "heat-mat-50x120",
+      "file": "/models/heat-mat-50x120.glb",
+      "kind": "device",
+      "dims_cm": [
+        50,
+        150,
+        4
+      ],
+      "bytes": 14096,
+      "origin_y": 0,
+      "meshes": 4,
+      "triangles": 140,
+      "anchors": {
+        "tray_1": "tray",
+        "tray_2": "tray",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "heat_element": "emissive",
+        "plastic_white": "dim"
+      }
+    },
+    {
+      "slug": "heater-ceramic-tube-60cm",
+      "file": "/models/heater-ceramic-tube-60cm.glb",
+      "kind": "device",
+      "dims_cm": [
+        70,
+        9,
+        14
+      ],
+      "bytes": 14520,
+      "origin_y": 0,
+      "meshes": 5,
+      "triangles": 152,
+      "anchors": {
+        "mount_1": "mount",
+        "mount_2": "mount",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "heat_element": "emissive",
+        "mesh_wire": "wire",
+        "plastic_dark": "shell",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "heater-fan-2kw",
+      "file": "/models/heater-fan-2kw.glb",
+      "kind": "device",
+      "dims_cm": [
+        28,
+        22,
+        37
+      ],
+      "bytes": 36248,
+      "origin_y": 0,
+      "meshes": 8,
+      "triangles": 362,
+      "anchors": {
+        "outlet_face": "airflow",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "heat_element": "emissive",
+        "fan_blade": "accent",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "heater-oil-column-7fin",
+      "file": "/models/heater-oil-column-7fin.glb",
+      "kind": "device",
+      "dims_cm": [
+        41,
+        22,
+        63
+      ],
+      "bytes": 61768,
+      "origin_y": 0,
+      "meshes": 10,
+      "triangles": 632,
+      "anchors": {
+        "cable_out": "cable"
+      },
+      "materials": {
+        "heat_element": "emissive",
+        "plastic_white": "dim",
+        "plastic_dark": "shell",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "hub-esp32-cyd",
+      "file": "/models/hub-esp32-cyd.glb",
+      "kind": "device",
+      "dims_cm": [
+        14,
+        4,
+        20
+      ],
+      "bytes": 36468,
+      "origin_y": -0.012,
+      "meshes": 11,
+      "triangles": 360,
+      "anchors": {
+        "mount": "mount",
+        "cable_1": "cable",
+        "cable_2": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "screen_glass": "emissive",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "humidifier-evaporative",
+      "file": "/models/humidifier-evaporative.glb",
+      "kind": "device",
+      "dims_cm": [
+        32,
+        29,
+        36
+      ],
+      "bytes": 32528,
+      "origin_y": 0,
+      "meshes": 10,
+      "triangles": 318,
+      "anchors": {
+        "outlet_face": "airflow",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "plastic_white": "dim",
+        "mesh_wire": "wire",
+        "window_acrylic": "glass",
+        "water": "glass",
+        "led_status": "emissive",
+        "fan_blade": "accent",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "humidifier-ultrasonic-4l",
+      "file": "/models/humidifier-ultrasonic-4l.glb",
+      "kind": "device",
+      "dims_cm": [
+        18,
+        19,
+        47
+      ],
+      "bytes": 26708,
+      "origin_y": 0,
+      "meshes": 7,
+      "triangles": 284,
+      "anchors": {
+        "mist_out": "emitter",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "led_status": "emissive",
+        "window_acrylic": "glass",
+        "water": "glass",
+        "plastic_white": "dim"
+      }
+    },
+    {
+      "slug": "lamp-bar-led--6bar",
+      "file": "/models/lamp-bar-led--6bar.glb",
+      "kind": "device",
+      "dims_cm": [
+        88,
+        84,
+        28
+      ],
+      "bytes": 63076,
+      "origin_y": -0.281,
+      "meshes": 18,
+      "triangles": 548,
+      "anchors": {
+        "hang_point": "hang",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "frame_steel": "frame",
+        "lamp_emitter": "emissive",
+        "plastic_white": "dim",
+        "plastic_dark": "shell",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "lamp-bar-led--8bar",
+      "file": "/models/lamp-bar-led--8bar.glb",
+      "kind": "device",
+      "dims_cm": [
+        88,
+        168,
+        28
+      ],
+      "bytes": 77768,
+      "origin_y": -0.281,
+      "meshes": 24,
+      "triangles": 660,
+      "anchors": {
+        "hang_point": "hang",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "frame_steel": "frame",
+        "lamp_emitter": "emissive",
+        "plastic_white": "dim",
+        "plastic_dark": "shell",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "lamp-clip-led",
+      "file": "/models/lamp-clip-led.glb",
+      "kind": "device",
+      "dims_cm": [
+        15,
+        17,
+        40
+      ],
+      "bytes": 27568,
+      "origin_y": 0,
+      "meshes": 7,
+      "triangles": 448,
+      "anchors": {
+        "clip_point": "mount",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "roller_silver": "frame",
+        "lamp_emitter": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "lamp-hood-hps-600--hood",
+      "file": "/models/lamp-hood-hps-600--hood.glb",
+      "kind": "device",
+      "dims_cm": [
+        70,
+        43,
+        29
+      ],
+      "bytes": 67968,
+      "origin_y": -0.29,
+      "meshes": 9,
+      "triangles": 1094,
+      "anchors": {
+        "hang_1": "hang",
+        "hang_2": "hang",
+        "duct_in": "duct",
+        "duct_out": "duct"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "window_acrylic": "glass",
+        "roller_silver": "frame",
+        "plastic_dark": "shell",
+        "lamp_emitter": "emissive"
+      }
+    },
+    {
+      "slug": "lamp-hood-hps-600--ballast",
+      "file": "/models/lamp-hood-hps-600--ballast.glb",
+      "kind": "device",
+      "dims_cm": [
+        30,
+        18,
+        8
+      ],
+      "bytes": 22124,
+      "origin_y": 0,
+      "meshes": 5,
+      "triangles": 200,
+      "anchors": {
+        "cable_out": "cable",
+        "mount": "mount"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "lamp-sf1000",
+      "file": "/models/lamp-sf1000.glb",
+      "kind": "device",
+      "dims_cm": [
+        27,
+        27,
+        16
+      ],
+      "bytes": 51496,
+      "origin_y": -0.161,
+      "meshes": 7,
+      "triangles": 504,
+      "anchors": {
+        "hang_point": "hang",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "lamp_emitter": "emissive",
+        "frame_steel": "frame",
+        "plastic_dark": "shell",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "lamp-t5-ho--2ft4",
+      "file": "/models/lamp-t5-ho--2ft4.glb",
+      "kind": "device",
+      "dims_cm": [
+        65,
+        25,
+        11
+      ],
+      "bytes": 68636,
+      "origin_y": -0.11,
+      "meshes": 10,
+      "triangles": 696,
+      "anchors": {
+        "hang_1": "hang",
+        "hang_2": "hang",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "roller_silver": "frame",
+        "lamp_emitter": "emissive",
+        "plastic_dark": "shell",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "lamp-t5-ho--4ft4",
+      "file": "/models/lamp-t5-ho--4ft4.glb",
+      "kind": "device",
+      "dims_cm": [
+        126,
+        25,
+        11
+      ],
+      "bytes": 68628,
+      "origin_y": -0.11,
+      "meshes": 10,
+      "triangles": 696,
+      "anchors": {
+        "hang_1": "hang",
+        "hang_2": "hang",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "roller_silver": "frame",
+        "lamp_emitter": "emissive",
+        "plastic_dark": "shell",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "mister-clone",
+      "file": "/models/mister-clone.glb",
+      "kind": "device",
+      "dims_cm": [
+        20,
+        18,
+        58
+      ],
+      "bytes": 24000,
+      "origin_y": 0,
+      "meshes": 7,
+      "triangles": 256,
+      "anchors": {
+        "mist_out": "emitter",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "led_status": "emissive",
+        "plastic_white": "dim",
+        "window_acrylic": "glass"
+      }
+    },
+    {
+      "slug": "panel-cyd-control",
+      "file": "/models/panel-cyd-control.glb",
+      "kind": "device",
+      "dims_cm": [
+        13,
+        3,
+        7
+      ],
+      "bytes": 12512,
+      "origin_y": -0.004,
+      "meshes": 5,
+      "triangles": 92,
+      "anchors": {
+        "mount": "mount",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "screen_glass": "emissive",
+        "led_status": "emissive",
+        "roller_silver": "frame"
+      }
+    },
+    {
+      "slug": "plant-cutting-in-cube",
+      "file": "/models/plant-cutting-in-cube.glb",
+      "kind": "plant",
+      "dims_cm": [
+        4,
+        5,
+        14
+      ],
+      "origin": "soil",
+      "bytes": 16968,
+      "origin_y": -0.03,
+      "meshes": 4,
+      "triangles": 144,
+      "anchors": {
+        "canopy_top": "canopy",
+        "cube_base": "spot"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "leaf_green": "accent"
+      }
+    },
+    {
+      "slug": "plant-lod-blob--s",
+      "file": "/models/plant-lod-blob--s.glb",
+      "kind": "plant",
+      "dims_cm": [
+        25,
+        25,
+        28
+      ],
+      "origin": "soil",
+      "bytes": 5408,
+      "origin_y": 0,
+      "meshes": 2,
+      "triangles": 92,
+      "anchors": {
+        "canopy_top": "canopy"
+      },
+      "materials": {
+        "leaf_green": "accent"
+      }
+    },
+    {
+      "slug": "plant-lod-blob--m",
+      "file": "/models/plant-lod-blob--m.glb",
+      "kind": "plant",
+      "dims_cm": [
+        45,
+        45,
+        47
+      ],
+      "origin": "soil",
+      "bytes": 5452,
+      "origin_y": 0,
+      "meshes": 2,
+      "triangles": 92,
+      "anchors": {
+        "canopy_top": "canopy"
+      },
+      "materials": {
+        "leaf_green": "accent"
+      }
+    },
+    {
+      "slug": "plant-lod-blob--l",
+      "file": "/models/plant-lod-blob--l.glb",
+      "kind": "plant",
+      "dims_cm": [
+        65,
+        65,
+        64
+      ],
+      "origin": "soil",
+      "bytes": 5452,
+      "origin_y": 0,
+      "meshes": 2,
+      "triangles": 92,
+      "anchors": {
+        "canopy_top": "canopy"
+      },
+      "materials": {
+        "leaf_green": "accent"
+      }
+    },
+    {
+      "slug": "plant-mother-7gal",
+      "file": "/models/plant-mother-7gal.glb",
+      "kind": "device",
+      "dims_cm": [
+        56,
+        49,
+        86
+      ],
+      "bytes": 56504,
+      "origin_y": 0,
+      "meshes": 6,
+      "triangles": 812,
+      "anchors": {
+        "probe_socket": "probe",
+        "canopy_top": "canopy",
+        "cutting_1": "cutting",
+        "cutting_2": "cutting",
+        "cutting_3": "cutting",
+        "cutting_4": "cutting"
+      },
+      "materials": {
+        "pot_fabric": "dim",
+        "soil": "shell",
+        "leaf_green": "accent"
+      }
+    },
+    {
+      "slug": "plant-stage--germination",
+      "file": "/models/plant-stage--germination.glb",
+      "kind": "plant",
+      "dims_cm": [
+        1,
+        2,
+        2
+      ],
+      "origin": "soil",
+      "bytes": 11264,
+      "origin_y": -0.004,
+      "meshes": 2,
+      "triangles": 136,
+      "anchors": {
+        "canopy_top": "canopy",
+        "canopy_centre": "canopy"
+      },
+      "materials": {
+        "soil": "shell",
+        "plastic_white": "dim"
+      }
+    },
+    {
+      "slug": "plant-stage--seedling",
+      "file": "/models/plant-stage--seedling.glb",
+      "kind": "plant",
+      "dims_cm": [
+        8,
+        6,
+        11
+      ],
+      "origin": "soil",
+      "bytes": 4828,
+      "origin_y": 0,
+      "meshes": 2,
+      "triangles": 34,
+      "anchors": {
+        "canopy_top": "canopy",
+        "canopy_centre": "canopy"
+      },
+      "materials": {
+        "leaf_green": "accent"
+      }
+    },
+    {
+      "slug": "plant-stage--early-veg",
+      "file": "/models/plant-stage--early-veg.glb",
+      "kind": "plant",
+      "dims_cm": [
+        14,
+        10,
+        22
+      ],
+      "origin": "soil",
+      "bytes": 8432,
+      "origin_y": 0,
+      "meshes": 2,
+      "triangles": 64,
+      "anchors": {
+        "canopy_top": "canopy",
+        "canopy_centre": "canopy"
+      },
+      "materials": {
+        "leaf_green": "accent"
+      }
+    },
+    {
+      "slug": "plant-stage--veg",
+      "file": "/models/plant-stage--veg.glb",
+      "kind": "plant",
+      "dims_cm": [
+        35,
+        19,
+        45
+      ],
+      "origin": "soil",
+      "bytes": 16172,
+      "origin_y": 0,
+      "meshes": 2,
+      "triangles": 142,
+      "anchors": {
+        "canopy_top": "canopy",
+        "canopy_centre": "canopy",
+        "stake_1": "mount",
+        "stake_2": "mount"
+      },
+      "materials": {
+        "leaf_green": "accent"
+      }
+    },
+    {
+      "slug": "plant-stage--push-veg",
+      "file": "/models/plant-stage--push-veg.glb",
+      "kind": "plant",
+      "dims_cm": [
+        51,
+        46,
+        58
+      ],
+      "origin": "soil",
+      "bytes": 24604,
+      "origin_y": 0,
+      "meshes": 2,
+      "triangles": 230,
+      "anchors": {
+        "canopy_top": "canopy",
+        "canopy_centre": "canopy",
+        "stake_1": "mount",
+        "stake_2": "mount"
+      },
+      "materials": {
+        "leaf_green": "accent"
+      }
+    },
+    {
+      "slug": "plant-stage--early-flower",
+      "file": "/models/plant-stage--early-flower.glb",
+      "kind": "plant",
+      "dims_cm": [
+        51,
+        47,
+        72
+      ],
+      "origin": "soil",
+      "bytes": 92608,
+      "origin_y": 0,
+      "meshes": 4,
+      "triangles": 918,
+      "anchors": {
+        "canopy_top": "canopy",
+        "canopy_centre": "canopy",
+        "stake_1": "mount",
+        "stake_2": "mount"
+      },
+      "materials": {
+        "leaf_green": "accent",
+        "trim_green": "accent",
+        "plastic_white": "dim"
+      }
+    },
+    {
+      "slug": "plant-stage--flower",
+      "file": "/models/plant-stage--flower.glb",
+      "kind": "plant",
+      "dims_cm": [
+        55,
+        56,
+        80
+      ],
+      "origin": "soil",
+      "bytes": 90700,
+      "origin_y": 0,
+      "meshes": 4,
+      "triangles": 898,
+      "anchors": {
+        "canopy_top": "canopy",
+        "canopy_centre": "canopy",
+        "stake_1": "mount",
+        "stake_2": "mount"
+      },
+      "materials": {
+        "leaf_green": "accent",
+        "trim_green": "accent",
+        "plastic_white": "dim"
+      }
+    },
+    {
+      "slug": "plant-stage--late-flower",
+      "file": "/models/plant-stage--late-flower.glb",
+      "kind": "plant",
+      "dims_cm": [
+        53,
+        51,
+        80
+      ],
+      "origin": "soil",
+      "bytes": 95912,
+      "origin_y": 0,
+      "meshes": 5,
+      "triangles": 942,
+      "anchors": {
+        "canopy_top": "canopy",
+        "canopy_centre": "canopy",
+        "stake_1": "mount",
+        "stake_2": "mount"
+      },
+      "materials": {
+        "leaf_green": "accent",
+        "soil": "shell",
+        "trim_green": "accent",
+        "plastic_white": "dim"
+      }
+    },
+    {
+      "slug": "plant-stage--flush",
+      "file": "/models/plant-stage--flush.glb",
+      "kind": "plant",
+      "dims_cm": [
+        49,
+        47,
+        79
+      ],
+      "origin": "soil",
+      "bytes": 85836,
+      "origin_y": 0,
+      "meshes": 4,
+      "triangles": 846,
+      "anchors": {
+        "canopy_top": "canopy",
+        "canopy_centre": "canopy",
+        "stake_1": "mount",
+        "stake_2": "mount"
+      },
+      "materials": {
+        "leaf_green": "accent",
+        "soil": "shell",
+        "trim_green": "accent",
+        "plastic_white": "dim"
+      }
+    },
+    {
+      "slug": "plug-smart-au-single",
+      "file": "/models/plug-smart-au-single.glb",
+      "kind": "device",
+      "dims_cm": [
+        5,
+        5,
+        8
+      ],
+      "bytes": 19868,
+      "origin_y": 0,
+      "meshes": 5,
+      "triangles": 184,
+      "anchors": {
+        "mount": "mount",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "plastic_dark": "shell",
+        "led_status": "emissive"
+      }
+    },
+    {
+      "slug": "plug-sonoff-s31",
+      "file": "/models/plug-sonoff-s31.glb",
+      "kind": "device",
+      "dims_cm": [
+        6,
+        6,
+        8
+      ],
+      "bytes": 19836,
+      "origin_y": 0,
+      "meshes": 5,
+      "triangles": 184,
+      "anchors": {
+        "mount": "mount",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "plastic_dark": "shell",
+        "led_status": "emissive"
+      }
+    },
+    {
+      "slug": "plug-timer-mechanical",
+      "file": "/models/plug-timer-mechanical.glb",
+      "kind": "device",
+      "dims_cm": [
+        9,
+        6,
+        13
+      ],
+      "bytes": 32156,
+      "origin_y": 0,
+      "meshes": 5,
+      "triangles": 308,
+      "anchors": {
+        "mount": "mount",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "screen_glass": "emissive",
+        "plastic_dark": "shell"
+      }
+    },
+    {
+      "slug": "port-collar-tent-4in",
+      "file": "/models/port-collar-tent-4in.glb",
+      "kind": "device",
+      "dims_cm": [
+        13,
+        12,
+        13
+      ],
+      "bytes": 11944,
+      "origin_y": -0.065,
+      "meshes": 3,
+      "triangles": 288,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct"
+      },
+      "materials": {
+        "shell_black": "shell",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "pot-fabric-3gal-plant-empty",
+      "file": "/models/pot-fabric-3gal-plant-empty.glb",
+      "kind": "device",
+      "dims_cm": [
+        25,
+        26,
+        22
+      ],
+      "bytes": 14464,
+      "origin_y": 0,
+      "meshes": 3,
+      "triangles": 264,
+      "anchors": {
+        "probe_socket": "probe",
+        "canopy_top": "canopy"
+      },
+      "materials": {
+        "pot_fabric": "dim",
+        "soil": "shell"
+      }
+    },
+    {
+      "slug": "pot-fabric-3gal-plant-flower",
+      "file": "/models/pot-fabric-3gal-plant-flower.glb",
+      "kind": "device",
+      "dims_cm": [
+        36,
+        27,
+        63
+      ],
+      "bytes": 88484,
+      "origin_y": 0,
+      "meshes": 6,
+      "triangles": 1006,
+      "anchors": {
+        "probe_socket": "probe",
+        "canopy_top": "canopy"
+      },
+      "materials": {
+        "pot_fabric": "dim",
+        "soil": "shell",
+        "leaf_green": "accent",
+        "trim_green": "accent"
+      }
+    },
+    {
+      "slug": "pot-fabric-3gal-plant-seedling",
+      "file": "/models/pot-fabric-3gal-plant-seedling.glb",
+      "kind": "device",
+      "dims_cm": [
+        25,
+        26,
+        26
+      ],
+      "bytes": 18300,
+      "origin_y": 0,
+      "meshes": 5,
+      "triangles": 292,
+      "anchors": {
+        "probe_socket": "probe",
+        "canopy_top": "canopy"
+      },
+      "materials": {
+        "pot_fabric": "dim",
+        "soil": "shell",
+        "leaf_green": "accent"
+      }
+    },
+    {
+      "slug": "pot-fabric-3gal-plant-veg",
+      "file": "/models/pot-fabric-3gal-plant-veg.glb",
+      "kind": "device",
+      "dims_cm": [
+        36,
+        27,
+        61
+      ],
+      "bytes": 29920,
+      "origin_y": 0,
+      "meshes": 5,
+      "triangles": 406,
+      "anchors": {
+        "probe_socket": "probe",
+        "canopy_top": "canopy"
+      },
+      "materials": {
+        "pot_fabric": "dim",
+        "soil": "shell",
+        "leaf_green": "accent"
+      }
+    },
+    {
+      "slug": "pot-family--1gal",
+      "file": "/models/pot-family--1gal.glb",
+      "kind": "vessel",
+      "dims_cm": [
+        18,
+        19,
+        15
+      ],
+      "bytes": 20820,
+      "origin_y": 0,
+      "meshes": 4,
+      "triangles": 464,
+      "anchors": {
+        "probe_socket": "probe",
+        "plant_base": "pot",
+        "saucer_under": "saucer_under"
+      },
+      "materials": {
+        "pot_fabric": "dim",
+        "soil": "shell"
+      }
+    },
+    {
+      "slug": "pot-family--5gal",
+      "file": "/models/pot-family--5gal.glb",
+      "kind": "vessel",
+      "dims_cm": [
+        30,
+        31,
+        25
+      ],
+      "bytes": 20816,
+      "origin_y": 0,
+      "meshes": 4,
+      "triangles": 464,
+      "anchors": {
+        "probe_socket": "probe",
+        "plant_base": "pot",
+        "saucer_under": "saucer_under"
+      },
+      "materials": {
+        "pot_fabric": "dim",
+        "soil": "shell"
+      }
+    },
+    {
+      "slug": "pot-family--7gal",
+      "file": "/models/pot-family--7gal.glb",
+      "kind": "vessel",
+      "dims_cm": [
+        36,
+        37,
+        28
+      ],
+      "bytes": 20816,
+      "origin_y": 0,
+      "meshes": 4,
+      "triangles": 464,
+      "anchors": {
+        "probe_socket": "probe",
+        "plant_base": "pot",
+        "saucer_under": "saucer_under"
+      },
+      "materials": {
+        "pot_fabric": "dim",
+        "soil": "shell"
+      }
+    },
+    {
+      "slug": "pot-family--square-3.6l",
+      "file": "/models/pot-family--square-3.6l.glb",
+      "kind": "vessel",
+      "dims_cm": [
+        16,
+        16,
+        20
+      ],
+      "bytes": 16964,
+      "origin_y": -0.002,
+      "meshes": 4,
+      "triangles": 136,
+      "anchors": {
+        "probe_socket": "probe",
+        "plant_base": "pot",
+        "saucer_under": "saucer_under"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "soil": "shell"
+      }
+    },
+    {
+      "slug": "pot-family--airpot-10l",
+      "file": "/models/pot-family--airpot-10l.glb",
+      "kind": "vessel",
+      "dims_cm": [
+        27,
+        27,
+        31
+      ],
+      "bytes": 51812,
+      "origin_y": 0,
+      "meshes": 4,
+      "triangles": 600,
+      "anchors": {
+        "probe_socket": "probe",
+        "plant_base": "pot",
+        "saucer_under": "saucer_under"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "soil": "shell"
+      }
+    },
+    {
+      "slug": "pot-family--saucer-30",
+      "file": "/models/pot-family--saucer-30.glb",
+      "kind": "vessel",
+      "dims_cm": [
+        30,
+        30,
+        3
+      ],
+      "bytes": 11928,
+      "origin_y": 0,
+      "meshes": 2,
+      "triangles": 360,
+      "anchors": {
+        "saucer_under": "saucer_under"
+      },
+      "materials": {
+        "plastic_dark": "shell"
+      }
+    },
+    {
+      "slug": "power-strip-6way",
+      "file": "/models/power-strip-6way.glb",
+      "kind": "device",
+      "dims_cm": [
+        36,
+        6,
+        4
+      ],
+      "bytes": 45412,
+      "origin_y": 0,
+      "meshes": 15,
+      "triangles": 360,
+      "anchors": {
+        "plug_1": "plug",
+        "plug_2": "plug",
+        "plug_3": "plug",
+        "plug_4": "plug",
+        "plug_5": "plug",
+        "plug_6": "plug",
+        "mount": "mount",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "plastic_dark": "shell",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "probe-ph-ec-pen--ph",
+      "file": "/models/probe-ph-ec-pen--ph.glb",
+      "kind": "sensor",
+      "dims_cm": [
+        3,
+        3,
+        36
+      ],
+      "bytes": 21628,
+      "origin_y": 0.001,
+      "meshes": 5,
+      "triangles": 204,
+      "anchors": {
+        "socket": "socket",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "glass_clear": "glass",
+        "plastic_white": "dim",
+        "screen_glass": "emissive",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "probe-ph-ec-pen--ec",
+      "file": "/models/probe-ph-ec-pen--ec.glb",
+      "kind": "sensor",
+      "dims_cm": [
+        3,
+        3,
+        36
+      ],
+      "bytes": 20092,
+      "origin_y": 0,
+      "meshes": 5,
+      "triangles": 188,
+      "anchors": {
+        "socket": "socket",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "glass_clear": "glass",
+        "plastic_white": "dim",
+        "screen_glass": "emissive",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "probe-stake-soil",
+      "file": "/models/probe-stake-soil.glb",
+      "kind": "sensor",
+      "dims_cm": [
+        6,
+        4,
+        27
+      ],
+      "bytes": 16184,
+      "origin_y": 0,
+      "meshes": 6,
+      "triangles": 152,
+      "anchors": {
+        "soil_line": "socket"
+      },
+      "materials": {
+        "frame_steel": "frame",
+        "plastic_dark": "shell",
+        "plastic_white": "dim",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "probe-temp-wired",
+      "file": "/models/probe-temp-wired.glb",
+      "kind": "sensor",
+      "dims_cm": [
+        1,
+        1,
+        38
+      ],
+      "bytes": 11072,
+      "origin_y": 0,
+      "meshes": 4,
+      "triangles": 104,
+      "anchors": {
+        "tip": "socket",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "frame_steel": "frame",
+        "rubber_black": "shell",
+        "cable_black": "shell",
+        "plastic_white": "dim"
+      }
+    },
+    {
+      "slug": "propagation-cabinet",
+      "file": "/models/propagation-cabinet.glb",
+      "kind": "device",
+      "dims_cm": [
+        60,
+        42,
+        92
+      ],
+      "bytes": 45780,
+      "origin_y": 0,
+      "meshes": 8,
+      "triangles": 412,
+      "anchors": {
+        "shelf_1": "shelf",
+        "shelf_2": "shelf",
+        "lamp_under_top": "lamp",
+        "lamp_under_2": "lamp",
+        "fan_exhaust": "fan_exhaust",
+        "cable_1": "cable",
+        "tray_1": "tray"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "window_acrylic": "glass",
+        "mesh_wire": "wire",
+        "plastic_dark": "shell"
+      }
+    },
+    {
+      "slug": "pump-dosing-peristaltic-3ch",
+      "file": "/models/pump-dosing-peristaltic-3ch.glb",
+      "kind": "device",
+      "dims_cm": [
+        17,
+        14,
+        8
+      ],
+      "bytes": 65432,
+      "origin_y": 0,
+      "meshes": 16,
+      "triangles": 604,
+      "anchors": {
+        "tube_out_1": "tube",
+        "tube_out_2": "tube",
+        "tube_out_3": "tube",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "window_acrylic": "glass",
+        "plastic_dark": "shell",
+        "rubber_black": "shell",
+        "screen_glass": "emissive",
+        "led_status": "emissive"
+      }
+    },
+    {
+      "slug": "pump-submersible",
+      "file": "/models/pump-submersible.glb",
+      "kind": "device",
+      "dims_cm": [
+        9,
+        7,
+        11
+      ],
+      "bytes": 37644,
+      "origin_y": 0,
+      "meshes": 5,
+      "triangles": 356,
+      "anchors": {
+        "hose_out": "hose"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "fan_blade": "accent",
+        "roller_silver": "frame"
+      }
+    },
+    {
+      "slug": "rack-wire-4tier",
+      "file": "/models/rack-wire-4tier.glb",
+      "kind": "device",
+      "dims_cm": [
+        90,
+        45,
+        180
+      ],
+      "bytes": 44912,
+      "origin_y": 0,
+      "meshes": 16,
+      "triangles": 456,
+      "anchors": {
+        "shelf_1": "shelf",
+        "shelf_2": "shelf",
+        "lamp_under_2": "lamp",
+        "shelf_3": "shelf",
+        "lamp_under_3": "lamp",
+        "shelf_4": "shelf",
+        "lamp_under_4": "lamp"
+      },
+      "materials": {
+        "roller_silver": "frame",
+        "mesh_wire": "wire"
+      }
+    },
+    {
+      "slug": "relay-box-4ch",
+      "file": "/models/relay-box-4ch.glb",
+      "kind": "device",
+      "dims_cm": [
+        17,
+        7,
+        13
+      ],
+      "bytes": 54408,
+      "origin_y": -0.01,
+      "meshes": 12,
+      "triangles": 492,
+      "anchors": {
+        "mount": "mount",
+        "cable_1": "cable",
+        "cable_2": "cable",
+        "cable_3": "cable",
+        "cable_4": "cable",
+        "cable_5": "cable",
+        "cable_6": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "window_acrylic": "glass",
+        "plastic_white": "dim",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "reservoir-ibc-1000l",
+      "file": "/models/reservoir-ibc-1000l.glb",
+      "kind": "device",
+      "dims_cm": [
+        120,
+        106,
+        118
+      ],
+      "bytes": 76192,
+      "origin_y": 0,
+      "meshes": 7,
+      "triangles": 756,
+      "anchors": {
+        "hose_out": "hose",
+        "pump_socket": "socket",
+        "probe_socket": "probe",
+        "fill_in": "hose"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "window_acrylic": "glass",
+        "water": "glass",
+        "frame_steel": "frame",
+        "plastic_white": "dim"
+      }
+    },
+    {
+      "slug": "reservoir-tank-60l",
+      "file": "/models/reservoir-tank-60l.glb",
+      "kind": "device",
+      "dims_cm": [
+        56,
+        44,
+        36
+      ],
+      "bytes": 22984,
+      "origin_y": 0,
+      "meshes": 6,
+      "triangles": 228,
+      "anchors": {
+        "hose_out": "hose",
+        "pump_socket": "socket"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "water": "glass",
+        "plastic_white": "dim"
+      }
+    },
+    {
+      "slug": "scale-bench-5kg",
+      "file": "/models/scale-bench-5kg.glb",
+      "kind": "device",
+      "dims_cm": [
+        20,
+        15,
+        3
+      ],
+      "bytes": 9360,
+      "origin_y": 0,
+      "meshes": 4,
+      "triangles": 60,
+      "anchors": {
+        "platform_centre": "spot"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "roller_silver": "frame",
+        "screen_glass": "emissive"
+      }
+    },
+    {
+      "slug": "sensor-co2-module",
+      "file": "/models/sensor-co2-module.glb",
+      "kind": "sensor",
+      "dims_cm": [
+        27,
+        4,
+        4
+      ],
+      "bytes": 29172,
+      "origin_y": -0.04,
+      "meshes": 5,
+      "triangles": 264,
+      "anchors": {
+        "hang_point": "hang",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "plastic_dark": "shell",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "sensor-door-contact",
+      "file": "/models/sensor-door-contact.glb",
+      "kind": "sensor",
+      "dims_cm": [
+        7,
+        1,
+        1
+      ],
+      "bytes": 6876,
+      "origin_y": 0,
+      "meshes": 3,
+      "triangles": 48,
+      "anchors": {
+        "mount_fixed": "mount",
+        "mount_moving": "mount"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "led_status": "emissive"
+      }
+    },
+    {
+      "slug": "sensor-float-level",
+      "file": "/models/sensor-float-level.glb",
+      "kind": "sensor",
+      "dims_cm": [
+        3,
+        3,
+        18
+      ],
+      "bytes": 16864,
+      "origin_y": -0.1,
+      "meshes": 6,
+      "triangles": 192,
+      "anchors": {
+        "mount": "mount",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "metal_brass": "frame",
+        "plastic_white": "dim",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "sensor-hygrometer-lcd",
+      "file": "/models/sensor-hygrometer-lcd.glb",
+      "kind": "sensor",
+      "dims_cm": [
+        6,
+        4,
+        7
+      ],
+      "bytes": 17524,
+      "origin_y": 0,
+      "meshes": 5,
+      "triangles": 132,
+      "anchors": {
+        "mount": "mount",
+        "hang_point": "hang"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "screen_glass": "emissive",
+        "plastic_dark": "shell"
+      }
+    },
+    {
+      "slug": "sensor-ir-leaf-temp",
+      "file": "/models/sensor-ir-leaf-temp.glb",
+      "kind": "sensor",
+      "dims_cm": [
+        5,
+        13,
+        21
+      ],
+      "bytes": 18008,
+      "origin_y": 0,
+      "meshes": 7,
+      "triangles": 228,
+      "anchors": {
+        "clip_point": "mount",
+        "aim": "aim",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "roller_silver": "frame",
+        "glass_clear": "glass",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "sensor-leak-zigbee",
+      "file": "/models/sensor-leak-zigbee.glb",
+      "kind": "sensor",
+      "dims_cm": [
+        5,
+        5,
+        3
+      ],
+      "bytes": 14492,
+      "origin_y": 0,
+      "meshes": 3,
+      "triangles": 128,
+      "anchors": {
+        "mount": "mount"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "led_status": "emissive",
+        "roller_silver": "frame"
+      }
+    },
+    {
+      "slug": "sensor-par-quantum",
+      "file": "/models/sensor-par-quantum.glb",
+      "kind": "sensor",
+      "dims_cm": [
+        21,
+        6,
+        4
+      ],
+      "bytes": 23292,
+      "origin_y": 0,
+      "meshes": 6,
+      "triangles": 268,
+      "anchors": {
+        "canopy_point": "canopy",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "plastic_white": "dim",
+        "roller_silver": "frame",
+        "glass_clear": "glass",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "sensor-zigbee-puck",
+      "file": "/models/sensor-zigbee-puck.glb",
+      "kind": "sensor",
+      "dims_cm": [
+        4,
+        5,
+        13
+      ],
+      "bytes": 16592,
+      "origin_y": -0.134,
+      "meshes": 3,
+      "triangles": 288,
+      "anchors": {
+        "hang_point": "hang"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "trellis-and-stakes--net-120",
+      "file": "/models/trellis-and-stakes--net-120.glb",
+      "kind": "device",
+      "dims_cm": [
+        126,
+        126,
+        3
+      ],
+      "bytes": 38400,
+      "origin_y": -0.002,
+      "meshes": 6,
+      "triangles": 344,
+      "anchors": {
+        "pole_1": "mount",
+        "pole_2": "mount",
+        "pole_3": "mount",
+        "pole_4": "mount"
+      },
+      "materials": {
+        "frame_steel": "frame",
+        "mesh_wire": "wire",
+        "plastic_dark": "shell"
+      }
+    },
+    {
+      "slug": "trellis-and-stakes--stakes-90",
+      "file": "/models/trellis-and-stakes--stakes-90.glb",
+      "kind": "device",
+      "dims_cm": [
+        11,
+        11,
+        90
+      ],
+      "bytes": 19124,
+      "origin_y": 0,
+      "meshes": 2,
+      "triangles": 176,
+      "anchors": {
+        "plant_base": "pot"
+      },
+      "materials": {
+        "soil": "shell",
+        "rubber_black": "shell"
+      }
+    },
+    {
+      "slug": "vent-passive-mesh--4in",
+      "file": "/models/vent-passive-mesh--4in.glb",
+      "kind": "device",
+      "dims_cm": [
+        15,
+        4,
+        15
+      ],
+      "bytes": 11924,
+      "origin_y": -0.075,
+      "meshes": 4,
+      "triangles": 120,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct"
+      },
+      "materials": {
+        "frame_steel": "frame",
+        "mesh_wire": "wire",
+        "plastic_dark": "shell"
+      }
+    },
+    {
+      "slug": "vent-passive-mesh--6in",
+      "file": "/models/vent-passive-mesh--6in.glb",
+      "kind": "device",
+      "dims_cm": [
+        20,
+        4,
+        20
+      ],
+      "bytes": 11920,
+      "origin_y": -0.1,
+      "meshes": 4,
+      "triangles": 120,
+      "anchors": {
+        "duct_in": "duct",
+        "duct_out": "duct"
+      },
+      "materials": {
+        "frame_steel": "frame",
+        "mesh_wire": "wire",
+        "plastic_dark": "shell"
+      }
+    },
+    {
+      "slug": "vessel--generic_fabric_25l",
+      "file": "/models/vessel--generic_fabric_25l.glb",
+      "kind": "vessel",
+      "dims_cm": [
+        33,
+        33,
+        30
+      ],
+      "bytes": 32504,
+      "origin_y": 0,
+      "meshes": 5,
+      "triangles": 384,
+      "anchors": {
+        "plant_base": "pot",
+        "probe_socket": "probe",
+        "saucer_under": "saucer_under",
+        "emitter_1": "emitter",
+        "emitter_2": "emitter",
+        "label_tab": "label"
+      },
+      "materials": {
+        "pot_fabric": "dim",
+        "soil": "shell",
+        "water": "glass"
+      }
+    },
+    {
+      "slug": "vessel--generic_fabric_20l",
+      "file": "/models/vessel--generic_fabric_20l.glb",
+      "kind": "vessel",
+      "dims_cm": [
+        31,
+        31,
+        28
+      ],
+      "bytes": 32424,
+      "origin_y": 0,
+      "meshes": 5,
+      "triangles": 384,
+      "anchors": {
+        "plant_base": "pot",
+        "probe_socket": "probe",
+        "saucer_under": "saucer_under",
+        "emitter_1": "emitter",
+        "emitter_2": "emitter",
+        "label_tab": "label"
+      },
+      "materials": {
+        "pot_fabric": "dim",
+        "soil": "shell",
+        "water": "glass"
+      }
+    },
+    {
+      "slug": "vessel--felt_15l",
+      "file": "/models/vessel--felt_15l.glb",
+      "kind": "vessel",
+      "dims_cm": [
+        27,
+        28,
+        26
+      ],
+      "bytes": 31604,
+      "origin_y": 0,
+      "meshes": 5,
+      "triangles": 344,
+      "anchors": {
+        "plant_base": "pot",
+        "probe_socket": "probe",
+        "saucer_under": "saucer_under",
+        "emitter_1": "emitter",
+        "emitter_2": "emitter",
+        "label_tab": "label"
+      },
+      "materials": {
+        "pot_fabric": "dim",
+        "soil": "shell",
+        "water": "glass"
+      }
+    },
+    {
+      "slug": "vessel--generic_tall_pet_20l",
+      "file": "/models/vessel--generic_tall_pet_20l.glb",
+      "kind": "vessel",
+      "dims_cm": [
+        26,
+        26,
+        40
+      ],
+      "bytes": 47308,
+      "origin_y": 0,
+      "meshes": 6,
+      "triangles": 464,
+      "anchors": {
+        "plant_base": "pot",
+        "probe_socket": "probe",
+        "saucer_under": "saucer_under",
+        "emitter_1": "emitter",
+        "emitter_2": "emitter",
+        "label_tab": "label"
+      },
+      "materials": {
+        "window_acrylic": "glass",
+        "plastic_dark": "shell",
+        "soil": "shell",
+        "water": "glass"
+      }
+    },
+    {
+      "slug": "vessel--plastic_taper_15l",
+      "file": "/models/vessel--plastic_taper_15l.glb",
+      "kind": "vessel",
+      "dims_cm": [
+        29,
+        29,
+        26
+      ],
+      "bytes": 30020,
+      "origin_y": -0.002,
+      "meshes": 5,
+      "triangles": 328,
+      "anchors": {
+        "plant_base": "pot",
+        "probe_socket": "probe",
+        "saucer_under": "saucer_under",
+        "emitter_1": "emitter",
+        "emitter_2": "emitter",
+        "label_tab": "label"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "soil": "shell",
+        "water": "glass"
+      }
+    },
+    {
+      "slug": "vessel--airpot_20l",
+      "file": "/models/vessel--airpot_20l.glb",
+      "kind": "vessel",
+      "dims_cm": [
+        33,
+        33,
+        32
+      ],
+      "bytes": 63556,
+      "origin_y": 0,
+      "meshes": 5,
+      "triangles": 620,
+      "anchors": {
+        "plant_base": "pot",
+        "probe_socket": "probe",
+        "saucer_under": "saucer_under",
+        "emitter_1": "emitter",
+        "emitter_2": "emitter",
+        "label_tab": "label"
+      },
+      "materials": {
+        "plastic_dark": "shell",
+        "soil": "shell",
+        "water": "glass"
+      }
+    },
+    {
+      "slug": "water-chiller-1-10hp",
+      "file": "/models/water-chiller-1-10hp.glb",
+      "kind": "device",
+      "dims_cm": [
+        35,
+        33,
+        37
+      ],
+      "bytes": 58884,
+      "origin_y": 0,
+      "meshes": 11,
+      "triangles": 550,
+      "anchors": {
+        "hose_in": "hose",
+        "hose_out": "hose",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "plastic_white": "dim",
+        "plastic_dark": "shell",
+        "mesh_wire": "wire",
+        "fan_blade": "accent",
+        "screen_glass": "emissive",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    },
+    {
+      "slug": "water-heater-aquarium-300w",
+      "file": "/models/water-heater-aquarium-300w.glb",
+      "kind": "device",
+      "dims_cm": [
+        3,
+        5,
+        37
+      ],
+      "bytes": 21696,
+      "origin_y": 0,
+      "meshes": 7,
+      "triangles": 200,
+      "anchors": {
+        "socket": "socket",
+        "cable_out": "cable"
+      },
+      "materials": {
+        "glass_clear": "glass",
+        "heat_element": "emissive",
+        "plastic_dark": "shell",
+        "led_status": "emissive",
+        "cable_black": "shell"
+      }
+    }
+  ]
+}

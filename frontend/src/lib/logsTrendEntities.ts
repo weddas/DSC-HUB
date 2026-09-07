@@ -1,11 +1,11 @@
 import type { FleetSnapshot } from "./fleetModel";
 import { probeAssignedPlantId } from "./probeAssignment";
 import {
-  isPotInService,
+  isProbeInService,
   KIT_PROBE_NUMBERS,
-  potGotEntity,
+  probeGotEntity,
   probeLabel,
-} from "./seatModel";
+} from "./probeModel";
 import type { JournalScope } from "../types/journal";
 
 export type TrendSeriesDef = {
@@ -27,7 +27,7 @@ export type TrendChartGroup = {
 };
 
 /** Resolve kit probe number for a plant id (empty when unassigned). */
-export function potForPlantId(
+export function probeForPlantId(
   plantId: string,
   fleet: FleetSnapshot | null | undefined,
   state: (id: string, fallback?: string) => string,
@@ -53,10 +53,10 @@ export function trendChartGroupsForScope(
       const vpdId = isClone ? "sensor.dsc_hub_clone_vpd_kpa" : "sensor.dsc_hub_vpd_kpa";
       const tentLabel = isClone ? "2×4" : "4×8";
       const moistSeries: TrendSeriesDef[] = KIT_PROBE_NUMBERS.filter((n) =>
-        isPotInService(n, state),
+        isProbeInService(n, state),
       ).map((n, i) => ({
         id: `p${n}m`,
-        entityId: potGotEntity(n, "moisture", state),
+        entityId: probeGotEntity(n, "moisture", state),
         label: probeLabel(n),
         color: ["var(--dsc-blue)", "var(--dsc-teal)", "var(--dsc-purple)", "var(--dsc-amber)"][i],
         unit: "%",
@@ -114,18 +114,18 @@ export function trendChartGroupsForScope(
       return groups;
     }
     case "plant": {
-      const pot = potForPlantId(scope.id ?? "", fleet, state);
-      if (!pot || !isPotInService(pot, state)) return [];
+      const probe = probeForPlantId(scope.id ?? "", fleet, state);
+      if (!probe || !isProbeInService(probe, state)) return [];
       return [
         {
           id: "plant-root",
-          title: `Probe ${pot} — moisture & EC`,
+          title: `Probe ${probe} — moisture & EC`,
           icon: "root",
           honesty: "Charts assigned probe Got channels only — unassigned or OOS probes stay empty.",
           series: [
             {
               id: "moist",
-              entityId: potGotEntity(pot, "moisture", state),
+              entityId: probeGotEntity(probe, "moisture", state),
               label: "Moisture %",
               color: "var(--dsc-teal)",
               axis: "left",
@@ -133,7 +133,7 @@ export function trendChartGroupsForScope(
             },
             {
               id: "ec",
-              entityId: potGotEntity(pot, "ec", state),
+              entityId: probeGotEntity(probe, "ec", state),
               label: "EC µS",
               color: "var(--dsc-amber)",
               axis: "right",

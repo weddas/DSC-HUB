@@ -28,7 +28,7 @@ from .hub_controls import (
 from .api_lock import host_lock
 from .native_api import make_api_client
 from .paths import EXPECTED_FIRMWARE, SURFACE_VERSION
-from .settings import list_inventory, record_history
+from .settings import list_inventory, record_history, record_history_throttled
 from .zigbee_mqtt import apply_zigbee_cache_to_state
 
 _logger = logging.getLogger(__name__)
@@ -116,7 +116,19 @@ class EsphomeIngest:
                 # Zigbee MQTT may have advanced canopy during this long poll —
                 # stamp ingest cache so we never clobber role-bound climate.
                 apply_zigbee_cache_to_state(state)
+                # Tuya lane rows ride the same role buckets; its own keys are stamped here.
+                from .tuya_local import apply_tuya_cache_to_state
+
+                apply_tuya_cache_to_state(state)
                 update_fleet_state(state)
+                # Brain-owned hub tunables: adopt new entities, confirm echoes, push what is
+                # queued (never while takeover / reconnect override holds). Never raises.
+                from .hub_tunables import on_fleet_poll
+
+                await on_fleet_poll(state)
+                from .journal_storage import maybe_prune_journals
+
+                maybe_prune_journals()
             except Exception as exc:  # noqa: BLE001
                 _logger.warning("ESPHome ingest poll failed: %s", exc)
             await asyncio.sleep(5.0)
@@ -145,14 +157,27 @@ class EsphomeIngest:
 
         for seat_id, row in seat_order:
             role = row.get("role", "")
-            if not row.get("in_service"):
-                self._mark_oos_seat(state, seat_id, role, prev)
-                continue
             host = row.get("host") or os.environ.get(f"DSC_{seat_id.upper()}_HOST")
             api_key = row.get("api_key") or os.environ.get(f"DSC_{seat_id.upper()}_API_KEY", "")
             # Panel firmware disables Noise (RAM); plaintext API only.
             if role == "panel":
                 api_key = row.get("api_key") or ""
+            if not row.get("in_service"):
+                # in_service gates WRITES, not observation. An out-of-service Sonoff
+                # whose relay is physically ON is exactly the state the failsafe exists
+                # for, so keep reading it (read-only) instead of going blind.
+                if role.startswith("sonoff") and host:
+                    try:
+                        readings = await _fetch_device(host, api_key or "", role, seat_id)
+                        self._apply_readings(state, seat_id, role, readings)
+                        seat = state.sonoffs.get(seat_id)
+                        if seat is not None:
+                            seat.values["in_service"] = False
+                        continue
+                    except Exception as exc:  # noqa: BLE001
+                        _logger.debug("ESPHome OOS %s @ %s: %s", seat_id, host, exc)
+                self._mark_oos_seat(state, seat_id, role, prev)
+                continue
             if not host:
                 continue
             polled = False
@@ -173,16 +198,25 @@ class EsphomeIngest:
             "Hub demand poll freshness; not per-Sonoff reachability"
         )
         state.system["relays"] = dict(appliance.get("relays", {}))
+        state.system["relay_demand"] = dict(appliance.get("demand", {}))
         relay_poll_ts = time.time()
-        for seat_id, relay_on in appliance.get("relays", {}).items():
-            sonoff = state.sonoffs.get(seat_id)
-            if sonoff is not None:
-                sonoff.values["relay_on"] = relay_on
-            # Every other metric is recorded on every poll (see the blanket loop above);
-            # relay_on was command-triggered only, so a manual/fault-driven state change
-            # with no matching brain command was never recorded. Record the observed
-            # state here too so relay history reflects reality, not just brain intent.
-            record_history(seat_id, "relay_on", 1.0 if relay_on else 0.0, relay_poll_ts)
+        commanded_map = appliance.get("relays", {}) or {}
+        demand_map = appliance.get("demand", {}) or {}
+        for seat_id, sonoff in state.sonoffs.items():
+            cmd = commanded_map.get(seat_id)
+            dem = demand_map.get(seat_id)
+            if cmd is not None:
+                sonoff.values["relay_commanded"] = bool(cmd)
+            if dem is not None:
+                sonoff.values["relay_demand"] = bool(dem)
+            # relay_on is the device's own polled contact state (see _fetch_device);
+            # it is never overwritten from the driver. History records the observed
+            # state when the seat was polled, else the last command as the best proxy.
+            observed = sonoff.values.get("relay_on")
+            if isinstance(observed, bool) and sonoff.online:
+                record_history(seat_id, "relay_on", 1.0 if observed else 0.0, relay_poll_ts)
+            elif cmd is not None:
+                record_history(seat_id, "relay_on", 1.0 if cmd else 0.0, relay_poll_ts)
 
         _finalize_hub_binaries(state)
         return state
@@ -303,6 +337,15 @@ class EsphomeIngest:
                     record_grow_log("; ".join(bits))
                 _BOOT_GROW_LOGGED = True
             for eid, ctrl in controls.items():
+                if eid.startswith("switch.dsc_hub_") and not eid.endswith("_demand"):
+                    # Mode / ownership switches: on change or every 5 min (charts + audits).
+                    record_history_throttled("hub", eid.replace(".", "_"), 1.0 if ctrl.get("state") == "on" else 0.0, now)
+                elif eid.startswith("number.dsc_hub_"):
+                    # Setpoints and rails: the band history the VPD chart needs.
+                    try:
+                        record_history_throttled("hub", eid.replace(".", "_"), float(ctrl.get("state")), now)
+                    except (TypeError, ValueError):
+                        pass
                 if eid.startswith("switch.dsc_hub_") and eid.endswith("_demand"):
                     metric = eid.replace(".", "_").replace("switch_", "switch_")
                     on = 1.0 if ctrl.get("state") == "on" else 0.0
@@ -340,6 +383,8 @@ class EsphomeIngest:
             for eid, on in binaries.items():
                 if not eid.startswith("binary_sensor.dsc_"):
                     continue
+                if eid.startswith("binary_sensor.dsc_hub_"):
+                    record_history_throttled("hub", "bin_" + eid.split(".", 1)[1], 1.0 if on else 0.0, now)
                 key = f"bin:{eid}"
                 st = "on" if on else "off"
                 prev = _PREV_HUB_DEMANDS.get(key)
@@ -469,6 +514,16 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
                 if binaries:
                     values["binaries"] = binaries
 
+            elif role.startswith("sonoff"):
+                # Physical relay state straight from the device — the only honest
+                # source (the appliance driver knows what it commanded, the hub what
+                # it demands; neither is the contact).
+                for key, st in states.items():
+                    if key_to_object.get(key, "") == "main_relay":
+                        raw = getattr(st, "state", None)
+                        values["relay_on"] = raw in (True, "on", "ON", 1, "1")
+                        break
+
             # Product firmware stamp from Firmware Version text sensor (all roles).
             for key, st in states.items():
                 object_id = key_to_object.get(key, "")
@@ -557,10 +612,24 @@ def _hub_controls_from_states(
 ) -> dict[str, dict[str, Any]]:
     """Build HA-shaped control readback for hub switches/numbers/fans/selects/light."""
     select_options: dict[str, list[str]] = {}
+    number_meta: dict[str, dict[str, Any]] = {}
     for ent in entities:
         oid = str(getattr(ent, "object_id", ""))
         if oid in HUB_SELECT_OID_TO_ENTITY and hasattr(ent, "options"):
             select_options[oid] = list(getattr(ent, "options", []) or [])
+        elif oid in HUB_NUMBER_OID_TO_ENTITY and hasattr(ent, "min_value"):
+            # Native range so the brain validates desired values against the firmware's own
+            # bounds (hub_tunables) and the SPA never hardcodes a min/max again.
+            meta: dict[str, Any] = {}
+            for src, dst in (("min_value", "min"), ("max_value", "max"), ("step", "step")):
+                try:
+                    meta[dst] = float(getattr(ent, src))
+                except (TypeError, ValueError):
+                    pass
+            unit = getattr(ent, "unit_of_measurement", None)
+            if unit:
+                meta["unit_of_measurement"] = str(unit)
+            number_meta[oid] = meta
 
     controls: dict[str, dict[str, Any]] = {}
 
@@ -579,10 +648,11 @@ def _hub_controls_from_states(
             put(entity_id, "on" if on else "off")
         elif object_id in HUB_NUMBER_OID_TO_ENTITY:
             entity_id = HUB_NUMBER_OID_TO_ENTITY[object_id]
+            meta = number_meta.get(object_id, {})
             try:
-                put(entity_id, str(float(st.state)))
+                put(entity_id, str(float(st.state)), **meta)
             except (TypeError, ValueError):
-                put(entity_id, str(getattr(st, "state", "")))
+                put(entity_id, str(getattr(st, "state", "")), **meta)
         elif object_id in HUB_FAN_OID_TO_ENTITY:
             entity_id = HUB_FAN_OID_TO_ENTITY[object_id]
             on = bool(getattr(st, "state", False))

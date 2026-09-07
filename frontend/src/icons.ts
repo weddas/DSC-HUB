@@ -1,20 +1,21 @@
 import { ICON_SVG, type IconName } from "./iconSvg";
+import { ICON_SVG_SET } from "./iconSet";
 
 export type { IconName };
 
 /** Prefer inline SVG body — live HA often 404s `/dsc_hub/assets/*` until full www sync. */
 export function iconSvg(name: IconName): string {
-  return ICON_SVG[name];
+  return (ICON_SVG_SET as Record<string, string>)[name] ?? (ICON_SVG as Record<string, string>)[name] ?? "";
 }
 
 /** Legacy absolute asset URL (brand/fallback / external tooling). */
 export function iconUrl(name: IconName): string {
   const ASSET_BASE = "/dsc_hub/assets";
-  const path = ICON_PATH[name];
+  const path = ICON_PATH[name] ?? `icons/${name}.svg`;
   return `${ASSET_BASE}/${path}`;
 }
 
-const ICON_PATH: Record<IconName, string> = {
+const ICON_PATH: Partial<Record<IconName, string>> = {
   live: "icons/dsc-icon-ops.svg",
   grow: "icons/dsc-icon-plant.svg",
   tune: "icons/dsc-icon-advanced.svg",

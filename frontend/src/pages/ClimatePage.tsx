@@ -1,25 +1,31 @@
 import { Fragment, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Button,
   Card,
   EntityFanSlider,
   EntitySelect,
   EntityToggle,
   type EntityToggleConfirm,
   Kpi,
-  PageHeader,
   StatusChip,
+  StatusTag,
 } from "../components/ui";
-import { OverflowMenu } from "../components/chrome";
-import { TimespanControl, CYCLE_TIMESPAN_EXTRAS } from "../components/HistoryDrawer";
+import { Icon } from "../components/ui";
+import { Panel } from "../components/Panel";
+import { VpdHero } from "../components/VpdHero";
+import { ZoneVpdChart } from "../components/ZoneVpdChart";
+import { SetpointsByPhase } from "../components/SetpointsByPhase";
+import { EquipmentTiles } from "../components/EquipmentTiles";
+import { useRecentGrowLog } from "../components/GrowLogCompact";
+import { useZones } from "../hooks/useZones";
+import { paths } from "../lib/paths";
 import { AirPathMap } from "../components/AirPathMap";
 import { FlowSankey } from "../components/FlowSankey";
 import { CropScheduler } from "../components/CropScheduler";
 import { TentTargetPanel } from "../components/TentTargets";
 import { resolveCfm } from "../lib/cfmProvenance";
 import { inventoryInService } from "../lib/fleetModel";
-import { absoluteHumidity } from "../lib/potTrust";
+import { absoluteHumidity } from "../lib/probeTrust";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleet, useHubVitals } from "../hooks/useFleet";
 import { useFleetEntity } from "../hooks/useFleetEntity";
@@ -31,14 +37,12 @@ import {
 } from "../hooks/useHeldReading";
 import { SettingsTable, SettingsRow, StaleValueCell } from "../components/settings/SettingsTable";
 import { useChartHours } from "../hooks/useChartHours";
-import { useZoneFocus, type ZoneFocus } from "../hooks/useZoneFocus";
+import { useZoneFocus } from "../hooks/useZoneFocus";
 import { useInspector } from "../components/InspectorHost";
 import { HelpTip } from "../components/HelpTip";
-import { withPriorGhost } from "../lib/chartSeries";
-import { ArcGauge, GotWantBars, MultiLineChart, seriesExtrema } from "../viz/charts";
-import { rhSegments, tempSegments, vpdSegments } from "../viz/gaugeTheme";
+import { MultiLineChart } from "../viz/charts";
 import { fmtDurationMs } from "../lib/formatDuration";
-import { SHARED_AIR_FAN_PCT, fanPctChip } from "../components/DashHomeSections";
+import { SHARED_AIR_FAN_PCT, fanPctChip } from "../lib/fanPlant";
 import { isZigbeeSafetyLeakRole } from "../lib/fleetApi";
 
 function resolveRoomVpdId(entity: (id: string) => unknown): string {
@@ -55,12 +59,54 @@ function fmt(n: number, digits = 1): string {
  *  forever. Shared with the settings-table primitives — one horizon, one rule. */
 const ZIGBEE_ROLE_STALE_MS = TIMESTAMPED_READING_STALE_MS;
 
-const FOCUS_OPTIONS: { id: ZoneFocus; label: string }[] = [
-  { id: "compare", label: "All" },
-  { id: "main", label: "4×8" },
-  { id: "clone", label: "2×4" },
-  { id: "room", label: "Room" },
-];
+
+// Binding metadata + device-health keys (health lives on Settings -> Device) are not readings.
+const ZIGBEE_ROW_META_KEYS = new Set([
+  "friendly_name",
+  "updated_at",
+  "role",
+  "zone",
+  "ieee",
+  "bound_stub",
+  "kind",
+  "last_topic",
+  "last_seen",
+  "battery",
+  "linkquality",
+  "voltage",
+]);
+const ZIGBEE_UNITS: Record<string, string> = {
+  co2: "ppm",
+  voc: "ppb",
+  pm25: "µg/m³",
+  illuminance_lux: "lx",
+  illuminance: "lx",
+  power: "W",
+  energy: "kWh",
+  temperature: "°C",
+  humidity: "%",
+};
+function zigbeeKeyLabel(key: string): string {
+  if (key === "co2") return "CO₂";
+  if (key === "pm25") return "PM2.5";
+  if (key === "illuminance_lux" || key === "illuminance") return "Lux";
+  return key.replace(/_/g, " ");
+}
+function zigbeeReadingText(key: string, value: number | boolean | string): string {
+  if (typeof value === "boolean") {
+    // Z2M semantics: contact=true is closed, occupancy=true is presence, state=true is on.
+    if (key === "contact") return value ? "Closed" : "Open";
+    if (key === "occupancy") return value ? "Occupied" : "Clear";
+    if (key === "state") return value ? "On" : "Off";
+    return `${zigbeeKeyLabel(key)} ${value ? "on" : "off"}`;
+  }
+  if (typeof value === "number") {
+    const digits = Number.isInteger(value) ? 0 : 1;
+    const unit = ZIGBEE_UNITS[key];
+    return `${zigbeeKeyLabel(key)} ${value.toFixed(digits)}${unit ? ` ${unit}` : ""}`;
+  }
+  return `${zigbeeKeyLabel(key)} ${value}`;
+}
 
 export function LiveClimatePage() {
   const { num, state, entity, available } = useEntityBus();
@@ -68,8 +114,12 @@ export function LiveClimatePage() {
   const hubVitals = useHubVitals();
   const navigate = useNavigate();
   const inspector = useInspector();
-  const { focus, setFocus } = useZoneFocus();
-  const { hours, setHours, maxPoints } = useChartHours(6);
+  const { focus } = useZoneFocus();
+  const { hours, maxPoints } = useChartHours(6);
+  const zones = useZones();
+  const log = useRecentGrowLog(168, 200);
+  const heroZone = focus === "clone" ? zones.clone : focus === "room" ? zones.room : zones.main;
+  const otherZones = [zones.main, zones.clone, zones.room].filter((z) => z.id !== heroZone.id);
   const fanOverride = useFleetEntity("switch.dsc_hub_tent_manual_override").state === "on";
   const fullAuto = useFleetEntity("switch.dsc_hub_tent_full_auto_mode").state === "on";
   const manualTakeover = useFleetEntity("switch.dsc_hub_manual_takeover").state === "on";
@@ -90,26 +140,12 @@ export function LiveClimatePage() {
   const tentVpdHeld = useHeldReading("sensor.dsc_hub_vpd_kpa");
   const cloneTHeld = useHeldReading("sensor.dsc_hub_clone_temperature");
   const cloneRhHeld = useHeldReading("sensor.dsc_hub_clone_humidity");
-  const cloneVpdHeld = useHeldReading("sensor.dsc_hub_clone_vpd_kpa");
   const roomTHeld = useHeldReading("sensor.dsc_hub_room_temperature");
   const roomRhHeld = useHeldReading("sensor.dsc_hub_room_humidity");
   const roomVpdId = resolveRoomVpdId(entity);
   const roomVpdHeld = useHeldReading(roomVpdId);
 
-  const leafVpdHeld = useHeldReading("sensor.dsc_leaf_vpd_kpa");
-  const cloneLeafVpdHeld = useHeldReading("sensor.dsc_clone_leaf_vpd_kpa");
 
-  const tentT = useEntitySeries("sensor.dsc_hub_tent_temperature", { hours, maxPoints, withGhost: true });
-  const tentRh = useEntitySeries("sensor.dsc_hub_tent_humidity", { hours, maxPoints, withGhost: true });
-  const tentVpd = useEntitySeries("sensor.dsc_hub_vpd_kpa", { hours, maxPoints, withGhost: true });
-  const cloneT = useEntitySeries("sensor.dsc_hub_clone_temperature", { hours, maxPoints, withGhost: true });
-  const cloneRh = useEntitySeries("sensor.dsc_hub_clone_humidity", { hours, maxPoints, withGhost: true });
-  const cloneVpd = useEntitySeries("sensor.dsc_hub_clone_vpd_kpa", { hours, maxPoints, withGhost: true });
-  const roomT = useEntitySeries("sensor.dsc_hub_room_temperature", { hours, maxPoints, withGhost: true });
-  const roomRh = useEntitySeries("sensor.dsc_hub_room_humidity", { hours, maxPoints, withGhost: true });
-  const roomVpd = useEntitySeries(roomVpdId, { hours, maxPoints, withGhost: true });
-  const leafVpd = useEntitySeries("sensor.dsc_leaf_vpd_kpa", { hours, maxPoints, withGhost: true });
-  const cloneLeafVpd = useEntitySeries("sensor.dsc_clone_leaf_vpd_kpa", { hours, maxPoints, withGhost: true });
   const fanOut = useEntitySeries("sensor.dsc_fan_exhaust_outside_pct", { hours, maxPoints });
   const fanRecirc = useEntitySeries("sensor.dsc_fan_exhaust_room_pct", { hours, maxPoints });
 
@@ -142,28 +178,7 @@ export function LiveClimatePage() {
   const tentAh = absoluteHumidity(tentTHeld.value, tentRhHeld.value);
   const cloneAh = absoluteHumidity(cloneTHeld.value, cloneRhHeld.value);
 
-  const targetTemp = num("number.dsc_hub_target_temp");
-  const rhMin = num("number.dsc_hub_rh_target_min");
-  const rhMax = num("number.dsc_hub_rh_target_max");
-  const vpdMin = num("number.dsc_hub_vpd_target_min");
-  const vpdMax = num("number.dsc_hub_vpd_target_max");
-  const cloneTargetTemp = num("number.dsc_hub_clone_target_temp");
-  const cloneRhMin = num("number.dsc_hub_clone_rh_min");
-  const cloneRhMax = num("number.dsc_hub_clone_rh_max");
-  const cloneVpdMin = num("number.dsc_hub_clone_vpd_min");
-  const cloneVpdMax = num("number.dsc_hub_clone_vpd_max");
-
   const open = (id: string, label: string, unit?: string) => inspector.open({ entityId: id, label, unit });
-
-  const tentTempExt = useMemo(() => seriesExtrema(tentT.series), [tentT.series]);
-  const tentRhExt = useMemo(() => seriesExtrema(tentRh.series), [tentRh.series]);
-  const tentVpdExt = useMemo(() => seriesExtrema(tentVpd.series), [tentVpd.series]);
-  const cloneTempExt = useMemo(() => seriesExtrema(cloneT.series), [cloneT.series]);
-  const cloneRhExt = useMemo(() => seriesExtrema(cloneRh.series), [cloneRh.series]);
-  const cloneVpdExt = useMemo(() => seriesExtrema(cloneVpd.series), [cloneVpd.series]);
-  const roomTempExt = useMemo(() => seriesExtrema(roomT.series), [roomT.series]);
-  const roomRhExt = useMemo(() => seriesExtrema(roomRh.series), [roomRh.series]);
-  const roomVpdExt = useMemo(() => seriesExtrema(roomVpd.series), [roomVpd.series]);
 
   const dTRoomMain = tentTHeld.value - roomTHeld.value;
   const dAhRoomMain = tentAh - roomAh;
@@ -254,7 +269,10 @@ export function LiveClimatePage() {
   const zigbeeClimateRows = useMemo(() => {
     if (!zigbeeByRole) return [];
     return Object.entries(zigbeeByRole)
-      .filter(([role]) => !isZigbeeSafetyLeakRole(role))
+      .filter(([role, row]) => {
+        const kind = String(row.kind ?? "");
+        return kind ? kind === "climate" : !isZigbeeSafetyLeakRole(role);
+      })
       .map(([role, row]) => {
         // Each value routed through the shared fail-closed gate: present value +
         // stale updated_at (or none) -> held/greyed, not a confident number.
@@ -277,6 +295,40 @@ export function LiveClimatePage() {
           rhStale: rh.stale,
           name: String(row.friendly_name ?? role),
           stale: t.stale || rh.stale,
+        };
+      });
+  }, [zigbeeByRole]);
+
+  // Non-climate, non-leak roles (CO₂, lux, contact, power, button, plugs). The brain
+  // exposes each datapoint as sensor./binary_sensor.dsc_zigbee_<role>_<key>; this
+  // table is the same data, held/greyed through the shared timestamp gate.
+  const zigbeeOtherRows = useMemo(() => {
+    if (!zigbeeByRole) return [];
+    return Object.entries(zigbeeByRole)
+      .filter(([role, row]) => {
+        const kind = String(row.kind ?? "");
+        if (!kind) return false;
+        return kind !== "climate" && !isZigbeeSafetyLeakRole(role);
+      })
+      .map(([role, row]) => {
+        const updatedAt = row.updated_at as number | string | null | undefined;
+        const stale = timestampedReading(0, updatedAt, ZIGBEE_ROLE_STALE_MS).stale;
+        const readings = Object.entries(row)
+          .filter(
+            ([k, v]) =>
+              !ZIGBEE_ROW_META_KEYS.has(k) &&
+              v != null &&
+              (typeof v === "number" || typeof v === "boolean" || typeof v === "string"),
+          )
+          .map(([k, v]) => ({ key: k, text: zigbeeReadingText(k, v as number | boolean | string) }));
+        return {
+          role,
+          kind: String(row.kind),
+          zone: String(row.zone ?? "—"),
+          name: String(row.friendly_name ?? role),
+          boundStub: Boolean(row.bound_stub),
+          stale,
+          readings,
         };
       });
   }, [zigbeeByRole]);
@@ -307,69 +359,62 @@ export function LiveClimatePage() {
       });
   }, [zigbeeByRole, bindings, policies, policyState]);
 
-  const rowLit = (id: "room" | "clone" | "main") =>
-    focus === "compare" || focus === id ? "dsc-gauge-row-3 is-lit" : "dsc-gauge-row-3";
-
   return (
     <div className="dsc-page">
-      <PageHeader
-        icon="climate"
-        title="Climate"
-        subtitle="Room is the umbrella lung. 2×4 and 4×8 are grow rooms and transfer/storage. T, RH, VPD only together."
-        actions={
-          <OverflowMenu
-            label="Climate settings"
-            items={[
-              { id: "mission", label: "Mission", onSelect: () => navigate("/live/mission") },
-              { id: "main", label: "4×8 cockpit", onSelect: () => navigate("/live/4x8") },
-              { id: "clone", label: "2×4 cockpit", onSelect: () => navigate("/live/2x4") },
-              { id: "fleet", label: "Fleet kit", onSelect: () => navigate("/fleet") },
-            ]}
+      <header className="dsc-ov-head">
+        <div>
+          <div className="dsc-eyebrow">Live · Climate</div>
+          <h1 className="dsc-headline">The room is the umbrella lung.</h1>
+          <p className="dsc-subline">T, RH and VPD only together. The 2×4 and 4×8 are grow rooms inside it.</p>
+        </div>
+        <div className="dsc-tagrow dsc-ov-tags">
+          <StatusTag
+            label={
+              hubVitals.online
+                ? `HUB ${hubVitals.temp_c != null ? `${hubVitals.temp_c.toFixed(1)} °C` : "LIVE"}`
+                : "HUB OFFLINE"
+            }
+            tone={hubVitals.online ? "ok" : "bad"}
+            live={!hubVitals.online}
+            onClick={() => navigate(paths.kit())}
           />
-        }
-      />
-
-      <div className="dsc-chip-row" style={{ marginBottom: 14 }} role="group" aria-label="Zone emphasis">
-        <StatusChip
-          icon={hubVitals.online ? "ok" : "alert"}
-          label={
-            hubVitals.online
-              ? `Hub ${hubVitals.temp_c != null ? `${hubVitals.temp_c.toFixed(1)}°C` : "live"}`
-              : "Hub offline"
-          }
-          tone={hubVitals.online ? "ok" : "bad"}
-        />
-        {FOCUS_OPTIONS.map((opt) => (
-          <button
-            key={opt.id}
-            type="button"
-            className={`dsc-chip${focus === opt.id ? " dsc-chip--ok" : ""}`}
-            onClick={() => setFocus(opt.id)}
-          >
-            {opt.label}
-          </button>
-        ))}
-        <HelpTip title="Zone focus">
-          <p>
-            Focus lights gauges and Want columns for the zone you are walking. <b>All</b> (compare) keeps both tents
-            hot. <b>Room</b> is the umbrella lung — not a tent Want editor.
-          </p>
-          <p>
-            Example: dial 2×4 RH → tap 2×4 so that column stays bright and 4×8 dims. Bare Climate URL keeps your last
-            focus; only <code>?tent=</code> rewrites it.
-          </p>
-        </HelpTip>
-        <TimespanControl hours={hours} setHours={setHours} extras={CYCLE_TIMESPAN_EXTRAS} />
-        <Button teal onClick={() => navigate("/fleet")}>
-          Kit / Fleet
-        </Button>
-      </div>
+          <StatusTag label={fullAuto ? "FULL AUTO" : "FULL AUTO OFF"} tone={fullAuto ? "ok" : "warn"} title="Brain owns fans and demand while Full Auto is on" />
+          {manualTakeover ? <StatusTag icon="manual-hand" label="MANUAL TAKEOVER" tone="bad" live /> : null}
+          {fanOverride ? <StatusTag label="FAN OVERRIDE" tone="warn" /> : null}
+          {reducedKit ? <StatusTag label="CAPACITY OFFLINE" tone="warn" /> : null}
+          <StatusTag label={`${heroZone.label} ${focus === "compare" ? "· COMPARE" : ""}`.trim()} tone="teal" title="Zone in focus — change it on the zone strip" />
+        </div>
+      </header>
 
       {manualTakeover ? (
-        <div className="dsc-banner dsc-banner--warn" style={{ marginBottom: 14 }}>
-          <strong>Manual takeover — brain will re-plan on clear/reconnect</strong>
+        <div className="dsc-mission dsc-mission--bad" role="alert">
+          <span className="dsc-mission-dot" aria-hidden="true" />
+          <span className="dsc-mission-title">Manual takeover</span>
+          <span className="dsc-mission-detail">— you own every fan and appliance; the brain re-plans on clear or hub reconnect.</span>
         </div>
       ) : null}
+
+      <div className="dsc-climate-grid">
+        <div className="dsc-climate-col">
+          <Panel legendIcon="vpd-gauge" legend={`${heroZone.label} · VPD · MASTER`} tone={heroZone.vpd.tone === "critical" ? "bad" : heroZone.vpd.tone === "warn" || heroZone.vpd.tone === "stale" ? "warn" : heroZone.vpd.tone === "ok" ? "ok" : "muted"} live={heroZone.vpd.tone === "critical"}>
+            <VpdHero zone={heroZone} onOpen={open} />
+          </Panel>
+          <Panel legendIcon="growth-stage-timeline" legend="SETPOINTS BY PHASE">
+            <SetpointsByPhase zone={heroZone} />
+          </Panel>
+        </div>
+        <div className="dsc-climate-col">
+          <Panel legendIcon="trend-chart" legend={`${heroZone.label} · VPD · WITH HISTORY`} legendRight={focus === "compare" ? <><Icon name="compare" size={11} /> OTHER ZONES GHOSTED</> : undefined}>
+            <ZoneVpdChart zone={heroZone} others={otherZones} events={log.events} compare={focus === "compare"} />
+          </Panel>
+          <Panel legendIcon="fan-speed-controller" legend="EQUIPMENT · PULLING TOWARD SETPOINT">
+            <EquipmentTiles
+              zone={heroZone}
+              onOpen={(entityId, label, kind, unit) => inspector.open({ entityId, label, kind, unit })}
+            />
+          </Panel>
+        </div>
+      </div>
 
       <div className="dsc-grid">
         <div className="dsc-col-12">
@@ -521,106 +566,6 @@ export function LiveClimatePage() {
         </div>
 
         <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Triad · T / RH / VPD" icon="gauge">
-            <div className="dsc-gauge-matrix">
-              <div className={rowLit("room")}>
-                <span className="dsc-gauge-row-tag">Room</span>
-                <ArcGauge label="T" value={roomTHeld.value} min={10} max={40} unit="°C" extrema={roomTempExt} stale={roomTHeld.stale} onClick={() => open("sensor.dsc_hub_room_temperature", "Room T", "°C")} />
-                <ArcGauge label="RH" value={roomRhHeld.value} min={0} max={100} unit="%" extrema={roomRhExt} stale={roomRhHeld.stale} onClick={() => open("sensor.dsc_hub_room_humidity", "Room RH", "%")} />
-                <ArcGauge label="VPD" value={roomVpdHeld.value} min={0} max={2.5} unit="kPa" extrema={roomVpdExt} stale={roomVpdHeld.stale} onClick={() => open(roomVpdId, "Room VPD", "kPa")} />
-              </div>
-              <div className={rowLit("clone")}>
-                <span className="dsc-gauge-row-tag">2×4</span>
-                <ArcGauge label="T" value={cloneTHeld.value} min={15} max={35} unit="°C" target={cloneTargetTemp} band={{ min: cloneTargetTemp - 2, max: cloneTargetTemp + 2 }} segments={tempSegments(cloneTargetTemp)} extrema={cloneTempExt} stale={cloneTHeld.stale} onClick={() => open("sensor.dsc_hub_clone_temperature", "2×4 T", "°C")} />
-                <ArcGauge label="RH" value={cloneRhHeld.value} min={0} max={100} unit="%" band={{ min: cloneRhMin, max: cloneRhMax }} segments={rhSegments(cloneRhMin, cloneRhMax)} extrema={cloneRhExt} stale={cloneRhHeld.stale} onClick={() => open("sensor.dsc_hub_clone_humidity", "2×4 RH", "%")} />
-                <ArcGauge label="VPD" value={cloneVpdHeld.value} min={0} max={2.5} unit="kPa" band={{ min: cloneVpdMin, max: cloneVpdMax }} segments={vpdSegments(cloneVpdMin, cloneVpdMax)} extrema={cloneVpdExt} stale={cloneVpdHeld.stale} onClick={() => open("sensor.dsc_hub_clone_vpd_kpa", "2×4 VPD", "kPa")} />
-              </div>
-              <div className={rowLit("main")}>
-                <span className="dsc-gauge-row-tag">4×8</span>
-                <ArcGauge label="T" value={tentTHeld.value} min={15} max={35} unit="°C" target={targetTemp} band={{ min: targetTemp - 2, max: targetTemp + 2 }} segments={tempSegments(targetTemp)} extrema={tentTempExt} stale={tentTHeld.stale} onClick={() => open("sensor.dsc_hub_tent_temperature", "4×8 T", "°C")} />
-                <ArcGauge label="RH" value={tentRhHeld.value} min={0} max={100} unit="%" band={{ min: rhMin, max: rhMax }} segments={rhSegments(rhMin, rhMax)} extrema={tentRhExt} stale={tentRhHeld.stale} onClick={() => open("sensor.dsc_hub_tent_humidity", "4×8 RH", "%")} />
-                <ArcGauge label="VPD" value={tentVpdHeld.value} min={0} max={2.5} unit="kPa" band={{ min: vpdMin, max: vpdMax }} segments={vpdSegments(vpdMin, vpdMax)} extrema={tentVpdExt} stale={tentVpdHeld.stale} onClick={() => open("sensor.dsc_hub_vpd_kpa", "4×8 VPD", "kPa")} />
-              </div>
-            </div>
-            <GotWantBars
-              rows={[
-                { label: "Room T", got: roomTHeld.value, stale: roomTHeld.stale, want: num("sensor.dsc_hub_room_temp_mean_24h"), unit: "°C" },
-                { label: "2×4 T", got: cloneTHeld.value, stale: cloneTHeld.stale, want: cloneTargetTemp, unit: "°C" },
-                { label: "4×8 T", got: tentTHeld.value, stale: tentTHeld.stale, want: targetTemp, unit: "°C" },
-                { label: "2×4 RH", got: cloneRhHeld.value, stale: cloneRhHeld.stale, wantMin: cloneRhMin, wantMax: cloneRhMax, unit: "%" },
-                { label: "4×8 RH", got: tentRhHeld.value, stale: tentRhHeld.stale, wantMin: rhMin, wantMax: rhMax, unit: "%" },
-                { label: "2×4 VPD", got: cloneVpdHeld.value, stale: cloneVpdHeld.stale, wantMin: cloneVpdMin, wantMax: cloneVpdMax, unit: "kPa" },
-                { label: "4×8 VPD", got: tentVpdHeld.value, stale: tentVpdHeld.stale, wantMin: vpdMin, wantMax: vpdMax, unit: "kPa" },
-                { label: "4×8 leaf VPD", got: leafVpdHeld.value, stale: leafVpdHeld.stale, unit: "kPa" },
-                { label: "2×4 leaf VPD", got: cloneLeafVpdHeld.value, stale: cloneLeafVpdHeld.stale, unit: "kPa" },
-              ]}
-            />
-          </Card>
-        </div>
-
-        <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Temperature" icon="climate">
-            <MultiLineChart
-              unit="°C"
-              chartHours={hours}
-              lastSyncAt={Math.max(roomT.lastSyncAt ?? 0, cloneT.lastSyncAt ?? 0, tentT.lastSyncAt ?? 0) || undefined}
-              yDomain={{ left: { min: 15, max: 35 } }}
-              series={[
-                ...withPriorGhost("rt", "Room", roomT, "var(--dsc-gray-5)", "°C"),
-                ...withPriorGhost("ct", "2×4", cloneT, "var(--dsc-teal)", "°C", { band: { min: cloneTargetTemp - 1.5, max: cloneTargetTemp + 1.5 } }),
-                ...withPriorGhost("mt", "4×8", tentT, "var(--dsc-blue)", "°C", { band: { min: targetTemp - 1.5, max: targetTemp + 1.5 } }),
-              ]}
-              targets={[{ axis: "left", value: targetTemp, color: "var(--dsc-amber)", label: "4×8 Want T" }]}
-            />
-          </Card>
-        </div>
-        <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Humidity" icon="climate">
-            <MultiLineChart
-              unit="%"
-              chartHours={hours}
-              lastSyncAt={Math.max(roomRh.lastSyncAt ?? 0, cloneRh.lastSyncAt ?? 0, tentRh.lastSyncAt ?? 0) || undefined}
-              yDomain={{ left: { min: 0, max: 100 } }}
-              series={[
-                ...withPriorGhost("rrh", "Room", roomRh, "var(--dsc-gray-5)", "%"),
-                ...withPriorGhost("crh", "2×4", cloneRh, "var(--dsc-teal)", "%", { band: { min: cloneRhMin, max: cloneRhMax } }),
-                ...withPriorGhost("mrh", "4×8", tentRh, "var(--dsc-blue)", "%", { band: { min: rhMin, max: rhMax } }),
-              ]}
-              targets={[{ axis: "left", min: rhMin, max: rhMax, color: "var(--dsc-teal)" }]}
-            />
-          </Card>
-        </div>
-        <div className="dsc-col-12">
-          <Card className="dsc-glass" title="VPD" icon="climate">
-            <MultiLineChart
-              unit="kPa"
-              chartHours={hours}
-              lastSyncAt={
-                Math.max(
-                  roomVpd.lastSyncAt ?? 0,
-                  cloneVpd.lastSyncAt ?? 0,
-                  tentVpd.lastSyncAt ?? 0,
-                  leafVpd.lastSyncAt ?? 0,
-                  cloneLeafVpd.lastSyncAt ?? 0,
-                ) || undefined
-              }
-              yDomain={{ left: { min: 0, max: 2.5 } }}
-              series={[
-                ...withPriorGhost("rv", "Room", roomVpd, "var(--dsc-gray-5)", "kPa"),
-                ...withPriorGhost("cv", "2×4 air", cloneVpd, "var(--dsc-teal)", "kPa", { band: { min: cloneVpdMin, max: cloneVpdMax } }),
-                ...withPriorGhost("mv", "4×8 air", tentVpd, "var(--dsc-blue)", "kPa", { band: { min: vpdMin, max: vpdMax } }),
-                ...withPriorGhost("lv", "4×8 leaf", leafVpd, "var(--dsc-green)", "kPa"),
-                ...withPriorGhost("clv", "2×4 leaf", cloneLeafVpd, "var(--dsc-green-dim)", "kPa"),
-              ]}
-              targets={[
-                { min: vpdMin, max: vpdMax, color: "var(--dsc-blue-dim)" },
-                { min: cloneVpdMin, max: cloneVpdMax, color: "var(--dsc-teal-dim)" },
-              ]}
-            />
-          </Card>
-        </div>
-
-        <div className="dsc-col-12">
           <Card className="dsc-glass" title="Air path" icon="climate">
             <AirPathMap
               intakeClone={inCloneReading}
@@ -647,7 +592,8 @@ export function LiveClimatePage() {
 
         {canopyRole ||
         zigbeeClimateRows.length ||
-        zigbeeSafetyRows.length ? (
+        zigbeeSafetyRows.length ||
+        zigbeeOtherRows.length ? (
           <div className="dsc-col-12">
             <Card className="dsc-glass" title="Zigbee by role" icon="gauge">
               <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginBottom: 8 }}>
@@ -702,11 +648,52 @@ export function LiveClimatePage() {
                     </SettingsRow>
                   ))}
                 </SettingsTable>
-              ) : zigbeeSafetyRows.length ? null : (
+              ) : zigbeeSafetyRows.length || zigbeeOtherRows.length ? null : (
                 <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
                   No climate roles bound yet — permit join, then set Role + Zone and Save.
                 </p>
               )}
+              {zigbeeOtherRows.length ? (
+                <>
+                  <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginTop: 12, marginBottom: 8 }}>
+                    Other sensors — every datapoint the device reports. Automations can trigger on each one as{" "}
+                    <code>sensor.dsc_zigbee_&lt;role&gt;_&lt;key&gt;</code>.
+                  </p>
+                  <SettingsTable
+                    columns={[
+                      { key: "role", label: "Role" },
+                      { key: "zone", label: "Zone" },
+                      { key: "device", label: "Device" },
+                      { key: "readings", label: "Readings" },
+                    ]}
+                  >
+                    {zigbeeOtherRows.map((row) => (
+                      <SettingsRow key={row.role} tone={row.stale ? "muted" : undefined}>
+                        <td>{row.role}</td>
+                        <td>{row.zone}</td>
+                        <td>{row.name}</td>
+                        <td>
+                          {row.readings.length ? (
+                            <div className="dsc-chip-row" style={{ flexWrap: "wrap" }}>
+                              {row.readings.map((r) => (
+                                <StatusChip
+                                  key={r.key}
+                                  label={row.stale ? `${r.text} ⏸` : r.text}
+                                  tone={row.stale ? "muted" : "ok"}
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="dsc-muted">
+                              {row.boundStub ? "bound — no report yet" : "no datapoints reported"}
+                            </span>
+                          )}
+                        </td>
+                      </SettingsRow>
+                    ))}
+                  </SettingsTable>
+                </>
+              ) : null}
               {zigbeeSafetyRows.length ? (
                 <>
                   <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginTop: 12, marginBottom: 8 }}>

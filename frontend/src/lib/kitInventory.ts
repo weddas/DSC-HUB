@@ -1,4 +1,4 @@
-import { KIT_PROBE_NUMBERS, isPotInService } from "./seatModel";
+import { KIT_PROBE_NUMBERS, isProbeInService } from "./probeModel";
 import type { FleetSnapshot } from "./fleetModel";
 import { inventoryInService } from "./fleetModel";
 
@@ -158,8 +158,8 @@ export function resolveKitNodeFromFleet(def: KitDef, fleet: FleetSnapshot): KitN
   }
 
   const sonoff = fleet.sonoffs[def.id];
-  const pot = fleet.pots[def.id];
-  const seatOnline = sonoff?.online ?? pot?.online ?? false;
+  const probe = fleet.pots[def.id];
+  const seatOnline = sonoff?.online ?? probe?.online ?? false;
   const inventoryOn = def.inServiceEntity ? inventoryInService(fleet, def.id) : true;
 
   if (def.id.startsWith("pot")) {
@@ -284,7 +284,7 @@ export function resolveKitNode(def: KitDef, hass: HassBits, settled: (id: string
     const svcKnown = hass.available(def.inServiceEntity);
     const inService =
       def.id.startsWith("pot") && def.id.length === 4
-        ? isPotInService(Number(def.id.slice(3)), hass.state)
+        ? isProbeInService(Number(def.id.slice(3)), hass.state)
         : hass.state(def.inServiceEntity) === "on";
     if (svcKnown && !inService) {
       return {
@@ -313,7 +313,7 @@ export function resolveKitNode(def: KitDef, hass: HassBits, settled: (id: string
   const inventoryInService =
     def.inServiceEntity &&
     (def.id.startsWith("pot") && def.id.length === 4
-      ? isPotInService(Number(def.id.slice(3)), hass.state)
+      ? isProbeInService(Number(def.id.slice(3)), hass.state)
       : hass.state(def.inServiceEntity) === "on");
 
   if (!known && !live) {

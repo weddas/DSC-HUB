@@ -1,6 +1,6 @@
 import { CatalogPicker } from "../CatalogPicker";
 import { Card, EntitySelect, EntityText, EntityDatetime, Icon, StatusChip } from "../ui";
-import { probeLabel } from "../../lib/seatModel";
+import { probeLabel } from "../../lib/probeModel";
 import type { CatalogItem } from "../../lib/catalog";
 import { strainOk, type CallService } from "./plantWizardSteps";
 
