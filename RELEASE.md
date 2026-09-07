@@ -1,5 +1,25 @@
 # DSC-HUB releases
 
+## Pi appliance — **v8.1.0** (2026-09-07)
+
+| | |
+|---|---|
+| **Brain / SPA** | **8.1.0** |
+| **Expected firmware** | **8.0.0.0** _(unchanged — no fleet reflash required)_ |
+| **Primary UI** | Pi SPA at `http://10.42.0.1:8787` |
+| **Studio LAN** | `http://192.168.86.48:8787` (`dsc-brain.local`) |
+| **SD image** | `dsc-hub-8.1.0-arm64.img.xz` (bake: [`services/dsc-hub/image/README.md`](services/dsc-hub/image/README.md)) |
+| **Changelog** | [`CHANGELOG.md`](CHANGELOG.md) — Hub v8.1.0 |
+
+First full cut of the 8.x line after the `v8.0.0-AlphaPi` alpha (102 commits). Dashboard v2
+(desks, zone model, icon set v5), composed 3D twin, Settings & preferences S1–S5, cameras,
+maker PPFD map, automation rule engine v2, Zigbee UX phases 0–4, Tuya local lane T1, and the
+completed ESPHome-only toolchain (host update helper, rollback, canary rollout). HA scaffolding
+removed from the SPA and firmware. SPA identifiers Seat/POT → Probe/Plant.
+
+---
+
+
 ## Pi appliance — **v7.3.0** (full software closure)
 
 | | |

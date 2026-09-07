@@ -1,4 +1,4 @@
-/** Kit Setup API helpers (DSC-HUB 8.0.0). */
+/** Kit Setup API helpers (DSC-HUB 8.1.0). */
 
 export type SetupState = {
   commissioned: boolean;

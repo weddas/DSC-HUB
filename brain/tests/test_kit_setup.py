@@ -1,4 +1,4 @@
-"""Kit SD installer / setup health tests (8.0.0)."""
+"""Kit SD installer / setup health tests (8.1.0)."""
 
 import time
 from pathlib import Path

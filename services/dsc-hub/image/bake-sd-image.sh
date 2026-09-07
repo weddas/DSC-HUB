@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Inject DSC-HUB 8.0.0 payload + docker images into a Raspberry Pi OS Lite arm64 .img
+# Inject DSC-HUB 8.1.0 payload + docker images into a Raspberry Pi OS Lite arm64 .img
 # Usage: sudo ./bake-sd-image.sh /path/to/raspios-lite-arm64.img
 set -euo pipefail
 
-VERSION="${DSC_VERSION:-8.0.0}"
+VERSION="${DSC_VERSION:-8.1.0}"
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 OUT="${DSC_BAKE_OUT:-${ROOT}/deploy}"
 SRC_IMG="${1:?usage: bake-sd-image.sh <raspios-lite-arm64.img>}"

@@ -1,4 +1,4 @@
-# DSC-HUB 8.0.0 — push tree to Pi and run linux bake (payload + docker images).
+# DSC-HUB 8.1.0 — push tree to Pi and run linux bake (payload + docker images).
 # Optional -MakeSdImage downloads Raspberry Pi OS Lite and injects (needs free disk + sudo on Pi).
 param(
   [string]$PiHost = "192.168.86.48",
@@ -64,7 +64,7 @@ sudo tr -d '\r' < /tmp/bake-sd-image.sh > /opt/dsc-hub-bake-src/services/dsc-hub
 sudo tr -d '\r' < /tmp/bake-firmware.sh > /opt/dsc-hub-bake-src/services/dsc-hub/image/bake-firmware.sh
 sudo chmod +x /opt/dsc-hub-bake-src/services/dsc-hub/image/*.sh /opt/dsc-hub-bake-src/services/dsc-hub/pi/*.sh 2>/dev/null || true
 export DSC_BAKE_OUT=/opt/dsc-hub-bake-out
-export DSC_VERSION=8.0.0
+export DSC_VERSION=8.1.0
 cd /opt/dsc-hub-bake-src
 # Run as root so docker works (dsc is not in docker group)
 echo Digital | sudo -S -E bash services/dsc-hub/image/bake-on-linux.sh
@@ -82,7 +82,7 @@ if ($LASTEXITCODE -ne 0) { throw "bake-on-linux failed on Pi" }
 Write-Host "=== Fetch bake artifacts ==="
 $LocalDeploy = Join-Path $RepoRoot "deploy"
 New-Item -ItemType Directory -Force -Path $LocalDeploy | Out-Null
-& pscp @pscpArgs "${target}:/opt/dsc-hub-bake-out/dsc-hub-8.0.0-*" $LocalDeploy
+& pscp @pscpArgs "${target}:/opt/dsc-hub-bake-out/dsc-hub-8.1.0-*" $LocalDeploy
 
 if ($MakeSdImage) {
   Write-Host "=== SD image inject (download base if needed) ==="
@@ -93,7 +93,7 @@ if ($MakeSdImage) {
   }
   $sdRemote = @"
 set -euo pipefail
-export DSC_BAKE_OUT=/opt/dsc-hub-bake-out DSC_VERSION=8.0.0
+export DSC_BAKE_OUT=/opt/dsc-hub-bake-out DSC_VERSION=8.1.0
 BASE_XZ=/opt/dsc-hub-bake-out/raspios-lite-arm64.img.xz
 BASE_IMG=/opt/dsc-hub-bake-out/raspios-lite-arm64.img
 if [[ ! -f "`$BASE_IMG" ]]; then
@@ -103,14 +103,14 @@ if [[ ! -f "`$BASE_IMG" ]]; then
 fi
 cd /opt/dsc-hub-bake-src
 sudo -E bash services/dsc-hub/image/bake-sd-image.sh "`$BASE_IMG"
-ls -lh /opt/dsc-hub-bake-out/dsc-hub-8.0.0-arm64.img*
+ls -lh /opt/dsc-hub-bake-out/dsc-hub-8.1.0-arm64.img*
 "@
   $sdPath = Join-Path $env:TEMP "dsc-bake-sd-remote.sh"
   [System.IO.File]::WriteAllText($sdPath, ($sdRemote -replace "`r`n", "`n"))
   & pscp @pscpArgs $sdPath "${target}:/tmp/dsc-bake-sd-remote.sh"
   & plink @plinkArgs $target "tr -d '\r' < /tmp/dsc-bake-sd-remote.sh > /tmp/dsc-bake-sd-run.sh; bash /tmp/dsc-bake-sd-run.sh"
-  & pscp @pscpArgs "${target}:/opt/dsc-hub-bake-out/dsc-hub-8.0.0-arm64.img.xz" $LocalDeploy
+  & pscp @pscpArgs "${target}:/opt/dsc-hub-bake-out/dsc-hub-8.1.0-arm64.img.xz" $LocalDeploy
 }
 
 Write-Host "Done. Artifacts in $LocalDeploy"
-Get-ChildItem $LocalDeploy -Filter "dsc-hub-8.0.0-*" | Format-Table Name, Length
+Get-ChildItem $LocalDeploy -Filter "dsc-hub-8.1.0-*" | Format-Table Name, Length

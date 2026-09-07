@@ -39,7 +39,7 @@ def temp_db(monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def test_version_is_pi_train() -> None:
-    assert __version__.startswith("8.0.0")
+    assert __version__.startswith("8.1.0")
 
 
 def test_settings_defaults(temp_db: Path) -> None:
@@ -464,8 +464,8 @@ def test_health_endpoint() -> None:
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "ok"
-    assert body["version"] == "8.0.0"
-    assert body["surface"] == "8.0.0"
+    assert body["version"] == "8.1.0"
+    assert body["surface"] == "8.1.0"
     assert body["expected_firmware"] == "8.0.0.0"  # ESPHome-only firmware train
 
 

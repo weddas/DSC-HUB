@@ -171,7 +171,10 @@ def update_status(*, eth_up: bool | None = None, refresh: bool = False) -> dict[
         "eth_up": bool(eth_up),
         "can_full_pull": bool(eth_up),
         "current": {
-            "image": "8.0.0",
+            # The compose image is tagged with the brain version — derive it so a
+            # release bump can never leave a stale literal behind (same reason
+            # SURFACE_VERSION follows __version__).
+            "image": __version__,
             "brain": __version__,
             "surface": SURFACE_VERSION,
             "digests": {},

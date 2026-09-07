@@ -258,7 +258,7 @@ function BottomBar() {
   );
 }
 
-function Shell({ surfaceVersion = "8.0.0" }: { surfaceVersion?: string }) {
+function Shell({ surfaceVersion = "8.1.0" }: { surfaceVersion?: string }) {
   const fleetSurface = useFleetSelector((v) => v.fleet.surface);
   const displaySurface =
     fleetSurface && fleetSurface !== "—" && fleetSurface !== "unknown" ? fleetSurface : surfaceVersion;
@@ -374,7 +374,7 @@ function Shell({ surfaceVersion = "8.0.0" }: { surfaceVersion?: string }) {
   );
 }
 
-export function App({ surfaceVersion = "8.0.0" }: { surfaceVersion?: string }) {
+export function App({ surfaceVersion = "8.1.0" }: { surfaceVersion?: string }) {
   return (
     <ZoneFocusProvider>
       <InspectorProvider>

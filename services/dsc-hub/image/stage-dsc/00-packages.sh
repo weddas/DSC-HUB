@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# pi-gen stage snippet — packages for DSC-HUB 8.0.0 kit image
+# pi-gen stage snippet — packages for DSC-HUB 8.1.0 kit image
 set -e
 apt-get update
 apt-get install -y --no-install-recommends \

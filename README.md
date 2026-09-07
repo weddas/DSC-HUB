@@ -4,8 +4,8 @@
 
 | | |
 |---|---|
-| **Release** | [8.0.0 AlphaPi](https://github.com/weddas/DSC-HUB/releases/tag/v8.0.0-AlphaPi) |
-| **Surface** | Brain / SPA **8.0.0** · kit firmware train **8.0.0.0** (ESPHome-only; fleet reflash via Settings → Device → ESPHome) |
+| **Release** | tree is **8.1.0** · latest published download: [8.0.0 AlphaPi](https://github.com/weddas/DSC-HUB/releases/tag/v8.0.0-AlphaPi) |
+| **Surface** | Brain / SPA **8.1.0** · kit firmware train **8.0.0.0** (ESPHome-only; fleet reflash via Settings → Device → ESPHome) |
 | **Product path** | Flash SD → Pi boots → SPA Setup (`#/setup`) → USB flash fleet → SoftAP/LAN join → Zigbee bind |
 
 Home Assistant lab, HACS, and Lovelace delivery were **retired** (2026-09). The SPA still speaks an HA-shaped entity / `call_service` dialect that **DSC-Brain implements natively** — there is no HA runtime.
@@ -76,9 +76,9 @@ Operator **Update** in Settings pulls a full kit version bundle **only when Ethe
 
 | Asset | Purpose |
 |---|---|
-| `dsc-hub-8.0.0-arm64.img.xz` | Flashable factory SD image |
-| `dsc-hub-8.0.0-docker.tar.gz` | Preloaded brain + Mosquitto + Zigbee2MQTT images |
-| `dsc-hub-8.0.0-payload.tar.gz` | Compose / units overlay (SPA lives inside the brain image) |
+| `dsc-hub-<version>-arm64.img.xz` | Flashable factory SD image |
+| `dsc-hub-<version>-docker.tar.gz` | Preloaded brain + Mosquitto + Zigbee2MQTT images |
+| `dsc-hub-<version>-payload.tar.gz` | Compose / units overlay (SPA lives inside the brain image) |
 | `*-bake-manifest.json` / `*-sd-manifest.json` | Bake provenance |
 
 Large binaries are **GitHub Release assets**, not git history.
@@ -89,12 +89,12 @@ Large binaries are **GitHub Release assets**, not git history.
 
 | Device | Config (kit) | Version | Role |
 |---|---|---|---|
-| Hub | `firmware/v4/dsc-hub-kit.yaml` | **7.0.0.0** | Climate ladder + SoftAP portal |
-| Panel | `dsc-control*-kit.yaml` | **7.0.0.0** | Field glass (DSC-CONTROL) |
-| Probes 1–2 | `dsc-pot{N}-kit.yaml` | **7.0.0.0** | Root-zone kit probes |
-| Bridge | `dsc-bridge-kit.yaml` | **7.0.0.0** | ETH01 + `DSC-Anchor` |
-| Sonoffs | heater / heatmat / humidifier / dehumidifier | **7.0.0.0** | Demand followers (home LAN) |
-| DSC-Brain + SPA | `brain/` + `frontend/` | **8.0.0** | Control SoT on `:8787` |
+| Hub | `firmware/v4/dsc-hub-kit.yaml` | **8.0.0.0** | Climate ladder + SoftAP portal |
+| Panel | `dsc-control*-kit.yaml` | **8.0.0.0** | Field glass (DSC-CONTROL) |
+| Probes 1–2 | `dsc-pot{N}-kit.yaml` | **8.0.0.0** | Root-zone kit probes |
+| Bridge | `dsc-bridge-kit.yaml` | **8.0.0.0** | ETH01 + `DSC-Anchor` |
+| Sonoffs | heater / heatmat / humidifier / dehumidifier | **8.0.0.0** | Demand followers (home LAN) |
+| DSC-Brain + SPA | `brain/` + `frontend/` | **8.1.0** | Control SoT on `:8787` |
 | Mosquitto + Z2M | compose stack | kit bake | Always on for Zigbee |
 
 Catalog packs: [`data/`](data/) (thin local YAML — not the fat remote CannaLib corpus).

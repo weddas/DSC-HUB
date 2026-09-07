@@ -1,4 +1,4 @@
-# DSC-HUB 8.0.0 — Kit SD / Pi release
+# DSC-HUB 8.1.0 — Kit SD / Pi release
 # Run on Raspberry Pi 4/5 (linux/arm64). Not for Unraid Compose Manager.
 name: dsc-hub
 
@@ -7,7 +7,7 @@ services:
     build:
       context: ../..
       dockerfile: services/dsc-hub/brain/Dockerfile.prebuilt
-    image: dsc-hub-brain:8.0.0
+    image: dsc-hub-brain:8.1.0
     container_name: dsc-hub-brain
     restart: unless-stopped
     ports:
@@ -68,7 +68,7 @@ services:
     build:
       context: ../cannalib
       dockerfile: Dockerfile
-    image: dsc-hub-cannalib:8.0.0
+    image: dsc-hub-cannalib:8.1.0
     container_name: dsc-hub-cannalib
     restart: unless-stopped
     ports:

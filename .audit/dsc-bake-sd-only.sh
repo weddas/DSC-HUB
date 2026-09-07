@@ -2,7 +2,7 @@
 # SD inject only — assumes bake-on-linux artifacts already in /opt/dsc-hub-bake-out
 set -euo pipefail
 echo Digital | sudo -S true
-export DSC_BAKE_OUT=/opt/dsc-hub-bake-out DSC_VERSION=8.0.0
+export DSC_BAKE_OUT=/opt/dsc-hub-bake-out DSC_VERSION=8.1.0
 BASE_XZ=/opt/dsc-hub-bake-out/raspios-lite-arm64.img.xz
 BASE_IMG=/opt/dsc-hub-bake-out/raspios-lite-arm64.img
 URL="https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2024-11-19/2024-11-19-raspios-bookworm-arm64-lite.img.xz"
@@ -23,8 +23,8 @@ if [[ ! -f "$BASE_IMG" ]]; then
   sudo xz -dkf "$BASE_XZ"
 fi
 
-echo "Injecting DSC-HUB 8.0.0 into image…"
+echo "Injecting DSC-HUB 8.1.0 into image…"
 cd /opt/dsc-hub-bake-src
 echo Digital | sudo -S -E bash services/dsc-hub/image/bake-sd-image.sh "$BASE_IMG"
-ls -lh /opt/dsc-hub-bake-out/dsc-hub-8.0.0-arm64.img*
+ls -lh /opt/dsc-hub-bake-out/dsc-hub-8.1.0-arm64.img*
 echo "=== SD bake DONE ==="
