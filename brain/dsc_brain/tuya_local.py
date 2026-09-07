@@ -429,7 +429,8 @@ class _Worker(threading.Thread):
             dev = None
             try:
                 dev = _device_for(self.row)
-                for name, args in (("set_socketPersistent", (True,)), ("set_socketTimeout", (SOCKET_TIMEOUT_S,))):
+                # Our own reconnect backoff owns retries; tinytuya's inner retry loop stays short.
+                for name, args in (("set_socketPersistent", (True,)), ("set_socketTimeout", (SOCKET_TIMEOUT_S,)), ("set_socketRetryLimit", (1,))):
                     fn = getattr(dev, name, None)
                     if callable(fn):
                         fn(*args)
@@ -947,9 +948,12 @@ def probe_tuya_device(device_id: str | None = None, *, ip: str = "", local_key: 
         return {"ok": False, "error": "ip and local key are required", "hint": "Give the device a DHCP reservation and paste the key from devices.json."}
     try:
         dev = _device_for(probe)
-        st = getattr(dev, "set_socketTimeout", None)
-        if callable(st):
-            st(5.0)
+        # One attempt, five seconds: a probe answers quickly or says why, never hangs
+        # the drawer behind tinytuya's default five connect retries.
+        for name, args in (("set_socketTimeout", (5.0,)), ("set_socketRetryLimit", (1,))):
+            fn = getattr(dev, name, None)
+            if callable(fn):
+                fn(*args)
         data = dev.status()
         close = getattr(dev, "close", None)
         if callable(close):

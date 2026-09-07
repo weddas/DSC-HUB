@@ -18,6 +18,9 @@ export function PreferencesRoot() {
     el.dataset.dscDensity = p.density;
     el.dataset.dscText = String(p.textScale);
     el.dataset.dscFresh = p.freshPulse ? "on" : "off";
-  }, [p.gridWash, p.motion, p.depth, p.highContrast, p.stateColors, p.density, p.textScale, p.freshPulse]);
+    el.dataset.dscInvented = p.showInvented ? "on" : "off";
+    el.dataset.dscEntityIds = p.showEntityIds ? "on" : "off";
+    el.dataset.dscProvenance = p.provenanceMode ? "on" : "off";
+  }, [p.gridWash, p.motion, p.depth, p.highContrast, p.stateColors, p.density, p.textScale, p.freshPulse, p.showInvented, p.showEntityIds, p.provenanceMode]);
   return null;
 }

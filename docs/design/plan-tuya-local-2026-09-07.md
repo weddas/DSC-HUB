@@ -1,19 +1,20 @@
 # DSC-HUB Tuya local lane — SmartLife Wi-Fi devices as kit devices without the cloud
 
-> Drafted 2026-09-07 on `feat/dashboard-v2`. Nothing in this document is implemented.
+> Drafted 2026-09-07 on `feat/dashboard-v2`.
 > Companion to [`plan-settings-2026-09-07.md`](./plan-settings-2026-09-07.md) (Devices › sub-tabs, pass S5) and the Zigbee add → role/zone/task → integrate path already live in `brain/dsc_brain/zigbee_mqtt.py`.
 > Operator direction: SmartLife/Tuya devices should work with DSC-HUB **as devices, locally**. Route chosen 2026-09-07: **local Tuya protocol (tinytuya)**, not reflash, not a cloud bridge.
 
 ## Status
 
 - **2026-09-07 — drafted.** Repo swept for the Zigbee lane (ingest, bindings, catalog, policies, automation action, SPA bind row), the appliance driver, the compose network shape and the settings KV. Tracker rows logged (see [Tracker rows](#tracker-rows)).
-- Next: operator confirms the device list (see [What the operator has to tell us](#what-the-operator-has-to-tell-us)), then Pass T1.
+- **2026-09-07 — operator answers in:** Wi-Fi plugs and a water tester (all Wi-Fi); a Tuya IoT account exists but the setup must explain the key export for others; DHCP reservations / WAN blocking fine if explained. The water tester moved into T1 as its own archetype.
+- **2026-09-07 — Pass T1 landed** on `feat/dashboard-v2` (uncommitted, not hotpatched). Evidence: `docs/FOLLOWUPS.md` § Tuya local lane: Pass T1 landed. Operator guide: [`docs/ops/TUYA-LOCAL-SETUP.md`](../ops/TUYA-LOCAL-SETUP.md). Open: real-device gate on the Pi, then T2 → T3.
 
 ## TL;DR
 
-Tuya devices come in two families. **Tuya Zigbee** devices already work: zigbee2mqtt has converters for them and a Tuya `ZY-ZTH02` has been bound to the canopy role since 2026-08-30. **Tuya Wi-Fi** devices (the usual SmartLife plugs, bulbs, IR blasters, Wi-Fi hygrometers) only talk to the Tuya cloud out of the box and have no lane in DSC-HUB.
+Tuya devices come in two families. **Tuya Zigbee** devices already work: zigbee2mqtt has converters for them and a Tuya `ZY-ZTH02` has been bound to the canopy role since 2026-08-30. **Tuya Wi-Fi** devices (the usual SmartLife plugs, bulbs, IR blasters, Wi-Fi hygrometers, water testers) only talk to the Tuya cloud out of the box and had no lane in DSC-HUB.
 
-The plan adds a **second local device lane** beside Zigbee, speaking Tuya's LAN protocol directly from the brain over TCP 6668 with the `tinytuya` library. Once each device's local key is known, the lane is fully local: no Tuya account, no internet, no bridge container. The lane reuses everything the Zigbee track already built, so a Tuya plug is added, bound to a role/zone/task, reported honestly, and driven by a rule through the same surfaces a Zigbee plug uses. Device types are introduced one at a time; **smart plug / relay** first.
+The plan adds a **second local device lane** beside Zigbee, speaking Tuya's LAN protocol directly from the brain over TCP 6668 with the `tinytuya` library. Once each device's local key is known, the lane is fully local: no Tuya account, no internet, no bridge container. The lane reuses everything the Zigbee track already built, so a Tuya plug is added, bound to a role/zone/task, reported honestly, and driven by a rule through the same surfaces a Zigbee plug uses. Device types are introduced one at a time; **smart plug / relay / water tester** first.
 
 Two things the operator should know before choosing this route over reflashing:
 
@@ -22,16 +23,14 @@ Two things the operator should know before choosing this route over reflashing:
 
 ---
 
-## What the operator has to tell us
+## What the operator has to tell us (answered 2026-09-07)
 
-The pass cannot be sized until this is known:
-
-| Question | Why it matters |
-|---|---|
-| Which devices, by SmartLife name and product type (plug · bulb · hygrometer · IR blaster · power strip · other) | Decides which device-type archetype ships in T1 and which wait. Plugs and relays are T1; multi-gang strips need per-DPS channels; bulbs and IR blasters are out of scope until asked. |
-| Does the SmartLife app list each as **Wi-Fi** or as a device under a **Tuya Zigbee hub**? | Zigbee ones move to the Pi's coordinator today with no code. |
-| Is a free Tuya IoT Platform sign-up acceptable for the one-time key pull? | If not, the only local route is reflashing (ESPHome for ESP-based units, OpenBeken via cloudcutter for BK7231 units). |
-| Can the router give each device a DHCP reservation and, ideally, block its WAN access? | The brain container is on a bridge network and cannot hear Tuya's UDP discovery broadcasts, so the IP must be stable. WAN blocking is what makes "local" mean local. |
+| Question | Answer | Effect |
+|---|---|---|
+| Which devices, by type | Wi-Fi plugs and a water quality tester | `smart_plug`, `smart_switch` and `water_tester` archetypes in T1 |
+| Wi-Fi or Tuya-Zigbee-hub per device | All Wi-Fi | Nothing moves to the Zigbee coordinator |
+| Free Tuya IoT sign-up acceptable for the key pull? | Already has one; the setup must cover it for other people | Step 1 of the add drawer and `docs/ops/TUYA-LOCAL-SETUP.md` explain the export end to end |
+| DHCP reservations and WAN blocking at the router? | Fine as long as the device setup is well explained | Step 2 of the add drawer states the fixed-IP requirement and why; the guide covers WAN blocking |
 
 ---
 
@@ -50,7 +49,7 @@ The pass cannot be sized until this is known:
 
 ---
 
-## Part 2 — Design
+## Part 2 — Design (as landed in T1)
 
 ### 2.1 Data model (tier S, brain KV)
 
@@ -65,73 +64,64 @@ The pass cannot be sized until this is known:
     "version": "3.4",
     "type": "smart_plug",
     "dps_map": {"state": 1, "power": 19, "energy": 17, "current": 18, "voltage": 20},
-    "scales": {"power": 0.1, "voltage": 0.1, "current": 0.001},
+    "scales": {"power": 0.1, "voltage": 0.1, "current": 0.001, "energy": 0.01},
     "enabled": true,
     "added_at": 1757222400
   }
 }
 ```
 
-- `type` names a **Tuya device-type archetype** in a new `tuya_catalog.py`, the mirror of `zigbee_catalog.py`: `capability_class`, datapoints with units, `can_actuate`, suggested roles, and the **default DPS map + scales** for that archetype. `dps_map` on the device is the operator-editable override for units the catalog does not know yet (shown under "Advanced").
-- `local_key` is stored like the seat API keys and masked with a `set` indicator in the SPA (the `ap_psk` pattern from the settings plan). `GET` routes never echo it.
+- `type` names a **Tuya device-type archetype** in `tuya_catalog.py`, the mirror of `zigbee_catalog.py`: `capability_class`, datapoints with units, `can_actuate`, suggested roles, and the **default DPS map + scales** for that archetype. `dps_map` / `scales` on the device are the operator-editable override for units the catalog does not know yet (Edit › Advanced).
+- `local_key` is stored like the seat API keys; `GET` routes never echo it (`local_key_set` instead).
 
-`tuya_device_bindings` (JSON, keyed by device id) uses **exactly the Zigbee binding shape**: `role`, `zone`, `alias`, `enabled`, `capability_override`. Same validators (`_valid_roles`, `_VALID_ZONES`, `_CLASS_ROLE_KINDS`) lifted into a small shared `device_bindings.py` so both lanes call one implementation. `tuya_device_policies` likewise reuses the recipe catalog and `evaluate_device_policies` (which already accepts an opaque address; the Tuya device id is that address).
+`tuya_device_bindings` (JSON, keyed by device id) uses **exactly the Zigbee binding shape**: `role`, `zone`, `alias`, `enabled`, `capability_override`. The validators live in the shared `device_bindings.py`, which both lanes call. Policies (task recipes) live in the shared `zigbee_device_policies` store keyed by device id, so `evaluate_device_policies` serves both lanes unchanged.
 
 ### 2.2 The lane: `brain/dsc_brain/tuya_local.py`
 
-Mirrors the `ZigbeeMqttIngest` shape and the appliance driver's thread discipline:
-
-- **One worker thread per enabled device** (`tinytuya.Device` with `set_socketPersistent(True)`, `receive()` loop, heartbeat every 9 s, reconnect with backoff 5 → 60 s). Persistent sockets give pushed state on physical button presses instead of 5 s polling lag. Fallback to `status()` polling every 5 s for protocol 3.1 units.
-- **Normalise DPS → datapoint row** through the device's `dps_map` and `scales`: `{"friendly_name": name, "updated_at": now, "role", "zone", "state": bool, "power": W, "energy": kWh, …}`. Temperature/humidity rows pass through `apply_temp_rh_offsets` with the zone → space mapping exactly as the Zigbee ingest does.
-- **Feed the shared role model.** `_by_role[role]` and `_device_states[name]` live in the lane; `apply_tuya_cache_to_state()` stamps `tuya_device_states`, `tuya_by_role`, `tuya_device_bindings`, `tuya_health` onto `FleetState.system`, and the canopy recompute reads climate rows from **both** lanes. Role conflicts (`_role_conflict_map`) span lanes: one role, one device, regardless of radio.
-- **Honesty.** A row is `LIVE` when `updated_at` is within 30 s, `STALE` after that, `OFFLINE` when the socket has been down for 60 s. A write is `PENDING` until the device's DPS echo confirms it (`receive()` after `set_value()`), then `SYNCED`; a `DIFFERS` state when the echo disagrees (someone toggled it in the app). Same vocabulary as hub tunables.
-- **Actuation.** `set_tuya_state(device_id, on)` → `set_value(dps_map["state"], on)`, best-effort status dict, never raises (the `set_zigbee_state` contract).
-- **Demo mode.** Honest empty state in T1 (no fake Tuya devices); the demo simulator gains one plug only when a dashboard surface needs it.
+- **One worker thread per enabled device** (`tinytuya.Device`, persistent socket, 2 s receive timeout, heartbeat every 9 s, full `status()` every 30 s, reconnect with backoff 5 → 60 s, tinytuya's own retry limit 1). Pushed DPS give state on physical button presses instead of polling lag. Writes are queued to the worker so one socket is ever open per device.
+- **Normalise DPS → datapoint row** through the device's `dps_map` and `scales`.
+- **Feed the shared role model.** `zigbee_mqtt.register_role_provider` + `stamp_role_buckets` merge Tuya rows into `zigbee_by_role` / `zigbee_by_placement` / canopy at every write point. Role conflicts span lanes: one role, one device, regardless of radio.
+- **Honesty.** `link`: `live` (report within 30 s) · `stale` · `offline` (60 s / socket down) · `key_changed` (payload will not decrypt). `write_state`: `pending` → `synced` on the DPS echo, `differs` when the echo disagrees (someone toggled it in the app), `failed`.
+- **Actuation.** `set_tuya_state(device_id, on)` best-effort, never raises.
+- **Demo mode.** Lane not started; routes refuse writes.
 
 ### 2.3 Automation and policies
 
-- `VALID_ACTIONS` gains `tuya_switch` with `params.device_id` and `on_when_firing`; execution and clear mirror the `zigbee_switch` branches in `automation_rules.py`.
-- `GET /settings/devices/actuatable` returns a **lane-tagged** list (`{"lane": "zigbee"|"tuya", "id", "friendly_name", "alias", "role"}`); the existing `/settings/zigbee/actuatable` stays for compatibility. The SPA rule editor shows one "Switch a plug" picker and writes whichever action type the chosen lane needs.
+- `VALID_ACTIONS` gained `tuya_switch` (`params.device_id`, `on_when_firing`); fire and clear mirror `zigbee_switch`.
+- `GET /settings/devices/actuatable` returns a **lane-tagged** list (`{"lane": "zigbee"|"tuya", "id", "friendly_name", "alias", "role"}`); `/settings/zigbee/actuatable` stays for compatibility. The rule editor lists **Zigbee switch** and **Tuya plug** as separate actions fed from the one list (a single "Switch a plug" picker is the remaining part of tracker row 2).
 - `RELAY_TARGETS` is untouched: Tuya plugs are not relays in the appliance sense.
-- Policies (`recipe_id`, `problem_when`, `oos_seat`, banners) work unchanged because the evaluator only needs an address, a friendly name and a payload.
 
-### 2.4 History and energy
+### 2.4 Entities
 
-Tuya plugs with power metering report `power` and `energy`; the lane records them through `record_history_throttled` under `sensor.tuya_<id>_power` / `_energy` so Logs trends and the space energy model can use them. Space energy attribution stays operator-explicit (bind the plug to a zone), never inferred.
+Every datapoint of a bound device exports as `sensor./binary_sensor.dsc_tuya_<role>_<key>` (never `dsc_zigbee_` for a Wi-Fi device); the rule engine's age lookup and `AGE_PREFIXES` cover both prefixes. Energy/power history recording is T2.
 
 ### 2.5 API routes
 
 | Route | Purpose |
 |---|---|
 | `GET /settings/tuya/devices` | Registered devices with live state, health, masked key. |
-| `POST /settings/tuya/devices/import` | Body is the `tinytuya` wizard `devices.json` (list of `{id, name, key, ip?, version?, mac?}`); upserts, never overwrites a role binding, reports which entries lack an IP. |
-| `PUT /settings/tuya/devices/{id}` | Edit name / ip / version / type / dps_map / enabled; rotate key. |
-| `DELETE /settings/tuya/devices/{id}` | Removes device, binding and policy; refuses while a rule references it (returns the rule names). |
-| `POST /settings/tuya/devices/{id}/probe` | One-shot `status()` for the add flow: proves ip + key + version before the operator binds anything; returns raw DPS so an unknown unit can be mapped. |
+| `POST /settings/tuya/devices/import` | Body is the `tinytuya` wizard `devices.json`; upserts, never overwrites a type / DPS map / binding, reports entries that lack an IP. |
+| `PUT /settings/tuya/devices/{id}` | Edit name / ip / version / type / dps_map / scales / enabled; rotate key. |
+| `DELETE /settings/tuya/devices/{id}` | Removes device, binding and policy; **409** while a rule references it (returns the rule names). |
+| `POST /settings/tuya/devices/{id}/probe`, `POST /settings/tuya/probe` | One-shot `status()` (5 s, one attempt): proves ip + key + version, returns raw DPS + a type guess, or the error code with a hint. A device with a live worker returns its cached DPS instead of opening a second socket. |
+| `POST /settings/tuya/devices/{id}/set` | Manual toggle; journaled. |
 | `GET/PUT /settings/tuya/bindings` | Same body as the Zigbee bindings routes. |
-| `GET/PUT /settings/tuya/policies` | Same body as the Zigbee policies routes. |
-| `POST /settings/tuya/devices/{id}/set` | Manual toggle from the device row; journaled. |
-| `GET /settings/tuya/device-types` | The archetype catalog. |
-
-All under the existing brain API key and the demo-mode write refusal.
+| `GET /settings/tuya/device-types`, `GET /settings/tuya/health` | Catalog; lane health (also on `/health`). |
 
 ### 2.6 Settings surface
 
-Lives under **The kit › Devices** as a sub-tab beside Zigbee (S5 restructure) — **Tuya (local)**. Until S5 lands it is a card on `DevicesSettingsPage.tsx` below the Zigbee card.
+`TuyaLocalCard` under **The kit › Devices** (`#tuya`), beside Zigbee until the S5 sub-tab restructure. Add flow is a two-step drawer, each stating What → Process → Expected:
 
-Add flow (a drawer, three steps, each stating What → Process → Expected per the calibration-surface rule):
+1. **Get the keys** — the Tuya IoT project + app-account link + `tinytuya wizard` explained; paste `devices.json`; Import.
+2. **Reach each device** — per imported device: IP, protocol version, **Probe** (raw DPS + type guess, or the specific failure with a hint), type, Save. "Done — bind roles" returns to the table.
 
-1. **Get the keys** — explains the one-time wizard on a PC (`pip install tinytuya`, `python -m tinytuya wizard`), what it produces, and that the brain never contacts Tuya. Textarea or file drop for `devices.json`.
-2. **Reach the device** — table of imported entries: name, id, ip (editable), version, **Probe** button per row → LIVE with raw DPS, or the specific failure (no route · wrong key · version mismatch · socket busy). Type select filtered to archetypes whose default DPS map matches what the probe returned.
-3. **Bind** — the existing bind row (`ZigbeeBindRow` generalised to `DeviceBindRow` with a lane prop): capability class → role/zone filtered selects → task/recipe → policy params. Identical to Zigbee so the operator learns one flow.
-
-Device row afterwards: name · type chip · `LIVE / STALE / OFFLINE` · state (with `PENDING / DIFFERS`) · power W when metered · role/zone · Toggle · Edit · Remove. A standing note on the card: *"Tuya plugs keep their last state if the brain stops. Use them for pumps, dosing and aux fans; the heater, humidifier, dehumidifier and heat mat stay on the hub-driven relays."*
+Binding happens in the shared bind row (`ZigbeeBindRow`, device id through the `ieee` prop); a honesty sub-row under each device shows link, ON/OFF, write state, datapoints and On / Off / Probe / Edit / Remove. Edit drawer: name, IP, protocol, type, enabled, key rotate, Advanced DPS map + scales. Delete asks first and relays the brain's 409. A standing note: *Tuya plugs keep their last state if the brain stops; use them for pumps, dosing and aux fans.*
 
 ### 2.7 Security and privacy
 
-- Local keys never leave the Pi; masked in every GET; excluded from setup-profile export (S4) by default with an explicit include toggle.
+- Local keys never leave the Pi; masked in every GET; to be excluded from setup-profile export (S4) by default.
 - No outbound call from the brain to Tuya; `tinytuya`'s cloud module is not imported.
-- Operator guidance page (Help) on blocking the devices' WAN access at the router, with the note that the SmartLife app then stops working for those devices, which is the point.
+- Operator guide covers blocking the devices' WAN access at the router.
 
 ---
 
@@ -139,11 +129,12 @@ Device row afterwards: name · type chip · `LIVE / STALE / OFFLINE` · state (w
 
 | Order | Archetype | DPS default | Roles | Pass |
 |---|---|---|---|---|
-| 1 | `smart_plug` (single gang, optional metering) | `1` state · `17/18/19/20` energy/current/power/voltage | `plug_pump`, `plug_dosing`, `plug_backup_dehum`, `plug_fan_aux` | T1 |
-| 2 | `smart_switch` (relay/in-wall, no metering) | `1` state | `plug_fan_aux`, `plug_pump` | T1 |
-| 3 | `thermo_hygrometer` (Wi-Fi T/RH) | `1` temp×0.1 · `2` humidity | canopy/room climate roles | T2 |
-| 4 | `power_strip` (multi-gang) | `1..N` per channel, each channel bound separately | `plug_*` | T2 |
-| 5 | `power_meter` | `101…` vendor-specific, operator DPS map | `meter_wall` | when asked |
+| 1 | `smart_plug` (single gang, optional metering) | `1` state · `17/18/19/20` energy/current/power/voltage | `plug_pump`, `plug_dosing`, `plug_backup_dehum`, `plug_fan_aux` | T1 ✓ |
+| 2 | `smart_switch` (relay/in-wall, no metering) | `1` state | `plug_fan_aux`, `plug_pump` | T1 ✓ |
+| 3 | `water_tester` (Wi-Fi multi-parameter) | `8` temp ×0.1 · `106` pH ×0.01 · `111` TDS · `116` EC · `121` salinity · `126` SG ×0.001 · `131` ORP · `136` CF ×0.1 — common Tuya profile, **verify by Probe** | `reservoir_4x8`, `reservoir_2x4`, `reservoir_room` (kind `water`) | T1 ✓ (defaults unverified on the operator's unit) |
+| 4 | `thermo_hygrometer` (Wi-Fi T/RH) | `1` temp×0.1 · `2` humidity | canopy/room climate roles | T2 |
+| 5 | `power_strip` (multi-gang) | `1..N` per channel, each channel bound separately | `plug_*` | T2 |
+| 6 | `power_meter` | vendor-specific, operator DPS map | `meter_wall` | when asked |
 | — | bulbs, IR blasters, curtains | — | — | not planned |
 
 ---
@@ -154,11 +145,11 @@ Both tents at the same point per pass; verify with `cd brain && python -m pytest
 
 | Pass | Scope | Acceptance |
 |---|---|---|
-| **T1 — Plug lane, end to end** | `tinytuya` in `requirements.txt`; `tuya_catalog.py` (plug + switch); `tuya_local.py` worker threads, normalisation, honesty states, `set_tuya_state`; shared `device_bindings.py` extracted from the Zigbee module (Zigbee behaviour unchanged, its tests still green); `apply_tuya_cache_to_state` + cross-lane canopy/role conflict; routes in 2.5; `tuya_switch` action + lane-tagged actuatable list; SPA card with the three-step drawer, `DeviceBindRow`, device rows, rule-editor picker; `brain/tests/test_tuya_local.py` against a fake `tinytuya.Device` (no network). | A real SmartLife plug imported from `devices.json`, probed, bound to `plug_pump` in `4x8`, shows `LIVE` with W on the Devices card and on the zone's plug chip; a rule toggles it and the row goes `PENDING → SYNCED` within one echo; toggling it in the SmartLife app shows `DIFFERS` then re-syncs on the next rule tick; pulling the plug's power shows `OFFLINE` within 60 s with no fake state; deleting it while a rule references it is refused with the rule name; Zigbee tests unchanged. |
-| **T2 — Sensors, strips, energy** | `thermo_hygrometer` and `power_strip` archetypes; per-channel bindings; canopy from a Wi-Fi hygrometer with the same offsets as Zigbee; `power`/`energy` into history and the space energy model; Help page for WAN blocking and the wizard. | A Wi-Fi hygrometer bound to a canopy role drives the same canopy chip a Zigbee one does; a two-gang strip binds each gang to its own role; Logs trends show plug W and kWh; energy attribution appears on the zone only when bound. |
-| **T3 — Discovery and resilience** | Host-network discovery helper publishing to MQTT; "Found on the LAN, not registered" list on the card; key-rotation detection (persistent decrypt failure → `KEY CHANGED` state with the re-import hint); socket-busy detection with the "close the SmartLife app" hint. | A new plug on the LAN appears in the found list within 30 s with its id and ip; re-pairing a plug in SmartLife shows `KEY CHANGED` instead of `OFFLINE`. |
+| **T1 — Plug lane, end to end** (landed 2026-09-07) | `tinytuya` in `requirements.txt`; `tuya_catalog.py` (plug + switch + water tester); `tuya_local.py`; shared `device_bindings.py`; role-provider merge into the shared buckets; routes in 2.5; `tuya_switch` action + lane-tagged actuatable list; SPA card with the two-step drawer, shared bind row + honesty line, edit drawer, rule-editor picker; `brain/tests/test_tuya_local.py` against a fake `tinytuya.Device`. | Dev-pane gate passed against a local brain (import → probe hint → type save → BOUND → actuatable → rule action). **Real-device gate on the Pi still open:** a real SmartLife plug imported, probed, bound to `plug_pump`, `LIVE` with W; a rule toggles it `PENDING → SYNCED`; a toggle in the SmartLife app shows `DIFFERS`; pulling its power shows `OFFLINE` within 60 s; the water tester's DPS map confirmed by Probe. |
+| **T2 — Sensors, strips, energy** | `thermo_hygrometer` and `power_strip` archetypes; per-channel bindings; canopy from a Wi-Fi hygrometer with the same offsets as Zigbee; `power`/`energy` and the tester's pH/EC into history and the space energy model; Help page for WAN blocking and the wizard. | A Wi-Fi hygrometer bound to a canopy role drives the same canopy chip a Zigbee one does; a two-gang strip binds each gang to its own role; Logs trends show plug W, kWh and reservoir pH/EC; energy attribution appears on the zone only when bound. |
+| **T3 — Discovery and resilience** | Host-network discovery helper publishing to MQTT; "Found on the LAN, not registered" list on the card; socket-busy detection with the "close the SmartLife app" hint. | A new plug on the LAN appears in the found list within 30 s with its id and ip. |
 
-Order: T1 → T2 → T3. T1 waits on the operator's device list only to pick the first archetype's DPS defaults; the code path is the same for any plug.
+Order: T1 → real-device gate → T2 → T3.
 
 ---
 
@@ -173,8 +164,8 @@ Order: T1 → T2 → T3. T1 waits on the operator's device list only to pick the
 
 ## Tracker rows
 
-Logged to the Notion tracker on 2026-09-07 (Area "Zigbee / Automation"):
+Logged to the Notion tracker on 2026-09-07 (Area "Zigbee / Automation" unless noted):
 
-1. Tuya local lane: SmartLife Wi-Fi devices as kit devices over the LAN protocol (this document) — Suggested Feature, High, anchor row.
-2. Automation switch targets and the bind row are Zigbee-specific; generalise to lane-tagged devices (`DeviceBindRow`, `/settings/devices/actuatable`, shared `device_bindings.py`) — Suggested Change, Medium.
-3. Brain container on the bridge network cannot hear LAN UDP discovery (Tuya, and any future mDNS-less device); needs a host-network discovery helper — Workflow Issue, Low.
+1. Tuya local lane: SmartLife Wi-Fi devices as kit devices over the LAN protocol (this document) — Suggested Feature, High, anchor row. *Needs Verification* since T1 landed.
+2. Automation switch targets and the bind row are Zigbee-specific; generalise to lane-tagged devices — Suggested Change, Medium. *Needs Verification*: shared `device_bindings.py` + lane-tagged actuatable list done; `DeviceBindRow` rename and the single plug picker remain.
+3. Brain container on the bridge network cannot hear LAN UDP discovery; needs a host-network discovery helper — Workflow Issue, Low (Area "Architecture"). Open for T3.

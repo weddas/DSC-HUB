@@ -93,6 +93,7 @@ export function AlertsSettingsPage() {
   const prefs = useAlertPrefs();
   const [toast, setToast] = usePreference("alertToast");
   const [sound, setSound] = usePreference("alertSound");
+  const [showInvented] = usePreference("showInvented");
   const disabled = ALERT_ENTITY_IDS.filter((id) => !prefs.isEnabled(id)).length;
   return (
     <>
@@ -139,6 +140,7 @@ export function AlertsSettingsPage() {
           }
         />
         <QuietHoursRow />
+        {showInvented ? (
         <SettingRow
           id="alert-push"
           label="Push to phone"
@@ -146,6 +148,7 @@ export function AlertsSettingsPage() {
           scope="brain"
           control={<Stated>possible with a notification relay</Stated>}
         />
+        ) : null}
       </SettingsCard>
 
       <SettingsCard

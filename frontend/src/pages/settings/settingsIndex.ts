@@ -114,6 +114,8 @@ export const SETTINGS_INDEX: SettingsIndexEntry[] = [
   { section: "devices", anchor: "zigbee", label: "Zigbee (SkyConnect)", keywords: ["permit join", "pair", "role", "task", "leak", "canopy", "z2m", "mqtt"] },
   { section: "devices", anchor: "cameras", label: "Cameras", keywords: ["camera", "webcam", "usb", "ip camera", "rtsp", "mjpeg", "snapshot", "motioneye", "timelapse", "vision", "frames", "retention"] },
   { section: "devices", anchor: "firmware", label: "Firmware (ESPHome)", keywords: ["OTA", "compile", "toolchain", "job history", "esphome", "reflash"] },
+  { section: "devices", anchor: "firmware-advanced", label: "Toolchain & drivers — ESPHome paths, fleet OTA prompt, Sonoff driver", keywords: ["esphome_bin", "project dir", "dashboard api", "fleet ota", "sonoff", "poll", "stale"] },
+  { section: "devices", anchor: "add-seat", label: "Add device / seat", keywords: ["register", "extra seat", "new sensor", "appliance"] },
   // Integrations
   { section: "integrations", anchor: "ollama-url", label: "Ollama URL", keywords: ["ollama", "ai", "llm", "ollama_base_url"] },
   { section: "integrations", anchor: "ollama-model", label: "Ollama model", keywords: ["ollama", "model"] },
@@ -131,6 +133,15 @@ export const SETTINGS_INDEX: SettingsIndexEntry[] = [
   { section: "system", anchor: "backup", label: "Backup export and import", keywords: ["backup", "restore", "zip", "export", "import"] },
   { section: "system", anchor: "storage", label: "Logs, verbosity, power and history retention", keywords: ["logs", "reboot", "restart", "shutdown", "retention", "prune", "verbosity", "storage"] },
   { section: "system", anchor: "failover-ttl", label: "Hub override TTL", keywords: ["failover", "takeover", "reassert"] },
+  { section: "system", anchor: "failover-state", label: "Failover — override now", keywords: ["override", "takeover", "pending reassert", "brain driving"] },
+  { section: "system", anchor: "time", label: "Time — brain clock, NTP, hub clock drift", keywords: ["timezone", "ntp", "clock", "drift", "photoperiod", "sntp", "sydney"] },
+  { section: "system", anchor: "about-routes", label: "Brain routes — which optional features this brain serves", keywords: ["routes", "predates", "hotpatch", "health", "served", "missing"] },
+  { section: "system", anchor: "about-setup", label: "Kit setup state — re-run setup", keywords: ["commissioned", "setup", "wizard", "flash debt"] },
+  { section: "system", anchor: "developer", label: "Developer — entity ids, provenance, INVENTED rows, force 3D, raw snapshot", keywords: ["debug", "entity id", "provenance", "formula", "raw", "fleet", "snapshot", "feature flag", "force3d", "twin"] },
+  { section: "system", anchor: "dev-tunables", label: "Hub tunables sync table", keywords: ["desired", "hub", "synced", "differs", "pending"] },
+  { section: "system", anchor: "dev-changelog", label: "Settings change log", keywords: ["journal", "history", "who changed"] },
+  { section: "system", anchor: "profile", label: "Setup profile — export / import", keywords: ["profile", "export", "import", "share", "second device", "community", "json", "presets"] },
+  { section: "system", anchor: "reset", label: "Reset — browser preferences, factory reset", keywords: ["reset", "factory", "erase", "defaults", "wipe", "first boot"] },
   { section: "system", anchor: "about", label: "About — versions", keywords: ["version", "surface", "firmware", "bundle", "sha", "manifest"] },
 ];
 

@@ -2847,6 +2847,22 @@ text_sensor:
     lambda: 'return {"8.0.0.0"};'
     update_interval: 60s
 
+  # S4 (settings): the hub's own wall clock as epoch seconds, so the brain can show
+  # hub-vs-brain drift (photoperiod windows run on THIS clock). "unsynced" until
+  # sntp has a valid time — the brain never invents a drift from it.
+  - platform: template
+    name: "Hub Clock"
+    id: hub_clock
+    icon: mdi:clock-check-outline
+    entity_category: diagnostic
+    update_interval: 30s
+    lambda: |-
+      auto now = id(sntp_time).now();
+      if (!now.is_valid()) return {"unsynced"};
+      char buf[24];
+      snprintf(buf, sizeof(buf), "%lld", (long long) now.timestamp);
+      return {std::string(buf)};
+
   # F-006: last recovery action reason (bounce / reboot / none)
   - platform: template
     name: "Link Recovery Last Reason"

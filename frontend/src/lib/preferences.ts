@@ -54,6 +54,11 @@ export interface Preferences {
   alertSound: "off" | "critical" | "all";
   /** Seconds between refreshes of a zone card's camera thumbnail (0 = only when the brain reports a new frame). */
   cameraThumbRefreshS: number;
+  // Developer (System › Developer)
+  showEntityIds: boolean;
+  provenanceMode: boolean;
+  showInvented: boolean;
+  force3d: boolean;
   // Charts & history
   chartHours: number;
   chartBands: boolean;
@@ -93,6 +98,10 @@ export const PREFERENCE_DEFAULTS: Preferences = {
   alertToast: true,
   alertSound: "critical",
   cameraThumbRefreshS: 30,
+  showEntityIds: false,
+  provenanceMode: false,
+  showInvented: true,
+  force3d: false,
   chartHours: 6,
   chartBands: true,
   chartLightsOff: true,

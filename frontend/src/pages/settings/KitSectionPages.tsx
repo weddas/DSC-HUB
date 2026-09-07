@@ -5,13 +5,15 @@ import { SettingRow, SettingsCard, Stated, Toggle } from "../../components/setti
 import { NetworkExtrasCard } from "../../components/settings/NetworkExtrasCard";
 import { SystemDiagnosticsCard } from "../../components/settings/SystemDiagnosticsCard";
 import { JournalsStorageCard } from "../../components/settings/JournalsStorageCard";
+import { TextSettingRow } from "../../components/settings/TextSettingRow";
+import { AboutCard, DeveloperCard, FailoverCard, ResetCard, SetupProfileCard, TimeCard } from "../../components/settings/SystemCards";
+import { getHealth } from "../../lib/systemApi";
 import { AP_CHANNELS, AP_KEYS, INTEGRATION_KEYS } from "../../components/settings/settingsConstants";
 import { pickSettings } from "../../components/settings/settingsHelpers";
 import { useSaveState } from "../../hooks/useGlobalModifiers";
 import { HubTunableRow } from "../../components/settings/HubTunableRow";
 import { useHubTunables } from "../../hooks/useHubTunables";
 import { manifestDefaultLabel, useSettingsManifest } from "../../hooks/useSettingsManifest";
-import { useFleetSelector } from "../../hooks/useFleet";
 import {
   apply_network,
   backup_export_url,
@@ -54,77 +56,21 @@ function IntegrationTestResult({ raw }: { raw: string }) {
   );
 }
 
-/** A tier-N text row that autosaves on blur. */
-function TextSettingRow({
-  id,
-  settingKey,
-  label,
-  description,
-  value,
-  onSaved,
-  password,
-  placeholder,
-  isSet,
-  consumers,
-}: {
-  id: string;
-  settingKey: string;
-  label: string;
-  description?: string;
-  value: string;
-  onSaved: (next: string) => void;
-  password?: boolean;
-  placeholder?: string;
-  /** For masked secrets: the brain says a value exists even though it never returns it. */
-  isSet?: boolean;
-  consumers?: { label: string; href: string }[];
-}) {
-  const manifest = useSettingsManifest();
-  const saveState = useSaveState();
-  const [draft, setDraft] = useState(value);
-  useEffect(() => setDraft(value), [value]);
-  const row = manifest.rows[settingKey];
-  const def = row && typeof row.default === "string" ? row.default : "";
-  const commit = () => {
-    if (draft === value) return;
-    void saveState.run(async () => {
-      await patch_settings({ [settingKey]: draft });
-      onSaved(draft);
-    });
-  };
+/** Read-only: why writes are refused on a demo brain (plan § 3.12). */
+function DemoModeRow() {
+  const [mode, setMode] = useState<"demo" | "live" | null>(null);
+  useEffect(() => {
+    getHealth()
+      .then((h) => setMode(h.mode))
+      .catch(() => setMode(null));
+  }, []);
   return (
     <SettingRow
-      id={id}
-      label={label}
-      description={description ?? row?.description}
-      scope="brain"
-      defaultLabel={def ? def : row ? "empty" : undefined}
-      isDefault={password ? undefined : value === def}
-      onReset={
-        password
-          ? undefined
-          : () =>
-              void saveState.run(async () => {
-                await patch_settings({ [settingKey]: def });
-                onSaved(def);
-              })
-      }
-      state={saveState.state}
-      stateText={saveState.text}
-      consumers={consumers}
-      control={
-        <input
-          type={password ? "password" : "text"}
-          value={draft}
-          placeholder={placeholder ?? (password && isSet ? "•••••••• (set)" : undefined)}
-          aria-label={label}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-          }}
-        />
-      }
+      id="demo-mode"
+      label="Demo mode"
+      description={mode === "demo" ? "This brain runs a software simulation — every write to the hub or the settings is refused with demo_simulation. Set by the DSC_DEMO_MODE environment variable, not here." : "Live brain: writes reach the hub. DSC_DEMO_MODE would turn this into a simulation."}
+      scope="firmware"
+      control={<Stated>{mode == null ? "…" : mode === "demo" ? "simulation" : "live"}</Stated>}
     />
   );
 }
@@ -290,6 +236,7 @@ export function IntegrationsSettingsPage() {
           </>
         }
       >
+        <DemoModeRow />
         <SettingRow
           id="ppfd-maps"
           label="PPFD maps"
@@ -463,6 +410,31 @@ export function NetworkSettingsPage() {
           reconnect on their own.
         </p>
       </DecisionLayer>
+      <SettingsCard id="names" title="Names & addresses" icon="network-ap" intro="Fixed identifiers — read-only here so a link on a phone or a label on the tent can be checked against them.">
+        <SettingRow
+          id="mdns-name"
+          label="mDNS name"
+          description="The brain answers on the LAN as this host name; the SoftAP clients reach it on the AP address."
+          scope="firmware"
+          control={<Stated>dsc-brain.local</Stated>}
+          consumers={[{ label: "Devices › Firmware", href: `#${paths.settings("devices", "firmware")}` }]}
+        />
+        <SettingRow
+          id="softap-spa"
+          label="SoftAP dashboard URL"
+          description="What a phone joined to the hub's own Wi-Fi opens."
+          scope="brain"
+          control={<Stated>{String(network?.spa_url ?? network?.softap_spa_url ?? "not reported by this brain")}</Stated>}
+        />
+        <SettingRow
+          id="channel-split"
+          label="Wi-Fi channel split"
+          description="Raised when the hub's AP and the house Wi-Fi sit on different channels; tune it on the Alerts page."
+          scope="brain"
+          control={<Stated>alert</Stated>}
+          consumers={[{ label: "Alerts", href: `#${paths.settings("alerts", "alert-dsc_nest_channel_split")}` }]}
+        />
+      </SettingsCard>
       <HubRadioCard />
       <NetworkExtrasCard />
     </>
@@ -486,13 +458,9 @@ function HubRadioCard() {
 }
 
 export function SystemSettingsPage() {
-  const manifest = useSettingsManifest();
   const [pendingImport, setPendingImport] = useState<File | null>(null);
   const [importResult, setImportResult] = useState("");
   const [importing, setImporting] = useState(false);
-  const surface = useFleetSelector((v) => v.fleet.surface);
-  const expected = useFleetSelector((v) => v.fleet.expected_firmware);
-  const ttl = manifest.rows["hub_failover.DEFAULT_TTL_SEC"];
 
   return (
     <>
@@ -554,8 +522,7 @@ export function SystemSettingsPage() {
         help={null}
       >
         <p>
-          Restores ops sqlite and related files from <strong>{pendingImport?.name ?? "backup"}</strong>. This
-          overwrites live Pi state.
+          Restores ops sqlite and related files from <strong>{pendingImport?.name ?? "backup"}</strong>. This overwrites live Pi state.
         </p>
       </DecisionLayer>
 
@@ -563,54 +530,12 @@ export function SystemSettingsPage() {
         <SystemDiagnosticsCard />
       </div>
       <JournalsStorageCard />
-
-      <SettingsCard
-        id="failover"
-        title="Failover"
-        icon="pause-hold"
-        intro="What happens when the hub and the brain disagree after a reconnect."
-      >
-        <SettingRow
-          id="failover-ttl"
-          label="Hub override TTL"
-          description={ttl?.description ?? "How long a hub-side manual takeover holds before the brain re-asserts Want→act."}
-          scope="firmware"
-          control={<Stated>{ttl ? `${String(ttl.default)} ${ttl.unit ?? ""}` : "900 s"}</Stated>}
-        />
-      </SettingsCard>
-
-      <SettingsCard id="about" title="About" icon="info" intro="Use the SPA bundle stamp to confirm a deploy actually took.">
-        <SettingRow id="about-surface" label="Surface" scope="brain" control={<Stated>{surface || "—"}</Stated>} />
-        <SettingRow
-          id="about-firmware"
-          label="Expected firmware"
-          scope="brain"
-          control={<Stated>{expected || "—"}</Stated>}
-          consumers={[{ label: "Devices › Firmware", href: `#${paths.settings("devices", "firmware")}` }]}
-        />
-        <SettingRow
-          id="about-bundle"
-          label="SPA bundle"
-          description="Git SHA + build time of the JS the Pi is serving right now."
-          scope="firmware"
-          control={<Stated>{(import.meta.env.VITE_DSC_SPA_BUILD as string | undefined) ?? "dev"}</Stated>}
-        />
-        <SettingRow
-          id="about-manifest"
-          label="Settings manifest"
-          description="Whether the running brain describes its own settings (defaults, ranges, units)."
-          scope="brain"
-          control={
-            <Stated>
-              {manifest.state === "ready"
-                ? `${Object.keys(manifest.rows).length} rows`
-                : manifest.state === "error"
-                  ? "brain predates the manifest"
-                  : "…"}
-            </Stated>
-          }
-        />
-      </SettingsCard>
+      <TimeCard />
+      <FailoverCard />
+      <SetupProfileCard />
+      <AboutCard />
+      <DeveloperCard />
+      <ResetCard />
     </>
   );
 }

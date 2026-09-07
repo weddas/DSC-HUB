@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { getPreference } from "../lib/preferences";
 import { useLocation } from "react-router-dom";
 import { Panel } from "../components/Panel";
 import { Button, StatusTag } from "../components/ui";
@@ -38,7 +39,7 @@ const WHATIF_APPLIANCES: ReadonlyArray<{ id: TwinApplianceId; label: string }> =
 export function TwinPage() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const force = params.get("force3d") === "1";
+  const force = params.get("force3d") === "1" || getPreference("force3d");
   const { focus } = useZoneFocus();
   const [layers, setLayers] = useState<TwinLayers>(DEFAULT_LAYERS);
   const [preset, setPreset] = useState<CameraPreset>(focus === "clone" ? "clone" : focus === "main" ? "main" : "room");

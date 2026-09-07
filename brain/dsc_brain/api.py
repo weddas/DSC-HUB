@@ -1008,6 +1008,78 @@ def settings_automation_defaults_patch(body: AutomationDefaultsPatch) -> dict[st
     return {"defaults": after, "max_conditions": MAX_CONDITIONS}
 
 
+# ---- S4: system transparency — time, failover, routes, setup profile, factory reset ----
+
+
+class ProfileImportBody(BaseModel):
+    profile: dict[str, Any]
+    confirm: bool = False
+
+
+class FactoryResetBody(BaseModel):
+    confirm_text: str
+    restart: bool = True
+
+
+@app.get("/system/time")
+def system_time() -> dict[str, Any]:
+    from .system_info import time_info
+
+    return time_info()
+
+
+@app.get("/system/failover")
+def system_failover() -> dict[str, Any]:
+    from .system_info import failover_info
+
+    return failover_info()
+
+
+@app.get("/system/routes")
+def system_routes() -> dict[str, Any]:
+    from .system_info import routes_info
+
+    return routes_info(app)
+
+
+@app.get("/settings/profile")
+def settings_profile_get() -> dict[str, Any]:
+    from .setup_profile import export_profile
+
+    return export_profile()
+
+
+@app.post("/settings/profile/import")
+def settings_profile_import(body: ProfileImportBody) -> dict[str, Any]:
+    if body.confirm and _demo_mode():
+        _demo_forbidden()
+    from .setup_profile import apply_profile
+
+    try:
+        return apply_profile(body.profile, confirm=body.confirm)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.get("/settings/system/factory-reset")
+def settings_factory_reset_get() -> dict[str, Any]:
+    from .factory_reset import expected_confirm_text
+
+    return {"confirm_text": expected_confirm_text(), "backup_first": True}
+
+
+@app.post("/settings/system/factory-reset")
+def settings_factory_reset(body: FactoryResetBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .factory_reset import factory_reset
+
+    try:
+        return factory_reset(body.confirm_text, restart=body.restart)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
 @app.get("/settings/journals")
 def settings_journals_get() -> dict[str, Any]:
     from .journal_storage import storage_stats
@@ -2806,7 +2878,7 @@ _API_FIRST_SEGMENTS = frozenset(
     {
         "api", "v1", "admin", "ai", "cameras", "catalogs", "control", "decision", "energy", "fleet",
         "grow-log", "health", "history", "journal", "learning", "rooms", "roster",
-        "settings", "setup", "soft-cal", "soil-tests", "spaces", "want", "ws",
+        "settings", "setup", "soft-cal", "soil-tests", "spaces", "system", "want", "ws",
     }
 )
 

@@ -101,6 +101,12 @@ def build_manifest() -> list[dict[str, Any]]:
             description="Browser link shown on the Firmware card.", consumers=["devices"]),
         _kv("esphome_fleet_ota_prompt", kind="bool", section="devices", label="Offer fleet OTA after toolchain update",
             description="After the ESPHome toolchain updates, offer to reflash the fleet.", consumers=["devices"]),
+        _kv("esphome_dashboard_api", kind="text", section="devices", label="ESPHome dashboard API base",
+            description="brain → dashboard HTTP base (container DNS). Empty falls back to the venv CLI.", consumers=["devices"]),
+        _kv("esphome_bin", kind="text", section="devices", label="ESPHome binary",
+            description="Path of the esphome CLI in the Pi venv. Empty resolves the default.", consumers=["devices"]),
+        _kv("esphome_project_dir", kind="text", section="devices", label="ESPHome project dir",
+            description="Directory holding the device YAMLs the build worker compiles. Empty resolves the default.", consumers=["devices"]),
         # --- global modifiers (JSON blob, exposed per field) --------------------
         _row("global_modifiers.fan_demand_scale", tier="brain", kind="number", section="climate",
              default=mods["fan_demand_scale"], label="Fan demand scale",

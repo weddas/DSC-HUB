@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { useFreshFlag } from "../hooks/useFreshFlag";
+import { usePreferences } from "../hooks/usePreference";
 import { fmtDurationMs } from "../lib/formatDuration";
 import { toneCssColor, type ZoneTone } from "../lib/zoneTone";
 import type { ZoneReading } from "../hooks/useZones";
@@ -210,8 +211,15 @@ export function Triad({
   leafVpd?: number | null;
   onOpen?: (kind: "temp" | "rh" | "vpd") => void;
 }) {
+  const { provenanceMode, showEntityIds } = usePreferences();
   const bandText = (r: ZoneReading) =>
     r.band ? `want ${r.band.min.toFixed(digitsFor(r.unit) === 2 ? 1 : 0)}–${r.band.max.toFixed(digitsFor(r.unit) === 2 ? 1 : 0)}` : null;
+  // Developer switches (System › Developer): provenance mode puts the formula / measured
+  // entity on the cell itself; show-entity-ids appends the id the cell reads.
+  const trace = (r: ZoneReading, base: string | null) =>
+    [base, provenanceMode && r.derived ? r.derived : null, showEntityIds ? r.entityId : provenanceMode && !r.derived ? `measured ${r.entityId}` : null]
+      .filter(Boolean)
+      .join(" · ") || null;
   const vpdSub =
     vpd.derived
       ? vpd.derived
@@ -224,7 +232,7 @@ export function Triad({
         label="Temperature"
         icon="temp-gauge"
         reading={temp}
-        sub={bandText(temp)}
+        sub={trace(temp, bandText(temp))}
         onClick={onOpen ? () => onOpen("temp") : undefined}
         title="Open the temperature chart"
       />
@@ -232,7 +240,7 @@ export function Triad({
         label="Relative humidity"
         icon="humidity-gauge"
         reading={rh}
-        sub={bandText(rh)}
+        sub={trace(rh, bandText(rh))}
         onClick={onOpen ? () => onOpen("rh") : undefined}
         title="Open the humidity chart"
       />
@@ -240,7 +248,7 @@ export function Triad({
         label="Vapour pressure deficit"
         icon="vpd-gauge"
         reading={vpd}
-        sub={vpdSub}
+        sub={showEntityIds ? [vpdSub, vpd.entityId].filter(Boolean).join(" · ") : vpdSub}
         onClick={onOpen ? () => onOpen("vpd") : undefined}
         title={vpd.derived ? `Derived ${vpd.derived}` : "Open the VPD chart"}
       />
