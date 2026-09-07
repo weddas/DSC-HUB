@@ -1,4 +1,6 @@
 import { useNavigate } from "react-router-dom";
+import { useAlertPrefs } from "../hooks/useAlertPrefs";
+import { usePreferences } from "../hooks/usePreference";
 import { StatusTag } from "../components/ui";
 import { Panel } from "../components/Panel";
 import { ZoneCard } from "../components/ZoneCard";
@@ -25,6 +27,7 @@ import { paths } from "../lib/paths";
  * Journals live on Logs. Every value is live, held (labelled), or derived (labelled).
  */
 export function OverviewPage() {
+  const prefs = usePreferences();
   const bus = useEntityBus();
   const { state, num } = bus;
   const fleet = useFleet();
@@ -37,7 +40,9 @@ export function OverviewPage() {
 
   const openChart = (kind: BandChartKind) => bandChart.open({ kind, title: BAND_CHART_TITLES[kind] });
 
-  const faultIds = activeAlertIds(state, isSnoozed);
+  const alertPrefs = useAlertPrefs();
+  const faultIds = activeAlertIds(state, isSnoozed, alertPrefs.isEnabled);
+  const criticalIds = faultIds.filter((id) => alertPrefs.severityOf(id) === "critical");
   const alertCount = num("sensor.dsc_active_alert_count", 0);
   const criticalBanners = (Array.isArray(fleet.system?.critical_banners)
     ? (fleet.system.critical_banners as Array<Record<string, unknown>>)
@@ -48,7 +53,8 @@ export function OverviewPage() {
   const recentAlert = log.events.find((ev) => growLogSeverity(ev.message) === "alert") ?? null;
   const story = buildMissionStory({
     criticalBanners,
-    activeAlertTitles: faultIds.map((id) => playbookFor(id, "alert").title),
+    activeAlertTitles: criticalIds.map((id) => playbookFor(id, "alert").title),
+    warnAlertTitles: faultIds.filter((id) => alertPrefs.severityOf(id) !== "critical").map((id) => playbookFor(id, "alert").title),
     recentAlert,
   });
 
@@ -106,7 +112,7 @@ export function OverviewPage() {
               onClick={() => navigate(paths.climate())}
             />
           ) : (
-            <StatusTag label="CANOPY UNBOUND" tone="muted" onClick={() => navigate(paths.settings("device"))} />
+            <StatusTag label="CANOPY UNBOUND" tone="muted" onClick={() => navigate(paths.settings("devices", "zigbee"))} />
           )}
           {alertCount > 0 || faultIds.length > 0 ? (
             <StatusTag
@@ -119,7 +125,7 @@ export function OverviewPage() {
         </div>
       </header>
 
-      <MissionLine story={story} />
+      {prefs.missionLine ? <MissionLine story={story} /> : null}
 
       <Panel
         tone="teal"

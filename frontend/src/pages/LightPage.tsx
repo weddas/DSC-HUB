@@ -25,6 +25,7 @@ import { dliFromPpfdHours, fmtDli, readCalibratedPpfd } from "../lib/dliEstimate
 import { buildCloneLightDesk } from "../lib/lightViewModel";
 import { LightEnergyPanel } from "../components/energy/LightEnergyPanel";
 import { JournalScopePanel } from "../components/journal/JournalScopePanel";
+import { PpfdMapCard } from "../components/PpfdMapCard";
 
 function fmt(n: number, digits = 1): string {
   return Number.isFinite(n) ? n.toFixed(digits) : "—";
@@ -509,6 +510,11 @@ export function LiveLightPage() {
               <Button onClick={() => navigate(paths.calibrate())}>Kit › Calibrate</Button>
             </div>
           </Panel>
+        </div>
+
+        <div className="dsc-col-6">
+          {/* Catalog id is the SF1000 until the fixture table carries a CannaLib id per lamp (Settings plan, The kit). */}
+          <PpfdMapCard catalogId="spider_farmer_sf1000" legend="SF1000 · MAKER PPFD MAP · CANNALIB" />
         </div>
 
         <div className="dsc-col-12">

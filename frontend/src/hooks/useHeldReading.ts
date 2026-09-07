@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useEntityBus } from "./useEntityBus";
+import { getPreference } from "../lib/preferences";
 import { useFleet, useFleetSource } from "./useFleet";
 import { fleetEntityAvailable, fleetLiveNumber, hubFleetDark } from "../lib/entityFleetMap";
 
@@ -13,6 +14,11 @@ export type HeldReading = {
 /** Default staleness horizon for readings that carry their own `updated_at`
  *  (Zigbee-by-role, and other fleet-snapshot values that aren't HA entities). */
 export const TIMESTAMPED_READING_STALE_MS = 10 * 60 * 1000;
+
+/** Live value of the horizon — Preferences › Charts › Advanced › Reading stale horizon. */
+export function timestampedReadingStaleMs(): number {
+  return getPreference("staleMs") || TIMESTAMPED_READING_STALE_MS;
+}
 
 export type TimestampedReading = { value: number; stale: boolean };
 
@@ -28,7 +34,7 @@ export type TimestampedReading = { value: number; stale: boolean };
 export function timestampedReading(
   value: number | string | null | undefined,
   updatedAtSec: number | string | null | undefined,
-  staleMs: number = TIMESTAMPED_READING_STALE_MS,
+  staleMs: number = timestampedReadingStaleMs(),
 ): TimestampedReading {
   const num = typeof value === "number" ? value : value == null || value === "" ? NaN : Number(value);
   const ts = typeof updatedAtSec === "number" ? updatedAtSec : Number(updatedAtSec);

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { usePreferences } from "../hooks/usePreference";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import type { ZoneModel } from "../hooks/useZones";
@@ -65,17 +66,19 @@ export function ZoneVpdChart({
 
   const now = Date.now();
   const fromMs = now - hours * 3600 * 1000;
+  const prefs = usePreferences();
 
   const shades = useMemo<ChartShade[]>(() => {
-    if (zone.role !== "grow") return [];
+    if (zone.role !== "grow" || !prefs.chartLightsOff) return [];
     const input = readTentPhotoperiodInput(zone.id === "clone" ? "clone" : "main", state, num);
     return darkIntervals(input, fromMs, now).map((d) => ({ ...d, color: "var(--dsc-black)", opacity: 0.45 }));
     // `state`/`num` are stable bus accessors; the schedule only changes with the bus tick.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zone.id, zone.role, hours, Math.floor(now / 60000)]);
+  }, [zone.id, zone.role, hours, prefs.chartLightsOff, Math.floor(now / 60000)]);
 
   const markers = useMemo<ChartTimeMarker[]>(() => {
     const out: ChartTimeMarker[] = [];
+    if (!prefs.chartMarkers) return out;
     for (const ev of events) {
       const t = ev.ts * 1000;
       if (t < fromMs) continue;
@@ -86,7 +89,7 @@ export function ZoneVpdChart({
       }
     }
     return out.slice(0, 12);
-  }, [events, fromMs]);
+  }, [events, fromMs, prefs.chartMarkers]);
 
   const series: NamedSeries[] = [
     {
@@ -166,7 +169,7 @@ export function ZoneVpdChart({
           right: companion === "rh" ? { min: 0, max: 100 } : { min: 10, max: 40 },
         }}
         series={series}
-        targets={zone.vpd.band ? [{ axis: "left", min: zone.vpd.band.min, max: zone.vpd.band.max, color: "var(--dsc-neon)" }] : []}
+        targets={zone.vpd.band && prefs.chartBands ? [{ axis: "left", min: zone.vpd.band.min, max: zone.vpd.band.max, color: "var(--dsc-neon)" }] : []}
         shades={shades}
         timeMarkers={markers}
         xDomain={{ min: fromMs, max: now }}

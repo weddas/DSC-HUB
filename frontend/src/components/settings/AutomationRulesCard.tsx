@@ -60,15 +60,17 @@ function blankCondition(): AutomationCondition {
   return { entity_id: "sensor.dsc_hub_tent_temperature", op: "gt", value: 32 };
 }
 
-function blankRule(n: number): AutomationRule {
+export type RuleDefaults = { debounce_s: number; release_s: number; window: { start: string; end: string } | null };
+
+function blankRule(n: number, defaults?: RuleDefaults): AutomationRule {
   return {
     id: `rule_${n}`,
     name: `Rule ${n}`,
     enabled: false,
     trigger: { all: [blankCondition()] },
-    window: null,
-    debounce_s: 0,
-    release_s: 0,
+    window: defaults?.window ? { ...defaults.window } : null,
+    debounce_s: defaults?.debounce_s ?? 0,
+    release_s: defaults?.release_s ?? 0,
     action: { type: "banner", params: { text: "", tone: "warn" } },
   };
 }
@@ -182,7 +184,7 @@ function ruleInvalid(r: AutomationRule, targets: AutomationTargets | null): stri
  * fails closed on stale / offline / missing inputs. Relay and setpoint actions
  * are limited to server allow-lists (loop-owned outputs are never offered).
  */
-export function AutomationRulesCard({ seats }: { seats: string[] }) {
+export function AutomationRulesCard({ seats, defaults }: { seats: string[]; defaults?: RuleDefaults }) {
   const [rules, setRules] = useState<AutomationRule[]>([]);
   const [dirty, setDirty] = useState(false);
   const [msg, setMsg] = useState("");
@@ -301,7 +303,7 @@ export function AutomationRulesCard({ seats }: { seats: string[] }) {
     });
 
   const addRule = () => {
-    const r = blankRule(nextN);
+    const r = blankRule(nextN, defaults);
     setRules((prev) => [...prev, r]);
     setOpen((prev) => new Set(prev).add(r.id));
     setNextN((n) => n + 1);

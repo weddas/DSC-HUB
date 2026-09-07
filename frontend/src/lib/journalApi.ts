@@ -125,6 +125,8 @@ export async function fetchJournalScope(
     limit: String(limit),
     offset: String(offset),
   });
+  // Core scope with an id is a tagged view — `settings` lists every settings change.
+  if (scope.kind === "core" && scope.id) q.set("tag", String(scope.id));
   const resp = await fetch(`${base}?${q}`);
   if (!resp.ok) {
     throw new Error(formatApiError(await resp.text(), "journal fetch failed"));

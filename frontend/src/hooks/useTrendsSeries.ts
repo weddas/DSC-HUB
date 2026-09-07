@@ -3,18 +3,22 @@ import { useEntitySeries } from "./useEntitySeries";
 import { useHistory } from "./useHistory";
 import type { SeriesPoint } from "../viz/charts";
 import { stepHoldSeries } from "../lib/seriesHold";
+import { getPreference } from "../lib/preferences";
 
 export const TRENDS_HALF_WINDOW_H = 6;
 
+/** Live value — Preferences › Charts › Advanced › Trends window around an event. */
+const halfWindowH = () => getPreference("trendsHalfWindowH") || TRENDS_HALF_WINDOW_H;
+
 export type TrendsWindow = { min: number; max: number };
 
-export function trendsWindowAround(anchorSec: number, halfHours = TRENDS_HALF_WINDOW_H): TrendsWindow {
+export function trendsWindowAround(anchorSec: number, halfHours = halfWindowH()): TrendsWindow {
   const anchorMs = anchorSec * 1000;
   const halfMs = halfHours * 3600 * 1000;
   return { min: anchorMs - halfMs, max: anchorMs + halfMs };
 }
 
-export function trendsWindowForAnchors(anchorsSec: number[], halfHours = TRENDS_HALF_WINDOW_H): TrendsWindow {
+export function trendsWindowForAnchors(anchorsSec: number[], halfHours = halfWindowH()): TrendsWindow {
   const halfMs = halfHours * 3600 * 1000;
   const ms = anchorsSec.filter((s) => Number.isFinite(s) && s > 0).map((s) => s * 1000);
   if (!ms.length) return { min: Date.now() - halfMs * 2, max: Date.now() };

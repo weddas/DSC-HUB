@@ -9,6 +9,7 @@ import {
 } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { deskOwnsZone } from "../routes";
+import { getPreference, setPreference } from "../lib/preferences";
 
 /** Zone context: the two tents, the room (umbrella lung), or all side by side. */
 export type ZoneFocus = "main" | "clone" | "compare" | "room";
@@ -20,12 +21,19 @@ type ZoneFocusApi = {
 
 const ZoneFocusContext = createContext<ZoneFocusApi | null>(null);
 
+/** The zone a desk opens on when the URL carries none — Preferences › Home › Default zone. */
+export function defaultZoneFocus(): ZoneFocus {
+  const pref = getPreference("defaultZone");
+  if (pref === "last") return getPreference("lastZone") ?? "main";
+  return pref;
+}
+
 export function parseZoneFocus(raw: string | null): ZoneFocus {
   if (raw === "clone" || raw === "compare" || raw === "room" || raw === "main") return raw;
   if (raw === "tent" || raw === "4x8") return "main";
   if (raw === "2x4") return "clone";
   if (raw === "all") return "compare";
-  return "main";
+  return defaultZoneFocus();
 }
 
 export function ZoneFocusProvider({ children }: { children: ReactNode }) {
@@ -46,6 +54,7 @@ export function ZoneFocusProvider({ children }: { children: ReactNode }) {
   const setFocus = useCallback(
     (next: ZoneFocus) => {
       setFocusState(next);
+      if (next !== "compare") setPreference("lastZone", next);
       // Never write ?zone= on routes the Shell strips — that fight stuck the old tabs.
       if (!urlOwned) return;
       const nextParams = new URLSearchParams(params);
@@ -64,7 +73,7 @@ export function useZoneFocus(): ZoneFocusApi {
   const ctx = useContext(ZoneFocusContext);
   if (!ctx) {
     return {
-      focus: "main",
+      focus: defaultZoneFocus(),
       setFocus: () => undefined,
     };
   }

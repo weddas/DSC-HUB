@@ -250,6 +250,9 @@ def _physics_tick(state: FleetState, dt: float) -> None:
     _sync_relays_from_demands(state)
 
 
+_tunables_tick = [0]
+
+
 async def _demo_loop() -> None:
     global _last_tick
     _last_tick = time.time()
@@ -262,6 +265,16 @@ async def _demo_loop() -> None:
         _physics_tick(state, dt)
         state.updated_at = now
         update_fleet_state(state)
+        # Brain-owned hub tunables adopt the simulated hub's values and confirm echoes;
+        # pushes are skipped in demo (software only). Throttled to the ingest cadence.
+        _tunables_tick[0] += 1
+        if _tunables_tick[0] % 5 == 0:
+            try:
+                from .hub_tunables import on_fleet_poll
+
+                await on_fleet_poll(state)
+            except Exception:  # noqa: BLE001
+                pass
 
 
 def start_demo_simulator() -> None:

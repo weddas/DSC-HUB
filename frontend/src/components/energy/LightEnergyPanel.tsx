@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { formatCost } from "../../lib/units";
 import { Button, Card, StatusChip } from "../ui";
 import {
   getEnergyEstimate,
@@ -22,7 +23,7 @@ const POLICY_COPY: Record<Policy, string> = {
 
 function fmtMoney(n: number | undefined): string {
   if (n == null || !Number.isFinite(n)) return "—";
-  return `$${n.toFixed(2)}`;
+  return formatCost(n);
 }
 
 export function LightEnergyPanel({

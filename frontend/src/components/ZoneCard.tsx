@@ -11,6 +11,8 @@ import { StatusTag } from "./ui";
 import { UpdatedStamp } from "./UpdatedStamp";
 import { applianceIcon } from "../lib/deviceIcons";
 import type { BandChartKind } from "./BandChartHost";
+import { CameraSlot } from "./CameraSlot";
+import { BRAIN_ZONE_ID } from "../hooks/useZoneMeta";
 
 export function panelToneFor(tone: ZoneTone): PanelTone {
   switch (tone) {
@@ -166,6 +168,7 @@ export function ZoneCard({
         ))}
         {zone.cultivar ? <StatusTag icon="strain-tag" label={zone.cultivar} tone="muted" title="From the roster" /> : null}
       </div>
+      <CameraSlot spaceId={BRAIN_ZONE_ID[zone.id]} zoneLabel={zone.label} />
     </Panel>
   );
 }

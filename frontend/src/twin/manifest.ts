@@ -8,10 +8,10 @@
  * palette roles so the wire look is token-driven, never baked into the file.
  */
 
-export type ModelKind = "tent" | "room" | "device" | "sensor";
+export type ModelKind = "tent" | "room" | "device" | "sensor" | "plant" | "vessel";
 
-/** What a node-name prefix stands for in a model. */
-export type AnchorRole =
+/** Anchor roles the app knows an icon / binding for. Any other anchor name is kept as-is. */
+export type KnownAnchorRole =
   | "fan_exhaust"
   | "fan_intake"
   | "duct_passive"
@@ -23,13 +23,15 @@ export type AnchorRole =
   | "door"
   | "lamp"
   | "mat"
-  | "probe";
+  | "probe"
+  | "camera";
+export type AnchorRole = KnownAnchorRole | (string & {});
 
 /** How a model material is drawn in the holographic wire look. */
-export type MaterialRole = "accent" | "dim" | "glass" | "shell" | "frame";
+export type MaterialRole = "accent" | "dim" | "glass" | "shell" | "frame" | "emissive" | "wire";
 
 /** Set icon per anchor role — the same glyph on the spike page, the Kit desk and the twin tooltip. */
-export const ANCHOR_ICON: Record<AnchorRole, string> = {
+export const ANCHOR_ICON: Partial<Record<string, string>> = {
   fan_exhaust: "exhaust-fan",
   fan_intake: "intake-fan",
   duct_passive: "ducting",
@@ -40,8 +42,17 @@ export const ANCHOR_ICON: Record<AnchorRole, string> = {
   vent_window: "observation-window",
   door: "door",
   lamp: "grow-light",
+  camera: "camera-monitor",
   mat: "heater-mat",
   probe: "soil-probe",
+  hang: "light-hanger",
+  mount: "smart-outlet",
+  duct: "ducting",
+  canopy: "canopy-top",
+  pot: "harvest-tote",
+  plug: "smart-outlet",
+  hose: "water-pump",
+  airflow: "airflow",
 };
 
 export interface TwinModel {
@@ -51,7 +62,13 @@ export interface TwinModel {
   dims_cm: [number, number, number];
   /** Brain zone id this model stands for by default (`2x4`, `4x8`, `grow_room`). */
   zone?: string;
+  /** `soil`: y = 0 is the soil surface, not the floor — snaps to a vessel's `plant_base`. */
+  origin?: "soil";
   bytes?: number;
+  /** Build metadata from scripts/build-twin-models.mjs (absent on hand-authored rows). */
+  origin_y?: number;
+  meshes?: number;
+  triangles?: number;
   anchors: Record<string, AnchorRole>;
   materials: Record<string, MaterialRole>;
 }

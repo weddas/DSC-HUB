@@ -224,6 +224,9 @@ def _states_with_controls(
             attrs["percentage"] = ctrl["percentage"]
         if ctrl.get("brightness") is not None:
             attrs["brightness"] = ctrl["brightness"]
+        for key in ("min", "max", "step", "unit_of_measurement"):
+            if ctrl.get(key) is not None:
+                attrs[key] = ctrl[key]
         merged[eid] = {
             "entity_id": eid,
             "state": str(ctrl.get("state", "unavailable")),

@@ -13,6 +13,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     DSC_DATA=/data \
     DSC_REPO_ROOT=/app
 
+# ffmpeg: camera capture from USB webcams (v4l2) and RTSP sources, and timelapse
+# assembly (docs/cameras.md). HTTP snapshot / MJPEG / motionEye sources need nothing.
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ffmpeg     && rm -rf /var/lib/apt/lists/*
+
 COPY brain/requirements.txt ./brain/requirements.txt
 RUN pip install --no-cache-dir -r brain/requirements.txt
 

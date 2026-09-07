@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { findModel, type TwinModel } from "../twin/manifest";
-import type { TwinPalette, TwinPerf } from "../twin/TwinViewport";
+import type { TwinPerf } from "../twin/TwinViewport";
+import { readTwinPalette as readPalette } from "./TwinStagePanel";
 
 /** Chunk timing for the lazy `twin-three` import — read by the HUD once the model reports. */
 const chunk = { start: 0, ms: null as number | null };
@@ -15,18 +16,6 @@ const TwinViewport = lazy(() => {
 export interface TwinPanelPerf extends TwinPerf {
   chunkMs: number | null;
   bytes: number | null;
-}
-
-function readPalette(el: HTMLElement): TwinPalette {
-  const cs = getComputedStyle(el);
-  const v = (name: string, fallback: string) => cs.getPropertyValue(name).trim() || fallback;
-  return {
-    accent: v("--dsc-neon", "#66bb6a"),
-    teal: v("--dsc-teal", "#26c6da"),
-    dim: v("--dsc-gray-5", "#8b95a8"),
-    bad: v("--dsc-bad", "#ef5350"),
-    background: v("--dsc-black", "#0b0e13"),
-  };
 }
 
 function canRender3d(): { ok: boolean; why: string } {
@@ -67,10 +56,24 @@ export function TwinPanel({
   const [seen, setSeen] = useState(false);
   const [inView, setInView] = useState(false);
   const [visible, setVisible] = useState(() => (typeof document === "undefined" ? true : !document.hidden));
+  // The gate re-evaluates when the viewport or motion preference changes — a page that
+  // mounts mid-resize (the in-app preview pane, a phone rotating) must not stay on the still.
+  const [gateTick, setGateTick] = useState(0);
+  useEffect(() => {
+    const mqs = [window.matchMedia("(max-width: 640px)"), window.matchMedia("(prefers-reduced-motion: reduce)")];
+    const bump = () => setGateTick((t) => t + 1);
+    mqs.forEach((mq) => mq.addEventListener("change", bump));
+    window.addEventListener("resize", bump);
+    return () => {
+      mqs.forEach((mq) => mq.removeEventListener("change", bump));
+      window.removeEventListener("resize", bump);
+    };
+  }, []);
   const gate = useMemo(() => {
     const g = canRender3d();
     return force && g.why !== "no WebGL" && g.why !== "no window" ? { ok: true, why: "" } : g;
-  }, [force]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [force, gateTick]);
   const palette = useMemo(() => (hostRef.current ? readPalette(hostRef.current) : null), [seen]);
 
   useEffect(() => {

@@ -634,7 +634,18 @@ async def call_service_proxy(domain: str, service: str, data: dict[str, Any]) ->
         if not option:
             raise ValueError("option required")
         if entity_id in HUB_SELECT_ENTITY_TO_OID:
-            return await _hub_select(entity_id, option)
+            result = await _hub_select(entity_id, option)
+            if entity_id == "select.dsc_hub_grow_stage":
+                # Brain-owned stage presets (S2): stamp the 4x8 targets right away instead
+                # of waiting for the next ingest poll to notice the stage change.
+                from .hub_tunables import apply_stage_targets, brain_owns_stage_targets
+
+                try:
+                    if brain_owns_stage_targets():
+                        await apply_stage_targets(option)
+                except Exception as exc:  # noqa: BLE001
+                    _logger.warning("stage preset apply after select failed: %s", exc)
+            return result
         set_helper(entity_id, option)
         _maybe_persist_pot_edit(entity_id, option)
         if entity_id.startswith("select.dsc_probe") and entity_id.endswith("_growth_stage"):

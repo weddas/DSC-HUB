@@ -40,6 +40,27 @@ const STAGE_RAIL: Record<string, StageRail> = {
   "Dry Mode": { temp: 19, vpdMin: 0.8, vpdMax: 1.0, rhMin: 55, rhMax: 62, lightHours: 0, short: "Dry" },
 };
 
+/**
+ * The brain's stage_rail table (Settings › Climate › Stage presets) replaces the constant
+ * above in place, so every rail lookup on the desks follows the operator's edits. Called by
+ * useStageRail once the table loads; an old brain leaves the firmware table standing.
+ */
+export function applyBrainStageRail(
+  rows: { stage: string; temp: number; vpd_min: number; vpd_max: number; rh_min: number; rh_max: number; light_hours: number; short: string }[],
+): void {
+  for (const r of rows) {
+    const cur = STAGE_RAIL[r.stage];
+    if (!cur) continue;
+    cur.temp = r.temp;
+    cur.vpdMin = r.vpd_min;
+    cur.vpdMax = r.vpd_max;
+    cur.rhMin = r.rh_min;
+    cur.rhMax = r.rh_max;
+    cur.lightHours = r.light_hours;
+    cur.short = r.short || cur.short;
+  }
+}
+
 export type Band = { min: number; max: number; source: "plant" | "stage"; mixed: boolean };
 
 export type TentWantRail = {

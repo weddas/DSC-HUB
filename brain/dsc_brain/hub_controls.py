@@ -23,6 +23,15 @@ HUB_SWITCH_ENTITY_TO_OID: dict[str, str] = {
     "switch.dsc_hub_auto_photoperiod": "auto_photoperiod",
     # LIGHT-only schedule hold — operator clear via SPA/API (Pass 5).
     "switch.dsc_hub_manual_light_hold": "manual_light_hold_switch",
+    # Policy switches the brain owns a desired value for (hub_tunables.py).
+    "switch.dsc_hub_lock_wifi_ap": "lock_wifi_ap",
+    "switch.dsc_hub_mat_vote_pot_1": "mat_vote_pot_1",
+    "switch.dsc_hub_mat_vote_pot_2": "mat_vote_pot_2",
+    "switch.dsc_hub_mat_vote_pot_3": "mat_vote_pot_3",
+    "switch.dsc_hub_mat_vote_pot_4": "mat_vote_pot_4",
+    # Brain-owned stage presets gate (firmware v4 + S2): when on and the API is up, the
+    # hub's apply_stage defers its numeric writes to the brain's stage_rail table.
+    "switch.dsc_hub_brain_stage_targets": "brain_stage_targets",
 }
 
 HUB_SWITCH_OID_TO_ENTITY: dict[str, str] = {
@@ -47,6 +56,8 @@ HUB_SWITCH_OID_TO_ENTITY: dict[str, str] = {
     # listed in HUB_SWITCH_ENTITY_TO_OID). Slug + legacy internal-id variants.
     "lock_wifi_ap": "switch.dsc_hub_lock_wifi_ap",
     "wifi_ap_lock": "switch.dsc_hub_lock_wifi_ap",
+    "brain_stage_targets": "switch.dsc_hub_brain_stage_targets",
+    "brain_stage_targets_switch": "switch.dsc_hub_brain_stage_targets",
     "manual_light_hold": "switch.dsc_hub_manual_light_hold",
     "manual_light_hold_switch": "switch.dsc_hub_manual_light_hold",
     "humidifier_auto": "switch.dsc_hub_humidifier_auto",
@@ -97,6 +108,29 @@ HUB_NUMBER_ENTITY_TO_OID: dict[str, str] = {
     "number.dsc_hub_mat_root_zone_low": "mat_root-zone_low",
     "number.dsc_hub_mat_root_zone_high": "mat_root-zone_high",
     "number.dsc_hub_clone_light_hours": "clone_light_hours",
+    # Tunables the brain owns a desired value for (hub_tunables.py). Slug object_ids from
+    # firmware/v4/dsc-hub-v4_0.yaml entity names; ingest also accepts the legacy ids below.
+    "number.dsc_hub_sunrise_duration": "sunrise_duration",
+    "number.dsc_hub_sunset_duration": "sunset_duration",
+    "number.dsc_hub_sf1000_target_brightness": "sf1000_target_brightness",
+    "number.dsc_hub_sf1000_ramp_floor": "sf1000_ramp_floor",
+    "number.dsc_hub_min_dark_hours": "min_dark_hours",
+    "number.dsc_hub_clone_hum_hysteresis": "clone_hum_hysteresis",
+    "number.dsc_hub_clone_hum_min_off_time": "clone_hum_min_off-time",
+    "number.dsc_hub_humidifier_min_off_time": "humidifier_min_off-time",
+    "number.dsc_hub_heater_min_off_time": "heater_min_off-time",
+    "number.dsc_hub_mat_min_off_time": "mat_min_off-time",
+    "number.dsc_hub_ladder_wait_dehum": "ladder_wait_dehum",
+    "number.dsc_hub_ladder_wait_hum": "ladder_wait_hum",
+    "number.dsc_hub_ladder_wait_heat": "ladder_wait_heat",
+    "number.dsc_hub_ladder_wait_ac": "ladder_wait_ac",
+    "number.dsc_hub_ladder_wait_mat": "ladder_wait_mat",
+    "number.dsc_hub_de_strat_pulse_period": "de-strat_pulse_period",
+    "number.dsc_hub_de_strat_pulse_length": "de-strat_pulse_length",
+    "number.dsc_hub_de_strat_pulse_level": "de-strat_pulse_level",
+    "number.dsc_hub_vpd_band_target_hours": "vpd_band_target_hours",
+    "number.dsc_hub_mister_target_hours": "mister_target_hours",
+    "number.dsc_hub_mister_min_off_hours": "mister_min_off_hours",
 }
 
 HUB_NUMBER_OID_TO_ENTITY: dict[str, str] = {

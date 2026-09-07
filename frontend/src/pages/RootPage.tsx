@@ -224,7 +224,7 @@ export function LiveRootPage() {
             <Button variant={steerOverride ? "primary" : "secondary"} disabled={steerBusy} onClick={() => setPendingSteer(true)}>
               {steerOverride ? "Resume auto steering" : "Take manual control"}
             </Button>
-            {!pumpBound ? <Button onClick={() => navigate(paths.settings("device"))}>Settings › Device</Button> : null}
+            {!pumpBound ? <Button onClick={() => navigate(paths.settings("devices", "zigbee"))}>Settings › Devices</Button> : null}
           </div>
         </Panel>
       </div>

@@ -45,6 +45,13 @@ services:
       DSC_ESPHOME_DASHBOARD_API: ${DSC_ESPHOME_DASHBOARD_API:-http://host.docker.internal:6052}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    # A USB webcam plugged into the brain Pi (Settings › Devices › Cameras, source kind
+    # "USB webcam on the brain"). Set DSC_CAMERA_DEVICE=/dev/video0 in .env when one is
+    # plugged in; the default maps /dev/null so the container still starts without one
+    # (compose refuses a device path that does not exist on the host). IP cameras,
+    # MJPEG streams and motionEye satellite Pis need no device.
+    devices:
+      - ${DSC_CAMERA_DEVICE:-/dev/null}:/dev/video0
     volumes:
       - ${DSC_DATA:-/var/lib/dsc-hub}/ops:/data
       - ${DSC_DATA:-/var/lib/dsc-hub}/firmware:/firmware:ro
