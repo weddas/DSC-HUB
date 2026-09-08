@@ -12,9 +12,9 @@ were not reachable, and one test physically took the rig down.
 
 ## Headline
 
-The pass found **7 new defects**, one of them Critical, and caused **one
-unplanned outage** (the USB webcam test browned out the Pi). It also confirmed
-one previously-suspected regression is genuinely fixed.
+The pass found **11 new defects**, one Critical, and caused **one unplanned
+outage** (the USB webcam test browned out the Pi). It also verified four
+previously-logged findings and confirmed one regression is genuinely fixed.
 
 The single most important result: **the photoperiod anchor cannot be written from
 the SPA at all**, on either desk that offers the control, because of a
@@ -27,10 +27,24 @@ consequential setting in the product.
 | 2 | Root FS on USB SSD — webcam brownout took the whole controller down | High |
 | 3 | Overview vs Climate disagree on "Want"; rail chips use a different band than the number shown | High |
 | 4 | USB flash wizard: `firmware_dir` empty in the running brain; `bridge` has no `.bin` | High |
-| 5 | Settings caches failed fetches forever — false "OLD BRAIN" / "fetch failed" | Medium |
-| 6 | Railed sensor values written to history and fed into VPD during a known fault | Medium |
-| 7 | Hub stage selector ≠ plant/expected stage; active band follows the plant | Medium |
+| 5 | CannaLib strain detail blank for every strain — `strain_tree_v1` vs the curated schema the SPA reads; 230 KB / 8 s payloads | High |
+| 6 | Settings caches failed fetches forever — false "OLD BRAIN" / "fetch failed" | Medium |
+| 7 | Railed sensor values written to history and fed into VPD during a known fault | Medium |
+| 8 | Hub stage selector ≠ plant/expected stage; active band follows the plant | Medium |
+| 9 | Journal stamps the four-part *firmware* version into `brain_version`; space/room entries carry none | Medium |
+| 10 | `Bounces —` / `RF —` on Alerts **and** Kit while both values are live in `/fleet` | Medium |
+| 11 | Kit ALERTS tile carries the Air Path panel's caption | Low |
 | — | Hub link flapping (filed, then **corrected** — was the brownout, not the hub) | Medium |
+
+### Verifications against previously-logged entries
+
+| Existing entry | Result |
+|---|---|
+| `time.set_value` had no branch in the control proxy | **Still broken** — branch now exists, but the lookup inside it uses the wrong `object_id`. Root cause identified (finding 1). |
+| Air-path numbers imply critical over-pressure | **Still present** — but the pressure sign is *correct*; the defect is mixed allocated/measured bases. Details below. |
+| Air Path map is unreadable | **Still present** at 1600 px — four specific defects enumerated. |
+| Efficacy panel chips render em-dashes | **Appears fixed** — all chips carry values. Caveat: the no-data path was not exercised. |
+| CannaLib lights by-id 404s | **Still reproducible**, and correctly scoped to lights — strains by-id return 200. |
 
 All logged to the Notion tracker with reproduction steps.
 
@@ -297,22 +311,138 @@ with no loss. Downgraded to Medium / Needs Verification pending a soak.
 
 ---
 
+---
+
+## J. Second sweep — the pages the first sweep skipped
+
+The first sweep covered only Overview and Climate. The operator correctly
+pointed out that issues existed which had not been found. This sweep walked the
+rest.
+
+### Alerts — COMPLETED
+
+Renders correctly: `Nothing active · 0 rules · 0 firing now`, 24 h history
+grouped ALERT → HUB → NOTE (the apparent out-of-order timestamps are that
+grouping, by design), and an honest disclosure that fired counts are not yet
+recorded.
+
+**Found:** the LINK panel renders `Bounces —` and `RF —` while
+`link_recovery_bounces = 0.0` and `wifi_rssi = -34.0` are live in `/fleet`.
+`Up 40M` in the same row is populated, so the panel *can* read hub values.
+Zero bounces is good news being suppressed — and these are exactly the two
+numbers an operator would come here for during the link trouble seen earlier.
+
+### Kit — COMPLETED
+
+Inventory, Learning and Calibrate all render. `KIT PULSE` radial diagram is
+good. `6/9 in service` is correct (AC, mister, tank out of service).
+
+**Found:** the `ALERTS` summary tile is captioned
+`"CFM from Learning (anemometer)."` — the Air Path panel's caption, verbatim.
+`IN SERVICE` in the same row has no caption at all, suggesting the captions are
+offset by one. Same `Bounces —` / `RF —` chips as Alerts, so that defect spans
+at least two desks.
+
+### Logs — COMPLETED, including a write/undo
+
+Journal browser renders with scope tree, filters, Trends / Compare scopes /
+Compare entries / Export CSV.
+
+**Journal write-then-undo: COMPLETED.**
+
+| Step | Result |
+|---|---|
+| Create room note via UI | `id=693`, `provenance=room`, `room_id=grow_room` |
+| Env snapshot captured | `room_temp_c 22.8 · room_rh_pct 51.6 · room_vpd_kpa 1.343` |
+| Delete | `{"ok":true,"deleted_id":693}`, total `1434 → 1433`, id gone |
+
+The audit trail also correctly captured the §B root-steering write *and* its
+undo, in order.
+
+**Found:** journal snapshots stamp `brain_version = "8.1.0.0"` — the four-part
+*fleet firmware* stamp — while the brain is `8.1.0`. Entries with `space` or
+`room` provenance carry no version at all, so two thirds of journal rows have no
+version provenance. This conflates the two version schemes the project
+deliberately keeps separate.
+
+Minor, not filed: `GET /journal/room/{unknown_id}` returns `200 {"total":0}`
+rather than 404, so "no such room" is indistinguishable from "no entries".
+
+### CannaLib — COMPLETED
+
+Catalog resolves to `BRAIN CATALOG / CANNALIB`, 12 hits, filters render.
+
+**Found (High):** the strain detail pane is blank for every strain. The SPA
+calls the correct route and gets `200`, but the response is schema
+`strain_tree_v1`, whose top level is
+`schema, id, name_norm, name, focus, matched_via, source, evidence, branches` —
+none of `type`, `breeder`, `want`, `height`, `flower`, `thc`. Only `name`
+matches, which is why `Name` is the single field that renders.
+
+A cold brain briefly returns a small **curated** record (663 B) that *does* have
+those fields; every warm call returns `strain_tree_v1` at 138–230 KB taking up
+to 8.6 s. So the pane can look correct immediately after a restart and never
+again.
+
+The known lights-404 entry is **correctly scoped** — strains by-id return 200,
+lights by-id 404. Different mechanisms, same outcome: the CannaLib detail
+surface resolves nothing for either kind.
+
+### Plants — COMPLETED
+
+Roster renders two plants (`#1 Grandmommy Purple / Probe 2`,
+`#4 Runtz Punch / Probe 1`), both active, with Edit / Detach / Delete. Crop
+scheduler duplicated from Climate. No new defects.
+
+Confirms the read-path half of finding 1 from the UI: the scheduler shows
+`LIGHTS ON 06:00` while the hub is holding `15:00`.
+
+### Twin — BLOCKED (environment, not a defect)
+
+Chrome renders — layer toggles (Air/Heat/Humidity/Light/Plants/Devices/Labels),
+camera presets, legend. But `canvas: 0`, zero GLB requests, `FPS —`.
+
+**This is not a product bug and must not be filed as one.** The `twin-three`
+chunk loads fine (all 5 chunks present) and WebGL is available in the pane
+(`ANGLE / RTX 3090`). The blocker is that **the Browser pane fires zero
+`requestAnimationFrame` callbacks**:
+
+```
+rafFramesIn2s: 0    rafFires: false    visibilityState: "visible"
+```
+
+An rAF-driven three.js scene cannot initialise under those conditions. **Twin
+rendering is unverified** and needs a real browser.
+
+### Performance — measured, and it is good
+
+An earlier impression that pages rendered slowly was **wrong**, and worth
+correcting: the blank screenshots were the pane capturing before paint, not app
+lag. Measured time-to-content per route:
+
+```
+#/kit 102 ms · #/logs 104 ms · #/plants 105 ms
+#/alerts 111 ms · #/root 101 ms · #/light 103 ms
+```
+
+~100 ms on every route. **No performance defect.**
+
+---
+
 ## Honest gaps — what this pass did NOT cover
 
 | Area | Why | To run it |
 |---|---|---|
 | **Cameras, entirely** | the test caused an outage | powered USB hub |
 | **USB flash end-to-end** | would reflash a live seat; no adapter attached | bench seat |
+| **Twin 3D rendering** | Browser pane fires no rAF — cannot initialise | real browser |
 | **Hub switch/number/select writes** | hub offline for the first half; not revisited | hub online, deliberate window |
 | **Alert config / automation rule writes** | not reached | next pass |
-| **Journal create/edit/delete** | not reached (journals showed "Loading journal…" on Light) | next pass |
 | **Stage rail / probe station writes** | not reached | next pass |
-| **Plants, CannaLib, Logs, Alerts, Kit, Twin pages** | not walked interactively this pass | next pass |
+| **Kit Calibrate wizard interaction** | rendered only; anemometer walk not run | with an anemometer |
 | **Accessibility** | not attempted | dedicated a11y pass |
 | **Hub latency soak** | single sample | full photoperiod |
 
-The plan asked for every interactive element on every page. **Overview and
-Climate were covered thoroughly; Root and Light partially; Plants, CannaLib,
-Logs, Alerts, Kit and Twin were not walked at all.** The outage and the
-finding-1 diagnosis consumed the time those would have taken. That is a real
-gap, not a rounding error.
+Every page is now walked. What remains unrun is the physical-hardware work
+(cameras, flashing, calibration), the actuator writes that were deliberately not
+performed on a live flowering tent, and accessibility.
