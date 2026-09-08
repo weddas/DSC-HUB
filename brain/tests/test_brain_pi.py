@@ -466,7 +466,7 @@ def test_health_endpoint() -> None:
     assert body["status"] == "ok"
     assert body["version"] == "8.1.0"
     assert body["surface"] == "8.1.0"
-    assert body["expected_firmware"] == "8.0.0.0"  # ESPHome-only firmware train
+    assert body["expected_firmware"] == "8.1.0.0"  # ESPHome-only firmware train
 
 
 def test_pot3_default_out_of_service(temp_db: Path) -> None:

@@ -161,7 +161,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "8.0.0.0"
+    version: "8.1.0.0"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -183,7 +183,7 @@ esphome:
         - lvgl.pause:
         - light.turn_off: backlight
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 8.0.0.0 paused — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 8.1.0.0 paused — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = false;
@@ -197,7 +197,7 @@ esphome:
               lambda: 'return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) < 20000;'
             then:
               - lambda: |-
-                  ESP_LOGW("boot", "DSC-CONTROL 8.0.0.0 heap still tight largest=%u — waiting longer",
+                  ESP_LOGW("boot", "DSC-CONTROL 8.1.0.0 heap still tight largest=%u — waiting longer",
                            (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
               - delay: 10s
         - lvgl.page.show: page_boot
@@ -206,7 +206,7 @@ esphome:
             id: boot_paint
             pct: 8
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 8.0.0.0 resume-lite — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 8.1.0.0 resume-lite — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 5000;
@@ -301,7 +301,7 @@ esphome:
             id: boot_paint
             pct: 100
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 8.0.0.0 post-lite — free_heap=%u largest=%u hub=%d cfg=%d soil=%d",
+            ESP_LOGI("boot", "DSC-CONTROL 8.1.0.0 post-lite — free_heap=%u largest=%u hub=%d cfg=%d soil=%d",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL),
                      (int) (id(gv_hub_last) != 0), (int) id(gv_cfg_ok), (int) id(gv_soil_ok));
@@ -310,14 +310,14 @@ esphome:
         - lambda: 'lv_obj_clear_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);'
         - lvgl.page.show: page_pulse
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 8.0.0.0 resume-full — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 8.1.0.0 resume-full — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 2000;
         - lvgl.resume:
         - delay: 3s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 8.0.0.0 UI armed — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 8.1.0.0 UI armed — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = true;
@@ -359,6 +359,13 @@ esp32:
       # Pi ESPHome 2025.12.4 (invalid under advanced); Windows builds OK.
       compiler_optimization: SIZE
       loop_task_stack_size: 8192
+      # 2026-09-08: the omission note above is stale — minimum_chip_revision was
+      # invalid under `advanced` on ESPHome 2025.12.4, but it is valid on the
+      # pinned 2026.6.5. This CYD reports rev3.1 (confirmed live), so declare it
+      # and drop the older-silicon shims. sram1_as_iram is deliberately NOT set
+      # here: the v5.1.9/5.1.10 A/B above settled on false for this panel, and
+      # this is the most heap-fragile device in the fleet. Hub + probes take it.
+      minimum_chip_revision: "3.1"
     sdkconfig_options:
       # ----------------------------------------------------------
       #  WiFi is the BACKUP path on this panel — ESP-NOW carries all
@@ -1262,7 +1269,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"8.0.0.0"};'
+    lambda: 'return {"8.1.0.0"};'
     update_interval: 60s
   - platform: template
     id: sel_stage
@@ -2227,7 +2234,7 @@ lvgl:
             y: 158
             text_color: 0x5A6472
         - label:
-            text: "v8.0.0.0"
+            text: "v8.1.0.0"
             text_font: f_small
             align: TOP_MID
             y: 188
@@ -3937,7 +3944,7 @@ lvgl:
                     - lambda: 'id(ui_vpd_editor) = true;'
                     - lvgl.page.show: page_set_vpd
                     - script.execute: refresh_ui
-              - label: {text: "DSC-CONTROL v8.0.0.0  ·  Pi island", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
+              - label: {text: "DSC-CONTROL v8.1.0.0  ·  Pi island", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
 # ==================================================================
 #  SCRIPTS
 # ==================================================================

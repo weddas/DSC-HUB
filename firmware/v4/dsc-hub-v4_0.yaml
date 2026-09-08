@@ -69,10 +69,10 @@ esphome:
   min_version: "2026.6.5"
   project:
     name: "digital_emotions.dsc-hub"
-    # 8.0.0.0 — ESPHome-only train: no `platform: homeassistant` anywhere
+    # 8.1.0.0 — ESPHome-only train: no `platform: homeassistant` anywhere
     # (SNTP-only clock, native-API set_plant_name, ESP-NOW-only rootzone),
     # min_version pin. Keep in step with brain EXPECTED_FIRMWARE.
-    version: "8.0.0.0"
+    version: "8.1.0.0"
   on_boot:
     - priority: -100
       then:
@@ -166,6 +166,17 @@ esp32:
   board: esp32dev
   framework:
     type: arduino
+    advanced:
+      # ESPHome flags both of these on every boot of every device in this fleet.
+      # +40KB IRAM. This fleet has a documented heap-exhaustion history (see the
+      # RAM BUDGET block in dsc-control-common.yaml: v4.0 boot-looped 8x with the
+      # heap down to 16 bytes during setup()), so the headroom is not academic.
+      sram1_as_iram: true
+      # Every ESP32 in this fleet reports rev3.1 (verified on hub/control/pot1/pot2
+      # 2026-09-08), so gating the build here is safe and shrinks the binary.
+      # NOTE: firmware built this way will NOT boot on an ESP32 older than 3.1 —
+      # revert this if a board is ever swapped for an earlier revision.
+      minimum_chip_revision: "3.1"
 
 logger:
   # v2.4.1 · PERFORMANCE: default DEBUG logs every sensor update to
@@ -2844,7 +2855,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"8.0.0.0"};'
+    lambda: 'return {"8.1.0.0"};'
     update_interval: 60s
 
   # S4 (settings): the hub's own wall clock as epoch seconds, so the brain can show

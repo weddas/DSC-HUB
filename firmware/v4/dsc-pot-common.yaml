@@ -134,13 +134,24 @@ esphome:
   min_version: "2026.6.5"
   project:
     name: digital_emotions.dsc-probe
-    # 8.0.0.0 — ESPHome-only train (SNTP-only clock, min_version pin).
-    version: "8.0.0.0"
+    # 8.1.0.0 — ESPHome-only train (SNTP-only clock, min_version pin).
+    version: "8.1.0.0"
 
 esp32:
   board: esp32dev
   framework:
     type: esp-idf
+    advanced:
+      # ESPHome flags both of these on every boot of every device in this fleet.
+      # +40KB IRAM. This fleet has a documented heap-exhaustion history (see the
+      # RAM BUDGET block in dsc-control-common.yaml: v4.0 boot-looped 8x with the
+      # heap down to 16 bytes during setup()), so the headroom is not academic.
+      sram1_as_iram: true
+      # Every ESP32 in this fleet reports rev3.1 (verified on hub/control/pot1/pot2
+      # 2026-09-08), so gating the build here is safe and shrinks the binary.
+      # NOTE: firmware built this way will NOT boot on an ESP32 older than 3.1 —
+      # revert this if a board is ever swapped for an earlier revision.
+      minimum_chip_revision: "3.1"
 
 logger:
   level: INFO
@@ -180,7 +191,13 @@ modbus:
   uart_id: rs485_uart
   flow_control_pin: GPIO4
   send_wait_time: 2000ms
-  # turnaround_time requires ESPHome 2026.8+; send_wait_time covers 2025.12 Pi appliance.
+  # 2026-09-08: the note that turnaround_time needs 2026.8+ was wrong — it exists
+  # in the pinned 2026.6.5 (modbus/__init__.py CONF_TURNAROUND_TIME, default 100ms).
+  # This is the RS485 bus-silence gap after a frame, which is what send_wait_time
+  # was standing in for. Set it explicitly; send_wait_time stays at 2000ms because
+  # that value was tuned against this specific soil sensor and is not safe to trim
+  # from a desk — retune it on the bench, not on a live root zone.
+  turnaround_time: 100ms
 
 modbus_controller:
   - id: soil_sensor_bus
@@ -191,6 +208,11 @@ modbus_controller:
     # and the hub's 5-min root-zone stale window).
     update_interval: 60s
     setup_priority: -10
+    # An offline sensor was still polled every single cycle, re-running the full
+    # retry ladder each time (max_cmd_retries defaults to 4, and each attempt
+    # waits send_wait_time=2000ms). Back off to one attempt in 6 while offline;
+    # on_online/on_offline still fire, so probe_online stays honest.
+    offline_skip_updates: 5
     on_online:
       - lambda: 'id(probe_online) = true;'
     on_offline:
@@ -679,7 +701,7 @@ text_sensor:
   - platform: template
     name: "Firmware Version"
     icon: mdi:tag-check
-    lambda: 'return {"8.0.0.0"};'
+    lambda: 'return {"8.1.0.0"};'
     update_interval: 60s
   # Diagnostic only — see 0xD7 RX note in globals/espnow below. This node
   # cannot set its own clock from the packet, so this is the only trace
