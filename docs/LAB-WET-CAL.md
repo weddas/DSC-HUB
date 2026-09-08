@@ -1,3 +1,5 @@
+> **Prefer** the Pi-path runbook: [`ops/LAB-WET-CAL.md`](ops/LAB-WET-CAL.md) (tip `6a89efa`).
+
 # Lab wet two-point calibration (N-016)
 
 Use **raw** probe readings (or reset cal first) against known buffers. Do **not** stack HA peer offsets with lab scale — Push/zero peers first, or enable Lab Wet Force.
