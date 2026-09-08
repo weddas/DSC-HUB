@@ -74,6 +74,8 @@ export function FlowSankey({
   const option = useMemo<EChartsCoreOption>(() => {
     const liveLinks = model.links.filter((l) => Number.isFinite(l.reading.value) && l.reading.value > 0);
     const usedNames = new Set(liveLinks.flatMap((l) => [l.from.label, l.to.label]));
+    const sourceNames = new Set(liveLinks.map((l) => l.from.label));
+    const terminalNames = new Set([...usedNames].filter((n) => !sourceNames.has(n)));
     if (!liveLinks.length) {
       return {
         backgroundColor: "transparent",
@@ -108,14 +110,18 @@ export function FlowSankey({
       series: [
         {
           type: "sankey",
-          left: 8,
-          right: 8,
+          // Sankey draws node labels OUTSIDE the node box, so a terminal column at right:8
+          // pushed its labels past the canvas edge and they were sliced in half by the card.
+          // Terminal nodes label to their left instead, and both gutters reserve label width.
+          left: 12,
+          right: 84,
           top: 12,
           bottom: 12,
           nodeWidth: 16,
           nodeGap: 14,
           data: model.nodes.filter((n) => usedNames.has(n.label)).map((n) => ({
             name: n.label,
+            label: terminalNames.has(n.label) ? { position: "left" } : undefined,
             itemStyle: { color: hexColor(n.color, "#26c6da"), borderColor: hexColor(n.color, "#26c6da") },
           })),
           links: liveLinks.map((l) => ({
@@ -125,6 +131,24 @@ export function FlowSankey({
             lineStyle: { color: hexColor(l.color, "#26c6da"), opacity: 0.45 },
           })),
           label: { color: "#e8eef8", fontSize: 11 },
+          // Naming each band on the band itself is what stops the cascade reading as an error:
+          // the 2x4 -> 4x8 overlap is only confusing while it is an unlabelled crossing.
+          edgeLabel: {
+            show: true,
+            color: "#e8eef8",
+            fontSize: 10,
+            // The bands are mid-tone, so plain light text on them is unreadable — outline it.
+            textBorderColor: "#0d1420",
+            textBorderWidth: 3,
+            formatter: (raw: unknown) => {
+              const p = raw as { data?: { source?: string; target?: string; value?: number } };
+              const link = liveLinks.find(
+                (l) => l.from.label === p.data?.source && l.to.label === p.data?.target,
+              );
+              if (!link) return "";
+              return `${link.label} ${Math.round(link.reading.value)}`;
+            },
+          },
           lineStyle: { curveness: 0.45 },
         },
       ],

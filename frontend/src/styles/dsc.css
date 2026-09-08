@@ -5946,3 +5946,22 @@ button.dsc-metric:focus-visible { outline: 2px solid var(--dsc-teal); outline-of
 .dsc-routes-list li.is-missing span { color: var(--dsc-gray-5); }
 .dsc-change-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: var(--dsc-fs-sm); }
 [data-dsc-invented="off"] .dsc-invented { display: none; }
+
+/* Photoperiod re-anchor on the Crop scheduler — set either end of the lit window. */
+.dsc-schedule-override {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--dsc-gray-2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.dsc-schedule-override.is-disabled {
+  opacity: 0.7;
+}
+.dsc-schedule-override-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}

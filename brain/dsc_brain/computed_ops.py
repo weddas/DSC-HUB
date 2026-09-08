@@ -504,9 +504,31 @@ def _build_cold_computed_states(
         except ValueError:
             pass
 
+    bought_hours = 0.0
+    bought_by: dict[str, float] = {}
     for runtime_id, (seat_id, metric) in RUNTIME_ENTITIES.items():
         hours = runtime.hours_today(seat_id, metric)
         _set_entity(states, runtime_id, hours, available=True, attributes={"unit_of_measurement": "h"})
+        if isinstance(hours, (int, float)):
+            bought_hours += float(hours)
+            bought_by[runtime_id.removeprefix("sensor.dsc_").removesuffix("_runtime_today")] = round(
+                float(hours), 2
+            )
+
+    # Efficacy's "bought" number: appliance-hours of purchased conditioning today. Appliances
+    # overlap, so this is appliance-hours, not wall-clock — the attributes carry the split.
+    _set_entity(
+        states,
+        "sensor.dsc_bought_runtime_today",
+        round(bought_hours, 2),
+        available=True,
+        attributes={
+            "unit_of_measurement": "h",
+            "model": "sum_of_appliance_runtime_today",
+            "honesty": "appliance_hours_overlapping_not_wall_clock",
+            "by_appliance": bought_by,
+        },
+    )
 
     slots = get_roster_slots()
     occupied = sum(1 for s in slots if s.get("status") not in ("empty", "", None, "unknown", "unavailable"))
@@ -967,9 +989,55 @@ def _build_hot_computed_states(
         },
     )
     total_exhaust = out_alloc + recirc_alloc
-    imbalance = abs(total_intake - total_exhaust)
-    mass_ok = imbalance < max(5.0, 0.05 * max(total_intake, total_exhaust, 1.0))
-    _set_entity(states, "binary_sensor.dsc_flow_mass_balance_ok", mass_ok)
+
+    # Pressure verdict off the *capacity* curves, never the allocated pair.
+    #
+    # intake_*_allocated is Sigma-exhaust-capacity split by intake fan pct; exhaust_*_allocated
+    # is Sigma-intake-capacity split by exhaust fan pct. Each side is derived from the other, so
+    # comparing them compares a number against its own mirror and can never fail honestly — and
+    # a diagram that prints both reads as an impossible balance (intake 278 next to dump 7).
+    # Capacity vs capacity is the only comparison that says something about the real rig.
+    intake_capacity = cfm_values.get("sensor.dsc_cfm_intake_main", 0.0) + cfm_values.get(
+        "sensor.dsc_cfm_intake_2x4", 0.0
+    )
+    exhaust_capacity = cfm_values.get("sensor.dsc_cfm_exhaust_out", 0.0) + cfm_values.get(
+        "sensor.dsc_cfm_exhaust_recirc", 0.0
+    )
+    net_pressure = round(intake_capacity - exhaust_capacity, 1)
+    for eid, val in (
+        ("sensor.dsc_cfm_intake_capacity_total", round(intake_capacity, 1)),
+        ("sensor.dsc_cfm_exhaust_capacity_total", round(exhaust_capacity, 1)),
+    ):
+        _set_entity(
+            states,
+            eid,
+            val,
+            available=True,
+            attributes={
+                "unit_of_measurement": "CFM",
+                "model": "fan_curve_or_nameplate",
+                "honesty": "measured_capacity_not_allocated",
+            },
+        )
+    _set_entity(
+        states,
+        "sensor.dsc_flow_net_pressure_cfm",
+        net_pressure,
+        available=True,
+        attributes={
+            "unit_of_measurement": "CFM",
+            "model": "intake_capacity_minus_exhaust_capacity",
+            "honesty": "positive_is_over_pressure_negative_is_under_pressure",
+        },
+    )
+    imbalance = abs(net_pressure)
+    mass_ok = imbalance < max(5.0, 0.05 * max(intake_capacity, exhaust_capacity, 1.0))
+    _set_entity(
+        states,
+        "binary_sensor.dsc_flow_mass_balance_ok",
+        mass_ok,
+        attributes={"net_pressure_cfm": net_pressure, "basis": "capacity_vs_capacity"},
+    )
 
     tent_t = fleet.hub.values.get("temp_c") if fleet.hub else None
     tent_rh = fleet.hub.values.get("rh_pct") if fleet.hub else None
@@ -988,6 +1056,32 @@ def _build_hot_computed_states(
     mat_demand = _control_state(view, "switch.dsc_hub_grow_mat_demand") == "on"
     mat_relay = _control_state(view, "switch.dsc_heatmat_main_relay") == "on"
     out_pct = fan_pcts.get("sensor.dsc_fan_exhaust_outside_pct", 0.0)
+
+    # What the lung is actually moving out of the 4x8 into the room, in BTU/h:
+    # 1.08 x CFM x dT(degF) == 1.944 x CFM x dT(degC). Both temps are measured, so this is real.
+    # There is no outdoor probe on this rig, so the tent->outdoors dump is NOT computed here —
+    # sensor.dsc_vent_heat_dump_btu never existed and stays absent rather than invented.
+    if tent_t is not None and room_t is not None and recirc_alloc > 0:
+        transfer_btu = round(1.944 * recirc_alloc * (float(tent_t) - float(room_t)), 1)
+        _set_entity(
+            states,
+            "sensor.dsc_vent_heat_transfer_btu",
+            transfer_btu,
+            available=True,
+            attributes={
+                "unit_of_measurement": "BTU/h",
+                "model": "1.08_x_cfm_x_dT_degF",
+                "honesty": "recirc_allocated_cfm_times_measured_tent_minus_room",
+            },
+        )
+    else:
+        _set_entity(
+            states,
+            "sensor.dsc_vent_heat_transfer_btu",
+            None,
+            available=False,
+            attributes={"unit_of_measurement": "BTU/h"},
+        )
 
     heat_tent_w = 0.0
     if heat_demand and heat_relay and room_t is not None and tent_t is not None:

@@ -19,6 +19,7 @@ from .hub_controls import (
     HUB_NUMBER_ENTITY_TO_OID,
     HUB_SELECT_ENTITY_TO_OID,
     HUB_SWITCH_ENTITY_TO_OID,
+    HUB_TIME_ENTITY_TO_OID,
 )
 from .paths import SURFACE_VERSION
 from .settings import list_inventory, upsert_inventory
@@ -426,6 +427,23 @@ async def demo_call_service(domain: str, service: str, data: dict[str, Any]) -> 
 
     if domain in ("input_text", "text") and service == "set_value":
         value = str(data.get("value", ""))
+        set_helper(entity_id, value)
+        return {"entity_id": entity_id, "state": value, "demo": True}
+
+    if domain == "time" and service in ("set_value", "set"):
+        raw = str(data.get("time") or data.get("value") or "")
+        if not raw:
+            raise ValueError("time required")
+        parts = raw.strip().split(":")
+        if len(parts) < 2:
+            raise ValueError("time must be HH:MM or HH:MM:SS")
+        try:
+            value = f"{int(parts[0]):02d}:{int(parts[1]):02d}:{int(parts[2]) if len(parts) > 2 else 0:02d}"
+        except ValueError as exc:
+            raise ValueError("time must be HH:MM or HH:MM:SS") from exc
+        if entity_id in HUB_TIME_ENTITY_TO_OID:
+            _set_ctrl(controls, entity_id, state=value)
+            update_fleet_state(state)
         set_helper(entity_id, value)
         return {"entity_id": entity_id, "state": value, "demo": True}
 

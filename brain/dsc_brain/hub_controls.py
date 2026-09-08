@@ -96,11 +96,17 @@ HUB_SWITCH_OID_TO_ENTITY: dict[str, str] = {
 
 HUB_NUMBER_ENTITY_TO_OID: dict[str, str] = {
     "number.dsc_hub_target_temp": "target_temp",
+    # Air-temp deadband (firmware 8.1.0.0+). Absent on older hubs — the SPA shows the fields
+    # disabled rather than falling back to the setpoint, so a half-flashed fleet is legible.
+    "number.dsc_hub_target_temp_min": "target_temp_min",
+    "number.dsc_hub_target_temp_max": "target_temp_max",
     "number.dsc_hub_rh_target_min": "rh_target_min",
     "number.dsc_hub_rh_target_max": "rh_target_max",
     "number.dsc_hub_vpd_target_min": "vpd_target_min",
     "number.dsc_hub_vpd_target_max": "vpd_target_max",
     "number.dsc_hub_clone_target_temp": "clone_target_temp",
+    "number.dsc_hub_clone_target_temp_min": "clone_target_temp_min",
+    "number.dsc_hub_clone_target_temp_max": "clone_target_temp_max",
     "number.dsc_hub_clone_rh_min": "clone_rh_min",
     "number.dsc_hub_clone_rh_max": "clone_rh_max",
     "number.dsc_hub_clone_vpd_min": "clone_vpd_min",
@@ -135,11 +141,15 @@ HUB_NUMBER_ENTITY_TO_OID: dict[str, str] = {
 
 HUB_NUMBER_OID_TO_ENTITY: dict[str, str] = {
     "target_temp": "number.dsc_hub_target_temp",
+    "target_temp_min": "number.dsc_hub_target_temp_min",
+    "target_temp_max": "number.dsc_hub_target_temp_max",
     "rh_target_min": "number.dsc_hub_rh_target_min",
     "rh_target_max": "number.dsc_hub_rh_target_max",
     "vpd_target_min": "number.dsc_hub_vpd_target_min",
     "vpd_target_max": "number.dsc_hub_vpd_target_max",
     "clone_target_temp": "number.dsc_hub_clone_target_temp",
+    "clone_target_temp_min": "number.dsc_hub_clone_target_temp_min",
+    "clone_target_temp_max": "number.dsc_hub_clone_target_temp_max",
     "clone_rh_min": "number.dsc_hub_clone_rh_min",
     "clone_rh_max": "number.dsc_hub_clone_rh_max",
     "clone_vpd_min": "number.dsc_hub_clone_vpd_min",

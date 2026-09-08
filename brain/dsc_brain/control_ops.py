@@ -23,6 +23,7 @@ from .hub_controls import (
     HUB_SELECT_ENTITY_TO_OID,
     HUB_SWITCH_ENTITY_TO_OID,
     HUB_SWITCH_OID_TO_ENTITY,
+    HUB_TIME_ENTITY_TO_OID,
 )
 
 _IN_SERVICE_ENTITY_TO_SEAT: dict[str, str] = {
@@ -62,6 +63,7 @@ _fan_keys: dict[str, dict[str, int]] = {}
 _light_keys: dict[str, dict[str, int]] = {}
 _select_keys: dict[str, dict[str, int]] = {}
 _select_options: dict[str, dict[str, list[str]]] = {}
+_time_keys: dict[str, dict[str, int]] = {}
 
 
 def _inventory_row(seat_id: str) -> dict[str, Any] | None:
@@ -288,6 +290,58 @@ async def _hub_number(entity_id: str, value: float) -> dict[str, Any]:
             await client.connect(login=True)
             client.number_command(key, value)
             return {"entity_id": entity_id, "state": str(value)}
+        finally:
+            try:
+                await client.disconnect()
+            except Exception:  # noqa: BLE001
+                pass
+
+
+def _parse_hhmmss(raw: str) -> tuple[int, int, int]:
+    """Accept HH:MM or HH:MM:SS, the two shapes the SPA and the API bodies use."""
+    parts = str(raw or "").strip().split(":")
+    if len(parts) < 2:
+        raise ValueError("time must be HH:MM or HH:MM:SS")
+    try:
+        hour, minute = int(parts[0]), int(parts[1])
+        second = int(parts[2]) if len(parts) > 2 else 0
+    except ValueError as exc:
+        raise ValueError("time must be HH:MM or HH:MM:SS") from exc
+    if not (0 <= hour <= 23 and 0 <= minute <= 59 and 0 <= second <= 59):
+        raise ValueError("time out of range")
+    return hour, minute, second
+
+
+async def _hub_time(entity_id: str, raw: str) -> dict[str, Any]:
+    """Write an ESPHome `datetime` (type: time) entity on the hub.
+
+    HUB_TIME_ENTITY_TO_OID existed but nothing ever called it, so `time.set_value` fell through
+    to `unsupported service` — which meant the Lights-on control on Light could not actually
+    write, and the schedule could only be changed on the hub itself.
+    """
+    oid = HUB_TIME_ENTITY_TO_OID.get(entity_id)
+    if not oid:
+        raise ValueError(f"unsupported hub time {entity_id}")
+    hour, minute, second = _parse_hhmmss(raw)
+    row = _inventory_row("hub")
+    host = (row or {}).get("host") or ""
+    api_key = _api_key(row, "hub")
+    if not host:
+        raise RuntimeError("hub host not configured")
+
+    keys = await _ensure_entity_keys(
+        host, api_key, "hub", set(HUB_TIME_ENTITY_TO_OID.values()), _time_keys
+    )
+    key = keys.get(oid)
+    if key is None:
+        raise RuntimeError(f"hub time {oid} not found")
+
+    client = make_api_client(host, api_key)
+    async with host_lock(host):
+        try:
+            await client.connect(login=True)
+            client.time_command(key, hour, minute, second)
+            return {"entity_id": entity_id, "state": f"{hour:02d}:{minute:02d}:{second:02d}"}
         finally:
             try:
                 await client.disconnect()
@@ -666,6 +720,17 @@ async def call_service_proxy(domain: str, service: str, data: dict[str, Any]) ->
         value = str(data.get("value", ""))
         set_helper(entity_id, value)
         _maybe_persist_pot_edit(entity_id, value)
+        return {"entity_id": entity_id, "state": value}
+
+    if domain == "time" and service in ("set_value", "set"):
+        raw = str(data.get("time") or data.get("value") or "")
+        if not raw:
+            raise ValueError("time required")
+        if entity_id in HUB_TIME_ENTITY_TO_OID:
+            return await _hub_time(entity_id, raw)
+        hour, minute, second = _parse_hhmmss(raw)
+        value = f"{hour:02d}:{minute:02d}:{second:02d}"
+        set_helper(entity_id, value)
         return {"entity_id": entity_id, "state": value}
 
     if domain == "input_datetime" and service == "set_datetime":

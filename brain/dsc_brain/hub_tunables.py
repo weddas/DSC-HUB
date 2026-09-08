@@ -59,12 +59,16 @@ ECHO_GRACE_SEC = 20.0
 TUNABLES: list[dict[str, Any]] = [
     # --- Climate › targets (4×8) ---------------------------------------------------
     {"entity_id": "number.dsc_hub_target_temp", "kind": "number", "label": "4×8 target temperature", "section": "climate", "group": "targets_main", "min": 15, "max": 32, "step": 0.5, "unit": "°C"},
+    {"entity_id": "number.dsc_hub_target_temp_min", "kind": "number", "label": "4×8 temp band low", "section": "climate", "group": "targets_main", "min": 15, "max": 32, "step": 0.5, "unit": "°C"},
+    {"entity_id": "number.dsc_hub_target_temp_max", "kind": "number", "label": "4×8 temp band high", "section": "climate", "group": "targets_main", "min": 17, "max": 40, "step": 0.5, "unit": "°C"},
     {"entity_id": "number.dsc_hub_rh_target_min", "kind": "number", "label": "4×8 RH minimum", "section": "climate", "group": "targets_main", "min": 20, "max": 90, "step": 1, "unit": "%"},
     {"entity_id": "number.dsc_hub_rh_target_max", "kind": "number", "label": "4×8 RH maximum", "section": "climate", "group": "targets_main", "min": 20, "max": 95, "step": 1, "unit": "%"},
     {"entity_id": "number.dsc_hub_vpd_target_min", "kind": "number", "label": "4×8 VPD minimum", "section": "climate", "group": "targets_main", "min": 0.4, "max": 1.6, "step": 0.1, "unit": "kPa"},
     {"entity_id": "number.dsc_hub_vpd_target_max", "kind": "number", "label": "4×8 VPD maximum", "section": "climate", "group": "targets_main", "min": 0.4, "max": 1.8, "step": 0.1, "unit": "kPa"},
     # --- Climate › targets (2×4) ---------------------------------------------------
     {"entity_id": "number.dsc_hub_clone_target_temp", "kind": "number", "label": "2×4 target temperature", "section": "climate", "group": "targets_clone", "min": 15, "max": 32, "step": 0.5, "unit": "°C"},
+    {"entity_id": "number.dsc_hub_clone_target_temp_min", "kind": "number", "label": "2×4 temp band low", "section": "climate", "group": "targets_clone", "min": 15, "max": 32, "step": 0.5, "unit": "°C"},
+    {"entity_id": "number.dsc_hub_clone_target_temp_max", "kind": "number", "label": "2×4 temp band high", "section": "climate", "group": "targets_clone", "min": 17, "max": 40, "step": 0.5, "unit": "°C"},
     {"entity_id": "number.dsc_hub_clone_rh_min", "kind": "number", "label": "2×4 RH minimum", "section": "climate", "group": "targets_clone", "min": 20, "max": 90, "step": 1, "unit": "%"},
     {"entity_id": "number.dsc_hub_clone_rh_max", "kind": "number", "label": "2×4 RH maximum", "section": "climate", "group": "targets_clone", "min": 20, "max": 95, "step": 1, "unit": "%"},
     {"entity_id": "number.dsc_hub_clone_vpd_min", "kind": "number", "label": "2×4 VPD minimum", "section": "climate", "group": "targets_clone", "min": 0.2, "max": 1.6, "step": 0.1, "unit": "kPa"},
