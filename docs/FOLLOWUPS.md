@@ -4717,7 +4717,7 @@ Process lesson: `esphome config` validates YAML only; lambda C++ breaks (9, 14) 
 
 | Severity | Item | Status | Next step |
 |---|---|---|---|
-| P1 | **Toolchain ceiling 2026.7.x** — no Device Builder adapter | **open** | Adapter for `ws://…/ws` named commands (`config/version`, `devices/list`, `firmware/compile`, `firmware/upload`, `firmware/follow_job`), venv-setup installs `esphome-device-builder[esphome]`, wrapper launches it, helper reports `device_builder: true`, then lift `DASHBOARD_REMOVED_FROM` |
+| P1 | **Toolchain ceiling 2026.7.x** — legacy device-builder cutover landed; residual unlock | **partial** | Tip `6f1b1fa`: wrapper prefers `esphome-device-builder`; bound `DASHBOARD_REMOVED_FROM=2026.7.0`; gate is `capabilities.device_builder`. **Still open:** venv-setup `pip install esphome-device-builder`, helper emits `device_builder: true`, native multiplexed `/ws` client (legacy API is DEPRECATED upstream) |
 | P1 | **SD-layout gate** not run | **open** | Linux bake host: `bake-on-linux.sh` (real bins + secrets) → `bake-sd-image.sh` → boot → same checks; then remove `legacy-esphome` + cut the release |
 | P2 | Probe 1 Modbus soil probe offline (`modbus_probe_online=false`, `sensor_fault=true`, **0 history points for ≥14 h before the reflash**) | **hardware, pre-existing** | Swap/reseat the JXCT probe / RS485 on Probe 1; Probe 2 reads fine on the same build |
 | P2 | Host DNS pin is site-specific (192.168.86.1) and lives in `bring-up-eth0.sh` | **open** | Kit bake: derive from the lease or ship only public fallbacks; fold `nohook resolv.conf` into `pi-bootstrap.sh`; re-check after reboot |
@@ -4909,7 +4909,7 @@ Branch `feat/dashboard-v2`, uncommitted, not hotpatched, firmware not flashed. P
 
 **Gotchas:** the other Claude session is editing this working tree at the same time (twin S7 cameras: `CamerasCard`, `cameraThumbRefreshS`, twin files) — the S1/S2 edits were all targeted replacements and the build is green with both sets, but a commit of this branch picks up both. `.env.s2` (Vite `--mode s2` → local brain) was removed after verification; launch config `spa-s2` (:5175) stays in the session's launch.json.
 
-**deferred:** `time.dsc_hub_lights_on_time` / clone on-time have no native write path yet (`HUB_TIME_ENTITY_TO_OID` is ingest-only) — Light › Schedule links to the desk; hub `sensor_clamp` still not patchable; `ECHO_GRACE_SEC` is defined but the reconcile uses `PUSH_RETRY_SEC` only; a firmware version bump for the brain-stage switch is the operator's release call (capability is detected by entity presence); Pi hotpatch of brain + SPA + firmware flash before any of this is live; S3 next (alerts catalogue, delivery, automation defaults, settings journal filter, journals & storage).
+**done (tip `6f1b1fa`):** hub `time.set_value` via `control_ops._hub_time` + SPA `ScheduleOverride` (re-anchor on or off end; want hours fixed). Remaining deferred: hub `sensor_clamp` still not patchable; `ECHO_GRACE_SEC` is defined but the reconcile uses `PUSH_RETRY_SEC` only; Pi hotpatch of brain + SPA + firmware flash before any of this is live on kit; S3 next (alerts catalogue, delivery, automation defaults, settings journal filter, journals & storage); S6 journal_media; S7b camera regions.
 
 ## 2026-09-07 — Settings Pass S7 (core): cameras as zone devices — IP, USB on the brain, motionEye satellite Pis
 
