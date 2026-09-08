@@ -1,6 +1,9 @@
 # DSC-HUB Pi appliance — operations
 
-**Release:** DSC-HUB 7.0.0 — The Pi Release.
+**Release:** DSC-HUB **8.1.0** (brain/SPA) · expected firmware **8.1.0.0** (tip `89ddfa7` aligned-card).
+Upgrade path: [`../../UPGRADE.md`](../../UPGRADE.md). SD bake:
+[`../../services/dsc-hub/image/README.md`](../../services/dsc-hub/image/README.md).
+ESPHome build service: [`ESPHOME-TOOLCHAIN.md`](ESPHOME-TOOLCHAIN.md).
 
 ## Network
 
@@ -14,16 +17,16 @@ Fleet DHCP reservations live in `/etc/dsc-hub/dnsmasq.conf` (bootstrap template)
 
 ## Cutover checklist
 
-1. Bootstrap Pi (`pi-bootstrap.sh`), compose up, `/health` green.
+1. Bootstrap Pi (`pi-bootstrap.sh`), compose up, `/health` green (`version` / `surface` **8.1.0**).
 2. Move SkyConnect from Unraid; z2m sees coordinator.
-3. Build firmware **8.0.0.0** (`wifi-pi` stubs); rotate Noise API keys → `.env` + Notion.
-4. Flash order: pot2 canary → remaining pots → Sonoffs → panel → **hub last** (Settings → Device → ESPHome, or `pi/flash-fleet-remote.sh`).
+3. Build firmware **8.1.0.0** (`wifi-pi` stubs); rotate Noise API keys → `.env` + Notion.
+4. Flash order: pot2 canary → remaining pots → Sonoffs → panel → **hub last** (Settings → Devices → Firmware, or `pi/flash-fleet-remote.sh`).
 5. (HA lab retired 2026-09 — nothing to disable; the fleet no longer reads any `platform: homeassistant` entity.)
 6. Hub ESP-NOW parked on Pi path; brain polls hub demand switches and drives Sonoff relays (45s stale OFF).
-7. **Island proof:** Nest off; tent on Pi AP; fleet chip `8.0.0.0`.
+7. **Island proof:** Nest off; tent on Pi AP; fleet chip `8.1.0.0`.
 8. With eth0 up: Settings → Test Ollama + Test CannaLib green.
 9. With eth0 down: integrations HELD; catalog uses local fallback if present.
-10. Stamp git tag `v7.0.0` only after soak.
+10. GitHub release [`v8.1.0`](https://github.com/weddas/DSC-HUB/releases/tag/v8.1.0) is published (2026-09-08) — Kit Update Check reads `releases/latest` and offers brain bumps when `_is_newer` is true.
 
 ## Acceptance tests
 
@@ -45,6 +48,14 @@ npm install && npm run build
 
 - Uptime Kuma: `GET http://dsc-brain.local:8787/health`
 - Fleet WS: `ws://dsc-brain.local:8787/ws/fleet`
+
+## Cameras (S7 core)
+
+Brain images install **ffmpeg**. Compose maps `${DSC_CAMERA_DEVICE:-/dev/null}` → container `/dev/video0` so kits without a webcam still start. Set `DSC_CAMERA_DEVICE=/dev/video0` in `services/dsc-hub/.env` and recreate the brain container when a USB webcam is on the Pi. Operator guide: [`docs/cameras.md`](../cameras.md). Hotpatch helper: `.audit/cameras-pi-hotpatch.ps1`.
+
+## SPA production builds
+
+Before hotpatching a SPA that touches twin / Three.js / lazy routes, run `vite preview` — Vite **dev** does not reproduce the Rollup chunk graph. See [`SPA-PROD-BUNDLE.md`](SPA-PROD-BUNDLE.md).
 
 ## Honesty boundaries
 

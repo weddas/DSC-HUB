@@ -4,8 +4,8 @@
 
 | | |
 |---|---|
-| **Release** | [8.1.0](https://github.com/weddas/DSC-HUB/releases/tag/v8.1.0) |
-| **Surface** | Brain / SPA **8.1.0** · kit firmware train **8.0.0.0** (ESPHome-only; fleet reflash via Settings → Device → ESPHome) |
+| **Release** | [8.1.0](https://github.com/weddas/DSC-HUB/releases/tag/v8.1.0) (tip `89ddfa7`; aligned-card bake) |
+| **Surface** | Brain / SPA **8.1.0** · kit firmware train **8.1.0.0** (ESPHome-only; fleet reflash via Settings → Devices → Firmware) |
 | **Product path** | Flash SD → Pi boots → SPA Setup (`#/setup`) → USB flash fleet → SoftAP/LAN join → Zigbee bind |
 
 Home Assistant lab, HACS, and Lovelace delivery were **retired** (2026-09). The SPA still speaks an HA-shaped entity / `call_service` dialect that **DSC-Brain implements natively** — there is no HA runtime.
@@ -34,6 +34,10 @@ flowchart LR
 ---
 
 ## Get started (kit)
+
+Fresh kits download **8.1.0**. AlphaPi cards upgrade brain via
+[`UPGRADE.md`](UPGRADE.md); tip `89ddfa7` aligned-card expects fleet train **8.1.0.0** (OTA
+when you want air-temp band entities / aligned chips).
 
 ### 1. Flash the SD image
 
@@ -90,11 +94,11 @@ Large binaries are **GitHub Release assets**, not git history.
 
 | Device | Config (kit) | Version | Role |
 |---|---|---|---|
-| Hub | `firmware/v4/dsc-hub-kit.yaml` | **8.0.0.0** | Climate ladder + SoftAP portal |
-| Panel | `dsc-control*-kit.yaml` | **8.0.0.0** | Field glass (DSC-CONTROL) |
-| Probes 1–2 | `dsc-pot{N}-kit.yaml` | **8.0.0.0** | Root-zone kit probes |
-| Bridge | `dsc-bridge-kit.yaml` | **8.0.0.0** | ETH01 + `DSC-Anchor` |
-| Sonoffs | heater / heatmat / humidifier / dehumidifier | **8.0.0.0** | Demand followers (home LAN) |
+| Hub | `firmware/v4/dsc-hub-kit.yaml` | **8.1.0.0** | Climate ladder + SoftAP portal (+ inert air-temp band entities) |
+| Panel | `dsc-control*-kit.yaml` | **8.1.0.0** | Field glass (DSC-CONTROL) |
+| Probes 1–2 | `dsc-pot{N}-kit.yaml` | **8.1.0.0** | Root-zone kit probes |
+| Bridge | `dsc-bridge-kit.yaml` | *(retired from bake)* | ETH01 role still in USB menu — no `bridge.bin` on card |
+| Sonoffs | heater / heatmat / humidifier / dehumidifier | **8.1.0.0** | Demand followers (home LAN) |
 | DSC-Brain + SPA | `brain/` + `frontend/` | **8.1.0** | Control SoT on `:8787` |
 | Mosquitto + Z2M | compose stack | kit bake | Always on for Zigbee |
 
@@ -160,6 +164,16 @@ Factory image bake lives under [`services/dsc-hub/image/`](services/dsc-hub/imag
 |---|---|
 | [`SETUP.md`](SETUP.md) | Fleet SoftAP unbox (hub / panel / pots / bridge) |
 | [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md) | Pi brain architecture |
+| [`docs/brain/WEBUI.md`](docs/brain/WEBUI.md) | Operator SPA desks + Settings gear |
+| [`docs/brain/SETTINGS.md`](docs/brain/SETTINGS.md) | Settings S1–S5 / hub tunables / System cards |
+| [`docs/brain/TUYA-LOCAL.md`](docs/brain/TUYA-LOCAL.md) | Tuya Wi-Fi local lane (Pass T1) |
+| [`docs/ops/TUYA-LOCAL-SETUP.md`](docs/ops/TUYA-LOCAL-SETUP.md) | Operator Tuya key import / bind runbook |
+| [`docs/brain/TWIN.md`](docs/brain/TWIN.md) | Composed 3D twin desk |
+| [`docs/brain/PPFD-FIELD.md`](docs/brain/PPFD-FIELD.md) | Maker PPFD 3D surface + fixture catalog binding |
+| [`docs/ops/ESPHOME-TOOLCHAIN.md`](docs/ops/ESPHOME-TOOLCHAIN.md) | Host venv / dashboard OTA / ceiling / canary |
+| [`docs/cameras.md`](docs/cameras.md) | Zone cameras + timelapse |
+| [`docs/ops/SPA-PROD-BUNDLE.md`](docs/ops/SPA-PROD-BUNDLE.md) | SPA chunk graph / vite preview gate |
+| [`docs/ops/PI-HOTPATCH.md`](docs/ops/PI-HOTPATCH.md) | Windows plink/pscp hotpatch + stop/start |
 | [`brain/README.md`](brain/README.md) | Brain CLI / API / catalogs |
 | [`docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md`](docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md) | Kit SD installer design (8.0.0) |
 | [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md) | Living engineering backlog |

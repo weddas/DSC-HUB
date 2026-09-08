@@ -1,22 +1,39 @@
 # DSC-HUB releases
 
-## Pi appliance — **v8.1.0** (2026-09-07)
+## Pi appliance — **v8.1.0** (2026-09-07; bake provenance 2026-09-08)
 
 | | |
 |---|---|
 | **Brain / SPA** | **8.1.0** |
-| **Expected firmware** | **8.0.0.0** _(unchanged — no fleet reflash required)_ |
+| **Expected firmware** | **8.1.0.0** _(aligned-card tip `89ddfa7` — kit bins + live fleet)_ |
 | **Primary UI** | Pi SPA at `http://10.42.0.1:8787` |
 | **Studio LAN** | `http://192.168.86.48:8787` (`dsc-brain.local`) |
 | **SD image** | `dsc-hub-8.1.0-arm64.img.xz` (bake: [`services/dsc-hub/image/README.md`](services/dsc-hub/image/README.md)) |
+| **GitHub release** | [`v8.1.0`](https://github.com/weddas/DSC-HUB/releases/tag/v8.1.0) (published 2026-09-08) |
+| **Bake provenance** | [`deploy/dsc-hub-8.1.0-bake-manifest.json`](deploy/dsc-hub-8.1.0-bake-manifest.json) · [`deploy/dsc-hub-8.1.0-sd-manifest.json`](deploy/dsc-hub-8.1.0-sd-manifest.json) — tip **`89ddfa7`** aligned-card rebake (`built_at` 2026-09-08 evening; payload **4 820 089** B vs hollow 8.0.0 ≈38 KB) |
 | **Changelog** | [`CHANGELOG.md`](CHANGELOG.md) — Hub v8.1.0 |
+| **Live QA** | [`docs/qa/TEST-PASS-8.1.0-2026-09-08.md`](docs/qa/TEST-PASS-8.1.0-2026-09-08.md) — fleet **8.1.0.0** / ESPHome **2026.8.2** + device-builder |
 
-First full cut of the 8.x line after the `v8.0.0-AlphaPi` alpha (102 commits). Dashboard v2
+First full cut of the 8.x line after the `v8.0.0-AlphaPi` alpha. Dashboard v2
 (desks, zone model, icon set v5), composed 3D twin, Settings & preferences S1–S5, cameras,
 maker PPFD map, automation rule engine v2, Zigbee UX phases 0–4, Tuya local lane T1, and the
 completed ESPHome-only toolchain (host update helper, rollback, canary rollout). HA scaffolding
 removed from the SPA and firmware. SPA identifiers Seat/POT → Probe/Plant.
 
+**Tip `89ddfa7` (2026-09-08 aligned-card):** re-baked SD ships kit firmware **8.1.0.0** built
+on ESPHome **2026.8.2** (cannalib image included; eight non-zero bins). Supersedes the earlier
+8.1.0 bake (`cce5c74` morning manifests), which still carried **8.0.0.0** kit firmware on
+ESPHome 2026.6.5. Live rig test pass confirms `behind_count: 0` on train 8.1.0.0.
+
+**Tip `6f1b1fa` (followups merge, earlier same day):** product firmware train **8.1.0.0** in
+source; Climate honest air/efficacy + photoperiod re-anchor; `:6052` prefers
+`esphome-device-builder`; bake uses declared `DEVDIR`. Prefer tip `89ddfa7` for card
+provenance.
+
+**Card honesty (tip `4ef6696` / `cce5c74` → superseded by `89ddfa7`):** eight real kit
+USB-flash binaries; thin-catalog `dsc-hub-cannalib` image + `/opt/cannalib` context on the
+card. **GitHub `v8.1.0` is published** — Kit Update Check offers the brain bump to AlphaPi
+(`8.0.0`) kits on Ethernet; same-core 8.1.0 kits stay silent (`kit_update._is_newer`).
 ---
 
 

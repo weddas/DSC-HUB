@@ -2,11 +2,40 @@
 
 ## Unreleased
 
+### Tip `89ddfa7` — 8.1.0 aligned-card provenance (2026-09-08)
+
+- **Aligned-card rebake** — kit firmware **8.1.0.0** on ESPHome **2026.8.2**, cannalib
+  image included, eight non-zero kit bins. Provenance manifests retimed
+  (`payload_bytes` **4 820 089**; SD `built_at` evening). Supersedes the morning
+  8.1.0 bake that still shipped **8.0.0.0** / 2026.6.5 kit bins.
+- **Bake ownership EXIT trap** (`502bbcb` / `521e416`) — root-run
+  `bake-on-linux.sh` restores `dsc` ownership of PlatformIO cache, `.esphome`,
+  `.device-builder*`, and `/home/dsc/.docker` so the build service and the next
+  bake do not fail on lock/`PermissionError`.
+- **Live QA** — [`docs/qa/TEST-PASS-8.1.0-2026-09-08.md`](docs/qa/TEST-PASS-8.1.0-2026-09-08.md)
+  against the studio rig (fleet 8.1.0.0, device-builder 1.14.4).
+
+### Tip `6f1b1fa` — followups 8.1.0.0 aligned build (2026-09-08)
+
+- **Firmware train 8.1.0.0** — `project: version` + brain `EXPECTED_FIRMWARE` /
+  compose default. Hub air-temp band numbers (`stage_temp_min` / `max`) restore +
+  publish but stay **inert for the ladder** this train; clone band defaults
+  24.0 / 27.0. SPA TentTargets gates on hub entity presence.
+- **ESPHome build service** — `:6052` prefers `esphome-device-builder` (legacy
+  HTTP/WS API); `DASHBOARD_REMOVED_FROM = "2026.7.0"`; compile WS
+  `ping_interval=None`. Residual: venv-setup install + `capabilities.device_builder`
+  + native `/ws` client.
+- **Bake image pick** — declared `DEVDIR` per role (no `"Build path:"` scrape).
+- **Climate honesty** — capacity-vs-capacity net pressure; lung
+  `dsc_vent_heat_transfer_btu`; bought runtime = appliance-hour sum; ScheduleOverride
+  hub `time.set_value` re-anchor (not shift plan).
+
 ## Hub — **v8.1.0** (2026-09-07)
 
 First full cut of the 8.x line after the `v8.0.0-AlphaPi` alpha (102 commits).
-**Brain / SPA 8.1.0 · expected firmware 8.0.0.0** (unchanged — the fleet stays on the
-8.0.0.0 ESPHome-only train; no reflash is required by this release).
+**Brain / SPA 8.1.0 · expected firmware 8.1.0.0** on tip `89ddfa7` aligned-card
+(earlier same-day tip `6f1b1fa` raised the train; morning bake still carried 8.0.0.0
+bins until the evening rebake).
 
 ### Major changes
 
