@@ -47,6 +47,20 @@ declare -A KIT=(
 )
 ORDER=(hub control pot1 pot2 heater heatmat humidifier dehumidifier)
 
+# role -> ESPHome device name, i.e. the .esphome/build/<dir> ESPHome writes into.
+# Declared, not parsed: ESPHome 2026.8 stopped printing the "Build path:" line the
+# previous approach scraped, so any log-scraping breaks silently on upgrade.
+declare -A DEVDIR=(
+  [hub]=dsc-hub
+  [control]=dsc-control
+  [pot1]=dsc_probe1
+  [pot2]=dsc_probe2
+  [heater]=dsc-heater
+  [heatmat]=dsc-heatmat
+  [humidifier]=dsc-humidifier
+  [dehumidifier]=dsc-de-humidifier
+)
+
 placeholders() {
   echo "bake-firmware: $1"
   if [[ "${RELEASE}" == "1" ]]; then
@@ -82,21 +96,18 @@ for role in "${ORDER[@]}"; do
     continue
   fi
   echo "=== compile ${role} (${yaml}) ==="
-  clog="$(mktemp)"
-  "${ESPHOME}" compile "${yaml}" 2>&1 | tee "${clog}"
-  # Take the image from the build dir ESPHome itself reports ("Build path: <dir>").
+  "${ESPHOME}" compile "${yaml}"
+  # Take the image from this role's own build dir.
   #
-  # This used to hunt for a file NEWER than a marker touched before the compile.
-  # That silently assumed every compile relinks: a fully cached build is a
+  # History: this used to hunt for a file NEWER than a marker touched before the
+  # compile, which assumed every compile relinks — a fully cached build is a
   # SUCCESS that rewrites nothing, so the probe found no image and aborted a
-  # perfectly good build (hit 2026-09-08 on the second pass, when control was
-  # cached from the first). It also searched all of .esphome/build unscoped, so
-  # simply dropping the freshness filter could have picked up another role's
-  # binary — scoping to the reported dir fixes both at once.
-  bdir="$(sed -e 's/\x1b\[[0-9;]*m//g' "${clog}" | sed -n 's/.*Build path: *//p' | tail -1 | tr -d '\r')"
-  rm -f "${clog}"
-  if [[ -z "${bdir}" || ! -d "${bdir}" ]]; then
-    echo "bake-firmware: ${role}: could not determine ESPHome build path" >&2
+  # perfectly good build. Scraping ESPHome's "Build path:" line replaced that,
+  # but 2026.8 stopped printing it (and moved ESP32 output from .pioenvs/<name>/
+  # to build/). DEVDIR is declared config and survives both layouts.
+  bdir="${FW}/.esphome/build/${DEVDIR[$role]}"
+  if [[ ! -d "${bdir}" ]]; then
+    echo "bake-firmware: ${role}: no build dir at ${bdir}" >&2
     exit 1
   fi
   # ESP32 → firmware.factory.bin (bootloader + partitions + app, flash at 0x0);
