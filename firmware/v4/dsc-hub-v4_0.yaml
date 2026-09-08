@@ -167,11 +167,14 @@ esp32:
   framework:
     type: arduino
     advanced:
-      # ESPHome flags both of these on every boot of every device in this fleet.
-      # +40KB IRAM. This fleet has a documented heap-exhaustion history (see the
-      # RAM BUDGET block in dsc-control-common.yaml: v4.0 boot-looped 8x with the
-      # heap down to 16 bytes during setup()), so the headroom is not academic.
-      sram1_as_iram: true
+      # sram1_as_iram is deliberately NOT set. ESPHome hints "+40KB" on every boot,
+      # but the flag re-maps SRAM1 out of the DRAM pool INTO IRAM — it buys space
+      # for code by taking it from data. Measured on 2026.8.2: with it on the hub
+      # DRAM pool fell from 327680 to 180736 bytes, i.e. ~145KB less heap headroom.
+      # This fleet's documented failure mode is heap exhaustion, not IRAM pressure
+      # (RAM BUDGET block in dsc-control-common.yaml: v4.0 boot-looped 8x with the
+      # heap down to 16 bytes during setup()), so the flag points the wrong way —
+      # which is also why the panel's v5.1.9/5.1.10 A/B settled on false.
       # Every ESP32 in this fleet reports rev3.1 (verified on hub/control/pot1/pot2
       # 2026-09-08), so gating the build here is safe and shrinks the binary.
       # NOTE: firmware built this way will NOT boot on an ESP32 older than 3.1 —
