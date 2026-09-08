@@ -1,6 +1,6 @@
 # DSC-HUB releases
 
-## Pi appliance — **v8.1.0** (2026-09-07)
+## Pi appliance — **v8.1.0** (2026-09-07; bake provenance 2026-09-08)
 
 | | |
 |---|---|
@@ -9,6 +9,8 @@
 | **Primary UI** | Pi SPA at `http://10.42.0.1:8787` |
 | **Studio LAN** | `http://192.168.86.48:8787` (`dsc-brain.local`) |
 | **SD image** | `dsc-hub-8.1.0-arm64.img.xz` (bake: [`services/dsc-hub/image/README.md`](services/dsc-hub/image/README.md)) |
+| **GitHub release** | [`v8.1.0`](https://github.com/weddas/DSC-HUB/releases/tag/v8.1.0) (published 2026-09-08; tip `2d7bfca` points README at this tag) |
+| **Bake provenance** | [`deploy/dsc-hub-8.1.0-bake-manifest.json`](deploy/dsc-hub-8.1.0-bake-manifest.json) · [`deploy/dsc-hub-8.1.0-sd-manifest.json`](deploy/dsc-hub-8.1.0-sd-manifest.json) — tip `cce5c74`; built on **dsc-brain** `aarch64` with real `DSC_RELEASE=1` (payload ≈4.8 MB vs hollow 8.0.0 ≈38 KB) |
 | **Changelog** | [`CHANGELOG.md`](CHANGELOG.md) — Hub v8.1.0 |
 
 First full cut of the 8.x line after the `v8.0.0-AlphaPi` alpha (102 commits). Dashboard v2
@@ -17,6 +19,10 @@ maker PPFD map, automation rule engine v2, Zigbee UX phases 0–4, Tuya local la
 completed ESPHome-only toolchain (host update helper, rollback, canary rollout). HA scaffolding
 removed from the SPA and firmware. SPA identifiers Seat/POT → Probe/Plant.
 
+**Card honesty (tip `4ef6696` / `cce5c74`):** eight real kit USB-flash binaries; thin-catalog
+`dsc-hub-cannalib` image + `/opt/cannalib` context on the card; SoftAP kit stubs compile on
+ESPHome 2026.6.5. **GitHub `v8.1.0` is published** — Kit Update Check offers the brain bump
+to AlphaPi (`8.0.0`) kits on Ethernet; same-core 8.1.0 kits stay silent (`kit_update._is_newer`).
 ---
 
 
