@@ -4,8 +4,8 @@
 
 | | |
 |---|---|
-| **Release** | [8.1.0](https://github.com/weddas/DSC-HUB/releases/tag/v8.1.0) |
-| **Surface** | Brain / SPA **8.1.0** · kit firmware train **8.0.0.0** (ESPHome-only; fleet reflash via Settings → Device → ESPHome) |
+| **Release** | [8.1.0](https://github.com/weddas/DSC-HUB/releases/tag/v8.1.0) (tip `2d7bfca`; bake provenance `cce5c74`) |
+| **Surface** | Brain / SPA **8.1.0** · kit firmware train **8.0.0.0** (ESPHome-only; fleet reflash via Settings → Devices → Firmware) |
 | **Product path** | Flash SD → Pi boots → SPA Setup (`#/setup`) → USB flash fleet → SoftAP/LAN join → Zigbee bind |
 
 Home Assistant lab, HACS, and Lovelace delivery were **retired** (2026-09). The SPA still speaks an HA-shaped entity / `call_service` dialect that **DSC-Brain implements natively** — there is no HA runtime.
@@ -34,6 +34,9 @@ flowchart LR
 ---
 
 ## Get started (kit)
+
+Fresh kits download **8.1.0**. AlphaPi cards upgrade brain-only via
+[`UPGRADE.md`](UPGRADE.md) (firmware stays **8.0.0.0**).
 
 ### 1. Flash the SD image
 
@@ -160,6 +163,16 @@ Factory image bake lives under [`services/dsc-hub/image/`](services/dsc-hub/imag
 |---|---|
 | [`SETUP.md`](SETUP.md) | Fleet SoftAP unbox (hub / panel / pots / bridge) |
 | [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md) | Pi brain architecture |
+| [`docs/brain/WEBUI.md`](docs/brain/WEBUI.md) | Operator SPA desks + Settings gear |
+| [`docs/brain/SETTINGS.md`](docs/brain/SETTINGS.md) | Settings S1–S5 / hub tunables / System cards |
+| [`docs/brain/TUYA-LOCAL.md`](docs/brain/TUYA-LOCAL.md) | Tuya Wi-Fi local lane (Pass T1) |
+| [`docs/ops/TUYA-LOCAL-SETUP.md`](docs/ops/TUYA-LOCAL-SETUP.md) | Operator Tuya key import / bind runbook |
+| [`docs/brain/TWIN.md`](docs/brain/TWIN.md) | Composed 3D twin desk |
+| [`docs/brain/PPFD-FIELD.md`](docs/brain/PPFD-FIELD.md) | Maker PPFD 3D surface + fixture catalog binding |
+| [`docs/ops/ESPHOME-TOOLCHAIN.md`](docs/ops/ESPHOME-TOOLCHAIN.md) | Host venv / dashboard OTA / ceiling / canary |
+| [`docs/cameras.md`](docs/cameras.md) | Zone cameras + timelapse |
+| [`docs/ops/SPA-PROD-BUNDLE.md`](docs/ops/SPA-PROD-BUNDLE.md) | SPA chunk graph / vite preview gate |
+| [`docs/ops/PI-HOTPATCH.md`](docs/ops/PI-HOTPATCH.md) | Windows plink/pscp hotpatch + stop/start |
 | [`brain/README.md`](brain/README.md) | Brain CLI / API / catalogs |
 | [`docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md`](docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md) | Kit SD installer design (8.0.0) |
 | [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md) | Living engineering backlog |
