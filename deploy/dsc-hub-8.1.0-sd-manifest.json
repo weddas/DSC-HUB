@@ -3,5 +3,5 @@
   "img": "dsc-hub-8.1.0-arm64.img",
   "xz": "dsc-hub-8.1.0-arm64.img.xz",
   "source_base": "raspios-lite-arm64.img",
-  "built_at": "2026-09-08T10:14:52+10:00"
+  "built_at": "2026-09-08T20:18:35+10:00"
 }
