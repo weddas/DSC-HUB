@@ -12,9 +12,28 @@ were not reachable, and one test physically took the rig down.
 
 ## Headline
 
-The pass found **21 new defects** — three Critical — verified five
+The pass found **26 new defects** — three Critical — verified five
 previously-logged entries, reversed one that had been closed wrongly, and caused
 **two unplanned outages** (both traced to the same root-on-USB fragility).
+
+### The one architectural theme worth fixing first
+
+Five separate defects are the same idea: **stability is treated as
+correctness.** Nothing in the stack asks whether a reading is *physically
+possible* — only whether it is *settled*.
+
+| Layer | Mechanism | Why it fails |
+|---|---|---|
+| Firmware | Republishes a failed probe's last Modbus read forever | A frozen value is maximally stable |
+| `probe1_sensor_stuck` | Detects "stuck" sensors | Fires on absent data, not frozen data |
+| `quality_score` | `100 − variance*10` | The steadier a dead sensor, the better it scores |
+| `sensor_clamp` | Range guard, `temp_c.max 50.0` | Sits **exactly on** the sensor's rail value |
+| `plausible_vpd_kpa` | Plausibility predicate | Dead code — zero callers |
+
+Chained, they produced pot1: a loose connector opens → firmware latches
+19.9 % / 48 µS / pH 5.0 → the stuck detector stays quiet → a soil test certifies
+it **100/100, confirmed** → an earlier pass closes it as "resolved" → the frozen
+value feeds heat-mat control for 24 h. Fixing this one idea closes a whole class.
 
 Three results matter most:
 
@@ -56,6 +75,11 @@ Three results matter most:
 | 25 | System OS/journal log viewer never works, and misdiagnoses why ("not a Pi") | Medium |
 | 26 | Kit ALERTS tile carries the Air Path panel's caption | Low |
 | 27 | Network MAC column empty for all 10 devices though ESPHome returns it | Low |
+| 28 | `/fleet` has no polling fallback — WS dies, seat values freeze while computed keeps updating | High |
+| 29 | `fleet.canopy` is one global slot — 2×4 canopy sensor's live 26.3 °C / 47 % discarded | High |
+| 30 | Plausibility layer inert — `sensor_clamp` PATCH 200-and-discarded, clamps sit **on** the rails, `plausible_vpd_kpa` dead | High |
+| 31 | Soil-test `quality_score` is variance-only — both tests 100/100 with EC 0, N 0, K 0, pH 7.9 | Medium |
+| 32 | Energy estimate `ok:false` both spaces; suggestions compute `delta_vs_current` against zero | Medium |
 
 ### Verifications against previously-logged entries
 
@@ -539,6 +563,100 @@ proving the values had been latched, not measured. **This reverses the earlier
 
 Operator root cause: the probe is on Dupont connectors that disconnect when
 bumped, and needs soldering.
+
+---
+
+## L. Fourth sweep — pulling the "stability ≠ correctness" thread
+
+Having named the pattern, the remaining sweep looked for more of it, and for
+whatever else the untouched surfaces held.
+
+### The plausibility layer is inert — three parts, all verified
+
+```
+PATCH /settings/global-modifiers  {"sensor_clamp":{"temp_c":{"max":45.0}}}
+  -> HTTP 200
+GET   /settings/global-modifiers
+  -> temp_c.max = 50.0            unchanged, silently discarded
+```
+
+`set_global_modifiers` (`global_modifiers.py:56`) reads only
+`fan_demand_scale`, `light_brightness_scale`, `moisture_dry_pct`,
+`temp_offset_c` and `rh_offset_pct`. `sensor_clamp` is *consumed* by
+`apply_temp_rh_offsets` but can never be *set*. The codebase already knows —
+`settings_manifest.py:134` carries the note *"patch route accepts clamps
+(tracker: set_global_modifiers ignores sensor_clamp)"*. The 200 is the part that
+should not stand.
+
+Worse, the defaults sit **on** the rails: `temp_c.max 50.0`, `rh_pct.max 100.0`
+— exactly the values the 4×8 sensor railed to on 2026-09-08. The one failure a
+clamp exists to catch is the one it is configured to admit, and the operator
+cannot tighten it.
+
+And `plausible_vpd_kpa()` (`climate_math.py:24`) has **zero callers** repo-wide.
+
+### Soil-test scoring rewards dead sensors
+
+```python
+quality = max(0.0, min(100.0, 100.0 - variance * 10))     # soil_tests.py:284
+```
+
+Both stored tests scored **100.0**:
+
+```
+08-31  moist 17.7  ec 0.0  ph 7.9  N 0  P null  K 0   quality 100  confirmed
+08-28  moist 19.0  ec 9.0  ph 6.5  N 0  P null  K 0   quality 100  confirmed
+```
+
+EC 0.0 in moist substrate, pH 1.4 above `want_ph_max`, and a perfect score —
+because the values were steady. The rejection path's message is telling:
+*"readings not stable — wait for solid capture"*. Instability is the only thing
+that can fail a capture.
+
+### Energy: broken estimate, and suggestions that invert
+
+```
+GET /energy/estimate?space_id=4x8  -> ok:false  "no schedule: lights-on unset"
+GET /energy/estimate?space_id=2x4  -> ok:false  (same)
+```
+
+Downstream of the `lights-on_time` read failure. But the suggestions endpoint
+still returns three confident options, each differenced against that zero:
+
+```
+max_offpeak  22:00  total 1.1808  delta_vs_current 1.1808
+night_heat   20:00  total 1.3152  delta_vs_current 1.3152
+morning      06:00  total 1.8336  delta_vs_current 1.8336
+```
+
+`delta == total` throughout. The proof is `morning` — `lights_on 06:00` is the
+schedule the brain already believes is current, so its delta must be zero; it
+claims **+$1.83**. Every option, including the cheapest, presents as a cost
+*increase*.
+
+### Two data paths, one screen
+
+`/fleet/computed` polls every 5 s over HTTP. `/fleet` is **never** requested —
+334 fleet-matching network entries, none to `/fleet`. The snapshot arrives only
+by WebSocket, and `applyFleet` stamps `lastUpdatedAt = Date.now()` client-side,
+so `UPDATED 42M AGO` means exactly what it says.
+
+Measured consequence: the Overview showed `PROBE 2 · 48%` while the API returned
+**43.7 %** — 42 minutes of drain missing, rendered as a live number beside a
+5-second-old VPD.
+
+### The 2×4 canopy sensor is discarded
+
+```
+zigbee_by_role:  canopy_4x8  22.6 °C / 51 %      <- published
+                 canopy_2x4  26.3 °C / 47 %      <- thrown away
+```
+
+`_recompute_canopy` (`zigbee_mqtt.py:575`) iterates the canopy roles and
+`break`s after the first, and only singular `sensor.dsc_canopy_temperature` /
+`_humidity` are published. The discarded reading is a 2.7 °C canopy-to-air delta
+in a tent whose air is 23.6 °C — precisely what a canopy sensor is mounted to
+reveal.
 
 ---
 
