@@ -1,6 +1,6 @@
 # DSC fleet SoftAP provisioning (hub portal + satellite credential pull).
 import esphome.codegen as cg
-from esphome.components import web_server_base
+from esphome.components import esp32, web_server_base
 from esphome.components.web_server_base import CONF_WEB_SERVER_BASE_ID
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
@@ -65,6 +65,16 @@ CONFIG_SCHEMA = cv.Schema(
 
 
 async def to_code(config):
+    if CORE.is_esp32:
+        # dsc_fleet_setup.cpp includes <esp_http_client.h> for the satellite's
+        # config pull / hello POST. ESPHome 2026 excludes esp_http_client from
+        # the IDF build by default ("only needed by http_request"), so a pure
+        # esp-idf target (the panel, dsc-control-common.yaml) failed with
+        # "esp_http_client.h: No such file or directory" while the arduino
+        # target (the hub) happened to get it via the Arduino library set.
+        # Same call ESPHome's own http_request and audio components make.
+        esp32.include_builtin_idf_component("esp_http_client")
+
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
 

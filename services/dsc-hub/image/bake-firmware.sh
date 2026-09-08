@@ -82,18 +82,31 @@ for role in "${ORDER[@]}"; do
     continue
   fi
   echo "=== compile ${role} (${yaml}) ==="
-  marker="$(mktemp)"
-  "${ESPHOME}" compile "${yaml}"
-  # Newest image produced by this compile. ESP32 → firmware.factory.bin (bootloader +
-  # partitions + app, flash at 0x0); ESP8266 → firmware.bin.
-  img="$(find .esphome/build -type f -newer "${marker}" \( -name 'firmware.factory.bin' -o -name 'firmware.bin' \) -printf '%T@ %p\n' 2>/dev/null \
-        | sort -rn | awk '{print $2}' | grep -m1 'factory' || true)"
-  if [[ -z "${img}" ]]; then
-    img="$(find .esphome/build -type f -newer "${marker}" -name 'firmware.bin' -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | awk '{print $2}')"
+  clog="$(mktemp)"
+  "${ESPHOME}" compile "${yaml}" 2>&1 | tee "${clog}"
+  # Take the image from the build dir ESPHome itself reports ("Build path: <dir>").
+  #
+  # This used to hunt for a file NEWER than a marker touched before the compile.
+  # That silently assumed every compile relinks: a fully cached build is a
+  # SUCCESS that rewrites nothing, so the probe found no image and aborted a
+  # perfectly good build (hit 2026-09-08 on the second pass, when control was
+  # cached from the first). It also searched all of .esphome/build unscoped, so
+  # simply dropping the freshness filter could have picked up another role's
+  # binary — scoping to the reported dir fixes both at once.
+  bdir="$(sed -e 's/\x1b\[[0-9;]*m//g' "${clog}" | sed -n 's/.*Build path: *//p' | tail -1 | tr -d '\r')"
+  rm -f "${clog}"
+  if [[ -z "${bdir}" || ! -d "${bdir}" ]]; then
+    echo "bake-firmware: ${role}: could not determine ESPHome build path" >&2
+    exit 1
   fi
-  rm -f "${marker}"
+  # ESP32 → firmware.factory.bin (bootloader + partitions + app, flash at 0x0);
+  # ESP8266 → firmware.bin.
+  img="$(find "${bdir}" -type f -name 'firmware.factory.bin' -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | awk '{print $2}')"
+  if [[ -z "${img}" ]]; then
+    img="$(find "${bdir}" -type f -name 'firmware.bin' -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | awk '{print $2}')"
+  fi
   if [[ -z "${img}" || ! -s "${img}" ]]; then
-    echo "bake-firmware: ${role}: compile produced no image under .esphome/build" >&2
+    echo "bake-firmware: ${role}: no firmware image under ${bdir}" >&2
     exit 1
   fi
   cp -f "${img}" "${OUT}/${role}.bin"

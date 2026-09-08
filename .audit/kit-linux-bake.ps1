@@ -39,7 +39,7 @@ if (-not (Test-Path $tarExe)) { $tarExe = "tar" }
   --exclude=node_modules --exclude=.git --exclude=__pycache__ `
   --exclude=frontend/node_modules --exclude=*.pyc `
   --exclude=deploy --exclude=.audit `
-  brain frontend/spa-dist data services/dsc-hub firmware/v4
+  brain frontend/spa-dist data services/dsc-hub services/cannalib firmware/v4
 Pop-Location
 
 Write-Host "=== Upload to Pi ==="

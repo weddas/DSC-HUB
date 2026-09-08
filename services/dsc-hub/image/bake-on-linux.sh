@@ -62,6 +62,16 @@ fi
 rm -rf "${STAGE}/opt/dsc-hub"
 mkdir -p "${STAGE}/opt/dsc-hub"
 cp -a "${COMPOSE}/." "${STAGE}/opt/dsc-hub/"
+
+# compose puts the cannalib service's build context at ../cannalib, which is
+# /opt/cannalib once /opt/dsc-hub is the compose dir. Ship it so an on-card
+# rebuild is possible; normal use runs the prebuilt image from the docker tar.
+if [[ -d "${ROOT}/services/cannalib" ]]; then
+  rm -rf "${STAGE}/opt/cannalib"
+  mkdir -p "${STAGE}/opt/cannalib"
+  cp -a "${ROOT}/services/cannalib/." "${STAGE}/opt/cannalib/"
+  echo "staged cannalib build context ($(du -sh "${STAGE}/opt/cannalib" | cut -f1))"
+fi
 rm -rf "${STAGE}/opt/dsc-hub/__pycache__" 2>/dev/null || true
 # Ensure pi scripts + firmware present
 mkdir -p "${STAGE}/opt/dsc-hub/firmware/kit"
@@ -167,9 +177,28 @@ echo "Pulling mosquitto + zigbee2mqtt…"
 "${DOCKER[@]}" pull eclipse-mosquitto:2
 "${DOCKER[@]}" pull koenkk/zigbee2mqtt:2
 
+# The thin-catalog profile's cannalib service declares `build: ../cannalib`, a
+# context that does not exist on a baked card — so without a prebuilt image
+# `docker compose --profile thin-catalog up` just fails. Bake the image too, so
+# the profile works offline on the card (the staged context above is only there
+# for an on-card rebuild).
+CANNALIB_SRC="${ROOT}/services/cannalib"
+CANNALIB_IMAGES=()
+if [[ -f "${CANNALIB_SRC}/Dockerfile" ]]; then
+  echo "Building dsc-hub-cannalib:${VERSION}…"
+  "${DOCKER[@]}" build \
+    -f "${CANNALIB_SRC}/Dockerfile" \
+    -t "dsc-hub-cannalib:${VERSION}" \
+    "${CANNALIB_SRC}"
+  CANNALIB_IMAGES+=("dsc-hub-cannalib:${VERSION}")
+else
+  echo "WARN: ${CANNALIB_SRC} absent — thin-catalog profile will not work on this card" >&2
+fi
+
 echo "Saving docker images…"
 "${DOCKER[@]}" save \
   "dsc-hub-brain:${VERSION}" \
+  "${CANNALIB_IMAGES[@]+"${CANNALIB_IMAGES[@]}"}" \
   eclipse-mosquitto:2 \
   koenkk/zigbee2mqtt:2 \
   | gzip -c > "${DOCKER_TAR}"
