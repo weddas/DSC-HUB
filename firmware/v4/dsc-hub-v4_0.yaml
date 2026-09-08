@@ -839,6 +839,19 @@ globals:
 
   # --- Stage-driven targets (written by apply_stage; numeric values
   #     PERSIST so reboots keep your fine-tuning — see apply_stage_boot) ---
+  # 8.1.0.0 — air-temp band. INERT in this train: these restore, publish and are
+  # stamped by apply_stage, but nothing reads them. stage_temp_target remains the
+  # only ladder input. The band becomes the ladder's parameterisation in a later
+  # OTA (min = 40% foot, max = 100% dump, middle rungs interpolated), which is a
+  # live-climate change that deserves its own flash and a tent to watch.
+  - id: stage_temp_min
+    type: float
+    restore_value: true
+    initial_value: '25.0'
+  - id: stage_temp_max
+    type: float
+    restore_value: true
+    initial_value: '28.0'
   - id: stage_temp_target
     type: float
     restore_value: true
@@ -1095,6 +1108,17 @@ globals:
     type: float
     restore_value: true
     initial_value: '24.0'
+  # 8.1.0.0 — clone air-temp band. Inert here, same as the main pair. The 2x4 DOES
+  # have its own cooling ladder off c_tt (clone_need 75/100 at c_tt+2/+3), so this
+  # band is destined to be live, not display-only.
+  - id: clone_temp_min
+    type: float
+    restore_value: true
+    initial_value: '25.0'
+  - id: clone_temp_max
+    type: float
+    restore_value: true
+    initial_value: '28.0'
   - id: clone_vpd_min
     type: float
     restore_value: true
@@ -2183,6 +2207,72 @@ number:
                          id(grow_stage).current_option().c_str());
                 id(num_target_temp).publish_state(id(stage_temp_target));
 
+  # ---- 8.1.0.0 air-temp band (INERT: stamped + restored, drives nothing) ----
+  # Clamp, never reject: the written end is pulled to keep max - min >= 2.0C,
+  # the same rule the root-zone band carries. A rejection is invisible on the
+  # hub glass, which is how "Reject Target Temp" became a mystery in the logs.
+  - platform: template
+    name: "Target Temp Min"
+    id: num_target_temp_min
+    icon: "mdi:thermometer-chevron-down"
+    optimistic: true
+    restore_value: true
+    min_value: 15
+    max_value: 32
+    step: 0.5
+    unit_of_measurement: "°C"
+    initial_value: 25
+    set_action:
+      - if:
+          condition:
+            lambda: |-
+              return id(stage_preset_write) ||
+                     id(grow_stage).current_option() == "Custom";
+          then:
+            - lambda: |-
+                float v = x;
+                float hi = id(stage_temp_max);
+                if (v > hi - 2.0f) v = hi - 2.0f;      // clamp, keep the 2C floor
+                id(stage_temp_min) = v;
+                if (v != x) id(num_target_temp_min).publish_state(v);
+            - script.execute: tx_panel_sync
+          else:
+            - lambda: |-
+                ESP_LOGW("grow", "Reject Target Temp Min — stage '%s' (switch to Custom)",
+                         id(grow_stage).current_option().c_str());
+                id(num_target_temp_min).publish_state(id(stage_temp_min));
+
+  - platform: template
+    name: "Target Temp Max"
+    id: num_target_temp_max
+    icon: "mdi:thermometer-chevron-up"
+    optimistic: true
+    restore_value: true
+    min_value: 17
+    max_value: 40
+    step: 0.5
+    unit_of_measurement: "°C"
+    initial_value: 28
+    set_action:
+      - if:
+          condition:
+            lambda: |-
+              return id(stage_preset_write) ||
+                     id(grow_stage).current_option() == "Custom";
+          then:
+            - lambda: |-
+                float v = x;
+                float lo = id(stage_temp_min);
+                if (v < lo + 2.0f) v = lo + 2.0f;
+                id(stage_temp_max) = v;
+                if (v != x) id(num_target_temp_max).publish_state(v);
+            - script.execute: tx_panel_sync
+          else:
+            - lambda: |-
+                ESP_LOGW("grow", "Reject Target Temp Max — stage '%s' (switch to Custom)",
+                         id(grow_stage).current_option().c_str());
+                id(num_target_temp_max).publish_state(id(stage_temp_max));
+
   - platform: template
     name: "VPD Target Min"
     id: num_vpd_min
@@ -2370,6 +2460,71 @@ number:
                 ESP_LOGW("clone", "Reject Clone Target Temp — mode '%s' (Custom or Follow Plants)",
                          id(clone_mode).current_option().c_str());
                 id(num_clone_temp).publish_state(id(clone_temp_target));
+
+  # ---- 8.1.0.0 clone air-temp band (INERT: stamped + restored, drives nothing) ----
+  - platform: template
+    name: "Clone Target Temp Min"
+    id: num_clone_target_temp_min
+    icon: "mdi:thermometer-chevron-down"
+    optimistic: true
+    restore_value: true
+    min_value: 15
+    max_value: 32
+    step: 0.5
+    unit_of_measurement: "°C"
+    initial_value: 25
+    set_action:
+      - if:
+          condition:
+            lambda: |-
+              return id(clone_preset_write) ||
+                     id(clone_mode).current_option() == "Custom" ||
+                     id(clone_mode).current_option() == "Follow Plants";
+          then:
+            - lambda: |-
+                float v = x;
+                float hi = id(clone_temp_max);
+                if (v > hi - 2.0f) v = hi - 2.0f;
+                id(clone_temp_min) = v;
+                if (v != x) id(num_clone_target_temp_min).publish_state(v);
+            - script.execute: tx_panel_sync
+          else:
+            - lambda: |-
+                ESP_LOGW("clone", "Reject Clone Target Temp Min — mode '%s' (Custom or Follow Plants)",
+                         id(clone_mode).current_option().c_str());
+                id(num_clone_target_temp_min).publish_state(id(clone_temp_min));
+
+  - platform: template
+    name: "Clone Target Temp Max"
+    id: num_clone_target_temp_max
+    icon: "mdi:thermometer-chevron-up"
+    optimistic: true
+    restore_value: true
+    min_value: 17
+    max_value: 40
+    step: 0.5
+    unit_of_measurement: "°C"
+    initial_value: 28
+    set_action:
+      - if:
+          condition:
+            lambda: |-
+              return id(clone_preset_write) ||
+                     id(clone_mode).current_option() == "Custom" ||
+                     id(clone_mode).current_option() == "Follow Plants";
+          then:
+            - lambda: |-
+                float v = x;
+                float lo = id(clone_temp_min);
+                if (v < lo + 2.0f) v = lo + 2.0f;
+                id(clone_temp_max) = v;
+                if (v != x) id(num_clone_target_temp_max).publish_state(v);
+            - script.execute: tx_panel_sync
+          else:
+            - lambda: |-
+                ESP_LOGW("clone", "Reject Clone Target Temp Max — mode '%s' (Custom or Follow Plants)",
+                         id(clone_mode).current_option().c_str());
+                id(num_clone_target_temp_max).publish_state(id(clone_temp_max));
 
   - platform: template
     name: "Clone VPD Min"
@@ -3886,6 +4041,16 @@ script:
           } else {
             id(stage_preset_write) = true;
             id(num_target_temp).make_call().set_value(tt).perform();
+            // 8.1.0.0 — stamp the air-temp band from the same tt, so a stage
+            // change can never leave a stale band contradicting the setpoint.
+            // min := tt, max := tt + 3.0 reproduces today's hardcoded ladder
+            // (rungs at tt, tt+1, tt+2, tt+3) for every stage, Dry Mode
+            // included, without a second table to keep in sync. Max first:
+            // the min setter clamps against the CURRENT max, so raising the
+            // ceiling before the floor avoids a transient 2C squeeze on a
+            // downward stage change.
+            id(num_target_temp_max).make_call().set_value(tt + 3.0f).perform();
+            id(num_target_temp_min).make_call().set_value(tt).perform();
             id(num_vpd_min).make_call().set_value(vmin).perform();
             id(num_vpd_max).make_call().set_value(vmax).perform();
             id(num_rh_min).make_call().set_value(rmin).perform();
