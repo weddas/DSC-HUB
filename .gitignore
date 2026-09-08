@@ -158,3 +158,4 @@ data/*.html
 
 # Local Claude Code session assets (slash commands, settings) — not shared
 .claude/
+frontend/.env.followups

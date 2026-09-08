@@ -174,6 +174,14 @@ export function LiveClimatePage() {
     { available, num },
   );
 
+  // The four readings above are the *allocated* pair: intake_*_allocated is Sigma-exhaust-capacity
+  // split by intake fan pct, exhaust_*_allocated is Sigma-intake-capacity split by exhaust fan pct.
+  // Each is derived from the other, so they can never disagree and cannot answer "is this rig
+  // over-pressure?". Capacity vs capacity can, and that is what these three chips report.
+  const intakeCapacity = num("sensor.dsc_cfm_intake_capacity_total");
+  const exhaustCapacity = num("sensor.dsc_cfm_exhaust_capacity_total");
+  const netPressure = num("sensor.dsc_flow_net_pressure_cfm");
+
   const roomAh = absoluteHumidity(roomTHeld.value, roomRhHeld.value);
   const tentAh = absoluteHumidity(tentTHeld.value, tentRhHeld.value);
   const cloneAh = absoluteHumidity(cloneTHeld.value, cloneRhHeld.value);
@@ -198,7 +206,9 @@ export function LiveClimatePage() {
     roomRhHeld.stale ||
     cloneRhHeld.stale;
   const boughtH = num("sensor.dsc_bought_runtime_today");
-  const dumpBtu = num("sensor.dsc_vent_heat_dump_btu");
+  // Lung transfer, not an outdoor dump — there is no outdoor probe, so tent->outdoors BTU/h
+  // is not computable and is not shown. This is 4x8 -> room off measured temps.
+  const transferBtu = num("sensor.dsc_vent_heat_transfer_btu");
 
   const canopyTempHeld = useHeldReading("sensor.dsc_canopy_temperature");
   const canopyRhHeld = useHeldReading("sensor.dsc_canopy_humidity");
@@ -574,6 +584,31 @@ export function LiveClimatePage() {
               outCfm={outReading}
               recircCfm={recReading}
             />
+            <div className="dsc-chip-row" style={{ marginTop: 8 }}>
+              <StatusChip
+                label={`Intake capacity ${Number.isFinite(intakeCapacity) ? Math.round(intakeCapacity) : "—"} cfm`}
+                tone="muted"
+                onClick={() => open("sensor.dsc_cfm_intake_capacity_total", "Intake capacity", "CFM")}
+              />
+              <StatusChip
+                label={`Exhaust capacity ${Number.isFinite(exhaustCapacity) ? Math.round(exhaustCapacity) : "—"} cfm`}
+                tone="muted"
+                onClick={() => open("sensor.dsc_cfm_exhaust_capacity_total", "Exhaust capacity", "CFM")}
+              />
+              <StatusChip
+                label={
+                  Number.isFinite(netPressure)
+                    ? netPressure > 5
+                      ? `Positive pressure +${Math.round(netPressure)} cfm`
+                      : netPressure < -5
+                        ? `Negative pressure ${Math.round(netPressure)} cfm`
+                        : "Pressure balanced"
+                    : "Pressure — no reading"
+                }
+                tone={Number.isFinite(netPressure) && Math.abs(netPressure) > 5 ? "warn" : "ok"}
+                onClick={() => open("sensor.dsc_flow_net_pressure_cfm", "Net pressure", "CFM")}
+              />
+            </div>
             <FlowSankey
               intakeClone={inCloneReading}
               intakeMain={inMainReading}
@@ -786,14 +821,18 @@ export function LiveClimatePage() {
                 onClick={() => open("binary_sensor.dsc_heater_ineffective_suspect", "Heater ineffective", undefined)}
               />
               <StatusChip
-                label={`Bought ${Number.isFinite(boughtH) ? boughtH.toFixed(1) : "—"}h today`}
+                label={`Bought ${Number.isFinite(boughtH) ? boughtH.toFixed(1) : "—"} appliance-h today`}
                 tone="muted"
                 onClick={() => open("sensor.dsc_bought_runtime_today", "Bought runtime today", "h")}
               />
               <StatusChip
-                label={`Dump ${Number.isFinite(dumpBtu) ? Math.round(dumpBtu) : "—"} BTU/h`}
+                label={
+                  Number.isFinite(transferBtu)
+                    ? `Lung transfer ${Math.round(transferBtu)} BTU/h`
+                    : "Lung transfer — no reading"
+                }
                 tone="muted"
-                onClick={() => open("sensor.dsc_vent_heat_dump_btu", "Vent heat dump", "BTU/h")}
+                onClick={() => open("sensor.dsc_vent_heat_transfer_btu", "Lung heat transfer", "BTU/h")}
               />
               <StatusChip
                 label={`Heater today ${fmtDurationMs(num("sensor.dsc_heater_runtime_today") * 3600000)}`}

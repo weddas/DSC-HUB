@@ -109,9 +109,11 @@ export function LiveLightPage() {
     rail2,
   );
   const heaterOn = state("switch.dsc_hub_heater_demand") === "on";
-  const dump = num("sensor.dsc_vent_heat_dump_btu");
+  // Was sensor.dsc_vent_heat_dump_btu, which nothing ever produced — the tag could only ever
+  // fire on heaterOn. Lung transfer is measured, so the "buying heat" half is now real.
+  const transferBtu = num("sensor.dsc_vent_heat_transfer_btu");
   const lightsBuying =
-    (lightOn || mainLit) && (heaterOn || (Number.isFinite(dump) && dump > 0));
+    (lightOn || mainLit) && (heaterOn || (Number.isFinite(transferBtu) && transferBtu > 0));
 
   const open = (id: string, label: string, kind?: "alert" | "binary" | "numeric") =>
     inspector.open({ entityId: id, label, kind: kind || "numeric" });

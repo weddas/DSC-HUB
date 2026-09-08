@@ -830,13 +830,13 @@ export function EntityText({
   );
 }
 
-function timeToInput(raw: string): string {
+export function timeToInput(raw: string): string {
   const s = liveText(raw);
   if (!s) return "";
   return s.slice(0, 5);
 }
 
-function timeToService(hhmm: string): string {
+export function timeToService(hhmm: string): string {
   if (!hhmm) return "00:00:00";
   return hhmm.length === 5 ? `${hhmm}:00` : hhmm;
 }

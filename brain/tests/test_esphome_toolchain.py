@@ -397,7 +397,7 @@ def test_host_update_writes_request_and_consumes_result(
     from dsc_brain import esphome_toolchain as tc
 
     hd = _host_env(monkeypatch, tc, tmp_path)
-    monkeypatch.setattr(tc, "latest", lambda *, force=False: {"version": "2026.7.4", "ok": True, "eth_up": True})
+    monkeypatch.setattr(tc, "latest", lambda *, force=False: {"version": "2026.6.6", "ok": True, "eth_up": True})
 
     # Fake helper: wait for request.json, stream progress, drop result.json, remove request.
     def helper() -> None:
@@ -407,11 +407,11 @@ def test_host_update_writes_request_and_consumes_result(
                 break
             time.sleep(0.01)
         body = json.loads(req.read_text(encoding="utf-8"))
-        (hd / "progress.log").write_text("Collecting esphome==2026.7.4\n", encoding="utf-8")
+        (hd / "progress.log").write_text("Collecting esphome==2026.6.6\n", encoding="utf-8")
         time.sleep(0.05)
         (hd / "result.json").write_text(
-            json.dumps({"job_id": body["job_id"], "ok": True, "from": "2026.6.5", "to": "2026.7.4", "exit_code": 0,
-                        "message": "ESPHome 2026.6.5 -> 2026.7.4; dashboard restarted", "log_tail": "Successfully installed esphome-2026.7.4"}),
+            json.dumps({"job_id": body["job_id"], "ok": True, "from": "2026.6.5", "to": "2026.6.6", "exit_code": 0,
+                        "message": "ESPHome 2026.6.5 -> 2026.6.6; dashboard restarted", "log_tail": "Successfully installed esphome-2026.6.6"}),
             encoding="utf-8",
         )
         req.unlink()
@@ -419,7 +419,7 @@ def test_host_update_writes_request_and_consumes_result(
     t = threading.Thread(target=helper, daemon=True)
     t.start()
     out = tc.update_to_latest(db_path=temp_db)
-    assert out["mode"] == "host" and out["target"] == "2026.7.4" and out["action"] == "update"
+    assert out["mode"] == "host" and out["target"] == "2026.6.6" and out["action"] == "update"
     t.join(timeout=5)
     for _ in range(300):
         job = tc.latest_update_job(temp_db)
@@ -427,7 +427,7 @@ def test_host_update_writes_request_and_consumes_result(
             break
         time.sleep(0.02)
     assert job is not None and job["status"] == "done", job
-    assert job["from_version"] == "2026.6.5" and job["to_version"] == "2026.7.4"
+    assert job["from_version"] == "2026.6.5" and job["to_version"] == "2026.6.6"
     assert "dashboard restarted" in job["detail"]
     assert not (hd / "request.json").exists()
     assert not (hd / "result.json").exists()
@@ -456,7 +456,7 @@ def test_host_update_helper_failure_marks_job_failed(
         req.unlink()
 
     threading.Thread(target=helper, daemon=True).start()
-    tc.update_to_latest(target="2026.7.4", db_path=temp_db)
+    tc.update_to_latest(target="2026.6.6", db_path=temp_db)
     for _ in range(300):
         job = tc.latest_update_job(temp_db)
         if job and job["status"] in {"done", "failed"}:
@@ -474,7 +474,7 @@ def test_update_refuses_when_disk_is_short(temp_db: Path, monkeypatch: pytest.Mo
         json.dumps({"helper": True, "disk_free_bytes": 500_000_000}), encoding="utf-8"
     )
     with pytest.raises(RuntimeError, match="MiB free"):
-        tc.update_to_latest(target="2026.7.4", db_path=temp_db)
+        tc.update_to_latest(target="2026.6.6", db_path=temp_db)
     assert tc._update_running is False
 
 
@@ -758,9 +758,9 @@ def test_latest_supported_stops_below_dashboard_removal(monkeypatch: pytest.Monk
     from dsc_brain import esphome_toolchain as tc
 
     monkeypatch.setenv("DSC_ESPHOME_HOST_DIR", str(tmp_path / "none"))  # no helper -> no device builder
-    releases = {"2026.7.4": [{"yanked": False}], "2026.8.0": [{"yanked": False}], "2026.8.2": [{"yanked": False}],
+    releases = {"2026.6.6": [{"yanked": False}], "2026.8.0": [{"yanked": False}], "2026.8.2": [{"yanked": False}],
                 "2026.7.5": [{"yanked": True}], "2026.6.5": [{"yanked": False}], "1.20.4": [{"yanked": False}]}
-    assert tc._latest_supported_from_releases(releases, "2026.8.2") == "2026.7.4"
+    assert tc._latest_supported_from_releases(releases, "2026.8.2") == "2026.6.6"
     hd = tmp_path / "esphome-host"
     hd.mkdir()
     (hd / "capabilities.json").write_text(json.dumps({"helper": True, "device_builder": True}), encoding="utf-8")
@@ -776,7 +776,7 @@ def test_update_refuses_past_dashboard_removal(temp_db: Path, monkeypatch: pytes
         tc.update_to_latest(target="2026.8.2", db_path=temp_db)
     assert tc._update_running is False
     # default target follows the supported latest, not PyPI's newest
-    monkeypatch.setattr(tc, "latest", lambda *, force=False: {"version": "2026.8.2", "supported": "2026.7.4", "ok": True, "eth_up": True})
+    monkeypatch.setattr(tc, "latest", lambda *, force=False: {"version": "2026.8.2", "supported": "2026.6.6", "ok": True, "eth_up": True})
     started: dict[str, Any] = {}
 
     def fake_runner(job_id: str, action: str, target: str | None, db_path: Path | None = None) -> None:
@@ -786,7 +786,7 @@ def test_update_refuses_past_dashboard_removal(temp_db: Path, monkeypatch: pytes
 
     monkeypatch.setattr(tc, "_run_host_update", fake_runner)
     out = tc.update_to_latest(db_path=temp_db)
-    assert out["target"] == "2026.7.4"
+    assert out["target"] == "2026.6.6"
 
 
 def test_status_reports_blocked_latest(temp_db: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -794,11 +794,11 @@ def test_status_reports_blocked_latest(temp_db: Path, monkeypatch: pytest.Monkey
 
     monkeypatch.setenv("DSC_ESPHOME_HOST_DIR", str(tmp_path / "none"))
     monkeypatch.setattr(tc, "installed", lambda: "2026.6.5")
-    monkeypatch.setattr(tc, "latest", lambda *, force=False: {"version": "2026.8.2", "supported": "2026.7.4", "ok": True, "eth_up": True})
+    monkeypatch.setattr(tc, "latest", lambda *, force=False: {"version": "2026.8.2", "supported": "2026.6.6", "ok": True, "eth_up": True})
     monkeypatch.setattr(tc, "device_versions", lambda: [])
     monkeypatch.setattr(tc, "build_backend", lambda: "venv-host")
     st = tc.status()
-    assert st["latest"] == "2026.8.2" and st["latest_supported"] == "2026.7.4"
+    assert st["latest"] == "2026.8.2" and st["latest_supported"] == "2026.6.6"
     assert st["update_available"] is True
     assert "Device Builder" in st["latest_blocked_reason"]
 

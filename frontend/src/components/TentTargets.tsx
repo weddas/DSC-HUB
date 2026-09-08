@@ -13,6 +13,9 @@ export type TentKind = "main" | "clone";
 export const TENT_ENTITIES = {
   main: {
     temp: "number.dsc_hub_target_temp",
+    // Air-temp deadband — hub-owned NVS numbers from firmware 8.1.0.0 (see hub_tunables.py).
+    tempMin: "number.dsc_hub_target_temp_min",
+    tempMax: "number.dsc_hub_target_temp_max",
     rhMin: "number.dsc_hub_rh_target_min",
     rhMax: "number.dsc_hub_rh_target_max",
     vpdMin: "number.dsc_hub_vpd_target_min",
@@ -23,6 +26,8 @@ export const TENT_ENTITIES = {
   },
   clone: {
     temp: "number.dsc_hub_clone_target_temp",
+    tempMin: "number.dsc_hub_clone_target_temp_min",
+    tempMax: "number.dsc_hub_clone_target_temp_max",
     rhMin: "number.dsc_hub_clone_rh_min",
     rhMax: "number.dsc_hub_clone_rh_max",
     vpdMin: "number.dsc_hub_clone_vpd_min",
@@ -138,6 +143,13 @@ function TentColumn({
   // only Custom/Off leave the sliders to the operator.
   const climateFollowsPlants = tent === "clone" && cloneMode === "Follow Plants";
   const climateFollowsMain = tent === "clone" && (cloneMode === "Follow 4x8" || climateFollowsPlants);
+  // Follow 4x8 means the master's numbers are the ones in effect, so read them here rather than
+  // rendering the clone's own untouched entities — showing 50-60 %RH while 40-55 is enforced is
+  // a lie on the face of the card. Follow Plants is different: the Pi writes the clone entities
+  // on its ~12h cycle, so those values ARE live and must not be replaced by the master's.
+  const mirrorsMain = tent === "clone" && cloneMode === "Follow 4x8";
+  const src = mirrorsMain ? TENT_ENTITIES.main : e;
+  const mirrorHint = mirrorsMain ? "mirrors 4×8" : undefined;
   const tHeld = useHeldReading(e.gotTemp);
   const rhHeld = useHeldReading(e.gotRh);
   const vpdHeld = useHeldReading(e.gotVpd);
@@ -146,12 +158,20 @@ function TentColumn({
   const gotRh = rhHeld.value;
   const gotVpd = vpdHeld.value;
   const anyHeld = tHeld.stale || rhHeld.stale || vpdHeld.stale;
-  const wantT = num(e.temp);
-  const wantRhMin = num(e.rhMin);
-  const wantRhMax = num(e.rhMax);
-  const wantVMin = num(e.vpdMin);
-  const wantVMax = num(e.vpdMax);
-  const [draftT, setDraftT] = useState(wantT);
+  // Temp band lands with hub firmware 8.1.0.0. On an older hub the entities are absent, and
+  // the honest render is the band disabled next to the setpoint that IS in control — never
+  // the setpoint wearing a "min" label, and never hiding the fields (a half-flashed fleet
+  // would then differ card to card with nothing on screen saying why).
+  const bandLive = Boolean(entity(src.tempMin)) && Boolean(entity(src.tempMax));
+  const wantT = num(src.temp);
+  const wantTMin = num(src.tempMin);
+  const wantTMax = num(src.tempMax);
+  const wantRhMin = num(src.rhMin);
+  const wantRhMax = num(src.rhMax);
+  const wantVMin = num(src.vpdMin);
+  const wantVMax = num(src.vpdMax);
+  const [draftTMin, setDraftTMin] = useState(wantTMin);
+  const [draftTMax, setDraftTMax] = useState(wantTMax);
   const [draftRhMin, setDraftRhMin] = useState(wantRhMin);
   const [draftRhMax, setDraftRhMax] = useState(wantRhMax);
   const [draftVMin, setDraftVMin] = useState(wantVMin);
@@ -159,13 +179,15 @@ function TentColumn({
 
   // Re-sync tone/hint badges when Want changes externally (Follow Plants auto-write,
   // another client, strategy change) — onLive only updates these while the operator types.
-  useEffect(() => setDraftT(wantT), [wantT]);
+  useEffect(() => setDraftTMin(wantTMin), [wantTMin]);
+  useEffect(() => setDraftTMax(wantTMax), [wantTMax]);
   useEffect(() => setDraftRhMin(wantRhMin), [wantRhMin]);
   useEffect(() => setDraftRhMax(wantRhMax), [wantRhMax]);
   useEffect(() => setDraftVMin(wantVMin), [wantVMin]);
   useEffect(() => setDraftVMax(wantVMax), [wantVMax]);
 
-  const tScore = draftTone(draftT, rail.temp, false, rail);
+  const tMinScore = draftTone(draftTMin, rail.temp, draftTMin > draftTMax, rail);
+  const tMaxScore = draftTone(draftTMax, rail.temp, draftTMin > draftTMax, rail);
   const rhMinScore = draftTone(draftRhMin, rail.rh, draftRhMin > draftRhMax, rail);
   const rhMaxScore = draftTone(draftRhMax, rail.rh, draftRhMin > draftRhMax, rail);
   const vMinScore = draftTone(draftVMin, rail.vpd, draftVMin > draftVMax, rail);
@@ -186,9 +208,10 @@ function TentColumn({
         <OverflowMenu
           label={`${title} more`}
           items={[
-            { id: "temp", label: "Inspector · temp", onSelect: () => openMoreInfo(e.temp, `${title} Want T`, "°C") },
-            { id: "rh", label: "Inspector · RH", onSelect: () => openMoreInfo(e.rhMin, `${title} RH min`, "%") },
-            { id: "vpd", label: "Inspector · VPD", onSelect: () => openMoreInfo(e.vpdMin, `${title} VPD min`, "kPa") },
+            { id: "temp", label: "Inspector · temp", onSelect: () => openMoreInfo(src.tempMin, `${title} Temp min`, "°C") },
+            { id: "tempHub", label: "Inspector · temp (hub midpoint)", onSelect: () => openMoreInfo(src.temp, `${title} hub target T`, "°C") },
+            { id: "rh", label: "Inspector · RH", onSelect: () => openMoreInfo(src.rhMin, `${title} RH min`, "%") },
+            { id: "vpd", label: "Inspector · VPD", onSelect: () => openMoreInfo(src.vpdMin, `${title} VPD min`, "kPa") },
           ]}
         />
       </div>
@@ -204,7 +227,13 @@ function TentColumn({
           {anyHeld ? " · held" : ""}
         </span>
         <span className="dsc-muted">
-          Want {Number.isFinite(wantT) ? wantT.toFixed(1) : "—"}°C · RH{" "}
+          Want{" "}
+          {bandLive
+            ? `${Number.isFinite(wantTMin) ? wantTMin.toFixed(1) : "—"}–${Number.isFinite(wantTMax) ? wantTMax.toFixed(1) : "—"}`
+            : Number.isFinite(wantT)
+              ? wantT.toFixed(1)
+              : "—"}
+          °C · RH{" "}
           {Number.isFinite(wantRhMin) ? wantRhMin.toFixed(0) : "—"}–
           {Number.isFinite(wantRhMax) ? wantRhMax.toFixed(0) : "—"}%
         </span>
@@ -226,7 +255,7 @@ function TentColumn({
           <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: "var(--dsc-fs-md)" }}>
             {climateFollowsPlants
               ? "Clone climate mode is Follow Plants — the Pi writes these targets on a ~12h cycle, so Want sliders lock here. Manual edits would be silently overwritten. Change mode below to edit by hand."
-              : "Clone climate mode is Follow 4×8 — Want targets lock here. Edit 4×8 climate or change mode below."}
+              : "Clone climate mode is Follow 4×8 — the values below mirror the 4×8 master and are the ones in effect here. Edit them on the 4×8 card, or change mode below."}
           </p>
         </div>
       ) : null}
@@ -240,12 +269,19 @@ function TentColumn({
           </p>
         </div>
       ) : null}
-      <div className="dsc-target-grid">
-        <TargetNumber entityId={e.temp} label="Temp °C" step={0.5} tone={tScore.tone} hint={tScore.label} onLive={setDraftT} disabled={climateFollowsMain} />
-        <TargetNumber entityId={e.rhMin} label="RH min %" step={1} tone={rhMinScore.tone} hint={rhMinScore.label} onLive={setDraftRhMin} disabled={climateFollowsMain} />
-        <TargetNumber entityId={e.rhMax} label="RH max %" step={1} tone={rhMaxScore.tone} hint={rhMaxScore.label} onLive={setDraftRhMax} disabled={climateFollowsMain} />
-        <TargetNumber entityId={e.vpdMin} label="VPD min" step={0.01} tone={vMinScore.tone} hint={vMinScore.label} onLive={setDraftVMin} disabled={climateFollowsMain} />
-        <TargetNumber entityId={e.vpdMax} label="VPD max" step={0.01} tone={vMaxScore.tone} hint={vMaxScore.label} onLive={setDraftVMax} disabled={climateFollowsMain} />
+      <div
+        className="dsc-target-grid"
+        title={mirrorsMain ? "These values mirror the 4×8 master while climate mode is Follow 4×8. Edit them on the 4×8 card, or change mode above." : undefined}
+      >
+        {bandLive ? null : (
+          <TargetNumber entityId={src.temp} label="Temp °C" step={0.5} hint={mirrorHint ?? "hub setpoint"} disabled={climateFollowsMain} />
+        )}
+        <TargetNumber entityId={src.tempMin} label="Temp min °C" step={0.5} tone={tMinScore.tone} hint={bandLive ? (mirrorHint ?? tMinScore.label) : "needs hub 8.1.0.0"} onLive={setDraftTMin} disabled={climateFollowsMain || !bandLive} />
+        <TargetNumber entityId={src.tempMax} label="Temp max °C" step={0.5} tone={tMaxScore.tone} hint={bandLive ? (mirrorHint ?? tMaxScore.label) : "needs hub 8.1.0.0"} onLive={setDraftTMax} disabled={climateFollowsMain || !bandLive} />
+        <TargetNumber entityId={src.rhMin} label="RH min %" step={1} tone={rhMinScore.tone} hint={mirrorHint ?? rhMinScore.label} onLive={setDraftRhMin} disabled={climateFollowsMain} />
+        <TargetNumber entityId={src.rhMax} label="RH max %" step={1} tone={rhMaxScore.tone} hint={mirrorHint ?? rhMaxScore.label} onLive={setDraftRhMax} disabled={climateFollowsMain} />
+        <TargetNumber entityId={src.vpdMin} label="VPD min" step={0.01} tone={vMinScore.tone} hint={mirrorHint ?? vMinScore.label} onLive={setDraftVMin} disabled={climateFollowsMain} />
+        <TargetNumber entityId={src.vpdMax} label="VPD max" step={0.01} tone={vMaxScore.tone} hint={mirrorHint ?? vMaxScore.label} onLive={setDraftVMax} disabled={climateFollowsMain} />
       </div>
     </div>
   );

@@ -109,7 +109,14 @@ def _dashboard_spawn(
     lines: list[str] = [f"ws {ws_url}  spawn configuration={yaml_name}" + (f" port={port}" if port else "") + "\n"]
     code: int | None = None
     last = 0.0
-    with ws_connect(ws_url, open_timeout=10, close_timeout=5) as ws:
+    # ping_interval=None: a C++ compile goes silent for minutes at a time, and the
+    # websockets default (20s ping, 20s pong timeout) tears the socket down mid-build
+    # with "keepalive ping timeout". Reproduced against ESPHome Device Builder 2026.8.2
+    # on 2026-09-08: the same spawn died at "Generating C++ source..." with keepalive on
+    # and completed cleanly (320 frames, exit 0, 347s) with it off. The exit frame is
+    # the completion signal here, not liveness, and the outer deadline below still
+    # bounds a genuinely wedged build.
+    with ws_connect(ws_url, open_timeout=10, close_timeout=5, ping_interval=None) as ws:
         spawn: dict[str, Any] = {"type": "spawn", "configuration": yaml_name}
         if port:
             spawn["port"] = port

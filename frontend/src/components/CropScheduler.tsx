@@ -14,6 +14,7 @@ import { useEntityBus } from "../hooks/useEntityBus";
 import { Card, StatusChip } from "./ui";
 import { VesselGlyph } from "./VesselGlyph";
 import { TentLightClock } from "./TentLightClock";
+import { ScheduleOverride } from "./ScheduleOverride";
 import { readProbeVessel } from "../lib/vesselSpec";
 
 type PlantProbe = ReturnType<typeof buildPlantProbe>;
@@ -92,6 +93,10 @@ function TentCropColumn({
   }));
   const { mixed, cur, live } = stageTrackForProbes([...tentProbes, ...stockAsProbes]);
   const title = tentLabel(tent);
+  // Photoperiod follow is its own select, separate from climate mode (light_loop.py reads both).
+  const cloneFollowsMain =
+    hass.state("select.dsc_hub_clone_photoperiod", "Independent") === "Follow 4x8" ||
+    hass.state("select.dsc_hub_clone_mode", "") === "Follow 4x8";
 
   return (
     <div className={`dsc-scheduler-tent-col dsc-scheduler-tent-col--${tent}`}>
@@ -142,6 +147,11 @@ function TentCropColumn({
           );
         })}
       </div>
+      <ScheduleOverride
+        tent={tent}
+        disabled={tent === "clone" && cloneFollowsMain}
+        disabledReason="2×4 photoperiod is set to Follow 4×8 — re-anchor the 4×8 window and this tent moves with it, or set the 2×4 to Independent on Light."
+      />
     </div>
   );
 }
