@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Release** | tree is **8.1.0** · latest published download: [8.0.0 AlphaPi](https://github.com/weddas/DSC-HUB/releases/tag/v8.0.0-AlphaPi) |
+| **Release** | [8.1.0](https://github.com/weddas/DSC-HUB/releases/tag/v8.1.0) |
 | **Surface** | Brain / SPA **8.1.0** · kit firmware train **8.0.0.0** (ESPHome-only; fleet reflash via Settings → Device → ESPHome) |
 | **Product path** | Flash SD → Pi boots → SPA Setup (`#/setup`) → USB flash fleet → SoftAP/LAN join → Zigbee bind |
 
@@ -33,11 +33,12 @@ flowchart LR
 
 ---
 
-## Get started (kit — AlphaPi)
+## Get started (kit)
 
 ### 1. Flash the SD image
 
-1. Download **`dsc-hub-8.0.0-arm64.img.xz`** from the [8.0.0 AlphaPi release](https://github.com/weddas/DSC-HUB/releases/tag/v8.0.0-AlphaPi).
+1. Download **`dsc-hub-8.1.0-arm64.img.xz`** from the [8.1.0 release](https://github.com/weddas/DSC-HUB/releases/tag/v8.1.0).
+   > **Do not use the 8.0.0 AlphaPi image** — it shipped zero-byte kit firmware and cannot flash a kit.
 2. Open [Raspberry Pi Imager](https://www.raspberrypi.com/software/) → **Use custom** → select that file.
 3. Flash a card for **Pi 4 or Pi 5** (aarch64).
 4. Insert the card, power the Pi, prefer **Ethernet** on first boot.
