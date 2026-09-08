@@ -45,13 +45,30 @@ _PYPI_FAIL_TTL = 15 * 60.0  # after a failed lookup, don't re-hit PyPI for 15 mi
 _PYPI_TIMEOUT = 4.0
 
 _VERSION_RE = re.compile(r"(\d+\.\d+\.\d+)")
-# ESPHome 2026.8 removed the built-in `esphome dashboard` (the build service the
-# brain drives over :6052) in favour of the separate `esphome-device-builder`
-# package, whose API is a single multiplexed WebSocket with named commands — not
-# the /version, /devices, /compile, /upload routes esphome_jobs speaks. Until a
+# ESPHome removed the built-in `esphome dashboard` (the build service the brain
+# drives over :6052) in favour of the separate `esphome-device-builder` package,
+# whose API is a single multiplexed WebSocket with named commands — not the
+# /version, /devices, /compile, /upload routes esphome_jobs speaks. Until a
 # Device Builder adapter exists and is verified, the toolchain must not move past
-# this boundary: a bump to 2026.8.2 took the live dashboard down (2026-09-06).
-DASHBOARD_REMOVED_FROM = "2026.8.0"
+# this boundary.
+#
+# 2026-09-08: this constant said "2026.8.0" and that was WRONG. Updating the Pi
+# venv to 2026.7.4 took the dashboard down immediately — it exits 1 with "The
+# built-in dashboard has been removed from ESPHome" and systemd crash-loops the
+# unit, so compile/OTA is dead until a rollback. The exact removal point inside
+# 2026.7.x is not established, so the boundary is pinned at the start of 2026.7.
+#
+# This bound only applies while the BUILT-IN dashboard is the build service.
+# esphome-device-builder ships api/legacy.py — a compatibility layer carrying
+# GET /version, GET /devices, GET /ping and the /compile + /upload WebSockets
+# with the identical spawn protocol and {event:line}/{event:exit} frame shape.
+# Verified 2026-09-08 against device-builder 1.14.4 + ESPHome 2026.8.2: /version
+# and /devices returned the same shapes, and a /compile spawn streamed 320 line
+# frames and exited 0. So device_builder_supported() is the real gate — when it
+# holds, the toolchain may move past this bound. Note the legacy layer is marked
+# DEPRECATED upstream ("will be removed once HA migrates to the /ws multiplexed
+# API"), so a native /ws client is still owed eventually.
+DASHBOARD_REMOVED_FROM = "2026.7.0"
 # An ESPHome release string (2026.6.5), as opposed to the product train (8.0.0.0).
 _ESPHOME_RELEASE_RE = re.compile(r"^20\d{2}\.\d{1,2}\.\d{1,3}(?![\d.])")  # allows the " (build stamp)" suffix
 
