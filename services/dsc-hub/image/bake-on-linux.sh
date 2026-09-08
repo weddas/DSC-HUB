@@ -29,6 +29,10 @@ _restore_ownership() {
   done
   # device-builder state files sit beside the project, not under .esphome
   chown "${u}:${u}" /opt/dsc-hub-repo/firmware/v4/.device-builder* 2>/dev/null || true
+  # ...and docker's per-user state. `sudo docker` inherits HOME=/home/<u>, so a
+  # root-run build leaves root-owned ~/.docker; the next non-root build then dies
+  # on "open /home/<u>/.docker/buildx/.lock: permission denied".
+  [[ -d "/home/${u}/.docker" ]] && chown -R "${u}:${u}" "/home/${u}/.docker" 2>/dev/null || true
   echo "bake: restored ${u} ownership of the shared build trees"
 }
 trap _restore_ownership EXIT
