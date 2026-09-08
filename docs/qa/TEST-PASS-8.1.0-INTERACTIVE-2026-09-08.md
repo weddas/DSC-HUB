@@ -12,29 +12,50 @@ were not reachable, and one test physically took the rig down.
 
 ## Headline
 
-The pass found **11 new defects**, one Critical, and caused **one unplanned
-outage** (the USB webcam test browned out the Pi). It also verified four
-previously-logged findings and confirmed one regression is genuinely fixed.
+The pass found **21 new defects** — three Critical — verified five
+previously-logged entries, reversed one that had been closed wrongly, and caused
+**two unplanned outages** (both traced to the same root-on-USB fragility).
 
-The single most important result: **the photoperiod anchor cannot be written from
-the SPA at all**, on either desk that offers the control, because of a
-one-character `object_id` mismatch. On a flowering grow that is the most
-consequential setting in the product.
+Three results matter most:
+
+1. **The photoperiod anchor cannot be written from the SPA at all**, because of a
+   one-character `object_id` mismatch.
+2. **The Pi's clock is 7 minutes slow and has never NTP-synced**, which took the
+   hub's `clock_valid` false and closed the 4×8 photoperiod window ~6.4 h early
+   on a day-61 flowering tent.
+3. **A failed soil probe keeps publishing its last reading forever**, so a dead
+   probe is indistinguishable from a healthy one — and the brain's own
+   stuck-sensor detector missed a 24 h flatline entirely.
 
 | # | Finding | Severity |
 |---|---|---|
 | 1 | Photoperiod anchor unwritable — `lights_on_time` vs `lights-on_time` | **Critical** |
-| 2 | Root FS on USB SSD — webcam brownout took the whole controller down | High |
-| 3 | Overview vs Climate disagree on "Want"; rail chips use a different band than the number shown | High |
-| 4 | USB flash wizard: `firmware_dir` empty in the running brain; `bridge` has no `.bin` | High |
-| 5 | CannaLib strain detail blank for every strain — `strain_tree_v1` vs the curated schema the SPA reads; 230 KB / 8 s payloads | High |
-| 6 | Settings caches failed fetches forever — false "OLD BRAIN" / "fetch failed" | Medium |
-| 7 | Railed sensor values written to history and fed into VPD during a known fault | Medium |
-| 8 | Hub stage selector ≠ plant/expected stage; active band follows the plant | Medium |
-| 9 | Journal stamps the four-part *firmware* version into `brain_version`; space/room entries carry none | Medium |
-| 10 | `Bounces —` / `RF —` on Alerts **and** Kit while both values are live in `/fleet` | Medium |
-| 11 | Kit ALERTS tile carries the Air Path panel's caption | Low |
-| — | Hub link flapping (filed, then **corrected** — was the brownout, not the hub) | Medium |
+| 2 | Fleet-wide time failure — Pi 7 min slow, never synced, no NTP for the SoftAP; hub `clock_valid` false; photoperiod closed 6.4 h early | **Critical** |
+| 3 | Failed Modbus probe latches its last value forever — dead probe looks healthy | **Critical** |
+| 4 | Root FS on USB SSD — a webcam *and* a plain `docker restart` each took the host down | High |
+| 5 | `probe1_sensor_stuck` missed a 24 h flatline; fires on null, not on frozen | High |
+| 6 | `fleet.canopy` is one global slot — the 2×4 canopy sensor's live data is discarded | High |
+| 7 | EC Want bands are feed-water values compared against **bulk** substrate EC — band unreachable | High |
+| 8 | Exhaust capacity is 93 % nameplate but stamped `measured`; pressure figure inherits it | High |
+| 9 | Overview vs Climate disagree on "Want"; rail chips use a different band than the number shown | High |
+| 10 | Hub's VPD in-band counter wrong by ~40× (0.16 h vs a measured 6.85 h) | High |
+| 11 | Compose assigns an occupied probe with no warning; new plants default to "Flowering day 61" | High |
+| 12 | CannaLib strain detail blank for every strain — schema mismatch; 230 KB / 8 s payloads | High |
+| 13 | USB flash wizard: `firmware_dir` empty in the running brain; `bridge` has no `.bin` | High |
+| 14 | SPA computes freshness across two clocks — a wrong server clock blanks live probes | High |
+| 15 | pot1 probe dead (operator root cause: Dupont connectors need soldering) | High |
+| 16 | Settings caches failed fetches forever — false "OLD BRAIN" / "fetch failed" | Medium |
+| 17 | Railed sensor values written to history and fed into VPD during a known fault | Medium |
+| 18 | Hub stage selector ≠ plant/expected stage; active band follows the plant | Medium |
+| 19 | `heater_temp_oos_latch` doesn't latch — 70 transitions in 48 h; runtime gate is cumulative-today | Medium |
+| 20 | Journal stamps the four-part *firmware* version into `brain_version` | Medium |
+| 21 | `Bounces —` / `RF —` on Alerts **and** Kit while both values are live | Medium |
+| 22 | Range sliders are mouse-only — arrow keys inert | Medium |
+| 23 | Probe fault binary sensors report `tracked:True` but record no history | Medium |
+| 24 | Brain ingests `soil_moisture_raw`, discarding on-device calibration | Medium |
+| 25 | System OS/journal log viewer never works, and misdiagnoses why ("not a Pi") | Medium |
+| 26 | Kit ALERTS tile carries the Air Path panel's caption | Low |
+| 27 | Network MAC column empty for all 10 devices though ESPHome returns it | Low |
 
 ### Verifications against previously-logged entries
 
@@ -291,7 +312,28 @@ originals, so nothing was actually lost — but only by luck.
 
 ---
 
-## I. A correction on the record
+## I. Corrections on the record
+
+Six of my own conclusions were wrong during this pass and were corrected. They
+are listed together because the pattern matters more than any one of them: in
+every case the error came from accepting a reading without asking what else
+would have to be true.
+
+| Claim I made | What was actually true |
+|---|---|
+| "Hub link is flapping" (filed High) | The flapping was the developing USB brownout. 0 disconnects / 0 failsafes after reboot vs 8 / 3 before. Downgraded, re-attributed. |
+| "The brain's ingestion has stalled" (filed Critical) | **No stall.** I was differencing Pi timestamps against my own clock. Withdrawn. |
+| "The tester's Windows clock is 7 min fast" | **Backwards.** Windows was ~3 s off true; the **Pi** is 7.08 min slow and never NTP-synced. This became finding #2. |
+| "Air-path intake/exhaust are swapped" | Not swapped — two different allocation bases. `−112 cfm` is genuinely correct under-pressure. |
+| "Pages render slowly" | ~100 ms to content on every route. The blank screenshots were the pane capturing before paint. |
+| "pot1's frozen 18.7 °C drove the heat mat's 72 % duty" | Unproven — pot2's real range (17.7–21.3 °C) straddles the arm band and could account for it. Stated as participation, not causation. |
+
+The withdrawn ingestion-stall finding is the costly one: I acted on it and
+restarted the brain, which rebooted the host. The tell was visible and I
+explained it away — the brain was reporting `last_seen` ages **longer than the
+container had been alive**, which is arithmetically impossible.
+
+## I-bis. The original hub-link correction
 
 The hub-flapping finding was filed **High** early in the session (15 % packet
 loss, 8 disconnects, 3 `Sonoff failsafe OFF` firings in 6 h) and attributed to
@@ -426,6 +468,77 @@ lag. Measured time-to-content per route:
 ```
 
 ~100 ms on every route. **No performance defect.**
+
+---
+
+---
+
+## K. Third sweep — driving the dash as a grower, and interrogating the numbers
+
+The operator's feedback part-way through was fair and worth recording: the pass
+had been reading values and accepting them rather than asking *"is that right?"*,
+and had been API-diving rather than **using** the dashboard. Both were true. This
+section is what changed when that was corrected.
+
+### Real grower tasks, driven through the UI
+
+| Task | Result |
+|---|---|
+| *"The 2×4 is empty — put a plant in it"* | **Found a High.** Compose offered Probe 1 (holding a live day-61 flowering plant), accepted it silently through all five steps, and presented `Add plant to Probe 1`. Sprout date pre-fills from the existing plants, so a new clone composes as "Flowering · day 61". Draft discarded; roster verified unchanged. |
+| *"Tell me if the tent goes over 28 °C"* | **Cannot be done.** Settings › Alerts is a fixed catalogue of built-in conditions with severity toggles only. The Alerts desk says "Edit rules in Settings", which does not lead to rule authoring. Automation › Add rule does exist and produced a usable draft (`tent_temperature > 32`, banner action, debounce/release/window) — removed cleanly. |
+| *"Should I water?"* | **Found three.** The Root desk blanked every probe value as `SENSOR FAULT / PROBE DARK` while data was 3 s old — one half client-clock, one half real device flags. Led to the pot1 flatline. |
+| Journal write/undo | **COMPLETE.** Created a room note via the UI (`id=693`, env snapshot captured), deleted it, `total 1434 → 1433`. |
+| Fan demand scale write/undo | **COMPLETE, and found a Medium.** Drag works and persists (1.00 → 0.50, `SAVED`, brain confirmed). Keyboard does nothing — 13 Left and 5 Right presses moved it zero steps while focused. Restored to 1.0 and verified byte-identical. |
+
+### Interrogating numbers instead of reading them
+
+Four things had been *seen* earlier in the pass and accepted. Re-examined:
+
+- **`vpd_main_band_hours = 0.16`** against a desk reading "in band 6h 43 of 24 h".
+  Integrated 1,469 history samples over the live 1.2–1.4 band: **6.85 h**. The
+  desk is right; the hub counter is wrong by ~40×.
+- **`exhaust_capacity_total = 118.6`, honesty `measured_capacity_not_allocated`** —
+  but `exhaust_recirc = 110.0` carries `capacity_proxy_nameplate`. 93 % of a
+  "measured" total is a datasheet number, and the headline `Negative pressure
+  −112 cfm` inherits it.
+- **`got_source: "twin"`** on the 4×8 delivered-light figure, stamped
+  `honesty: ok` — a modelled value labelled like a measured one.
+- **`soil_moisture 20.9` vs `soil_moisture_raw 19.9`** on the device, with the
+  brain storing 19.9 — the on-device calibration never reaches any desk.
+
+### The EC question, settled with the operator's water test
+
+The operator tested the feed: **pH 6.64, EC 2656 ppm** (≈3.8 mS/cm on the 700
+scale, ≈5.3 on the 500 scale). pot2, freshly saturated with it, peaked at
+**394 µS** and drained through 326 → 262 → 195.
+
+`brain/dsc_brain/want.py` sets `ec_us` bands of 400–800 / 1000–1600 / 1600–2400
+for seedling / veg / flower — textbook **feed-water** EC. The firmware comments
+state plainly that the probe reports **bulk** EC (`N/P/K: DERIVED from bulk EC`).
+Those are different physical quantities, and bulk runs several times lower, so
+the flower band is unreachable by construction and EC reads "too low" forever —
+in the dangerous direction, since it invites heavier feeding.
+
+pH cross-checks cleanly (feed 6.64, pot2 6.4–6.5), which isolates the fault to
+the EC channel's unit domain rather than the probe.
+
+### The watering, watched live
+
+pot2 tracked it perfectly and pot1 did not move at all:
+
+```
+        moisture      EC        pH
+pot2    27.2 → 61.6   76 → 394  6.0 → 6.4     then drained 59.9 / 58.8 / 57.7 / 47.9
+pot1    19.9 → 19.9   48 → 48   5.0 → 5.0     (fresh data, simply unchanging)
+```
+
+24 h of history: pot1 produced **4 distinct moisture values** across 579 samples;
+pot2 produced **113** across 797. A node reboot then dropped pot1 to `None`,
+proving the values had been latched, not measured. **This reverses the earlier
+"RESOLVED BY REFLASH" entry** — the reflash restored numbers, not sensing.
+
+Operator root cause: the probe is on Dupont connectors that disconnect when
+bumped, and needs soldering.
 
 ---
 
