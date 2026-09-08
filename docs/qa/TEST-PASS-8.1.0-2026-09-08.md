@@ -154,5 +154,8 @@ in this train — `turnaround_time: 100ms` now set explicitly, and
 four-retry ladder (4 × 2000 ms) every 60 s cycle. That retry storm is a
 plausible reason a probe never recovers once its sensor drops.
 
-**New, unexplained:** pot2 now reports `ec_us 0.0` against pot1's `48.0` on
-similar moisture and temperature. Worth a look if it persists.
+**pot2 `ec_us 0.0` — explained, not a fault.** Per the operator the pots have
+not been watered yet, and dry medium has no dissolved salts in solution to
+conduct, so 0 µS is the expected reading. Watering is the natural test: if pot2's
+EC rises with pot1's, both probes are good; if pot2 holds at 0 while pot1
+responds, re-open it.
