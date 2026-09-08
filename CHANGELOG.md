@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### Tip `6f1b1fa` — followups 8.1.0.0 aligned build (2026-09-08)
+
+- **Firmware train 8.1.0.0** — `project: version` + brain `EXPECTED_FIRMWARE` /
+  compose default. Hub air-temp band numbers (`stage_temp_min` / `max`) restore +
+  publish but stay **inert for the ladder** this train; clone band defaults
+  24.0 / 27.0. SPA TentTargets gates on hub entity presence.
+- **ESPHome build service** — `:6052` prefers `esphome-device-builder` (legacy
+  HTTP/WS API); `DASHBOARD_REMOVED_FROM = "2026.7.0"`; compile WS
+  `ping_interval=None`. Residual: venv-setup install + `capabilities.device_builder`
+  + native `/ws` client.
+- **Bake image pick** — declared `DEVDIR` per role (no `"Build path:"` scrape).
+- **Climate honesty** — capacity-vs-capacity net pressure; lung
+  `dsc_vent_heat_transfer_btu`; bought runtime = appliance-hour sum; ScheduleOverride
+  hub `time.set_value` re-anchor (not shift plan).
+
 ## Hub — **v8.1.0** (2026-09-07)
 
 First full cut of the 8.x line after the `v8.0.0-AlphaPi` alpha (102 commits).
