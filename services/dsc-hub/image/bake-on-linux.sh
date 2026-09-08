@@ -13,6 +13,26 @@ DOCKER_TAR="${OUT}/dsc-hub-${VERSION}-docker.tar.gz"
 COMPOSE="${ROOT}/services/dsc-hub"
 IMAGE_DIR="${COMPOSE}/image"
 
+# This bake must run as root: it drives docker, and `dsc` is not in the docker
+# group. But root-run compiles leave root-owned artifacts in the shared
+# PlatformIO cache and the project .esphome tree, and the ESPHome build service
+# (dsc-esphome-dashboard) runs as `dsc` — it then fails to start with a
+# PermissionError on .device-builder.lock, and compiles die in ~4s on a valid
+# config. Cost 10995 + 5422 files to clean up by hand on 2026-09-08. Hand
+# ownership back on the way out, however this script exits.
+BAKE_SERVICE_USER="${DSC_SERVICE_USER:-dsc}"
+_restore_ownership() {
+  local u="${BAKE_SERVICE_USER}"
+  id -u "${u}" >/dev/null 2>&1 || return 0
+  for d in "${PLATFORMIO_CORE_DIR:-/var/lib/dsc-hub/platformio}"            "${ROOT}/firmware/v4/.esphome"            /opt/dsc-hub-repo/firmware/v4/.esphome; do
+    [[ -d "${d}" ]] && chown -R "${u}:${u}" "${d}" 2>/dev/null || true
+  done
+  # device-builder state files sit beside the project, not under .esphome
+  chown "${u}:${u}" /opt/dsc-hub-repo/firmware/v4/.device-builder* 2>/dev/null || true
+  echo "bake: restored ${u} ownership of the shared build trees"
+}
+trap _restore_ownership EXIT
+
 echo "=== DSC-HUB ${VERSION} linux bake ==="
 echo "ROOT=${ROOT}"
 echo "OUT=${OUT}"
