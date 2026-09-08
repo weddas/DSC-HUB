@@ -4,8 +4,8 @@
 
 | | |
 |---|---|
-| **Release** | tree is **8.1.0** · latest published download: [8.0.0 AlphaPi](https://github.com/weddas/DSC-HUB/releases/tag/v8.0.0-AlphaPi) |
-| **Surface** | Brain / SPA **8.1.0** · kit firmware train **8.0.0.0** (ESPHome-only; fleet reflash via Settings → Device → ESPHome) |
+| **Release** | tree is **8.1.0** (`cce5c74`) · latest published SD download: [8.0.0 AlphaPi](https://github.com/weddas/DSC-HUB/releases/tag/v8.0.0-AlphaPi) (GitHub tag may lag; see [`UPGRADE.md`](UPGRADE.md)) |
+| **Surface** | Brain / SPA **8.1.0** · kit firmware train **8.0.0.0** (ESPHome-only; fleet reflash via Settings → Devices → Firmware) |
 | **Product path** | Flash SD → Pi boots → SPA Setup (`#/setup`) → USB flash fleet → SoftAP/LAN join → Zigbee bind |
 
 Home Assistant lab, HACS, and Lovelace delivery were **retired** (2026-09). The SPA still speaks an HA-shaped entity / `call_service` dialect that **DSC-Brain implements natively** — there is no HA runtime.
@@ -33,11 +33,14 @@ flowchart LR
 
 ---
 
-## Get started (kit — AlphaPi)
+## Get started (kit)
+
+Published SD assets may still be **AlphaPi** while `master` is **8.1.0** — see
+[`UPGRADE.md`](UPGRADE.md) for AlphaPi → 8.1.0 (brain-only; firmware stays 8.0.0.0).
 
 ### 1. Flash the SD image
 
-1. Download **`dsc-hub-8.0.0-arm64.img.xz`** from the [8.0.0 AlphaPi release](https://github.com/weddas/DSC-HUB/releases/tag/v8.0.0-AlphaPi).
+1. Download **`dsc-hub-8.0.0-arm64.img.xz`** from the [8.0.0 AlphaPi release](https://github.com/weddas/DSC-HUB/releases/tag/v8.0.0-AlphaPi) (or the `dsc-hub-8.1.0-arm64.img.xz` asset once the GitHub `v8.1.0` release publishes).
 2. Open [Raspberry Pi Imager](https://www.raspberrypi.com/software/) → **Use custom** → select that file.
 3. Flash a card for **Pi 4 or Pi 5** (aarch64).
 4. Insert the card, power the Pi, prefer **Ethernet** on first boot.
@@ -159,6 +162,16 @@ Factory image bake lives under [`services/dsc-hub/image/`](services/dsc-hub/imag
 |---|---|
 | [`SETUP.md`](SETUP.md) | Fleet SoftAP unbox (hub / panel / pots / bridge) |
 | [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md) | Pi brain architecture |
+| [`docs/brain/WEBUI.md`](docs/brain/WEBUI.md) | Operator SPA desks + Settings gear |
+| [`docs/brain/SETTINGS.md`](docs/brain/SETTINGS.md) | Settings S1–S5 / hub tunables / System cards |
+| [`docs/brain/TUYA-LOCAL.md`](docs/brain/TUYA-LOCAL.md) | Tuya Wi-Fi local lane (Pass T1) |
+| [`docs/ops/TUYA-LOCAL-SETUP.md`](docs/ops/TUYA-LOCAL-SETUP.md) | Operator Tuya key import / bind runbook |
+| [`docs/brain/TWIN.md`](docs/brain/TWIN.md) | Composed 3D twin desk |
+| [`docs/brain/PPFD-FIELD.md`](docs/brain/PPFD-FIELD.md) | Maker PPFD 3D surface + fixture catalog binding |
+| [`docs/ops/ESPHOME-TOOLCHAIN.md`](docs/ops/ESPHOME-TOOLCHAIN.md) | Host venv / dashboard OTA / ceiling / canary |
+| [`docs/cameras.md`](docs/cameras.md) | Zone cameras + timelapse |
+| [`docs/ops/SPA-PROD-BUNDLE.md`](docs/ops/SPA-PROD-BUNDLE.md) | SPA chunk graph / vite preview gate |
+| [`docs/ops/PI-HOTPATCH.md`](docs/ops/PI-HOTPATCH.md) | Windows plink/pscp hotpatch + stop/start |
 | [`brain/README.md`](brain/README.md) | Brain CLI / API / catalogs |
 | [`docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md`](docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md) | Kit SD installer design (8.0.0) |
 | [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md) | Living engineering backlog |
