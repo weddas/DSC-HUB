@@ -20,6 +20,8 @@ export type PlantWizardReviewStepProps = {
   expectedDays: string;
   strainLabel: string;
   assign: string;
+  /** name of the plant already on the chosen probe, if any */
+  assignOccupiedBy?: string;
   setConfirmAdd: (open: boolean) => void;
   commitErr: string | null;
   showAdvanced: boolean;
@@ -48,6 +50,7 @@ export function PlantWizardReviewStep({
   expectedDays,
   strainLabel,
   assign,
+  assignOccupiedBy,
   setConfirmAdd,
   commitErr,
   showAdvanced,
@@ -101,9 +104,19 @@ export function PlantWizardReviewStep({
           </div>
         ) : null}
       </dl>
+      {assignOccupiedBy ? (
+        <p className="dsc-honesty" style={{ marginBottom: 8 }}>
+          <StatusChip label="OCCUPIED" tone="warn" /> {assignLabel} currently holds <strong>{assignOccupiedBy}</strong>. Confirming replaces that
+          plant's roster identity on this probe — retire it first if it is still growing.
+        </p>
+      ) : null}
       <div className="dsc-row-actions">
         <Button variant="primary" disabled={!strainLabel} icon="compose" iconMotion="glow" onClick={() => setConfirmAdd(true)}>
-          {assign === "none" ? "Add to roster (stock)" : `Add plant to ${assignLabel}`}
+          {assign === "none"
+            ? "Add to roster (stock)"
+            : assignOccupiedBy
+              ? `Replace ${assignOccupiedBy} on ${assignLabel}`
+              : `Add plant to ${assignLabel}`}
         </Button>
       </div>
       {commitErr ? (

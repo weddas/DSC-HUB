@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import threading
 import time
 from typing import Any
 
@@ -102,8 +103,13 @@ def clear_build_helpers() -> None:
     set_helper("input_text.dsc_build_blend_snapshot", "")
 
 
+# Every HA-shaped helper is one JSON blob under one settings key. Two concurrent
+# set_helper calls (FastAPI threadpool + the ingest loop + automation actuators) each did
+# load -> modify -> save on their own copy, and the second save erased the first write.
+_helpers_lock = threading.RLock()
+
+
 def set_helper(entity_id: str, value: Any) -> None:
-    data = _load_helpers()
     if entity_id.startswith("input_boolean."):
         if isinstance(value, bool):
             value = "on" if value else "off"
@@ -111,9 +117,11 @@ def set_helper(entity_id: str, value: Any) -> None:
             value = "on"
         elif str(value).lower() in ("false", "0", "no"):
             value = "off"
-    data[entity_id] = value
-    _save_helpers(data)
-    _mirror_plant_name_to_hub(entity_id, value)
+    with _helpers_lock:
+        data = _load_helpers()
+        data[entity_id] = value
+        _save_helpers(data)
+    _mirror_plant_name_to_hub(entity_id, value)  # network; never under the lock
 
 
 _PROBE_PLANT_NAME_RE = re.compile(r"^text\.dsc_probe([1-4])_plant_name$")

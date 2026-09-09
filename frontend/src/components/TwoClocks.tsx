@@ -6,6 +6,7 @@ import { useTentLightSchedule } from "../hooks/useTentLightSchedule";
 import { dayScheduleSegments, readTentPhotoperiodInput, tentWindowEntity, type TentPhotoperiodId } from "../lib/lightSchedule";
 import { fmtDurationMs } from "../lib/formatDuration";
 import { getEnergyEstimate, type EnergyEstimate } from "../lib/fleetApi";
+import { getSystemTime } from "../lib/systemApi";
 import { paths } from "../lib/paths";
 import { buildCloneLightDesk } from "../lib/lightViewModel";
 import { Icon, StatusTag } from "./ui";
@@ -53,8 +54,40 @@ function useEnergy(spaceId: "4x8" | "2x4", lightsOn: string, hours: number): Ene
   return est;
 }
 
+/**
+ * The hub evaluates every photoperiod window on its own SNTP clock. When that clock is
+ * unsynced the window flags below are not trustworthy — on 2026-09-09 the hub reported
+ * both windows OPEN at 03:20 local while the clocks here said DARK, and nothing said why.
+ */
+function useHubClockTrust(): { untrusted: boolean; reason: string } {
+  const [trust, setTrust] = useState<{ untrusted: boolean; reason: string }>({ untrusted: false, reason: "" });
+  useEffect(() => {
+    let alive = true;
+    const load = () =>
+      getSystemTime()
+        .then((t) => {
+          if (!alive) return;
+          const hub = t.hub;
+          if (hub.online && hub.valid === false) setTrust({ untrusted: true, reason: "hub reports clock_valid=false" });
+          else if (hub.online && hub.raw === "unsynced") setTrust({ untrusted: true, reason: "hub clock has not synced (SNTP unreachable)" });
+          else setTrust({ untrusted: false, reason: "" });
+        })
+        .catch(() => {
+          /* an older brain has no /system/time — no claim either way */
+        });
+    void load();
+    const id = window.setInterval(load, 60_000);
+    return () => {
+      alive = false;
+      window.clearInterval(id);
+    };
+  }, []);
+  return trust;
+}
+
 export function TentClock({ tent, showEyebrow = true }: { tent: TentPhotoperiodId; showEyebrow?: boolean }) {
   const schedule = useTentLightSchedule(tent);
+  const hubClock = useHubClockTrust();
   const { state, num, entity } = useEntityBus();
   const input = readTentPhotoperiodInput(tent, state, num);
   const energy = useEnergy(tent === "main" ? "4x8" : "2x4", input.lightsOnTime, input.expectedHours);
@@ -105,6 +138,7 @@ export function TentClock({ tent, showEyebrow = true }: { tent: TentPhotoperiodI
             <TipRow k={`${label} lamp`} v={hubLit != null ? (hubLit ? "LIT · hub window open" : "DARK · hub window closed") : schedule.valid ? (lit ? "LIT" : "DARK") : "no schedule"} tone={shownLit ? "ok" : undefined} />
             {schedule.valid ? <TipRow k={clock.key.toLowerCase()} v={clock.value} tone={conflict ? "bad" : undefined} /> : null}
             {conflict ? <TipRow k="conflict" v={`schedule says ${lit ? "LIT" : "DARK"} — the hub's lights-on time differs from the SPA's ${String(input.lightsOnTime ?? "—")}`} tone="bad" /> : null}
+            {hubClock.untrusted ? <TipRow k="hub clock" v={`${hubClock.reason} — the hub's window flags run on that clock and cannot be trusted until it syncs`} tone="bad" /> : null}
             <TipRow k="window" v={`${String(input.lightsOnTime ?? "—")} + ${Math.round(input.expectedHours)} h${tent === "clone" && schedule.followsMain ? " · follows 4×8" : ""}`} tone="muted" />
             <TipRow k="fixture" v={lampText} tone={lampText.includes("NOT WIRED") ? "muted" : undefined} />
             <TipRow k="energy" v={energyText} tone="muted" />
@@ -120,6 +154,7 @@ export function TentClock({ tent, showEyebrow = true }: { tent: TentPhotoperiodI
           <span className="dsc-clock-key">{clock.key}</span>
           <span className={`dsc-clock-big${conflict ? " is-conflict" : ""}`}>{clock.value}</span>
           {conflict ? <StatusTag label={`HUB ${hubLit ? "LIT" : "DARK"} · SCHEDULE ${lit ? "LIT" : "DARK"}`} tone="bad" live title={`${windowId} disagrees with the clock computed from the SPA's lights-on time — one of them is wrong`} /> : null}
+          {hubClock.untrusted ? <StatusTag label="HUB CLOCK UNSYNCED" tone="bad" live title={`${hubClock.reason}. Photoperiod windows run on the hub's clock; this window state is not trustworthy until it syncs.`} /> : null}
         </div>
       </Tooltip>
       <ClockRail tent={tent} />

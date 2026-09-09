@@ -11,6 +11,8 @@ export type PlantWizardPlantStepProps = {
   strain: string;
   assign: string;
   assignOptions: string[];
+  /** probe number -> plant name for probes that already hold a plant */
+  occupiedBy?: Record<string, string>;
   setAssignDraft: (next: string) => void;
   callService: CallService;
   expectedStage: string;
@@ -24,11 +26,13 @@ export function PlantWizardPlantStep({
   strain,
   assign,
   assignOptions,
+  occupiedBy,
   setAssignDraft,
   callService,
   expectedStage,
   expectedDays,
 }: PlantWizardPlantStepProps) {
+  const chosenOccupant = assign !== "none" ? occupiedBy?.[assign] : undefined;
   return (
     <Card className="dsc-glass dsc-wizard-panel" title="1 · Which plant, which probe?" icon="roster">
       <p className="dsc-muted" style={{ marginTop: 0, fontSize: "var(--dsc-fs-md)" }}>
@@ -70,10 +74,17 @@ export function PlantWizardPlantStep({
           >
             {assignOptions.map((opt) => (
               <option key={opt} value={opt}>
-                {opt === "none" ? "— none —" : probeLabel(Number(opt))}
+                {opt === "none"
+                  ? "— none —"
+                  : `${probeLabel(Number(opt))}${occupiedBy?.[opt] ? ` — occupied: ${occupiedBy[opt]}` : " — empty"}`}
               </option>
             ))}
           </select>
+          {chosenOccupant ? (
+            <span className="dsc-honesty">
+              <StatusChip label="OCCUPIED" tone="warn" /> {probeLabel(Number(assign))} already holds {chosenOccupant}. Adding here replaces its roster identity — retire it first if it is still growing.
+            </span>
+          ) : null}
         </label>
         <EntitySelect entityId="input_select.dsc_build_tent" label="Tent" icon="tent" />
       </div>

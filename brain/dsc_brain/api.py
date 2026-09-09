@@ -2951,6 +2951,9 @@ _ASSET_EXTS = (
     ".js", ".mjs", ".cjs", ".css", ".map", ".json", ".wasm",
     ".woff", ".woff2", ".ttf", ".otf", ".eot",
     ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".avif", ".ico",
+    # 3D twin + media: GLTFLoader given index.html for a missing .glb died inside its
+    # parser with "Unexpected token '<'" instead of reporting a clean 404.
+    ".glb", ".gltf", ".bin", ".hdr", ".ktx2", ".mp4", ".webm", ".txt", ".xml", ".webmanifest",
 )
 
 
@@ -2960,9 +2963,10 @@ _ASSET_EXTS = (
 # clean "route missing". Hash-routed SPA paths (#/…) never reach the server.
 _API_FIRST_SEGMENTS = frozenset(
     {
-        "api", "v1", "admin", "ai", "cameras", "catalogs", "control", "decision", "energy", "fleet",
-        "grow-log", "health", "history", "journal", "learning", "rooms", "roster",
-        "settings", "setup", "soft-cal", "soil-tests", "spaces", "system", "want", "ws",
+        "admin", "ai", "api", "cameras", "catalogs", "control", "decision", "energy",
+        "fleet", "grow-log", "health", "history", "journal", "journals", "learning", "rooms",
+        "roster", "settings", "setup", "soft-cal", "soil-tests", "spaces", "system", "v1",
+        "want", "ws", "zones",
     }
 )
 

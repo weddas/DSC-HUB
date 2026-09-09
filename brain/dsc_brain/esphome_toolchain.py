@@ -382,34 +382,54 @@ def run_env() -> dict[str, str]:
 # --------------------------------------------------------------------------- #
 # Versions
 # --------------------------------------------------------------------------- #
-def installed() -> str | None:
-    """Installed ESPHome version.
+def installed_sources() -> dict[str, str | None]:
+    """Every place an ESPHome version can be read from, side by side.
 
-    Prefer the dashboard's `/version` (works cross-container, no binary needed);
-    fall back to the venv `esphome version` for a host/venv deployment.
+    dashboard  — the build service's own /version (what it started with)
+    host_helper — dsc-esphome-host.sh capabilities.json (the venv the helper pip'd)
+    venv       — a local `esphome version` (host/venv brain only)
     """
+    out: dict[str, str | None] = {"dashboard": None, "host_helper": None, "venv": None}
     data = _dash_get("/version", timeout=3.0)
     if isinstance(data, dict):
         m = _VERSION_RE.search(str(data.get("version", "")))
         if m:
-            return m.group(1)
+            out["dashboard"] = m.group(1)
     caps = host_capabilities()
     if caps and caps.get("esphome_version"):
         m = _VERSION_RE.search(str(caps["esphome_version"]))
         if m:
-            return m.group(1)  # dashboard down, but the host helper knows the venv
-    try:
-        out = subprocess.run(
-            [esphome_bin(), "version"],
-            capture_output=True,
-            text=True,
-            timeout=20,
-        )
-    except (OSError, subprocess.SubprocessError):
-        return None
-    blob = f"{out.stdout}\n{out.stderr}"
-    m = _VERSION_RE.search(blob)
-    return m.group(1) if m else None
+            out["host_helper"] = m.group(1)
+    eb = esphome_bin()
+    if eb and (Path(eb).exists() or shutil.which(eb)):
+        try:
+            res = subprocess.run([eb, "version"], capture_output=True, text=True, timeout=20)
+            m = _VERSION_RE.search(f"{res.stdout}\n{res.stderr}")
+            if m:
+                out["venv"] = m.group(1)
+        except (OSError, subprocess.SubprocessError):
+            pass
+    return out
+
+
+def _pick_installed(sources: dict[str, str | None], backend: str) -> str | None:
+    """The version the build backend will actually compile with.
+
+    The dashboard's /version is what it STARTED with. After a host rollback pip'd the venv
+    to 2026.6.5 the dashboard still said 2026.8.2, so one payload disagreed with itself and
+    every seat was measured against a number in dispute. When the backend is the venv /
+    host helper, that wins; the dashboard only decides when it is the backend.
+    """
+    order = ("venv", "host_helper", "dashboard") if backend in ("venv", "venv-host") else ("dashboard", "host_helper", "venv")
+    for key in order:
+        if sources.get(key):
+            return sources[key]
+    return None
+
+
+def installed() -> str | None:
+    """Installed ESPHome version, read from the backend that builds (see _pick_installed)."""
+    return _pick_installed(installed_sources(), build_backend())
 
 
 def min_version() -> str:
@@ -603,7 +623,10 @@ def build_backend() -> str:
 
 
 def status(*, force_latest: bool = False) -> dict[str, Any]:
-    inst = installed()
+    backend = build_backend()
+    sources = installed_sources()
+    inst = installed()  # same picker; kept as the seam tests and callers stub
+    distinct = sorted({v for v in sources.values() if v})
     lat = latest(force=force_latest)
     mn = min_version()
     last_built = get_setting("last_built_esphome", "").strip()
@@ -615,11 +638,15 @@ def status(*, force_latest: bool = False) -> dict[str, Any]:
     )
     devices = device_versions()
     behind = [d for d in devices if d["running"] and not d["matches_installed"]]
-    backend = build_backend()
     caps = host_capabilities()
     free = disk_free_bytes()
     return {
         "installed": inst,
+        "installed_from": next((k for k in (("venv", "host_helper", "dashboard") if backend in ("venv", "venv-host") else ("dashboard", "host_helper", "venv")) if sources.get(k)), None),
+        "installed_sources": sources,
+        # More than one distinct version among the sources means the dashboard has not been
+        # restarted onto the venv it reports for, or runs from a different environment.
+        "installed_disagreement": distinct if len(distinct) > 1 else None,
         "latest": lat.get("version"),
         "latest_supported": latest_supported,
         "latest_blocked_reason": (

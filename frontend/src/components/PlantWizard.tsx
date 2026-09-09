@@ -303,6 +303,19 @@ export function PlantWizard() {
   const plantTitle = nick || strainLabel || "New plant";
   const assignLabel = assign === "none" ? "Roster stock (no probe)" : probeLabel(Number(assign));
 
+  // Which kit probes already hold a plant (the hub mirror of each probe's plant name).
+  // Compose used to offer every probe as if empty and confirm "Add plant to Probe 1" over
+  // a live day-61 flowering plant.
+  const occupiedBy = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const n of KIT_PROBE_NUMBERS) {
+      const name = String(state(`text.dsc_probe${n}_plant_name`, "") ?? "").trim();
+      if (name && name !== "unknown" && name !== "unavailable" && name !== "—") out[String(n)] = name;
+    }
+    return out;
+  }, [state]);
+  const assignOccupiedBy = assign === "none" ? undefined : occupiedBy[assign];
+
   const assignOptions = useMemo(() => {
     const raw = (entity("input_select.dsc_build_assign_pot")?.attributes?.options as string[]) || [];
     const kit = new Set<string>(["none", ...KIT_PROBE_NUMBERS.map(String)]);
@@ -386,6 +399,7 @@ export function PlantWizard() {
           strain={strain}
           assign={assign}
           assignOptions={assignOptions}
+          occupiedBy={occupiedBy}
           setAssignDraft={setAssignDraft}
           callService={guardedCallService}
           expectedStage={expectedStage}
@@ -442,6 +456,7 @@ export function PlantWizard() {
           expectedDays={expectedDays}
           strainLabel={strainLabel}
           assign={assign}
+          assignOccupiedBy={assignOccupiedBy}
           setConfirmAdd={setConfirmAdd}
           commitErr={commitErr}
           showAdvanced={showAdvanced}

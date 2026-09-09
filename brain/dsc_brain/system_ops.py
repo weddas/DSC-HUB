@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 import shlex
+from pathlib import Path
 import shutil
 import subprocess
 from typing import Any
@@ -32,6 +33,20 @@ _DEFAULT_POWER_CMD = {
 }
 
 VALID_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")
+
+
+def _in_container() -> bool:
+    """True inside Docker/podman — the shipping topology for the brain."""
+    try:
+        if Path("/.dockerenv").exists() or Path("/run/.containerenv").exists():
+            return True
+        cg = Path("/proc/1/cgroup")
+        if cg.exists():
+            txt = cg.read_text(encoding="utf-8", errors="ignore")
+            return any(tok in txt for tok in ("docker", "containerd", "podman", "kubepods"))
+    except OSError:
+        pass
+    return False
 
 
 # ---------------------------------------------------------------- log verbosity
@@ -92,10 +107,17 @@ def tail_log(source: str, lines: int = 200) -> dict[str, Any]:
     if ok:
         hint = None
     else:
-        base = (
-            "This host doesn't expose that log (not a Pi, or the command needs adjusting via the "
-            f"log_cmd_{src} setting)."
-        )
+        if _in_container():
+            # It IS a Pi and journalctl IS on the host — the brain simply runs in a container
+            # that has neither journalctl nor /run/systemd. Pointing the operator at "not a Pi"
+            # sent them to the wrong fix.
+            base = (
+                "The brain runs in a container, so the host's journal is not reachable from here. "
+                f"Read it over ssh (`{_DEFAULT_LOG_CMD.get(src, 'journalctl')}` on the Pi), or point the "
+                f"log_cmd_{src} setting at a host-side helper that can."
+            )
+        else:
+            base = f"This host doesn't expose that log — adjust the log_cmd_{src} setting to a command this host can run."
         # Fold the raw subprocess error into the hint rather than leaking a bare
         # "[Errno 2] ... 'journalctl'" into the log pane as if it were log output.
         if code == 127:
