@@ -107,7 +107,9 @@ async def gate_and_meter(request: Request, call_next):
         ok, retry = await limiter.gate(_client_id(request))
         if not ok:
             rate_limited = True
-            body = b'{"detail":"rate limited — cooldown; retry later"}'
+            # ASCII only: a bytes literal cannot carry the em dash this once had, and the
+            # SyntaxError took the whole 8.1.0 container down at import (live 2026-09-09).
+            body = b'{"detail":"rate limited - cooldown; retry later"}'
             metrics.record_request(
                 bytes_in=bytes_in, bytes_out=len(body), rate_limited=True
             )
