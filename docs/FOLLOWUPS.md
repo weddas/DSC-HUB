@@ -10,6 +10,16 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-09-09 — Docs SoT tip `17aa6bd` (USB flash / commission / plausibility)
+
+Landed in product: flash guards, `commissioned_inferred`, reject-not-clamp climate. Engineering docs:
+
+- [`docs/ops/USB-FLASH.md`](ops/USB-FLASH.md)
+- [`docs/brain/KIT-SETUP.md`](brain/KIT-SETUP.md)
+- [`docs/brain/PLAUSIBILITY.md`](brain/PLAUSIBILITY.md)
+
+Residual (not closed by `17aa6bd`): USB flash job history prune/DELETE; container serial passthrough / firmware mount deployment; bake path still needs CI that refuses shipping hollow bins onto the card.
+
 ## 2026-09-07 — 3D twin: the composed live scene (`#/twin`) + pack-3 model briefs
 
 Same branch `feat/dashboard-v2`, uncommitted, not hotpatched. First scene that *composes* the model library into the

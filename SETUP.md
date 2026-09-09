@@ -2,7 +2,9 @@
 
 **Product unbox path (8.1.0):** Flash the kit SD image → Pi boots → open SPA Setup (`#/setup`) on LAN/`dsc-brain.local` or Pi SoftAP → USB-flash devices on the Pi → fleet SoftAP join → Zigbee bind. See [`docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md`](docs/superpowers/specs/2026-09-06-dsc-kit-sd-installer-design.md).
 
-**Legacy detail below** still describes hub/device SoftAP membership (hub `DSC-Setup-*`, bridge `DSC-Anchor`) — that remains the **fleet** Wi‑Fi story and is distinct from the **Pi operator** SoftAP used only when Ethernet is absent.
+**Commission honesty (tip `17aa6bd`):** `GET /setup/state` returns `commissioned_inferred` when the fleet has reported even if `kit_commissioned` stayed `false` (kits that predate the wizard). The SPA parks the destructive USB-flash step on either flag — see [`docs/brain/KIT-SETUP.md`](docs/brain/KIT-SETUP.md). USB flash guards (manifest disk truth, coordinator exclusion, `0xE9` / chip_id): [`docs/ops/USB-FLASH.md`](docs/ops/USB-FLASH.md).
+
+**Legacy detail below** still describes hub/device SoftAP membership (hub `DSC-Setup-*`, bridge `DSC-Anchor`) — that remains the **fleet** Wi‑Fi story and is distinct from the **Pi operator** SoftAP used only when Ethernet is absent. The WT32-ETH01 **bridge role is not** in the USB flash kit role list (bake excludes it).
 
 **Product unbox path (pre-8.0 narrative).** SoftAP + hub + DSC-CONTROL is the local climate kit.
 Catalogs / Want / advanced UI destination: Pi offline brain — see

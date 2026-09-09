@@ -5,6 +5,10 @@ the build or update path: the running per-device ESPHome version comes from the
 native API, "latest" comes from PyPI, and updates are `pip`/`esphome` in a Pi
 venv.
 
+**USB first-boot flash** (baked `.bin` + host `esptool`, Setup wizard) is a
+separate path — see [`USB-FLASH.md`](USB-FLASH.md). Do not conflate it with
+dashboard compile/OTA below.
+
 ## Pieces
 
 | Piece | Where |
