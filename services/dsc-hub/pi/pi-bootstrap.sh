@@ -103,6 +103,11 @@ dhcp-option=option:router,${AP_NET}
 dhcp-option=option:dns-server,${AP_NET}
 domain=dsc-brain.local
 address=/dsc-brain.local/${AP_NET}
+# Explicit upstreams: with bind-interfaces on wlan0, dnsmasq did not reliably forward fleet
+# queries from /etc/resolv.conf (2026-09-09: fleet resolver returned no answer while the Pi's
+# own DNS worked), so any SoftAP device needing real DNS failed silently. Pin them here.
+server=1.1.1.1
+server=8.8.8.8
 # Fleet NTP answers from the Pi (chrony): the SoftAP subnet has no NAT, so ESPHome's default
 # pool.ntp.org servers resolve to the Pi. dsc-hub-ap-run.sh also REDIRECTs udp/123 as belt
 # and braces (2026-09-09: hub clock never synced, photoperiod windows stayed shut).
