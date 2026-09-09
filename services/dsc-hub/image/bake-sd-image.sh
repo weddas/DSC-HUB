@@ -79,11 +79,36 @@ EOF
 if [[ -f "${MNT}/etc/dhcpcd.conf" ]] && ! grep -q '^nohook resolv.conf' "${MNT}/etc/dhcpcd.conf"; then
   cat >> "${MNT}/etc/dhcpcd.conf" <<'EOF'
 
-# DSC-HUB (baked): the resolver is static and container interfaces are never managed.
+# DSC-HUB (baked): the resolver is static.
 nohook resolv.conf
-denyinterfaces veth* docker0 br-*
 EOF
 fi
+# denyinterfaces MUST precede the first `interface` block or dhcpcd ignores it and keeps
+# soliciting on docker veths (which steals the eth0 default route on a container recreate,
+# live 2026-09-09). Prepend it, not append.
+if [[ -f "${MNT}/etc/dhcpcd.conf" ]] && ! grep -q '^denyinterfaces veth' "${MNT}/etc/dhcpcd.conf"; then
+  sed -i '1i # DSC-HUB (baked): never manage container interfaces (must precede any interface block).\ndenyinterfaces veth* docker0 br-*' "${MNT}/etc/dhcpcd.conf"
+fi
+# Fleet NTP: bake the boot-time redirect unit + chrony drop-in so a fresh card serves NTP to
+# its SoftAP fleet (the hub clock cannot sync otherwise; the subnet has no NAT). The chrony
+# PACKAGE is installed by bring-up-eth0.sh on first deploy if the image lacks it.
+if [[ -f "${DSC_ROOT:-.}/services/dsc-hub/pi/dsc-hub-fleet-ntp.service" ]]; then
+  install -m 0644 "${DSC_ROOT:-.}/services/dsc-hub/pi/dsc-hub-fleet-ntp.service" \
+    "${MNT}/etc/systemd/system/dsc-hub-fleet-ntp.service" 2>/dev/null || true
+  ln -sfn /etc/systemd/system/dsc-hub-fleet-ntp.service \
+    "${MNT}/etc/systemd/system/multi-user.target.wants/dsc-hub-fleet-ntp.service" 2>/dev/null || true
+fi
+mkdir -p "${MNT}/etc/chrony/conf.d"
+cat > "${MNT}/etc/chrony/conf.d/dsc-hub.conf" <<'EOF'
+# DSC-HUB (baked): the Pi is the NTP server for its SoftAP fleet. No `local stratum` — an
+# unsynced Pi must not hand the fleet a guess.
+server 162.159.200.1 iburst
+server 162.159.200.123 iburst
+server 216.239.35.0 iburst
+server 216.239.35.4 iburst
+pool time.cloudflare.com iburst
+allow 10.42.0.0/24
+EOF
 rm -f "${MNT}/etc/resolv.conf"
 cat > "${MNT}/etc/resolv.conf" <<'EOF'
 # DSC-HUB static resolver (baked; dhcpcd nohook resolv.conf). bring-up-eth0.sh adds the LAN router on a live host.

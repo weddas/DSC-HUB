@@ -100,12 +100,11 @@ fi
 # new veth, dhcpcd gave it an IPv4LL address and a 169.254/16 route, and the eth0 default
 # route went with it (LAN unreachable while the brain kept running). Deny them.
 if ! grep -q '^denyinterfaces veth\*' /etc/dhcpcd.conf 2>/dev/null; then
-  printf '
-# DSC-HUB: never manage container interfaces (bring-up-eth0.sh).
-denyinterfaces veth* docker0 br-*
-' > /tmp/dsc-dhcpcd-deny.conf
-  run_sudo bash -c "cat /tmp/dsc-dhcpcd-deny.conf >> /etc/dhcpcd.conf"
-  rm -f /tmp/dsc-dhcpcd-deny.conf
+  # MUST be PREPENDED, before the first `interface` block: appended at the end (as an
+  # earlier version did) dhcpcd silently ignored it and kept soliciting on veths — the
+  # 2026-09-09 reboot came up with dhcpcd still managing four veths despite the line
+  # being present. sed 1i puts it at the very top.
+  run_sudo sed -i '1i # DSC-HUB: never manage container interfaces (must precede any interface block).\ndenyinterfaces veth* docker0 br-*' /etc/dhcpcd.conf
 fi
 
 # Time: the Pi ran 7 minutes slow with NTPSynchronized=no because timesyncd's default pool
@@ -156,6 +155,15 @@ fi
 if command -v iptables >/dev/null 2>&1 && ip link show wlan0 >/dev/null 2>&1; then
   run_sudo iptables -t nat -C PREROUTING -i wlan0 -p udp --dport 123 -j REDIRECT --to-ports 123 2>/dev/null \
     || run_sudo iptables -t nat -A PREROUTING -i wlan0 -p udp --dport 123 -j REDIRECT --to-ports 123 || true
+fi
+# Make the redirect survive a reboot. iptables rules are not persisted and the AP can be
+# brought up by more than one mechanism, so a dedicated boot-time oneshot re-arms it
+# regardless (2026-09-09: a plain reboot left the redirect gone and the hub clock unsynced).
+UNIT_SRC="$(dirname "$0")/dsc-hub-fleet-ntp.service"
+if [ -f "${UNIT_SRC}" ] && [ ! -f /etc/systemd/system/dsc-hub-fleet-ntp.service ]; then
+  run_sudo install -m 0644 "${UNIT_SRC}" /etc/systemd/system/dsc-hub-fleet-ntp.service
+  run_sudo systemctl daemon-reload 2>/dev/null || true
+  run_sudo systemctl enable --now dsc-hub-fleet-ntp.service 2>/dev/null || true
 fi
 
 # Docker: prefer IPv4 DNS (AP-only Pi had broken IPv6 resolver). Only meaningful

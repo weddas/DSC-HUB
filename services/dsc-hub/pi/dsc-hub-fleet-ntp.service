@@ -1,0 +1,17 @@
+[Unit]
+Description=DSC-HUB: redirect SoftAP fleet NTP (udp/123 on wlan0) to the local chrony
+After=network.target chrony.service
+Wants=chrony.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# The fleet (hub/pots/Sonoffs on 10.42.0.0/24) has NO NAT off the SoftAP, so its SNTP to
+# pool.ntp.org can never get a reply — the hub clock never syncs and the photoperiod
+# windows stay shut (live 2026-09-09). Answer udp/123 from the SoftAP with the Pi's own
+# chrony instead. Idempotent add; no firmware change. chrony must `allow 10.42.0.0/24`.
+ExecStart=/bin/sh -c 'iptables -t nat -C PREROUTING -i wlan0 -p udp --dport 123 -j REDIRECT --to-ports 123 2>/dev/null || iptables -t nat -A PREROUTING -i wlan0 -p udp --dport 123 -j REDIRECT --to-ports 123'
+ExecStop=/bin/sh -c 'iptables -t nat -D PREROUTING -i wlan0 -p udp --dport 123 -j REDIRECT --to-ports 123 2>/dev/null || true'
+
+[Install]
+WantedBy=multi-user.target
