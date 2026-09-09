@@ -1959,6 +1959,39 @@ def settings_global_modifiers_patch(body: GlobalModifiersPatch) -> dict[str, Any
     return {"modifiers": saved}
 
 
+class DevicePowerBody(BaseModel):
+    # None / "" clears the value back to "not set", which is different from 0 W.
+    watts: float | None = None
+
+
+@app.get("/settings/device-power")
+async def settings_device_power_get() -> dict[str, Any]:
+    """Per-device wattage with its source: catalog (locked), operator, or unset."""
+    from .device_power import MAX_WATTS, list_device_power
+
+    return {"devices": await list_device_power(), "max_watts": MAX_WATTS}
+
+
+@app.patch("/settings/device-power/{seat_id}")
+async def settings_device_power_patch(seat_id: str, body: DevicePowerBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .device_power import PowerLockedError, _catalog_watts_for, set_device_watts
+    from .settings import list_inventory
+
+    row = next((r for r in list_inventory() if str(r.get("seat_id")) == seat_id), None)
+    extra = (row or {}).get("extra") or {}
+    catalog_id = str(extra.get("catalog_id") or "") if isinstance(extra, dict) else ""
+    catalog_watts = await _catalog_watts_for(catalog_id)
+    try:
+        return {"device": set_device_watts(seat_id, body.watts, catalog_watts=catalog_watts)}
+    except PowerLockedError as exc:
+        # 409, not 400: the request is well-formed, it just conflicts with the catalogue.
+        raise HTTPException(409, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
 @app.get("/settings/probe-stations")
 def settings_probe_stations_get() -> dict[str, Any]:
     return {"stations": list_probe_stations()}

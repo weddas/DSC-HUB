@@ -312,6 +312,30 @@ async def catalog_light_detail(light_id: str) -> dict[str, Any] | None:
         return data if isinstance(data, dict) else None
 
 
+async def catalog_equipment_detail(equipment_id: str) -> dict[str, Any] | None:
+    """Full equipment record from the CannaLib equipment store; None when absent.
+
+    Mirrors catalog_light_detail — the two stores share a shape, including the
+    ``wattage_w`` field the device-power lock reads.
+    """
+    eid = (equipment_id or "").strip()
+    if not eid:
+        return None
+    base = cannalib_base_url()
+    if not base:
+        raise CatalogSearchError("CannaLib API URL not configured")
+    headers = cannalib_headers()
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        resp = await client.get(f"{base}/v1/catalogs/equipment/{eid}", headers=headers)
+        if resp.status_code == 404:
+            return None
+        if resp.status_code == 503:
+            raise CatalogSearchError("CannaLib equipment store not mounted on the remote")
+        resp.raise_for_status()
+        data = resp.json()
+        return data if isinstance(data, dict) else None
+
+
 async def catalog_media_asset(asset_id: str) -> tuple[bytes, str] | None:
     """Proxy licensed media bytes from live CannaLib (gateway or sidecar)."""
     aid = (asset_id or "").strip()

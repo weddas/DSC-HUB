@@ -9,6 +9,7 @@ import { SettingRow, SettingsCard, Stated, Toggle } from "../../components/setti
 import { TextSettingRow } from "../../components/settings/TextSettingRow";
 import { FLOOD_TASK_ID, IDLE_PROBE_OPTIONS, TANK_TASK_ID, TENT_OPTIONS } from "../../components/settings/settingsConstants";
 import { inventoryGroup, resolveSeat, seatIcon, taskParamDefaults } from "../../components/settings/settingsHelpers";
+import { DevicePowerCard } from "../../components/settings/DevicePowerCard";
 import { ActionsCell, HealthCell, SettingsTable, SettingsRow } from "../../components/settings/SettingsTable";
 import { ZigbeeCatalogCard } from "../../components/settings/ZigbeeCatalogCard";
 import { TuyaLocalCard } from "../../components/settings/TuyaLocalCard";
@@ -490,6 +491,9 @@ export function DevicesSettingsPage() {
           >
             <p>{pendingInService?.next ? "The brain will treat this seat as part of the live kit." : "Out-of-service seats stay visible but never fake readings."}</p>
           </DecisionLayer>
+          {/* Power belongs with the devices it describes: same page, same seats. A device
+              matched to a catalogue product renders read-only with the reason. */}
+          <DevicePowerCard />
         </>
       ) : null}
 

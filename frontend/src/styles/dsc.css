@@ -6161,3 +6161,16 @@ button.dsc-metric:focus-visible { outline: 2px solid var(--dsc-teal); outline-of
   padding: 4px 8px;
   line-height: 1.45;
 }
+
+/* Per-device wattage input (Settings › Devices › Inventory). Narrow and right-aligned so a
+   column of them reads as figures rather than text fields. */
+.dsc-power-input {
+  width: 88px;
+  text-align: right;
+  background: var(--dsc-gray-1);
+  border: 1px solid var(--dsc-gray-3);
+  border-radius: 4px;
+  color: var(--dsc-white);
+  padding: 4px 7px;
+  font-variant-numeric: tabular-nums;
+}
