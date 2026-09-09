@@ -132,6 +132,24 @@ if [ -d "${REPO}/brain/static" ]; then
   echo "=== hot-synced SPA static ==="
 fi
 
+# Re-assert the eth0 LAN route AFTER the container recreate. The recreate spawns a new veth;
+# until `denyinterfaces veth*` is active (needs a dhcpcd reload/reboot — we do NOT reload it
+# mid-deploy, that risks locking out this very SSH session), dhcpcd can grab an IPv4LL route
+# on the veth and take the eth0 default route with it, stranding the Pi on the LAN with the
+# brain still running. bring-up-eth0.sh's pre-step re-asserts routes but runs BEFORE this
+# recreate, so do it again here. Idempotent; reachability is restored by the time the deploy
+# ends. (Live 2026-09-06 and 2026-09-09.)
+if ip link show eth0 >/dev/null 2>&1 && [ "$(cat /sys/class/net/eth0/carrier 2>/dev/null || echo 0)" = "1" ]; then
+  ETH_IP="$(ip -4 addr show eth0 | awk '/inet /{print $2}' | cut -d/ -f1 | head -1)"
+  if [ -n "${ETH_IP}" ]; then
+    SUBNET="$(echo "${ETH_IP}" | awk -F. '{printf "%s.%s.%s.0/24", $1, $2, $3}')"
+    GW="$(echo "${ETH_IP}" | awk -F. '{printf "%s.%s.%s.1", $1, $2, $3}')"
+    run_sudo ip route replace "${SUBNET}" dev eth0 src "${ETH_IP}" 2>/dev/null || true
+    run_sudo ip route replace default via "${GW}" dev eth0 src "${ETH_IP}" 2>/dev/null || true
+    echo "=== re-asserted eth0 routes (${SUBNET}, default via ${GW}) after recreate ==="
+  fi
+fi
+
 sleep 3
 echo "=== deploy mode: ${DEPLOY_MODE} ==="
 curl -sf http://127.0.0.1:8787/health && echo || echo "health check failed"
