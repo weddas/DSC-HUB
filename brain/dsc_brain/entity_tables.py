@@ -39,6 +39,11 @@ SONOFF_FW: dict[str, str] = {
     "dehumidifier": "sensor.dsc_dehumidifier_firmware_version",
 }
 
+# Entity -> seat. The brain had three literal copies of this inversion (computed_ops,
+# control_ops, demo_simulator); they are relay/actuation mappings, so an edit to one and
+# not the others silently mis-targets a relay. Derived here so that cannot happen.
+SONOFF_RELAY_TO_SEAT: dict[str, str] = {entity: seat for seat, entity in SONOFF_RELAY.items()}
+
 IN_SERVICE_ENTITIES: dict[str, str] = {
     "ac": "input_boolean.dsc_ac_in_service",
     "mister": "input_boolean.dsc_clone_humidifier_in_service",
@@ -313,7 +318,7 @@ KIT_DEFS: list[KitDefRow] = [
         "demand_entity": "switch.dsc_hub_dehumidifier_demand",
         "relay_entity": "switch.dsc_de_humidifier_main_relay",
         "runtime_today": "sensor.dsc_dehumidifier_runtime_today",
-        "firmware_entity": "sensor.dsc_de_humidifier_firmware_version",
+        "firmware_entity": "sensor.dsc_dehumidifier_firmware_version",
     },
     {
         "id": "mister",

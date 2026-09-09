@@ -298,6 +298,11 @@ def emit_dash_entities(
 
     since_hour = time.time() - 3600
     set_entity(states, "sensor.dsc_humidifier_cycles_last_hour", cycle_count_since("hub", "switch_dsc_hub_humidifier_demand", since_hour, history=history), available=True)
+    # The Kit tiles have asked for these two since 8.0.0 and nothing ever produced them, so
+    # "cycles today" was permanently blank. Same day boundary as runtime_memo.hours_today so
+    # the two numbers on the same tile always describe the same window.
+    set_entity(states, "sensor.dsc_heater_cycles_today", cycle_count_since("hub", "switch_dsc_hub_heater_demand", runtime_memo.midnight_ts, history=history), available=True)
+    set_entity(states, "sensor.dsc_humidifier_cycles_today", cycle_count_since("hub", "switch_dsc_hub_humidifier_demand", runtime_memo.midnight_ts, history=history), available=True)
     set_entity(states, "sensor.dsc_dehumidifier_runtime_today", runtime_memo.hours_today("hub", "switch_dsc_hub_dehumidifier_demand"), available=True, attributes={"unit_of_measurement": "h"})
     set_entity(states, "sensor.dsc_ac_runtime_today", runtime_memo.hours_today("hub", "switch_dsc_hub_ac_demand"), available=True, attributes={"unit_of_measurement": "h"})
 

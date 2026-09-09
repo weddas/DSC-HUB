@@ -56,7 +56,7 @@ export const KIT_DEFS: KitDef[] = [
     demandEntity: "switch.dsc_hub_dehumidifier_demand",
     relayEntity: "switch.dsc_de_humidifier_main_relay",
     runtimeToday: "sensor.dsc_dehumidifier_runtime_today",
-    firmwareEntity: "sensor.dsc_de_humidifier_firmware_version",
+    firmwareEntity: "sensor.dsc_dehumidifier_firmware_version",
   },
   {
     id: "mister",

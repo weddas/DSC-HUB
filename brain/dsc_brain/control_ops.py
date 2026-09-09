@@ -37,12 +37,8 @@ _IN_SERVICE_ENTITY_TO_SEAT: dict[str, str] = {
     "input_boolean.dsc_tank_in_service": "tank",
 }
 
-_SONOFF_RELAY_ENTITY_TO_SEAT: dict[str, str] = {
-    "switch.dsc_heater_main_relay": "heater",
-    "switch.dsc_heatmat_main_relay": "heatmat",
-    "switch.dsc_humidifier_main_relay": "humidifier",
-    "switch.dsc_de_humidifier_main_relay": "dehumidifier",
-}
+# Single source of truth: brain/dsc_brain/entity_tables.py (was a literal copy).
+from .entity_tables import SONOFF_RELAY_TO_SEAT as _SONOFF_RELAY_ENTITY_TO_SEAT
 
 # Seats with demand switches but no physical Sonoff relay seat (guard writes).
 _PHANTOM_RELAY_SEATS = frozenset({"ac", "mister"})

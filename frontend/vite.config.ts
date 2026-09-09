@@ -78,6 +78,12 @@ export default defineConfig(({ mode }) => {
     "process.env.NODE_ENV": JSON.stringify("production"),
   },
   root: path.resolve(__dirname),
+  // `vite preview` INHERITS server.proxy, so booting the built bundle to check the chunk
+  // graph used to send every non-Vite request — including /assets/*.js — at
+  // DSC_BRAIN_ORIGIN, i.e. the LIVE Pi (2026-09-09: ~15 stray GETs landed on it before it
+  // was noticed). A verification step must never point load at the running grow. Empty
+  // proxy here; verify the emitted chunk graph offline against spa-dist instead.
+  preview: { proxy: {} },
   server: {
     // Dev against the live Pi: everything that is not a Vite asset (source, @vite/@fs,
     // pre-bundled deps, /public models, the HMR socket) goes to the brain so the SPA sees

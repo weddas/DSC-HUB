@@ -443,12 +443,8 @@ def _control_state(states: dict[str, dict[str, Any]], eid: str) -> str | None:
     return str(st)
 
 
-_SONOFF_RELAY_ENTITIES: dict[str, str] = {
-    "heater": "switch.dsc_heater_main_relay",
-    "heatmat": "switch.dsc_heatmat_main_relay",
-    "humidifier": "switch.dsc_humidifier_main_relay",
-    "dehumidifier": "switch.dsc_de_humidifier_main_relay",
-}
+# Single source of truth: brain/dsc_brain/entity_tables.py (was a literal copy).
+from .entity_tables import SONOFF_RELAY as _SONOFF_RELAY_ENTITIES
 
 
 def _states_with_sonoff_relays(
