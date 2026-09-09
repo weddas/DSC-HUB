@@ -12,7 +12,7 @@ were not reachable, and one test physically took the rig down.
 
 ## Headline
 
-The pass found **59 new defects** — ten Critical — verified five
+The pass found **66 new defects** — ten Critical — verified five
 previously-logged entries, reversed one that had been closed wrongly, and caused
 **three unplanned outages**. Two were the root-on-USB fragility. The third,
 on 2026-09-09, was the SPA flooding the brain with ~17 `/fleet/computed`
@@ -1296,18 +1296,223 @@ fix and remains the operator's call — it is a host config change on a live gro
 
 ---
 
+## O. Seventh sweep, 2026-09-09 — the remaining areas
+
+The operator lifted the actuator restriction ("I don't care about actuators or
+live grows, I need these tests to run") and supplied an IP camera. This sweep
+closes what was left.
+
+**Every write in this sweep was restored and verified against a baseline.** Final
+state check at the end of the sweep:
+
+```
+settings/automations       IDENTICAL
+settings/alerts            IDENTICAL
+settings/stage-rail        IDENTICAL
+settings/probe-stations    IDENTICAL
+hub-tunables (47 rows)     IDENTICAL
+cameras                    DIFFERS  ← deliberate, see O.1
+```
+
+### O.1 Cameras — COMPLETED (API), STAGED (real device)
+
+The USB webcam remains off-limits (it browned out the Pi, §H). But the whole
+camera pipeline was exercised through the API with a synthetic camera, then a
+real IP camera was staged.
+
+Full create → validate → capture → media → storage → delete cycle:
+
+| Step | Result |
+|---|---|
+| `POST /cameras/test` on an unreachable URL | `{"ok":false,"error":"camera did not answer within 20 s"}` — honest |
+| `PUT /cameras/qa_test_cam` | 200, full row returned, `password_set:false` |
+| invalid `source_kind` | 400 — lists the five valid kinds |
+| unknown `space_id` | 400 `unknown zone atlantis` |
+| `interval_s: -5` | 400 `must be between 30 and 86400` |
+| `keep_days: -1` | 400 `must be between 0 and 3650` |
+| `POST .../capture` | `ok:false`, same honest timeout error |
+| `GET .../latest.jpg` | 404 |
+| `GET .../days`, `/frames`, `/timelapses` | 200, all empty |
+| `GET /cameras/storage` | correct zero-byte accounting |
+| `DELETE` + verify | `{"deleted":true}`, `GET /cameras` byte-identical to baseline |
+
+**Camera validation is the best on the brain** — a marked contrast with
+`patch_probe_station`, which validates nothing (§N.1).
+
+One defect: `DELETE /cameras/never_existed` returns **200 `{"deleted": false}`**
+where the neighbouring routes 404 (`latest.jpg`, `usb-flash/jobs/{id}`).
+
+**The real camera.** `192.168.86.200` is a **TP-Link** unit: ports 554 and 443
+only, 80/8080 refused. RTSP `OPTIONS` returns `200 OK`; every `DESCRIBE` returns
+`401 Unauthorized · WWW-Authenticate: Basic realm="TP-Link IP-Camera"`, so the
+stream path cannot be discovered without credentials. `ffmpeg: true` in the
+container, so capture will work once authenticated.
+
+A camera row is staged and waiting, deliberately left in place (this is the one
+intentional deviation from baseline):
+
+```
+tent_4x8_cam · space 4x8 · rtsp://192.168.86.200:554/stream1
+username set · password_set: false · enabled: false
+interval 900 s · keep 14 d · cap 2 GB · lights_on_only
+```
+
+Entering the password is the operator's step, not mine. Once set, enable the row
+and the remaining camera tests (real capture, MJPEG, retention prune, timelapse
+assembly, zone thumbnail) run on the live device.
+
+### O.2 Hub writes — COMPLETED, and the operator's clash concern measured
+
+First attempted through `/control/service`. The operator's correction was right:
+*"don't control the hub directly, it must be controlled via the brain, or the
+test means nothing"* — that route is a thin passthrough and tests the transport,
+not the product. Re-run through the brain-owned `/settings/hub-tunables` surface.
+
+**The two surfaces behave very differently, and the difference is the finding.**
+
+`/control/service` returns the value you asked for, immediately:
+
+```
+POST → {"entity_id":"number.dsc_hub_ladder_wait_mat","state":"90.0"}   [200]
+GET  /fleet  → still 60.0   … for 30–40 s
+```
+
+`/settings/hub-tunables` tells the truth:
+
+```
+PATCH → desired=90  hub=60  state=pending   source=operator
+t+70s → desired=90  hub=90  state=synced
+```
+
+Measured round trips: **70 s** on one write, **50 s** on another, **40 s** on the
+restore. That is the window the operator was pointing at.
+
+**The clash test.** With the brain at `desired=90` and the hub confirmed at 90,
+a competing value (120) was written straight to the device. The brain detected it
+correctly — `desired=90 · hub=120 · state="differs"`. Good.
+
+But for roughly **90 seconds in between**, every one of the 47 tunable rows read
+`hub=None · state="missing"` while `hub_online` stayed `True`. The code's own
+comment says what `missing` is meant to mean:
+
+```python
+present = eid in controls
+state = _state_for(...)
+if not present and online:
+    state = "missing"   # the running firmware has no such entity
+```
+
+The condition only tests membership of the *current snapshot*. A poll gap is
+therefore reported to the operator as "your firmware does not have this control"
+— pointing at a reflash when the truth is a dropped frame. The `and online`
+guard makes it worse: it fires precisely when the hub is up but the snapshot is
+briefly thin.
+
+Writes verified through the full cycle on a switch, a number and a select. All
+restored; `/adopt` used to return `source` to `adopted` so the 47-row comparison
+came back clean.
+
+**Pre-existing drift found by the same test** — in the baseline, before any write,
+and unchanged after all restores. Five tunables disagree between brain and hub
+with no banner, chip or alert anywhere:
+
+| Tunable | brain desires | hub runs |
+|---|---|---|
+| `control_strategy` | **VPD** | **Humidity** |
+| `rh_target_min` | 50 | 40 |
+| `rh_target_max` | 60 | 55 |
+| `vpd_target_max` | 1.3 | 1.4 |
+| `priority_tent` | 2x4 Clone | 4x8 Main |
+
+`control_strategy` is the one that matters: the brain believes the tent is driven
+on VPD while the hub is actually driving on Humidity, which selects a different
+appliance ladder. All five are `source: adopted`, so they read as values the
+brain took from the hub once and then drifted from — not operator intent.
+
+### O.3 Calibration store — COMPLETED
+
+`/settings/calibration/{device_id}` is a **second, separate** calibration store
+from the CFM helpers in §M (`input_number.dsc_cal_cfm_*` live in the compose
+helper store). This one is **empty for every device** — hub, pot1, pot2 all
+return `{"calibrations": []}`, consistent with the Light page's "No calibration
+yet — PPFD shows as —".
+
+Write tests were run against a deliberately fake `qa_test_device` so no real
+device's calibration was polluted. Upsert works (`ON CONFLICT … DO UPDATE`:
+step 25 rewritten 42.5 → 55.0, step 50 untouched), `cal_type` is validated
+(`400 unsupported cal_type telepathy`), non-numeric values are rejected (422),
+and the `?cal_type=` filter works.
+
+`/soft-cal/sessions` validation correct on all three cases (`probe_n` 0, `probe_n`
+9, missing `phase` → 400). The session list is empty.
+
+Two rows remain under `qa_test_device` — there is no DELETE for calibration
+either, same as `usb_flash_jobs` (§N.2).
+
+### O.4 Accessibility — COMPLETED, and mostly good
+
+First a11y pass of this test pass, measured on `#/climate` and `#/alerts`.
+
+**What is correct**, recorded so a fix agent does not churn it: all 62 buttons
+have accessible names; all 21 form controls are labelled; no image missing `alt`;
+exactly one `h1` per page; `lang="en"`; no positive `tabindex`; no buttons
+removed from the tab order; **and focus indication is properly implemented** via
+25 `:focus-visible` rules — verified with real `Tab` keypresses, giving
+`outline: solid 2px rgb(38,198,218)` at `2px` offset.
+
+**Contrast passes.** All 297 text nodes on `#/climate` meet WCAG AA with correct
+alpha compositing — zero failures.
+
+Two genuine gaps:
+
+1. **No `aria-live` regions at all** — `aria-live`, `role=status`, `role=alert`,
+   `role=log`, `aria-atomic` are all **0** on both desks. This is a live
+   monitoring product whose values change every few seconds over a WebSocket, and
+   whose Alerts desk exists to raise things the operator must act on. None of it
+   is announced. A screen-reader user must re-navigate to discover that anything
+   happened, which defeats the Alerts desk entirely.
+2. **No `<main>` landmark** (0 on both desks, against 3 `nav` and 2 `header`) and
+   **no skip link** — so keyboard and screen-reader users tab the full 11-item
+   desk nav on every page load. `#/climate` also jumps `h1 → h3`.
+
+### O.5 Twin — assets COMPLETED, rendering still blocked
+
+Rendering cannot be verified here: the Browser pane fires no rAF, so three.js
+never initialises. That is an environment limit, unchanged.
+
+Everything else about the twin was closed by auditing the served assets. **All
+134 GLBs** in `frontend/public/models` were fetched from the Pi and checked for
+the `glTF` magic number — **134/134 correct**. `/models/manifest.json` returns
+`application/json`, 75,266 bytes, `version 2`, generated `2026-09-07`. The model
+pipeline is fully deployed and healthy.
+
+The audit did surface a defect: **a missing asset returns 200 with the SPA's
+`index.html`.**
+
+```
+GET /models/definitely-not-a-real-model.glb
+→ 200 · text/html · 729 bytes · "<!DOCTYPE html>"
+```
+
+The SPA catch-all `GET /{full_path}` answers asset paths too, so `GLTFLoader`
+asking for a model that is not there gets a successful HTML body and dies inside
+the parser with `Unexpected token '<'` rather than reporting a clean 404. The
+same applies to any renamed or mistyped asset.
+
+---
+
 ## Honest gaps — what this pass did NOT cover
 
 | Area | Why | To run it |
 |---|---|---|
-| **Cameras, entirely** | the test caused an outage | powered USB hub |
+| **Cameras** | **CLOSED in §O** — full API cycle (create/validate/capture/media/storage/delete) run and restored; a real TP-Link IP camera is staged at `tent_4x8_cam` awaiting its password | operator enters the camera password, then enable the row |
 | **USB flash end-to-end** | **CLOSED in §N** — job path, validation and concurrency guard all run against the live brain; an actual flash still needs a bench seat, an adapter, and the container fixes from §M | bench seat |
-| **Twin 3D rendering** | Browser pane fires no rAF — cannot initialise | real browser |
-| **Hub switch/number/select writes** | hub offline for the first half; not revisited | hub online, deliberate window |
+| **Twin 3D rendering** | **PARTLY CLOSED in §O** — all 134 GLBs + manifest verified served correctly from the Pi; rendering still unverifiable because the Browser pane fires no rAF | real browser |
+| **Hub switch/number/select writes** | **CLOSED in §O** — switch, number and select each written through the brain-owned hub-tunables path and restored; brain→hub round trip measured at 50–70 s | — |
 | **Alert config / automation rule writes** | **CLOSED in §N** — both write/undo tested and restored byte-identical | — |
 | **Stage rail / probe station writes** | **CLOSED in §N** — both write/undo tested and restored byte-identical. `stage-rail/apply` deliberately not called: it stamps live setpoints onto a flowering tent | operator-chosen window for `/apply` |
-| **Kit Calibrate wizard interaction** | rendered only; anemometer walk not run | with an anemometer |
-| **Accessibility** | not attempted | dedicated a11y pass |
+| **Kit Calibrate wizard interaction** | **PARTLY CLOSED in §O** — the calibration store and soft-cal session API fully write-tested and validated; the physical anemometer walk still needs hardware | with an anemometer |
+| **Accessibility** | **CLOSED in §O** — full audit on two desks. Contrast, labels, focus-visible, tabindex and headings all pass; two real gaps found (no aria-live anywhere, no `<main>`/skip link) | — |
 | **Hub latency soak** | single sample | full photoperiod |
 
 Every page is now walked, and §M walked the API surface behind them —
