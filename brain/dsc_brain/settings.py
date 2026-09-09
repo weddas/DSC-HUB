@@ -464,6 +464,34 @@ def history_has_rows(seat_id: str, metric: str, db_path: Path | None = None) -> 
     return row is not None
 
 
+def last_reading_ts(seat_id: str, metric: str, db_path: Path | None = None) -> float | None:
+    """Newest ts with a non-NULL value for this series (when the sensor last produced a
+    real reading), or None if it never has. Powers the 'went dark' timer."""
+    conn = connect(db_path)
+    row = conn.execute(
+        "SELECT MAX(ts) FROM fleet_history WHERE seat_id=? AND metric=? AND value IS NOT NULL",
+        (seat_id, metric),
+    ).fetchone()
+    conn.close()
+    return float(row[0]) if row and row[0] is not None else None
+
+
+def last_change_ts(
+    seat_id: str, metric: str, current_value: float, *, eps: float = 1e-6, db_path: Path | None = None
+) -> float | None:
+    """Newest ts whose value differs from ``current_value`` — i.e. the last time this
+    series actually MOVED. A probe whose reading is frozen (dead Modbus republishing its
+    last value) went dark at this instant. None if it has only ever held ``current_value``."""
+    conn = connect(db_path)
+    row = conn.execute(
+        "SELECT MAX(ts) FROM fleet_history WHERE seat_id=? AND metric=? "
+        "AND value IS NOT NULL AND ABS(value - ?) > ?",
+        (seat_id, metric, float(current_value), float(eps)),
+    ).fetchone()
+    conn.close()
+    return float(row[0]) if row and row[0] is not None else None
+
+
 def record_history_throttled(
     seat_id: str,
     metric: str,

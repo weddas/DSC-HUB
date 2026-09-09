@@ -16,7 +16,7 @@ from typing import Any
 
 from .compose_store import get_helper
 from .event_log import record_grow_log
-from .settings import list_history
+from .settings import last_change_ts, last_reading_ts, list_history
 
 _STUCK_RATE_MAX = 0.02  # %/h — legacy slope test, kept for the rate sensor only
 _STUCK_ON_SEC = 45 * 60
@@ -130,6 +130,36 @@ def _moisture_flatline(pot_n: int) -> tuple[float, float, int] | None:
         return None
     ys = [v for _, v in vals]
     return max(ys) - min(ys), hours, len(vals)
+
+
+_DARK_FLATLINE_SEC = 45 * 60  # a reading frozen this long is dark (matches the stuck window)
+
+
+def _reading_dark_since(pot_n: int, moisture_now: float | None, now: float) -> tuple[float | None, str | None]:
+    """When this probe's moisture reading went dark, and why — or (None, None) if it is
+    producing live, changing readings.
+
+    Two dark modes:
+      * "no_reading": the current value is None -> dark since the last real reading.
+      * "flatline":   the value is frozen (a dead Modbus probe republishing its last read)
+                      -> dark since it last moved, once frozen past _DARK_FLATLINE_SEC.
+
+    Derived from history so the timer survives a brain restart (an in-memory 'since' resets
+    on every deploy). Deliberately independent of the firmware sensor_fault / modbus_online
+    flags: those have been seen both false-positive (a working probe flagged dark — pot2
+    tracked a live watering with both flags raised) and false-negative. A changing reading
+    is the ground truth that a probe is alive.
+    """
+    seat = f"pot{pot_n}"
+    if moisture_now is None:
+        last = last_reading_ts(seat, "moisture_pct")
+        return (last, "no_reading") if last is not None else (None, None)
+    changed = last_change_ts(seat, "moisture_pct", float(moisture_now))
+    if changed is None:
+        return (None, None)  # only ever held this value — cannot date the freeze
+    if (now - changed) >= _DARK_FLATLINE_SEC:
+        return (changed, "flatline")
+    return (None, None)  # moved recently -> live
 
 
 def _max_peer_divergence(values: list[float]) -> float | None:
@@ -320,6 +350,23 @@ def emit_sensor_trust(
         )
         set_entity(states, f"binary_sensor.dsc_probe{n}_sensor_stuck", stuck, attributes=stuck_attrs)
         set_entity(states, f"binary_sensor.dsc_probe{n}_untrusted", stuck)
+
+        # "Went dark" timer: when did this probe stop giving live readings, and for how long.
+        # Reading-based (freeze or null), not the unreliable firmware fault flags.
+        dark_since, dark_basis = _reading_dark_since(n, moisture_f, now)
+        dark_attrs: dict[str, Any] = {"basis": dark_basis or "live"}
+        if dark_since is not None:
+            dark_attrs["dark_since"] = round(dark_since, 3)
+            dark_attrs["dark_for_s"] = round(now - dark_since, 1)
+        set_entity(states, f"binary_sensor.dsc_probe{n}_reading_dark", dark_since is not None, attributes=dark_attrs)
+        if pot is not None:
+            if dark_since is not None:
+                pot.values["reading_dark_since"] = round(dark_since, 3)
+                pot.values["reading_dark_for_s"] = round(now - dark_since, 1)
+                pot.values["reading_dark_basis"] = dark_basis
+            else:
+                for _k in ("reading_dark_since", "reading_dark_for_s", "reading_dark_basis"):
+                    pot.values.pop(_k, None)
         _edge_log(
             f"pot{n}_stuck",
             stuck,

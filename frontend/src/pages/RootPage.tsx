@@ -497,6 +497,24 @@ function RootProbeCard({
             {trust.labels.map((l) => (
               <StatusTag key={l} label={l} tone="warn" />
             ))}
+            {(() => {
+              // "Went dark" timer — reading-based (freeze or null), independent of the
+              // firmware fault flags (which false-flag a working probe). Shows how long
+              // the probe has produced no live reading, and since when.
+              const dk = entity(`binary_sensor.dsc_probe${probe}_reading_dark`);
+              const forS = Number(dk?.attributes?.dark_for_s);
+              if (dk?.state !== "on" || !Number.isFinite(forS)) return null;
+              const sinceS = Number(dk?.attributes?.dark_since);
+              const basis = String(dk?.attributes?.basis ?? "");
+              const sinceTxt = Number.isFinite(sinceS) ? new Date(sinceS * 1000).toLocaleString() : "—";
+              return (
+                <StatusTag
+                  label={`DARK ${fmtDurationMs(forS * 1000)}`}
+                  tone="warn"
+                  title={`No live reading since ${sinceTxt}${basis === "no_reading" ? " (reading dropped to none)" : basis === "flatline" ? " (reading frozen — dead Modbus republishing its last value)" : ""}. Timer is reading-based, not the firmware fault flag.`}
+                />
+              );
+            })()}
           </div>
         </div>
         <Sparkline

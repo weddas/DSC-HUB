@@ -35,3 +35,39 @@ def test_sparse_history_is_undecided(monkeypatch):
     assert st._moisture_flatline(1) is None
     monkeypatch.setattr(st, "list_history", lambda *_a, **_k: _rows([20.0] * 40, hours=1.0))
     assert st._moisture_flatline(1) is None  # 40 samples but only one hour
+
+
+def test_reading_dark_since_flatline(monkeypatch):
+    """A frozen reading is dark since it last moved (basis flatline)."""
+    now = 1_000_000.0
+    monkeypatch.setattr(st, "last_change_ts", lambda *_a, **_k: now - 3 * 3600)  # last moved 3 h ago
+    monkeypatch.setattr(st, "last_reading_ts", lambda *_a, **_k: now)
+    since, basis = st._reading_dark_since(2, moisture_now=8.8, now=now)
+    assert basis == "flatline" and since == now - 3 * 3600
+
+
+def test_reading_dark_since_null(monkeypatch):
+    """A null current reading is dark since the last real reading (basis no_reading)."""
+    now = 1_000_000.0
+    monkeypatch.setattr(st, "last_reading_ts", lambda *_a, **_k: now - 22 * 3600)
+    monkeypatch.setattr(st, "last_change_ts", lambda *_a, **_k: now - 22 * 3600)
+    since, basis = st._reading_dark_since(1, moisture_now=None, now=now)
+    assert basis == "no_reading" and since == now - 22 * 3600
+
+
+def test_reading_dark_since_live(monkeypatch):
+    """A reading that moved within the window is not dark."""
+    now = 1_000_000.0
+    monkeypatch.setattr(st, "last_change_ts", lambda *_a, **_k: now - 120)  # moved 2 min ago
+    monkeypatch.setattr(st, "last_reading_ts", lambda *_a, **_k: now)
+    since, basis = st._reading_dark_since(2, moisture_now=8.7, now=now)
+    assert since is None and basis is None
+
+
+def test_reading_dark_since_never_moved(monkeypatch):
+    """Only ever held one value in history -> cannot date the freeze, report not-dark."""
+    now = 1_000_000.0
+    monkeypatch.setattr(st, "last_change_ts", lambda *_a, **_k: None)
+    monkeypatch.setattr(st, "last_reading_ts", lambda *_a, **_k: now - 3600)
+    since, basis = st._reading_dark_since(3, moisture_now=20.0, now=now)
+    assert since is None and basis is None
