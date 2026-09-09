@@ -9,30 +9,16 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .appliance_driver import get_appliance_status
+from .entity_tables import IN_SERVICE_ENTITIES, SONOFF_FW, SONOFF_RELAY
 from .paths import EXPECTED_FIRMWARE, SURFACE_VERSION
 
-# Kit Pulse / Fleet page entity contracts (mirrors frontend kitInventory.ts)
-_SONOFF_RELAY: dict[str, str] = {
-    "heater": "switch.dsc_heater_main_relay",
-    "heatmat": "switch.dsc_heatmat_main_relay",
-    "humidifier": "switch.dsc_humidifier_main_relay",
-    "dehumidifier": "switch.dsc_de_humidifier_main_relay",
-}
-_SONOFF_FW: dict[str, str] = {
-    "heater": "sensor.dsc_heater_firmware_version",
-    "heatmat": "sensor.dsc_heatmat_firmware_version",
-    "humidifier": "sensor.dsc_humidifier_firmware_version",
-    "dehumidifier": "sensor.dsc_dehumidifier_firmware_version",
-}
-_IN_SERVICE_ENTITIES: dict[str, str] = {
-    "ac": "input_boolean.dsc_ac_in_service",
-    "mister": "input_boolean.dsc_clone_humidifier_in_service",
-    "pot1": "input_boolean.dsc_probe1_in_service",
-    "pot2": "input_boolean.dsc_probe2_in_service",
-    "pot3": "input_boolean.dsc_probe3_in_service",
-    "pot4": "input_boolean.dsc_probe4_in_service",
-    "tank": "input_boolean.dsc_tank_in_service",
-}
+# Kit Pulse / Fleet page entity contracts. These live in entity_tables.py, which
+# is the single source of truth: the frontend's copies under
+# frontend/src/lib/generated/ are emitted from it by
+# brain/scripts/gen_entity_maps.py, so the two languages can no longer drift.
+_SONOFF_RELAY = SONOFF_RELAY
+_SONOFF_FW = SONOFF_FW
+_IN_SERVICE_ENTITIES = IN_SERVICE_ENTITIES
 
 # HA entity_id → FleetState path (compatibility for BrainProvider)
 ENTITY_MAP: dict[str, tuple[str, str]] = {

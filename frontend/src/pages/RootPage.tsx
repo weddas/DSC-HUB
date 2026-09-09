@@ -418,7 +418,16 @@ function RootProbeCard({
   const dryBand = { min: 0, max: 45 };
   const showDryback = Number.isFinite(dry.value);
   const fmtChip = (v: number, digits = 0) => (Number.isFinite(v) ? v.toFixed(digits) : "—");
-  const readingOk = !trust.labels.includes("sensor fault") && !trust.labels.includes("probe dark");
+  // Trust the LIVE READING, not the firmware fault flags. The brain's reading-based dark
+  // signal (binary_sensor.dsc_probe<n>_reading_dark) is true only when the reading is null
+  // or frozen; a moving reading = alive, even if the node still (falsely) raises
+  // sensor_fault/modbus_offline. Fall back to the flag-based labels only when that signal
+  // hasn't been computed yet.
+  const readingDark = entity(`binary_sensor.dsc_probe${probe}_reading_dark`);
+  const readingDarkKnown = readingDark?.state === "on" || readingDark?.state === "off";
+  const readingOk = readingDarkKnown
+    ? readingDark?.state !== "on"
+    : !trust.labels.includes("sensor fault") && !trust.labels.includes("probe dark");
   const moistV = readingOk ? moist.value : Number.NaN;
   const soilV = readingOk ? soil.value : Number.NaN;
   const dryV = readingOk ? dry.value : Number.NaN;
@@ -495,7 +504,16 @@ function RootProbeCard({
             <StatusTag label={tentLabel(plant.tent)} tone={oos || plant.tent === "unassigned" ? "muted" : "ok"} />
             <StatusTag label={needLabel} tone={needTone} />
             {trust.labels.map((l) => (
-              <StatusTag key={l} label={l} tone="warn" />
+              <StatusTag
+                key={l}
+                label={readingOk ? `${l} (reading live)` : l}
+                tone={readingOk ? "muted" : "warn"}
+                title={
+                  readingOk
+                    ? "The node raised this firmware flag, but the live reading is moving — the gauges show it."
+                    : undefined
+                }
+              />
             ))}
             {(() => {
               // "Went dark" timer — reading-based (freeze or null), independent of the

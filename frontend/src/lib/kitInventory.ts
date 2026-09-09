@@ -1,6 +1,7 @@
-import { KIT_PROBE_NUMBERS, isProbeInService } from "./probeModel";
+import { isProbeInService } from "./probeModel";
 import type { FleetSnapshot } from "./fleetModel";
 import { inventoryInService } from "./fleetModel";
+import { KIT_DEFS } from "./generated/kitDefs.gen";
 
 export type KitNodeStatus = "ok" | "missing" | "oos" | "dark" | "held" | "idle";
 
@@ -38,81 +39,15 @@ export interface KitDef {
   firmwareEntity?: string;
 }
 
-/** Single kit map. in_service off = OOS. Dark only when an in-service node is unavailable. */
-export const KIT_DEFS: KitDef[] = [
-  {
-    id: "hub",
-    label: "Hub",
-    linkEntity: "binary_sensor.dsc_hub_link",
-    firmwareEntity: "sensor.dsc_hub_firmware_version",
-  },
-  {
-    id: "heater",
-    label: "Heater",
-    demandEntity: "switch.dsc_hub_heater_demand",
-    relayEntity: "switch.dsc_heater_main_relay",
-    runtimeToday: "sensor.dsc_heater_runtime_today",
-    cyclesToday: "sensor.dsc_heater_cycles_today",
-    firmwareEntity: "sensor.dsc_heater_firmware_version",
-  },
-  {
-    id: "heatmat",
-    label: "Heat mat",
-    demandEntity: "switch.dsc_hub_grow_mat_demand",
-    relayEntity: "switch.dsc_heatmat_main_relay",
-    runtimeToday: "sensor.dsc_growmat_runtime_today",
-    firmwareEntity: "sensor.dsc_heatmat_firmware_version",
-  },
-  {
-    id: "ac",
-    label: "AC",
-    inServiceEntity: "input_boolean.dsc_ac_in_service",
-    plannedWhenOff: true,
-    demandEntity: "switch.dsc_hub_ac_demand",
-    relayEntity: "switch.dsc_ac_main_relay",
-    runtimeToday: "sensor.dsc_ac_runtime_today",
-  },
-  {
-    id: "humidifier",
-    label: "Humidifier",
-    demandEntity: "switch.dsc_hub_humidifier_demand",
-    relayEntity: "switch.dsc_humidifier_main_relay",
-    runtimeToday: "sensor.dsc_humidifier_runtime_today",
-    cyclesToday: "sensor.dsc_humidifier_cycles_today",
-    firmwareEntity: "sensor.dsc_humidifier_firmware_version",
-  },
-  {
-    id: "dehumidifier",
-    label: "Dehumidifier",
-    demandEntity: "switch.dsc_hub_dehumidifier_demand",
-    relayEntity: "switch.dsc_de_humidifier_main_relay",
-    runtimeToday: "sensor.dsc_dehumidifier_runtime_today",
-    firmwareEntity: "sensor.dsc_de_humidifier_firmware_version",
-  },
-  {
-    id: "mister",
-    label: "Clone mister",
-    inServiceEntity: "input_boolean.dsc_clone_humidifier_in_service",
-    plannedWhenOff: true,
-    demandEntity: "switch.dsc_hub_clone_humidifier_demand",
-    relayEntity: "switch.dsc_clone_humidifier_main_relay",
-  },
-  ...KIT_PROBE_NUMBERS.map(
-    (n): KitDef => ({
-      id: `pot${n}`,
-      label: `Probe ${n}`,
-      inServiceEntity: `input_boolean.dsc_probe${n}_in_service`,
-      plannedWhenOff: false,
-      firmwareEntity: `sensor.dsc_probe${n}_firmware_version`,
-    }),
-  ),
-  {
-    id: "tank",
-    label: "Tank",
-    inServiceEntity: "input_boolean.dsc_tank_in_service",
-    plannedWhenOff: true,
-  },
-];
+/**
+ * Single kit map. in_service off = OOS. Dark only when an in-service node is
+ * unavailable.
+ *
+ * GENERATED from brain/dsc_brain/entity_tables.py into
+ * ./generated/kitDefs.gen.ts (probe rows expand from KIT_PROBE_NUMBERS there).
+ * Add or rename ids in the Python table, then run `npm run gen:entities`.
+ */
+export { KIT_DEFS };
 
 function presenceEntity(def: KitDef): string {
   return def.linkEntity || def.relayEntity || def.demandEntity || def.inServiceEntity || def.firmwareEntity || "";
