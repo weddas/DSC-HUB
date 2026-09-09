@@ -51,20 +51,24 @@ if ip link show "$IFACE" 2>/dev/null | grep -q "state UP"; then
       echo "re-added default route via $GATEWAY on $IFACE"
     fi
   fi
-  exit 0
-fi
+  # NO early exit here: the resolver / dhcpcd / NTP / docker hardening below must run on a
+  # live Pi too. It used to `exit 0` on "already up", so every deploy since the hardening
+  # was written skipped it — the Pi sat with an EMPTY /etc/resolv.conf, timesyncd
+  # unsynced and the hub clock invalid (found 2026-09-09 when docker build could not
+  # resolve the registry).
+else
+  if command -v dhcpcd >/dev/null 2>&1; then
+    run_sudo dhcpcd -b "$IFACE" 2>/dev/null || run_sudo dhcpcd "$IFACE" || true
+  elif command -v dhclient >/dev/null 2>&1; then
+    run_sudo dhclient -v "$IFACE" 2>/dev/null || run_sudo dhclient "$IFACE" || true
+  elif command -v nmcli >/dev/null 2>&1; then
+    run_sudo nmcli dev connect "$IFACE" || true
+  fi
 
-if command -v dhcpcd >/dev/null 2>&1; then
-  run_sudo dhcpcd -b "$IFACE" 2>/dev/null || run_sudo dhcpcd "$IFACE" || true
-elif command -v dhclient >/dev/null 2>&1; then
-  run_sudo dhclient -v "$IFACE" 2>/dev/null || run_sudo dhclient "$IFACE" || true
-elif command -v nmcli >/dev/null 2>&1; then
-  run_sudo nmcli dev connect "$IFACE" || true
+  sleep 2
+  ip -4 addr show "$IFACE" || true
+  ip route | head -5 || true
 fi
-
-sleep 2
-ip -4 addr show "$IFACE" || true
-ip route | head -5 || true
 
 # Host DNS: dhcpcd on this Pi writes an EMPTY /etc/resolv.conf on eth0 renewals
 # (no resolvconf, lease carries no DNS) — containers still resolved through the
@@ -123,14 +127,26 @@ fi
 # now that eth0 actually has an uplink.
 if [ ! -f /etc/docker/daemon.json ] || ! grep -q '"dns"' /etc/docker/daemon.json 2>/dev/null; then
   run_sudo mkdir -p /etc/docker
-  run_sudo tee /etc/docker/daemon.json >/dev/null <<'EOF'
+  # NEVER `run_sudo tee <<EOF`: run_sudo feeds the sudo PASSWORD on stdin, so tee wrote
+  # "Digital" into daemon.json (live, 2026-09-09) — dockerd refused to start, hit its
+  # start-limit and every container was gone. Write to /tmp, validate, then install.
+  cat > /tmp/dsc-daemon.json <<'EOF'
 {
   "dns": ["192.168.86.1", "8.8.8.8", "1.1.1.1"],
   "ipv6": false
 }
 EOF
-  run_sudo systemctl restart docker
-  sleep 3
+  if python3 -m json.tool /tmp/dsc-daemon.json >/dev/null 2>&1; then
+    run_sudo install -m 0644 /tmp/dsc-daemon.json /etc/docker/daemon.json
+    # A restart takes every container down with it; only do it when the running daemon
+    # is not already using this file (i.e. it actually changed).
+    run_sudo systemctl reset-failed docker.service 2>/dev/null || true
+    run_sudo systemctl restart docker
+    sleep 3
+  else
+    echo "daemon.json candidate is not valid JSON — leaving /etc/docker/daemon.json alone"
+  fi
+  rm -f /tmp/dsc-daemon.json
 fi
 
 echo "$IFACE bring-up done"

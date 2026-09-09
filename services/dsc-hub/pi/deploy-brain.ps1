@@ -115,7 +115,16 @@ $EthScript = Join-Path $PSScriptRoot "bring-up-eth0.sh"
 Invoke-Expression "$pscp `"$EthScript`" ${PiUser}@${PiHost}:/tmp/bring-up-eth0.sh"
 
 Write-Host "Apply on Pi + rebuild brain container..."
-Invoke-Expression "$plink `"tr -d '\r' < /tmp/deploy-brain-remote.sh > /tmp/deploy.sh; bash /tmp/deploy.sh $PiPassword`""
+# Anything the remote script prints on stderr (tar warnings, docker build progress, sudo
+# prompts) must not become a terminating NativeCommandError here: that killed plink mid-run
+# and the SIGHUP took the half-finished remote deploy with it. Stream both channels and
+# judge by the exit code only.
+$prevEap = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+& plink -batch -hostkey $HostKey -pw $PiPassword "${PiUser}@${PiHost}" "tr -d '\r' < /tmp/deploy-brain-remote.sh > /tmp/deploy.sh; bash /tmp/deploy.sh $PiPassword" 2>&1 | ForEach-Object { Write-Host "$_" }
+$remoteExit = $LASTEXITCODE
+$ErrorActionPreference = $prevEap
+if ($remoteExit -ne 0) { throw "Remote deploy failed (exit $remoteExit) - inspect the output above; the Pi may be partly updated" }
 
 Write-Host "Done. Brain: http://${PiHost}:8787/health"
 Write-Host "Verify: services/dsc-hub/pi/verify-brain.ps1"

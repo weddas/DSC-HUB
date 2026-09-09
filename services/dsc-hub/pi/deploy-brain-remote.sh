@@ -13,7 +13,12 @@ mkdir -p \
   "${REPO}/data" \
   "${REPO}/services/dsc-hub/brain"
 
-tar -xzf /tmp/dsc-brain-src.tgz -C "${REPO}/brain"
+# --warning=no-timestamp: the Pi clock can trail the Windows box by a few seconds and
+# tar's "time stamp … is in the future" goes to stderr, which the PowerShell driver
+# ($ErrorActionPreference=Stop) turned into a fatal NativeCommandError mid-deploy
+# (2026-09-09: source extracted, SPA + container rebuild never ran).
+TAR_X="tar --warning=no-timestamp -xzf"
+${TAR_X} /tmp/dsc-brain-src.tgz -C "${REPO}/brain"
 cp /tmp/dsc-hub.yaml "${REPO}/firmware/v4/dsc-hub.yaml"
 mkdir -p "${REPO}/services/dsc-hub/brain"
 cp /tmp/docker-compose.yml "${REPO}/services/dsc-hub/docker-compose.yml"
@@ -23,7 +28,7 @@ if [ -f /tmp/dsc-spa-static.tgz ]; then
   # non-sudo tar dies before the chown below can repair it. Reset it first.
   run_sudo rm -rf "${REPO}/brain/static"
   mkdir -p "${REPO}/brain/static"
-  tar -xzf /tmp/dsc-spa-static.tgz -C "${REPO}/brain/static"
+  ${TAR_X} /tmp/dsc-spa-static.tgz -C "${REPO}/brain/static"
   if [ -f "${REPO}/brain/static/index.html" ]; then
     SPA_HASH=$(grep -oE 'assets/index-[^"]+\.js' "${REPO}/brain/static/index.html" | head -1 || true)
     echo "=== SPA bundle: ${SPA_HASH:-unknown} ==="
@@ -32,10 +37,10 @@ fi
 # Prefer dsc-data.tgz; accept legacy dsc-ha-data.tgz during cutover.
 if [ -f /tmp/dsc-data.tgz ]; then
   mkdir -p "${REPO}/data"
-  tar -xzf /tmp/dsc-data.tgz -C "${REPO}/data"
+  ${TAR_X} /tmp/dsc-data.tgz -C "${REPO}/data"
 elif [ -f /tmp/dsc-ha-data.tgz ]; then
   mkdir -p "${REPO}/data"
-  tar -xzf /tmp/dsc-ha-data.tgz -C "${REPO}/data"
+  ${TAR_X} /tmp/dsc-ha-data.tgz -C "${REPO}/data"
 fi
 run_sudo install -m 600 /tmp/dsc-hub.env /opt/dsc-hub/.env
 run_sudo install -m 600 /tmp/dsc-hub.env "${REPO}/services/dsc-hub/.env"
