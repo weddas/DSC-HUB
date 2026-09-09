@@ -1501,6 +1501,28 @@ same applies to any renamed or mistyped asset.
 
 ---
 
+### O.6 Latency soak — COMPLETED (bounded)
+
+A full-photoperiod soak is not runnable inside a session, so a bounded one was
+run instead: 30 samples of `/fleet` over 5 minutes with **no SPA client
+connected**.
+
+```
+samples 30   failures 0
+/fleet   min 37   med 84   p95 108   max 111 ms
+/health  min 12   med 23   p95  29   max 125 ms   (n=20)
+hub heartbeat  107 -> 118  = 11 beats / 300 s  (~27 s cadence)
+```
+
+Zero failures, a tight distribution, and the hub heartbeat advancing steadily
+throughout. This is the clean-baseline counterpart to §M: the same brain that
+stops answering entirely under an SPA request flood is completely stable at
+p95 108 ms when nothing is flooding it. The two measurements together are the
+argument for the `refreshComputed` coalescing fix — the server is not slow, it
+is being buried.
+
+---
+
 ## Honest gaps — what this pass did NOT cover
 
 | Area | Why | To run it |
@@ -1513,7 +1535,7 @@ same applies to any renamed or mistyped asset.
 | **Stage rail / probe station writes** | **CLOSED in §N** — both write/undo tested and restored byte-identical. `stage-rail/apply` deliberately not called: it stamps live setpoints onto a flowering tent | operator-chosen window for `/apply` |
 | **Kit Calibrate wizard interaction** | **PARTLY CLOSED in §O** — the calibration store and soft-cal session API fully write-tested and validated; the physical anemometer walk still needs hardware | with an anemometer |
 | **Accessibility** | **CLOSED in §O** — full audit on two desks. Contrast, labels, focus-visible, tabindex and headings all pass; two real gaps found (no aria-live anywhere, no `<main>`/skip link) | — |
-| **Hub latency soak** | single sample | full photoperiod |
+| **Hub latency soak** | **CLOSED in §O.6** — bounded 5-minute soak: 30 samples, 0 failures, `/fleet` p95 108 ms, heartbeat steady. A full-photoperiod soak remains a longer-horizon exercise | full photoperiod |
 
 Every page is now walked, and §M walked the API surface behind them —
 `/setup/*`, `/soft-cal/sessions`, `/energy/*`, `/settings/usb-flash/*`,
