@@ -154,6 +154,11 @@ def _catalog_search_local(db_path: Any, kind: str, q: str, limit: int, offset: i
     needle = " ".join((q or "").strip().lower().split())
     limit = max(1, min(int(limit), 100))
     offset = max(0, int(offset))
+    # DELIBERATELY a bare sqlite3.connect, NOT db.open_db — do not "finish the migration"
+    # here. open_db mkdirs the parent and sets PRAGMA journal_mode=WAL, and both are wrong
+    # for a read-only catalog file: WAL on a :ro mount is exactly what made every catalog
+    # query fail silently and report 0 results on 7.0.0 (fixed by opening ?mode=ro). This
+    # connection is read-only by contract, enforced by query_only below.
     conn = sqlite3.connect(f"file:{db_path.as_posix()}?mode=ro", uri=True)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA query_only=ON")

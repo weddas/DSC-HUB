@@ -65,14 +65,17 @@ def factory_reset(confirm_text: str, *, restart: bool = True) -> dict[str, Any]:
     # would fail on hosts where another connection holds the file open (Windows), and an
     # in-place wipe keeps every path the running process already resolved valid.
     import shutil
-    import sqlite3
+
+    from .db import open_db
 
     moved: list[str] = []
     if db.exists():
         target = backups / f"{db.name}.{stamp}"
         shutil.copy2(db, target)
         moved.append(str(target))
-        conn = sqlite3.connect(db)
+        # open_db, not a bare sqlite3.connect: this drops every table while other
+        # connections may still hold the file, so the busy timeout is the point.
+        conn = open_db(db)
         try:
             names = [r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type IN ('table','view') AND name NOT LIKE 'sqlite_%'")]
             for name in names:
