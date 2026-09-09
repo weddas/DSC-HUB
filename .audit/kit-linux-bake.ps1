@@ -79,7 +79,7 @@ if [[ ! -f "`$LIVE_SECRETS" ]]; then
   exit 1
 fi
 sudo install -m 0600 "`$LIVE_SECRETS" /opt/dsc-hub-bake-src/firmware/v4/secrets.yaml
-GOT=`$(md5sum /opt/dsc-hub-bake-src/firmware/v4/secrets.yaml | cut -d' ' -f1)
+GOT=`$(echo Digital | sudo -S md5sum /opt/dsc-hub-bake-src/firmware/v4/secrets.yaml 2>/dev/null | cut -d' ' -f1)
 if [[ "`$GOT" != "$ExpectSecretsMd5" ]]; then
   echo "ERROR: secrets.yaml md5 `$GOT != expected $ExpectSecretsMd5 — refusing to bake (fleet OTA would break)" >&2
   exit 1
@@ -114,7 +114,7 @@ if ($LASTEXITCODE -ne 0) { throw "bake-on-linux failed on Pi" }
 
 # The bake now runs DETACHED, so artifacts do not exist yet. Poll the log, then fetch:
 #   plink ... "tail -f /var/log/dsc-bake.log"
-#   pscp  ... "dsc@<pi>:/opt/dsc-hub-bake-out/dsc-hub-<ver>-*" deploy$LocalDeploy = Join-Path $RepoRoot "deploy"
+#   pscp  ... "dsc@<pi>:/opt/dsc-hub-bake-out/dsc-hub-<ver>-*" deploy\n$LocalDeploy = Join-Path $RepoRoot "deploy"
 New-Item -ItemType Directory -Force -Path $LocalDeploy | Out-Null
 Write-Host "=== Bake launched detached. Poll: plink ... 'tail -20 /var/log/dsc-bake.log' ==="
 Write-Host "=== Fetch when complete into: $LocalDeploy ==="
