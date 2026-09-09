@@ -40,7 +40,10 @@ def resolve_pump_seat() -> dict[str, Any] | None:
 def irrigation_shot(*, pot_id: str = "", duration_s: float = 2.0) -> dict[str, Any]:
     """Command one shot. Guardrails: max duration, pump seat required."""
     max_s = 30.0
-    dur = max(0.5, min(float(duration_s or 2.0), max_s))
+    # Floor at 1 s, not 0.5: the Zigbee on_time below is an integer seconds countdown, and
+    # int(0.5) == 0. on_time=0 on a Tuya/Zigbee plug disables the auto-off countdown — the
+    # pump would turn ON and STAY ON (overwater/flood risk). Never let a shot round to 0.
+    dur = max(1.0, min(float(duration_s or 2.0), max_s))
     seat = resolve_pump_seat()
     if seat is None:
         out = {
@@ -54,7 +57,9 @@ def irrigation_shot(*, pot_id: str = "", duration_s: float = 2.0) -> dict[str, A
         return out
 
     topic = f"zigbee2mqtt/{seat['friendly_name']}/set"
-    payload = json.dumps({"state": "ON", "on_time": int(dur)})
+    # max(1, ...) is defence in depth: on_time must never be 0 (= no auto-off). round so a
+    # 2.6 s shot is 3 s of pump, not 2.
+    payload = json.dumps({"state": "ON", "on_time": max(1, int(round(dur)))})
     published = False
     if mqtt is not None and getattr(_ingest, "_client", None) is not None:
         try:

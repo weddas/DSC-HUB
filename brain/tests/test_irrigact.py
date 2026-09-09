@@ -47,3 +47,31 @@ def test_irrigation_commands_plug_pump(temp_db: Path, monkeypatch: pytest.Monkey
     assert out["seat"]["friendly_name"] == "pump1"
     assert published and published[0][0] == "zigbee2mqtt/pump1/set"
     assert "ON" in published[0][1]
+
+
+def test_irrigation_on_time_never_zero(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A sub-1s shot must not publish on_time=0 — that disables the plug's auto-off and
+    the pump would stay ON (overwater/flood)."""
+    import json
+
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain.irrigact import irrigation_shot
+    from dsc_brain.zigbee_mqtt import _ingest, save_zigbee_bindings
+
+    save_zigbee_bindings(
+        {"0xpump": {"role": "plug_pump", "zone": "4x8", "enabled": True, "friendly_name": "pump1"}}
+    )
+    published: list[tuple[str, str]] = []
+
+    class _Client:
+        def publish(self, topic: str, payload: str) -> None:
+            published.append((topic, payload))
+
+    _ingest._client = _Client()
+    for req in (0.1, 0.5, 0.9):
+        published.clear()
+        out = irrigation_shot(pot_id="pot1", duration_s=req)
+        assert out["ok"] is True, req
+        assert out["duration_s"] >= 1.0, req
+        on_time = json.loads(published[0][1])["on_time"]
+        assert on_time >= 1, (req, on_time)
