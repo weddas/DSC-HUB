@@ -8,6 +8,8 @@ import { Button, Card, PageHeader, StatusChip } from "../components/ui";
 import { HelpTip } from "../components/HelpTip";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
+import { useFleetLastUpdated } from "../hooks/useFleet";
+import { Skeleton } from "../components/Skeleton";
 import { useBrainRefresh } from "../hooks/useBrain";
 import { PlantProbePanel } from "../components/PlantProbePanel";
 import {
@@ -103,6 +105,7 @@ export function GrowRosterPage() {
   const [assignSlot, setAssignSlot] = useState<number | null>(null);
   const [assignProbe, setAssignProbe] = useState<number>(KIT_PROBE_NUMBERS[0] ?? 1);
   void tick;
+  const rosterReady = useFleetLastUpdated() != null;
   const allSlots = rosterSlots(entity);
   const slots = allSlots.filter((s) => {
     const st = String(s.status || "");
@@ -219,7 +222,12 @@ export function GrowRosterPage() {
         <CropScheduler compact />
       </div>
       <Card className="dsc-glass" title="Roster" icon="roster">
-        {!slots.length ? (
+        {/* "No plants in roster yet" is a CLAIM, and it was being made for about a second
+            before the first fleet snapshot arrived — the roster is derived from fleet
+            entities, so it is empty until then. Waiting and empty must not look alike. */}
+        {!rosterReady ? (
+          <Skeleton rows={4} label="Waiting for the roster" />
+        ) : !slots.length ? (
           <p className="dsc-muted" style={{ marginTop: 0 }}>
             No plants in roster yet. Commit from Compose, then assign a probe.
           </p>

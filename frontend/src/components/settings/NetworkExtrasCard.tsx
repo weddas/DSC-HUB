@@ -18,6 +18,8 @@ type EthState = {
   dns: string;
   carrier: boolean;
   current_ip: string | null;
+  /** "host" = a real LAN address · "container" = the Docker bridge veth · "unknown". */
+  current_ip_scope?: "host" | "container" | "unknown";
 };
 
 /**
@@ -99,9 +101,21 @@ export function NetworkExtrasCard() {
           label={eth?.carrier ? "LINK UP" : "NO LINK"}
           tone={eth?.carrier ? "ok" : "muted"}
         />
-        {eth?.current_ip ? (
+        {/* The brain runs in a container, so its own eth0 is the compose bridge, not the
+            Pi's LAN interface. This printed 172.18.0.5 as "Ethernet (LAN)" while the Pi was
+            actually on 192.168.86.48 — an operator bookmarking that got an address nothing
+            can reach. Say which one we are looking at rather than guessing it is the LAN. */}
+        {eth?.current_ip && eth.current_ip_scope !== "container" ? (
           <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginLeft: 8 }}>
             {eth.current_ip}
+          </span>
+        ) : null}
+        {eth?.current_ip && eth.current_ip_scope === "container" ? (
+          <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)", marginLeft: 8 }}>
+            <StatusChip label="CONTAINER IP" tone="muted" title="This is the brain container's address on the Docker bridge, not the Pi's LAN address. The brain cannot see the host's interfaces from inside the container." />{" "}
+            {eth.current_ip} · the Pi&apos;s LAN address is not visible from inside the brain
+            container — reach it at <code>dsc-brain.local:8787</code>, or set{" "}
+            <code>DSC_HOST_LAN_IP</code> in compose to show the real one here.
           </span>
         ) : null}
         <div className="dsc-mode-selects" style={{ marginTop: 8 }}>

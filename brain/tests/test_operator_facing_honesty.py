@@ -113,3 +113,41 @@ def test_zigbee_policy_journal_lines_carry_no_internal_jargon() -> None:
         assert "ieee=" not in line, f"raw ieee address in an operator journal line: {line.strip()}"
         assert "zigbee task" not in line, f"internal task jargon in a journal line: {line.strip()}"
         assert "policy-owned" not in line, f"internal phrasing in a journal line: {line.strip()}"
+
+
+# --- The LAN address: a bridge IP is not the LAN one ------------------------------------
+
+
+def test_docker_bridge_address_is_not_called_a_lan_address() -> None:
+    """Live 2026-09-10: Settings > Network showed 172.18.0.5 as "Ethernet (LAN)" while the
+    Pi was on 192.168.86.48. Inside the container eth0 IS the bridge veth."""
+    from dsc_brain.network_apply import _looks_like_container_bridge
+
+    assert _looks_like_container_bridge("172.18.0.5") is True
+    assert _looks_like_container_bridge("172.17.0.2") is True
+    # Real operator networks must never be mistaken for the bridge.
+    assert _looks_like_container_bridge("192.168.86.48") is False
+    assert _looks_like_container_bridge("10.42.0.1") is False, "the SoftAP is reachable, not a bridge"
+    assert _looks_like_container_bridge(None) is False
+    assert _looks_like_container_bridge("not-an-ip") is False
+
+
+def test_declared_host_ip_wins_and_a_malformed_one_is_ignored(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A container cannot see the host's addresses, so compose can declare it."""
+    from dsc_brain import network_apply
+
+    monkeypatch.setenv("DSC_HOST_LAN_IP", "192.168.86.48")
+    assert network_apply.host_lan_ipv4() == ("192.168.86.48", "host")
+
+    # A malformed override must not become a fact — fall through to what we can observe.
+    monkeypatch.setenv("DSC_HOST_LAN_IP", "not-an-ip")
+    monkeypatch.setattr(network_apply, "_primary_ipv4", lambda *_a, **_k: "172.18.0.5")
+    assert network_apply.host_lan_ipv4() == ("172.18.0.5", "container")
+
+
+def test_a_bridge_address_never_becomes_a_clickable_spa_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A link to the bridge address is a link to nowhere; mDNS still works."""
+    from dsc_brain.network_apply import spa_urls_for_mode
+
+    assert spa_urls_for_mode("ethernet", None) == ["http://dsc-brain.local:8787"]
+    assert spa_urls_for_mode("ethernet", "192.168.86.48")[0] == "http://192.168.86.48:8787"

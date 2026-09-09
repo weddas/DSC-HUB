@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ipaddress
+import os
 import shutil
 import socket
 import struct
@@ -58,6 +59,48 @@ def _primary_ipv4(iface: str = ETH_IFACE) -> str | None:
         return None
 
 
+def _looks_like_container_bridge(ip: str | None) -> bool:
+    """True when ``ip`` is a Docker-bridge address rather than a LAN one.
+
+    Inside the brain container ``eth0`` is the container's veth, so SIOCGIFADDR returns the
+    compose network address (observed live: 172.18.0.5) while the Pi itself is on
+    192.168.86.48. Presenting that as "Ethernet (LAN)" hands the operator an address that is
+    unreachable from the phone or laptop they are typing it into.
+    """
+    if not ip:
+        return False
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        return False
+    # Docker's default pools. 172.16/12 is the bridge range; 10.42/16 is our own SoftAP and
+    # is deliberately NOT treated as a bridge — it is a real, reachable operator network.
+    return addr in ipaddress.ip_network("172.16.0.0/12")
+
+
+def host_lan_ipv4() -> tuple[str | None, str]:
+    """The Pi's LAN IPv4 and how much we trust it: ``host``, ``container`` or ``unknown``.
+
+    ``DSC_HOST_LAN_IP`` (set by compose from the host) wins when present — a container
+    cannot otherwise see the host's addresses. Failing that we read our own interface and
+    say plainly when what we found is the bridge, rather than passing it off as the LAN.
+    """
+    declared = os.environ.get("DSC_HOST_LAN_IP", "").strip()
+    if declared:
+        try:
+            ipaddress.ip_address(declared)
+            return declared, "host"
+        except ValueError:
+            pass  # a malformed override must not become a fact
+
+    found = _primary_ipv4()
+    if found is None:
+        return None, "unknown"
+    if _looks_like_container_bridge(found):
+        return found, "container"
+    return found, "host"
+
+
 def spa_urls_for_mode(mode: OperatorMode, eth_ip: str | None = None) -> list[str]:
     if mode == "softap":
         return [SOFTAP_SPA_URL]
@@ -102,7 +145,7 @@ def network_status() -> dict[str, Any]:
     ]
     carrier = eth_carrier_up()
     mode = operator_mode_for_carrier(carrier)
-    eth_ip = _primary_ipv4() if carrier else None
+    eth_ip, eth_ip_scope = host_lan_ipv4() if carrier else (None, "unknown")
     return {
         "ap_ssid": settings.get("ap_ssid", "DSC-Brain"),
         "ap_channel": settings.get("ap_channel", "6"),
@@ -115,7 +158,10 @@ def network_status() -> dict[str, Any]:
         "internet": internet_reachable(),
         "internet_check_host": settings.get("internet_check_host", _DEFAULT_CHECK_HOST),
         "operator_mode": mode,
-        "spa_urls": spa_urls_for_mode(mode, eth_ip),
+        "eth_ip_scope": eth_ip_scope,
+        # A bridge address in spa_urls would be an unreachable link, so only a host-scoped
+        # address earns one; mDNS still works either way.
+        "spa_urls": spa_urls_for_mode(mode, eth_ip if eth_ip_scope == "host" else None),
         "note": (
             "Ethernet carrier → Pi SoftAP off, SPA on LAN/mDNS. "
             "No Ethernet → start dsc-hub-ap for operator Setup. "
@@ -184,6 +230,7 @@ EthMode = Literal["auto", "static"]
 
 
 def eth_config() -> dict[str, Any]:
+    _lan_ip, _lan_scope = host_lan_ipv4()
     mode = str(get_setting("eth_mode", "auto")).strip().lower()
     if mode not in ("auto", "static"):
         mode = "auto"
@@ -194,7 +241,11 @@ def eth_config() -> dict[str, Any]:
         "gateway": get_setting("eth_gateway", ""),
         "dns": get_setting("eth_dns", ""),  # space/comma separated
         "carrier": eth_carrier_up(),
-        "current_ip": _primary_ipv4(),
+        "current_ip": _lan_ip,
+        # "host" = a real LAN address; "container" = the Docker bridge veth this process
+        # sees instead of the Pi's; "unknown" = no address readable. The SPA must not label
+        # a "container" address as the LAN one.
+        "current_ip_scope": _lan_scope,
     }
 
 

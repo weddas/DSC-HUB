@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, StatusChip } from "../ui";
+import { Skeleton } from "../Skeleton";
 import { get_grow_log } from "../../lib/fleetApi";
 import { filterGrowLog, prepareGrowLog, type GrowLogFilter } from "../../lib/growLogFilter";
 import { useEntityBus } from "../../hooks/useEntityBus";
@@ -52,7 +53,7 @@ export function GrowLogStream() {
           </button>
         ))}
       </div>
-      {loading && !events.length ? <p className="dsc-muted">Loading grow log…</p> : null}
+      {loading && !events.length ? <Skeleton rows={5} label="Loading the grow log" /> : null}
       {filtered.length ? <GrowLogList events={filtered} timeFormat="full" /> : null}
       {!loading && !filtered.length ? (
         <p className="dsc-muted">No operational events in the last 24 hours.</p>

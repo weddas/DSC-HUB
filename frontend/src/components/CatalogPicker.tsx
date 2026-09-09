@@ -135,11 +135,18 @@ export function CatalogPicker({
     hitsRef.current?.scrollTo({ top: 0 });
   }, [q, strainFilters, kind]);
 
-  const resultNote =
-    kind === "strain" && list.length !== items.length
-      ? `${list.length} of ${items.length} hits after filters`
+  // The count is a PAGE SIZE, not a match total — the catalog holds ~195k strains and the
+  // proxy caps a page at 50. "11 hits" read as "this catalog contains 11 strains", and the
+  // same query showed "50 hits+" elsewhere purely because that page had filled (2026-09-10).
+  // Say "showing N" whenever more exist, so the number never poses as the total.
+  const resultNote = busy
+    ? "Searching…"
+    : kind === "strain" && list.length !== items.length
+      ? `${list.length} of ${items.length} shown after filters${hasMore ? ", more to load" : ""}`
       : list.length
-        ? `${list.length} hit${list.length === 1 ? "" : "s"}${hasMore ? "+" : ""}`
+        ? hasMore
+          ? `showing ${list.length}, more to load`
+          : `${list.length} hit${list.length === 1 ? "" : "s"}`
         : "";
 
   return (
@@ -214,7 +221,12 @@ export function CatalogPicker({
         </div>
       ) : null}
       <ul className="dsc-catalog-hits" ref={hitsRef}>
-        {busy && !list.length ? <li className="dsc-muted">Searching…</li> : null}
+        {/* Blank the list while a query is in flight. It used to render the prior query's
+            rows for ~1 s after the header had already switched to the new source and count,
+            so the list actively contradicted the count above it (typing "gelato" showed
+            Afternoon Brunch / FRITZ The Cat until the fetch landed). List and count now
+            move together. */}
+        {busy ? <li className="dsc-muted">Searching…</li> : null}
         {!busy && !list.length ? (
           <li className="dsc-muted">
             {kind === "strain" && items.length
@@ -222,7 +234,7 @@ export function CatalogPicker({
               : "No catalog hits — empty is honesty, not a placeholder."}
           </li>
         ) : null}
-        {list.map((item, i) => (
+        {(busy ? [] : list).map((item, i) => (
           <li key={`${itemKey(item)}-${i}`}>
             <button type="button" onClick={() => onPick(item)}>
               <Icon

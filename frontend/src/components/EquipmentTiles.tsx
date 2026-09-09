@@ -361,7 +361,7 @@ export function EquipmentTiles({
             <span className="dsc-equip-state">{t.stateLabel}</span>
           </span>
           <span className="dsc-equip-big">{t.big}</span>
-          <span className="dsc-equip-sub">{t.sub}</span>
+          <span className="dsc-equip-sub" title={t.sub}>{t.sub}</span>
         </button>
         </Tooltip>
       ))}

@@ -4,10 +4,11 @@ import { InventoryInServiceToggle } from "../components/InventoryInServiceToggle
 import { LearningWizard } from "../components/LearningWizard";
 import { TankCutaway } from "../components/TankCutaway";
 import { KitPulse } from "../components/KitPulse";
+import { Skeleton } from "../components/Skeleton";
 import { HubLinkLine } from "../components/HubLinkLine";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { buildKitNodesFromFleet, kitInServiceCount, type KitNode } from "../lib/kitInventory";
-import { useFleet } from "../hooks/useFleet";
+import { useFleet, useFleetLastUpdated } from "../hooks/useFleet";
 import { useInspector } from "../components/InspectorHost";
 
 export function TuneLearningPage() {
@@ -50,6 +51,7 @@ export function TuneLearningPage() {
 export function FleetOverviewPage() {
   const { state, num } = useEntityBus();
   const fleet = useFleet();
+  const fleetReady = useFleetLastUpdated() != null;
   const inspector = useInspector();
   const kit: KitNode[] = buildKitNodesFromFleet(fleet);
   const svc = kitInServiceCount(kit);
@@ -116,7 +118,9 @@ export function FleetOverviewPage() {
             <p className="dsc-honesty" style={{ marginTop: 0 }}>
               Grey = offline or out of service. Every device shows its real state.
             </p>
-            <KitPulse nodes={kit} onSelect={openNode} />
+            {/* Until the first fleet snapshot lands, `kit` is empty and the radial drew
+                nothing — about a second of blank that looked like "no devices". */}
+            {fleetReady ? <KitPulse nodes={kit} onSelect={openNode} /> : <Skeleton rows={4} label="Waiting for the first fleet snapshot" />}
           </Card>
         </div>
 

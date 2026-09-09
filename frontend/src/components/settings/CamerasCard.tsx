@@ -5,6 +5,7 @@ import { Button, StatusTag } from "../ui";
 import { SettingsCard, Toggle } from "./SettingRow";
 import { CameraThumb, CameraViewer } from "../CameraSlot";
 import { useCameras } from "../../hooks/useCameras";
+import { cameraErrorHelp } from "../../lib/cameraError";
 import {
   deleteCamera,
   captureCamera,
@@ -309,7 +310,27 @@ export function CamerasCard() {
                     {cam.extra.assemble && cam.extra.assemble !== "off" ? <StatusTag label={`TIMELAPSE ${cam.extra.assemble.toUpperCase()}`} tone="teal" /> : null}
                   </div>
                   <code className="dsc-cam-src">{cam.source_kind === "motioneye" ? `motionEye ${cam.source} · camera ${cam.extra.camera_no ?? 1}` : cam.source}</code>
-                  {cam.status.last_error ? <p className="dsc-honesty">{cam.status.last_error}</p> : null}
+                  {(() => {
+                    const help = cameraErrorHelp(cam.status.last_error);
+                    if (!help) return null;
+                    // On a DISABLED camera this error is the last thing that happened before
+                    // it was switched off, not a live failure — saying so removes the "is it
+                    // still trying?" question the bare error left hanging.
+                    return (
+                      <p className="dsc-honesty">
+                        {!cam.enabled ? <em>Last attempt before this camera was disabled — it is not capturing now. </em> : null}
+                        {help.guidance}
+                        {help.guidance !== help.raw ? (
+                          <>
+                            {" "}
+                            <span className="dsc-muted" title={help.raw}>
+                              ({help.raw})
+                            </span>
+                          </>
+                        ) : null}
+                      </p>
+                    );
+                  })()}
                 </div>
                 <div className="dsc-cam-row-actions">
                   <Toggle checked={cam.enabled} onChange={(v) => void toggleEnabled(cam, v)} label={`Capture enabled for ${cam.label}`} />

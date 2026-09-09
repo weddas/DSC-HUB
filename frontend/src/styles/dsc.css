@@ -4978,7 +4978,12 @@ button.dsc-metric:focus-visible { outline: 2px solid var(--dsc-teal); outline-of
 .dsc-equip-tile:not(.is-on) .dsc-equip-state { color: var(--dsc-gray-5); }
 .dsc-equip-big { font-family: var(--dsc-mono); font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .dsc-equip-tile:not(.is-on) .dsc-equip-big { color: var(--dsc-gray-5); }
-.dsc-equip-sub { font-family: var(--dsc-mono); font-size: 11px; color: var(--dsc-gray-5); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The reason line carries the useful part — which fault code, what it is pulling toward,
+   the curve basis — and single-line clipping hid it at EVERY width, 1440px included
+   ("out of service (F-0…", "no DLI - needs cano…"). Two lines before clipping; the tile
+   stays a fixed height because the clamp caps it, and the inspector still has the full
+   text. */
+.dsc-equip-sub { font-family: var(--dsc-mono); font-size: 11px; color: var(--dsc-gray-5); overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow-wrap: anywhere; }
 
 /* Heat lines rising off a mat / heater — only while on. */
 .dsc-heat { color: var(--dsc-gray-5); overflow: visible; }
@@ -5992,4 +5997,27 @@ button.dsc-metric:focus-visible { outline: 2px solid var(--dsc-teal); outline-of
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
+}
+
+/* ---------------------------------------------------------------- skeletons */
+/* Shown while a page's main region waits on its first snapshot. Distinct from an empty
+   state on purpose: "waiting" and "nothing here" are different claims. */
+.dsc-skeleton { display: flex; flex-direction: column; gap: 10px; padding: 14px 0; }
+.dsc-skeleton-bar {
+  height: 14px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--dsc-gray-2) 0%, var(--dsc-gray-3) 50%, var(--dsc-gray-2) 100%);
+  background-size: 200% 100%;
+  animation: dsc-skeleton-sheen 1.4s ease-in-out infinite;
+}
+.dsc-skeleton-bar:nth-child(2) { width: 82%; }
+.dsc-skeleton-bar:nth-child(3) { width: 64%; }
+.dsc-skeleton-bar:nth-child(4) { width: 74%; }
+.dsc-skeleton-bar:nth-child(5) { width: 58%; }
+@keyframes dsc-skeleton-sheen {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dsc-skeleton-bar { animation: none; background: var(--dsc-gray-2); }
 }

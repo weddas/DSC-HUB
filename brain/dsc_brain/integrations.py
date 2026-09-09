@@ -172,10 +172,14 @@ def _catalog_search_local(db_path: Any, kind: str, q: str, limit: int, offset: i
                     (like, f"%{needle.replace(' ', '_')}%", like, limit, offset),
                 ).fetchall()
             else:
+                # Order by the NORMALISED name, not the raw one. Raw ordering puts every
+                # entry starting with a quote, hash or digit at the head of a ~195k catalog
+                # — '"O" Lubricant', '"VPD" for drying', '# 38' were the first thing an
+                # operator saw when browsing (2026-09-10). name_norm exists for exactly this.
                 rows = conn.execute(
                     """
                     SELECT name_norm, name, type FROM strain_canonical
-                    ORDER BY curated DESC, name
+                    ORDER BY curated DESC, name_norm
                     LIMIT ? OFFSET ?
                     """,
                     (limit, offset),
