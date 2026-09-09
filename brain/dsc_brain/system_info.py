@@ -41,11 +41,79 @@ OPTIONAL_ROUTES: list[dict[str, str]] = [
 ]
 
 
+def _ntp_status_kernel() -> dict[str, Any] | None:
+    """Kernel clock discipline via adjtimex(2) — the same kernel clock the host disciplines,
+    readable from inside the container without any host tooling. None when unavailable."""
+    import ctypes
+    import sys
+
+    if not sys.platform.startswith("linux"):
+        return None
+    try:
+        libc = ctypes.CDLL(None, use_errno=True)
+
+        class _Timeval(ctypes.Structure):
+            _fields_ = [("tv_sec", ctypes.c_long), ("tv_usec", ctypes.c_long)]
+
+        class _Timex(ctypes.Structure):
+            _fields_ = [
+                ("modes", ctypes.c_uint),
+                ("offset", ctypes.c_long),
+                ("freq", ctypes.c_long),
+                ("maxerror", ctypes.c_long),
+                ("esterror", ctypes.c_long),
+                ("status", ctypes.c_int),
+                ("constant", ctypes.c_long),
+                ("precision", ctypes.c_long),
+                ("tolerance", ctypes.c_long),
+                ("time", _Timeval),
+                ("tick", ctypes.c_long),
+                ("ppsfreq", ctypes.c_long),
+                ("jitter", ctypes.c_long),
+                ("shift", ctypes.c_int),
+                ("stabil", ctypes.c_long),
+                ("jitcnt", ctypes.c_long),
+                ("calcnt", ctypes.c_long),
+                ("errcnt", ctypes.c_long),
+                ("stbcnt", ctypes.c_long),
+                ("tai", ctypes.c_int),
+                ("_pad", ctypes.c_int * 11),
+            ]
+
+        tx = _Timex()
+        tx.modes = 0  # read-only query, no CAP_SYS_TIME needed
+        ret = libc.adjtimex(ctypes.byref(tx))
+        if ret < 0:
+            return None
+        sta_unsync = 0x0040
+        time_error = 5
+        synced = ret != time_error and not (int(tx.status) & sta_unsync)
+        return {
+            "synced": bool(synced),
+            "source": "kernel adjtimex",
+            "detail": (
+                f"kernel clock {'synchronised' if synced else 'UNSYNC'} · max error {int(tx.maxerror) / 1e6:.3f} s"
+                + (" · TIME_ERROR" if ret == time_error else "")
+            ),
+            "max_error_s": round(int(tx.maxerror) / 1e6, 3),
+        }
+    except Exception:  # noqa: BLE001 — any libc/ABI surprise means "unknown", never a crash
+        return None
+
+
 def _ntp_status() -> dict[str, Any]:
-    """Best-effort NTP status from systemd's timedatectl; ``synced`` is None when unknown."""
+    """NTP health: timedatectl on a host that has it, else the kernel's own sync flag.
+
+    The brain runs in a container where timedatectl is never present, so the old
+    "unknown on this host" branch was the only branch that ever ran in production and the
+    7-minute host clock error went undetected. The kernel clock is shared with the host.
+    """
     exe = shutil.which("timedatectl")
     if not exe:
-        return {"synced": None, "source": None, "detail": "timedatectl not available on this host"}
+        kernel = _ntp_status_kernel()
+        if kernel is not None:
+            return kernel
+        return {"synced": None, "source": None, "detail": "neither timedatectl nor adjtimex available on this host"}
     try:
         out = subprocess.run(  # noqa: S603
             [exe, "show", "-p", "NTPSynchronized", "-p", "NTP", "-p", "Timezone"],

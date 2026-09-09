@@ -452,6 +452,17 @@ def list_usb_flash_jobs(limit: int = 20, db_path: Path | None = None) -> list[di
     return [dict(r) for r in rows]
 
 
+def clear_usb_flash_jobs(db_path: Path | None = None) -> int:
+    """Delete finished job rows. Returns the count removed."""
+    conn = connect(db_path)
+    _ensure(conn)
+    cur = conn.execute("DELETE FROM usb_flash_jobs WHERE status IN ('done','failed')")
+    conn.commit()
+    n = int(cur.rowcount or 0)
+    conn.close()
+    return n
+
+
 def manifest_public() -> dict[str, Any]:
     """The role table plus what is actually on disk for each role — the manifest used to be a
     static list that named nine binaries whether the directory held good images, empty

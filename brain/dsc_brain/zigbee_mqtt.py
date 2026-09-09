@@ -580,20 +580,27 @@ def _recompute_canopy(by_role: dict[str, dict[str, Any]]) -> dict[str, Any]:
     show Canopy ← role instead of unbound theater.
     """
     canopy: dict[str, Any] = {}
+    # Every bound canopy sensor gets its own zone entry; the legacy single slot keeps the
+    # first (4x8-preferred) for older consumers. With one slot the 2x4 sensor's live
+    # readings were computed, bound, and then thrown away.
+    zones: dict[str, dict[str, Any]] = {}
     for role in _CANOPY_ROLES:
         row = by_role.get(role)
         if not isinstance(row, dict):
             continue
+        zone = role.removeprefix("canopy_")
+        entry: dict[str, Any] = {"role": role, "updated_at": row.get("updated_at"), "friendly_name": row.get("friendly_name")}
         if row.get("temperature") is not None:
-            canopy["temp_c"] = row.get("temperature")
+            entry["temp_c"] = row.get("temperature")
         if row.get("humidity") is not None:
-            canopy["rh_pct"] = row.get("humidity")
-        canopy["role"] = role
-        canopy["updated_at"] = row.get("updated_at")
-        canopy["friendly_name"] = row.get("friendly_name")
+            entry["rh_pct"] = row.get("humidity")
         if row.get("bound_stub"):
-            canopy["bound_stub"] = True
-        break
+            entry["bound_stub"] = True
+        zones[zone] = entry
+        if "role" not in canopy:
+            canopy.update({k: v for k, v in entry.items()})
+    if zones:
+        canopy["zones"] = zones
     return canopy
 
 

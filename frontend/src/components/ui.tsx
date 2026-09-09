@@ -653,9 +653,16 @@ export function EntityFanSlider({
   const draggingRef = useRef(false);
   const [draft, setDraft] = useState(Number.isFinite(pct) ? pct : 0);
 
+  const keyHoldRef = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(keyHoldRef.current), []);
   useEffect(() => {
     if (!draggingRef.current && !dragging && Number.isFinite(pct)) setDraft(pct);
-  }, [pct, dragging, entityId]);
+    // The hub caught up with a keyboard edit: release the hold early.
+    if (dragging && !draggingRef.current && Number.isFinite(pct) && Math.round(pct) === Math.round(draft)) {
+      window.clearTimeout(keyHoldRef.current);
+      setDragging(false);
+    }
+  }, [pct, dragging, draft, entityId]);
 
   const commit = (value: number) => {
     if (locked) return;
@@ -699,7 +706,15 @@ export function EntityFanSlider({
         onChange={(e) => {
           const value = Number(e.target.value);
           setDraft(value);
-          if (!draggingRef.current) commit(value);
+          if (!draggingRef.current) {
+            // Keyboard / programmatic change: show the draft until the hub echoes it back
+            // (50–70 s round trip) instead of snapping to the stale live value on the next
+            // tick, which made arrow keys look inert.
+            setDragging(true);
+            window.clearTimeout(keyHoldRef.current);
+            keyHoldRef.current = window.setTimeout(() => setDragging(false), 90_000);
+            commit(value);
+          }
         }}
       />
     </label>

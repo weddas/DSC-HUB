@@ -81,8 +81,13 @@ def patch_alert_prefs(patch: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(alerts, dict):
             raise ValueError("alerts must be an object keyed by entity id")
         for eid, pref in alerts.items():
+            if pref is None:
+                # null removes the override and the alert falls back to its catalogue default.
+                # The map only ever grew before this; nothing written was removable.
+                current["alerts"].pop(str(eid), None)
+                continue
             if not isinstance(pref, dict):
-                raise ValueError(f"{eid}: preference must be an object")
+                raise ValueError(f"{eid}: preference must be an object or null (remove)")
             row = dict(current["alerts"].get(str(eid), {}))
             if "enabled" in pref:
                 if eid == FAILSAFE_ID and pref["enabled"] is False:

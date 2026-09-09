@@ -174,13 +174,59 @@ def patch_probe_station(seat_id: str, patch: dict[str, Any]) -> dict[str, Any]:
             return upsert_inventory(seat_id, {"extra": extra})
         if "idle_home_pot_id" in patch:
             # Empty string = unassign pot from this probe (keep probe role).
-            extra["idle_home_pot_id"] = str(patch["idle_home_pot_id"] or "").strip()
+            home = str(patch["idle_home_pot_id"] or "").strip()
+            if home:
+                if home == seat_id:
+                    raise ValueError("a roving probe cannot idle at itself")
+                seats = {str(r2.get("seat_id")): r2 for r2 in list_inventory()}
+                if home not in seats or str(seats[home].get("role") or "") != "pot":
+                    raise ValueError(f"idle home {home!r} is not a pot seat")
+            extra["idle_home_pot_id"] = home
         if "tent" in patch:
-            extra["tent"] = str(patch["tent"])
+            tent = str(patch["tent"]).strip()
+            known = {"4x8", "2x4"}
+            try:
+                from .space_model import list_spaces
+
+                known |= {str(sp.get("space_id")) for sp in list_spaces()}
+            except Exception:  # noqa: BLE001
+                pass
+            if tent not in known:
+                raise ValueError(f"unknown tent {tent!r}; expected one of {sorted(known)}")
+            extra["tent"] = tent
         extra["role"] = "probe_station"
         extra.setdefault("probe_attached", True)
         return upsert_inventory(seat_id, {"extra": extra})
     raise KeyError(seat_id)
+
+
+def _plausibility_penalty(avg: dict[str, Any]) -> tuple[float, list[str]]:
+    """Points off the quality score for readings that cannot be true, with the reasons."""
+    reasons: list[str] = []
+    penalty = 0.0
+
+    def _f(key: str) -> float | None:
+        try:
+            v = avg.get(key)
+            return None if v is None else float(v)
+        except (TypeError, ValueError):
+            return None
+
+    moist, ec, ph = _f("moisture_pct"), _f("ec_us"), _f("ph")
+    if moist is not None and not (0.0 < moist < 100.0):
+        penalty += 50
+        reasons.append("moisture on a rail")
+    if ec is not None and ec <= 0.0 and (moist or 0.0) > 5.0:
+        penalty += 50
+        reasons.append("EC 0 in wet media")
+    if ph is not None and not (3.0 <= ph <= 9.0):
+        penalty += 30
+        reasons.append("pH outside 3-9")
+    npk = [_f(k) for k in ("nitrogen", "phosphorus", "potassium")]
+    if npk and all(v in (None, 0.0) for v in npk) and (moist or 0.0) > 5.0:
+        penalty += 20
+        reasons.append("N/P/K all zero in wet media")
+    return penalty, reasons
 
 
 def _readings_from_pot(pot_id: str) -> dict[str, float | None]:
@@ -284,7 +330,11 @@ def confirm_soil_test(test_id: str) -> dict[str, Any]:
     if not stable:
         _active[test_id] = session
         raise ValueError("readings not stable — wait for solid capture")
-    quality = max(0.0, min(100.0, 100.0 - variance * 10))
+    stability_score = max(0.0, min(100.0, 100.0 - variance * 10))
+    penalty, quality_reasons = _plausibility_penalty(avg)
+    # A dead probe has zero variance and used to score a perfect 100. Stability is only
+    # half of quality; the other half is whether the numbers could be true.
+    quality = max(0.0, stability_score - penalty)
     now = time.time()
     row = {
         "id": test_id,
@@ -300,6 +350,8 @@ def confirm_soil_test(test_id: str) -> dict[str, Any]:
         "readings_json": json.dumps(avg),
         "stable_seconds": now - session["started_at"],
         "quality_score": quality,
+        "stability_score": stability_score,
+        "quality_reasons": quality_reasons,
         "confirmed": 1,
     }
     conn = connect()

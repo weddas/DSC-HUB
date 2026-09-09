@@ -348,7 +348,7 @@ export type KitUpdateStatus = {
     latest_name: string | null;
     latest_url: string | null;
     published_at: string | null;
-    update_available: boolean;
+    update_available: boolean | null; // null = the check did not run (offline / DNS)
     checked_at: number | null;
     ok: boolean;
     error: string | null;

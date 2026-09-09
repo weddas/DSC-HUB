@@ -72,13 +72,37 @@ async def test_ollama() -> dict[str, Any]:
         return {"ok": False, "detail": str(exc)}
 
 
-async def test_cannalib() -> dict[str, Any]:
+_CANNALIB_PROBE: dict[str, Any] = {"at": 0.0, "result": None}
+_CANNALIB_PROBE_OK_TTL_S = 60.0
+_CANNALIB_PROBE_FAIL_TTL_S = 15 * 60.0  # the toolchain code learned this with _PYPI_FAIL_TTL
+_CANNALIB_PROBE_TIMEOUT_S = 5.0
+
+
+async def test_cannalib(force: bool = False) -> dict[str, Any]:
+    """Probe CannaLib. Cached: a failed probe is not retried for 15 min, a good one for 60 s,
+    so a Settings surface never blocks for the full timeout on every read. `force` bypasses
+    the cache for an explicit operator Test."""
+    import time as _time
+
+    now = _time.time()
+    cached = _CANNALIB_PROBE.get("result")
+    if cached is not None and not force:
+        ttl = _CANNALIB_PROBE_OK_TTL_S if cached.get("ok") else _CANNALIB_PROBE_FAIL_TTL_S
+        if now - float(_CANNALIB_PROBE.get("at") or 0.0) < ttl:
+            return {**cached, "cached": True}
+    result = await _test_cannalib_live()
+    _CANNALIB_PROBE["at"] = now
+    _CANNALIB_PROBE["result"] = result
+    return result
+
+
+async def _test_cannalib_live() -> dict[str, Any]:
     base = cannalib_base_url()
     if not base:
         return {"ok": False, "detail": "CannaLib API URL not configured"}
     headers = cannalib_headers()
     try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
+        async with httpx.AsyncClient(timeout=_CANNALIB_PROBE_TIMEOUT_S) as client:
             health = await client.get(f"{base}/health", headers=headers)
             health.raise_for_status()
             search = await client.get(

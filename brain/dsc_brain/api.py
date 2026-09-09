@@ -1480,7 +1480,7 @@ async def integrations_test_ollama() -> dict[str, Any]:
 
 
 @app.post("/settings/integrations/test-cannalib")
-async def integrations_test_cannalib() -> dict[str, Any]:
+async def integrations_test_cannalib(force=True) -> dict[str, Any]:
     if _demo_mode():
         return {"ok": True, "mode": "demo_simulation", "detail": "Local catalog fallback only"}
     return await test_cannalib()
@@ -1737,6 +1737,8 @@ def settings_probe_stations_patch(seat_id: str, body: ProbeStationPatch) -> dict
         return patch_probe_station(seat_id, body.model_dump(exclude_none=True))
     except KeyError as exc:
         raise HTTPException(404, f"unknown seat {seat_id}") from exc
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
 
 
 @app.post("/soil-tests/start")
@@ -2040,6 +2042,16 @@ def settings_usb_flash_manifest() -> dict[str, Any]:
 @app.get("/settings/usb-flash/jobs")
 def settings_usb_flash_jobs(limit: int = Query(20, ge=1, le=100)) -> dict[str, Any]:
     return {"jobs": list_usb_flash_jobs(limit=limit)}
+
+
+@app.delete("/settings/usb-flash/jobs")
+def settings_usb_flash_jobs_clear() -> dict[str, Any]:
+    """Drop finished (done/failed) job rows; a queued or running job is never touched."""
+    if _demo_mode():
+        _demo_forbidden()
+    from .usb_flash import clear_usb_flash_jobs
+
+    return {"deleted": clear_usb_flash_jobs()}
 
 
 @app.get("/settings/usb-flash/jobs/{job_id}")
@@ -2547,7 +2559,9 @@ def cameras_put(camera_id: str, body: CameraBody) -> dict[str, Any]:
 def cameras_delete(camera_id: str, delete_media: bool = Query(False)) -> dict[str, Any]:
     from .cameras import delete_camera
 
-    return {"deleted": delete_camera(camera_id, delete_media=delete_media)}
+    if not delete_camera(camera_id, delete_media=delete_media):
+        raise HTTPException(404, "camera not found")  # the sibling routes 404 too
+    return {"deleted": True}
 
 
 @app.post("/cameras/{camera_id}/capture")

@@ -165,7 +165,9 @@ def update_status(*, eth_up: bool | None = None, refresh: bool = False) -> dict[
         eth_up = eth_carrier_up()
     gh = github_latest(force=refresh)
     latest_tag = _norm(gh.get("tag"))
-    update_available = bool(gh["ok"] and latest_tag and _is_newer(latest_tag, __version__))
+    # None = the check did not run (offline, DNS down). False used to be produced by a
+    # failed lookup, which the card rendered as a green all-clear.
+    update_available = bool(latest_tag and _is_newer(latest_tag, __version__)) if gh["ok"] else None
     fleet = fleet_firmware_status()
     return {
         "eth_up": bool(eth_up),

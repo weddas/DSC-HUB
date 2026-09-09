@@ -45,15 +45,29 @@ function useLoad<T>(fn: () => Promise<T>, everyMs = 0): Load<T> & { reload: () =
   const [n, setN] = useState(0);
   useEffect(() => {
     let alive = true;
+    let retry = 0;
+    let retryDelay = 10_000; // a brain blip must not leave "fetch failed" on screen until a hard reload
     const run = () =>
       fn()
-        .then((data) => alive && setV({ data, state: "ready" }))
-        .catch((e: unknown) => alive && setV((cur) => ({ data: cur.data, state: "error", error: e instanceof Error ? e.message : String(e) })));
+        .then((data) => {
+          if (!alive) return;
+          retryDelay = 10_000;
+          setV({ data, state: "ready" });
+        })
+        .catch((e: unknown) => {
+          if (!alive) return;
+          setV((cur) => ({ data: cur.data, state: "error", error: e instanceof Error ? e.message : String(e) }));
+          if (!everyMs) {
+            retry = window.setTimeout(() => void run(), retryDelay);
+            retryDelay = Math.min(retryDelay * 2, 60_000);
+          }
+        });
     void run();
     const id = everyMs ? window.setInterval(() => void run(), everyMs) : 0;
     return () => {
       alive = false;
       if (id) window.clearInterval(id);
+      if (retry) window.clearTimeout(retry);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [n]);

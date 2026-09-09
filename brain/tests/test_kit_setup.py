@@ -170,7 +170,7 @@ def test_update_status_offline_safe_and_fleet_diff(temp_db, monkeypatch) -> None
 
     s = kit_update.update_status()
     assert s["brain"]["ok"] is False
-    assert s["brain"]["update_available"] is False
+    assert s["brain"]["update_available"] is None  # unknown when the check could not run - never a false all-clear
     assert "offline" in str(s["brain"]["error"]).lower()
     assert "expected_firmware" in s["fleet"]
     assert isinstance(s["fleet"]["devices"], list)

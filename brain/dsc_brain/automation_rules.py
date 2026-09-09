@@ -496,7 +496,12 @@ def _normalize_action(action: Any) -> dict[str, Any]:
 def _normalize_rule(row: Any) -> dict[str, Any]:
     if not isinstance(row, dict):
         raise ValueError("rule must be an object")
-    rid = str(row.get("id") or "").strip().lower()
+    raw_id = str(row.get("id") or "").strip()
+    if raw_id != raw_id.lower():
+        # The message promised lowercase was enforced; it was silently coerced, which broke
+        # round-trip fidelity and let MyRule and myrule collide on an id nobody sent.
+        raise ValueError(f"invalid rule id {raw_id!r} — must be lowercase (slug, 2–48 chars)")
+    rid = raw_id
     if not _RULE_ID_RE.match(rid):
         raise ValueError(f"invalid rule id {rid!r} — slug, lowercase, 2–48 chars")
     return {

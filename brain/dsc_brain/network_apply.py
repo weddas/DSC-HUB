@@ -67,6 +67,24 @@ def spa_urls_for_mode(mode: OperatorMode, eth_ip: str | None = None) -> list[str
     return urls
 
 
+def _fleet_mac(seat_id: str) -> str | None:
+    try:
+        from .fleet_state import get_fleet_state
+
+        fleet = get_fleet_state()
+        seat = None
+        if seat_id == "hub":
+            seat = fleet.hub
+        elif seat_id == "panel":
+            seat = fleet.panel
+        else:
+            seat = (fleet.pots or {}).get(seat_id) or (fleet.sonoffs or {}).get(seat_id)
+        mac = (getattr(seat, "values", None) or {}).get("mac") if seat is not None else None
+        return str(mac) if mac else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def network_status() -> dict[str, Any]:
     settings = get_all_settings()
     inventory = list_inventory()
@@ -74,7 +92,9 @@ def network_status() -> dict[str, Any]:
         {
             "seat_id": r["seat_id"],
             "host": r.get("host"),
-            "mac": r.get("mac"),
+            # Inventory rarely carries a MAC; the ESPHome device_info() the brain reads on
+            # every poll does, so fall back to what the device itself reported.
+            "mac": r.get("mac") or _fleet_mac(str(r["seat_id"])),
             "role": r.get("role"),
         }
         for r in inventory

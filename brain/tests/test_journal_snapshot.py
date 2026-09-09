@@ -116,7 +116,10 @@ def test_core_snapshot_keys() -> None:
         },
     }
     snap = capture_journal_snapshot("core", "dsc_core", fleet)
-    assert snap["brain_version"] == "7.0.0.0"
+    from dsc_brain import __version__
+
+    assert snap["brain_version"] == __version__  # the brain's own version, not the firmware train
+    assert snap["fleet_firmware"] == "7.0.0.0"
     assert snap["active_alert_count"] == 3
 
 
@@ -160,7 +163,10 @@ def test_add_core_entry_persists_snapshot(tmp_path: Path) -> None:
         "hass_extras": {"sensor.dsc_active_alert_count": {"state": "0"}},
     }
     row = add_core_entry(1000.0, "core note", db_path=db, fleet=fleet)
-    assert row["snapshot"]["brain_version"] == "7.1.0.0"
+    from dsc_brain import __version__
+
+    assert row["snapshot"]["brain_version"] == __version__
+    assert row["snapshot"]["fleet_firmware"] == "7.1.0.0"
     assert row["snapshot"]["active_alert_count"] == 0
 
 

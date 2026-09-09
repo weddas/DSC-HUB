@@ -1,9 +1,16 @@
 import type { FleetSnapshot } from "./fleetModel";
 
-export type EntityFleetRef = { seatId: string; metric: string; binary?: boolean };
+export type EntityFleetRef = { seatId: string; metric: string; binary?: boolean; text?: boolean };
 
 /** Maps HA entity_id → fleet seat metric (Pi history + held readings). */
 export const ENTITY_FLEET_MAP: Record<string, EntityFleetRef> = {
+  // Hub link vitals — the brain files these as flat hub.values metrics (hub_controls.py);
+  // without these rows the Alerts/Kit chips rendered "Bounces —" and "RF —" over live data.
+  "sensor.dsc_hub_api_down_age": { seatId: "hub", metric: "api_down_age" },
+  "sensor.dsc_hub_ha_handshake_age": { seatId: "hub", metric: "ha_handshake_age" },
+  "sensor.dsc_hub_link_recovery_bounces": { seatId: "hub", metric: "link_recovery_bounces" },
+  "sensor.dsc_hub_rf_status": { seatId: "hub", metric: "rf_status", text: true },
+  "sensor.dsc_hub_wifi_rssi": { seatId: "hub", metric: "wifi_rssi" },
   "sensor.dsc_hub_tent_temperature": { seatId: "hub", metric: "temp_c" },
   "sensor.dsc_hub_temperature": { seatId: "hub", metric: "temp_c" },
   "sensor.dsc_hub_tent_humidity": { seatId: "hub", metric: "rh_pct" },
@@ -126,6 +133,10 @@ export function fleetLiveNumber(entityId: string, fleet: FleetSnapshot): number 
 export function fleetLiveState(entityId: string, fleet: FleetSnapshot): string | null {
   const ref = ENTITY_FLEET_MAP[entityId];
   if (!ref) return null;
+  if (ref.text) {
+    const raw = seatValues(fleet, ref.seatId)?.[ref.metric];
+    return raw == null || raw === "" ? null : String(raw);
+  }
   const live = fleetLiveNumber(entityId, fleet);
   if (live == null || !Number.isFinite(live)) return null;
   if (ref.binary) return live > 0 ? "on" : "off";
@@ -136,6 +147,7 @@ export function fleetLiveState(entityId: string, fleet: FleetSnapshot): string |
 export function fleetMetricPresent(entityId: string, fleet: FleetSnapshot): boolean {
   const ref = ENTITY_FLEET_MAP[entityId];
   if (!ref) return false;
+  if (ref.text) return fleetLiveState(entityId, fleet) != null;
   if (ref.binary) {
     const values = seatValues(fleet, ref.seatId);
     if (!values) return false;

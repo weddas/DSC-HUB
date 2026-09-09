@@ -494,6 +494,9 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
         fw = EXPECTED_FIRMWARE
         try:
             info = await client.device_info()
+            mac = getattr(info, "mac_address", None) if info else None
+            if mac:
+                values["mac"] = str(mac)
             if info and getattr(info, "esphome_version", None):
                 fw = str(info.esphome_version)
                 # Keep the ESPHome framework release for every role — `fw` is
@@ -539,10 +542,15 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
                     object_id = key_to_object.get(key, "")
                     for suffix, field in POT_MAP.items():
                         if object_id.endswith(suffix) or suffix in object_id:
+                            # `soil_moisture_raw` contains `soil_moisture`, so with a plain
+                            # substring match whichever state arrived last won and the
+                            # on-device calibration was silently discarded. Raw channels
+                            # are kept under their own key and never shadow the calibrated one.
+                            target = f"{field}_raw" if object_id.endswith("_raw") else field
                             try:
-                                values[field] = float(st.state)
+                                values[target] = float(st.state)
                             except (TypeError, ValueError):
-                                values[field] = st.state
+                                values[target] = st.state
                             break
                     bin_field = POT_BINARY_OID_TO_KEY.get(object_id)
                     if bin_field is not None:

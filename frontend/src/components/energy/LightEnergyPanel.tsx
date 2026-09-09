@@ -102,8 +102,12 @@ export function LightEnergyPanel({
           <StatusChip label={`Est. ${fmtMoney(estimate.total_cost)}/day`} tone="ok" />
           <StatusChip label={`${estimate.total_kwh?.toFixed(2) ?? "—"} kWh`} tone="muted" />
         </div>
+      ) : estimate === null ? (
+        // First paint: nothing has come back yet. A warn chip here is an assertion about the
+        // system, and it was being read as the steady state.
+        <StatusChip label="Loading estimate…" tone="muted" />
       ) : (
-        <StatusChip label={estimate?.honesty || "No schedule for estimate"} tone="warn" />
+        <StatusChip label={estimate.honesty || "No schedule for estimate"} tone="warn" />
       )}
       {planning ? (
         <div className="dsc-banner dsc-banner--warn" style={{ marginBottom: 8 }}>

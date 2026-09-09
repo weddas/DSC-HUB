@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useEntityBus } from "./useEntityBus";
 import { getPreference } from "../lib/preferences";
-import { useFleet, useFleetSource } from "./useFleet";
+import { useFleet, useFleetSource, useFleetLastUpdated } from "./useFleet";
 import { fleetEntityAvailable, fleetLiveNumber, hubFleetDark } from "../lib/entityFleetMap";
 
 export type HeldReading = {
@@ -122,13 +122,26 @@ function useOfflineMs(entityId: string): number | null {
   return Number.isFinite(t) ? Date.now() - t : null;
 }
 
+/**
+ * Age of a server-stamped last_seen. Both stamps come from the brain's clock so a wrong Pi
+ * clock cancels out; only the time since the snapshot arrived here is measured on the
+ * browser clock. Differencing a server stamp against Date.now() blanked healthy probes as
+ * PROBE DARK while the Pi ran 7 minutes slow.
+ */
+export function serverAgeMs(serverNowS: number, lastSeenS: number, appliedAtMs: number | null): number {
+  const sinceApplied = appliedAtMs ? Math.max(0, Date.now() - appliedAtMs) : 0;
+  if (!serverNowS) return Date.now() - lastSeenS * 1000;
+  return Math.max(0, (serverNowS - lastSeenS) * 1000) + sinceApplied;
+}
+
 /** Hub offline duration from uptime entity last_changed. */
 export function useHubOfflineMs(): number | null {
   const fleet = useFleet();
   const source = useFleetSource();
+  const appliedAt = useFleetLastUpdated();
   const fromEntity = useOfflineMs(HUB_UPTIME);
   if (source === "pi" && !fleet.hub.online && fleet.hub.last_seen) {
-    return Date.now() - fleet.hub.last_seen * 1000;
+    return serverAgeMs(fleet.updated_at, fleet.hub.last_seen, appliedAt);
   }
   return fromEntity;
 }
@@ -140,9 +153,10 @@ export function useBeatOfflineMs(): number | null {
 export function usePanelOfflineMs(): number | null {
   const fleet = useFleet();
   const source = useFleetSource();
+  const appliedAt = useFleetLastUpdated();
   const fromEntity = useOfflineMs("binary_sensor.dsc_hub_panel_link");
   if (source === "pi" && !fleet.panel.online && fleet.panel.last_seen) {
-    return Date.now() - fleet.panel.last_seen * 1000;
+    return serverAgeMs(fleet.updated_at, fleet.panel.last_seen, appliedAt);
   }
   return fromEntity;
 }

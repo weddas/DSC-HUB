@@ -18,8 +18,17 @@ from .compose_store import get_helper
 from .event_log import record_grow_log
 from .settings import list_history
 
-_STUCK_RATE_MAX = 0.02  # %/h — matches HA dsc_v4_sensor_trust
+_STUCK_RATE_MAX = 0.02  # %/h — legacy slope test, kept for the rate sensor only
 _STUCK_ON_SEC = 45 * 60
+# Flatline detection: over the window the probe must have moved less than this span with
+# at least this many samples spanning at least this many hours. A dead Modbus probe that
+# republishes its last read (with a few jitter values) is FLAT; the old first-minus-last
+# slope test needed the endpoints to agree within 0.12 % over 6 h, so jitter of a few
+# tenths hid a 24 h flatline entirely, and the flag only fired once the values went null.
+_FLAT_SPAN_MAX_PCT = 0.6
+_FLAT_MIN_SAMPLES = 20
+_FLAT_MIN_HOURS = 3.0
+_FLAT_WINDOW_H = 6.0
 _MAD_ON_SEC = 20 * 60
 _DHT_ON_SEC = 15 * 60
 _DHT_OFF_SEC = 5 * 60
@@ -95,6 +104,32 @@ def _moisture_rate_per_hour(pot_n: int) -> float | None:
         return (float(last["value"]) - float(first["value"])) / dt_h
     except (TypeError, ValueError):
         return None
+
+
+def _moisture_flatline(pot_n: int) -> tuple[float, float, int] | None:
+    """(span_pct, hours_covered, samples) over the flatline window, or None if too sparse."""
+    since = time.time() - _FLAT_WINDOW_H * 3600
+    rows = list_history(f"pot{pot_n}", "moisture_pct", since, limit=2000)
+    vals: list[tuple[float, float]] = []
+    for r in rows:
+        v = r.get("value")
+        if v is None:
+            continue
+        try:
+            fv = float(v)
+        except (TypeError, ValueError):
+            continue
+        if fv != fv:  # NaN
+            continue
+        vals.append((float(r["ts"]), fv))
+    if len(vals) < _FLAT_MIN_SAMPLES:
+        return None
+    vals.sort(key=lambda t: t[0])
+    hours = (vals[-1][0] - vals[0][0]) / 3600.0
+    if hours < _FLAT_MIN_HOURS:
+        return None
+    ys = [v for _, v in vals]
+    return max(ys) - min(ys), hours, len(vals)
 
 
 def _max_peer_divergence(values: list[float]) -> float | None:
@@ -268,12 +303,8 @@ def emit_sensor_trust(
             )
             if pot is not None:
                 pot.values.pop("dryback_pct", None)
-        stuck_raw = (
-            not probe_station
-            and rate is not None
-            and abs(rate) < _STUCK_RATE_MAX
-            and moisture_f is not None
-        )
+        flat = _moisture_flatline(n) if (moisture_f is not None and not probe_station) else None
+        stuck_raw = flat is not None and flat[0] <= _FLAT_SPAN_MAX_PCT
         if stuck_raw:
             if n not in _stuck_since:
                 _stuck_since[n] = now
@@ -282,7 +313,12 @@ def emit_sensor_trust(
             _stuck_since.pop(n, None)
             stuck = False
 
-        set_entity(states, f"binary_sensor.dsc_probe{n}_sensor_stuck", stuck)
+        stuck_attrs = (
+            {"span_pct": round(flat[0], 2), "hours": round(flat[1], 1), "samples": flat[2], "basis": "flatline_span"}
+            if flat is not None
+            else {"basis": "flatline_span", "reason": "insufficient history" if moisture_f is not None else "no reading"}
+        )
+        set_entity(states, f"binary_sensor.dsc_probe{n}_sensor_stuck", stuck, attributes=stuck_attrs)
         set_entity(states, f"binary_sensor.dsc_probe{n}_untrusted", stuck)
         _edge_log(
             f"pot{n}_stuck",

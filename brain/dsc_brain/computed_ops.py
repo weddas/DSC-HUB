@@ -233,6 +233,51 @@ def _cfm_from_pct_memoized(
     return round(val, 1), "curve", "measured_curve"
 
 
+def _capacity_honesty(
+    states: dict[str, dict[str, Any]],
+    cfm_values: dict[str, float],
+    eids: tuple[str, ...],
+) -> tuple[str, int]:
+    """(honesty label, nameplate share %) for a sum of per-fan capacities."""
+    total = 0.0
+    proxy = 0.0
+    for eid in eids:
+        val = float(cfm_values.get(eid, 0.0) or 0.0)
+        hon = str(((states.get(eid) or {}).get("attributes") or {}).get("honesty") or "")
+        total += val
+        if hon.startswith("capacity_proxy"):
+            proxy += val
+    if total <= 0.0:
+        return "no_capacity", 0
+    share = int(round(100.0 * proxy / total))
+    if share <= 0:
+        return "measured_curve", 0
+    if share >= 100:
+        return "capacity_proxy_nameplate", 100
+    return f"mixed_{share}pct_nameplate_proxy", share
+
+
+# Flags that must not flap: each holds its raw condition for on_after_s before turning on
+# and off_after_s before turning off. heater_temp_oos_latch was a latch in name only —
+# recomputed every tick, it toggled 70 times in 48 h — and its "runtime" gate used the
+# cumulative hours today, so after 8 minutes of heating it was permanently satisfied.
+_FLAG_STATE: dict[str, dict[str, Any]] = {}
+
+
+def _held_flag(eid: str, raw: bool, *, on_after_s: float, off_after_s: float, now: float | None = None) -> bool:
+    now = time.time() if now is None else now
+    st = _FLAG_STATE.setdefault(eid, {"on": False, "since": None})
+    if bool(raw) != bool(st["on"]):
+        if st["since"] is None:
+            st["since"] = now
+        if now - float(st["since"]) >= (on_after_s if raw else off_after_s):
+            st["on"] = bool(raw)
+            st["since"] = None
+    else:
+        st["since"] = None
+    return bool(st["on"])
+
+
 def _states_with_controls(
     base: dict[str, dict[str, Any]],
     controls: dict[str, Any],
@@ -1043,9 +1088,14 @@ def _build_hot_computed_states(
         "sensor.dsc_cfm_exhaust_recirc", 0.0
     )
     net_pressure = round(intake_capacity - exhaust_capacity, 1)
-    for eid, val in (
-        ("sensor.dsc_cfm_intake_capacity_total", round(intake_capacity, 1)),
-        ("sensor.dsc_cfm_exhaust_capacity_total", round(exhaust_capacity, 1)),
+    # A total is only as measured as its parts. exhaust_capacity_total used to be stamped
+    # "measured" while 93 % of it was one fan's nameplate proxy, and the headline negative
+    # pressure figure inherited that label.
+    intake_h, intake_share = _capacity_honesty(states, cfm_values, ("sensor.dsc_cfm_intake_main", "sensor.dsc_cfm_intake_2x4"))
+    exhaust_h, exhaust_share = _capacity_honesty(states, cfm_values, ("sensor.dsc_cfm_exhaust_out", "sensor.dsc_cfm_exhaust_recirc"))
+    for eid, val, hon, share in (
+        ("sensor.dsc_cfm_intake_capacity_total", round(intake_capacity, 1), intake_h, intake_share),
+        ("sensor.dsc_cfm_exhaust_capacity_total", round(exhaust_capacity, 1), exhaust_h, exhaust_share),
     ):
         _set_entity(
             states,
@@ -1055,9 +1105,11 @@ def _build_hot_computed_states(
             attributes={
                 "unit_of_measurement": "CFM",
                 "model": "fan_curve_or_nameplate",
-                "honesty": "measured_capacity_not_allocated",
+                "honesty": hon,
+                "nameplate_share_pct": share,
             },
         )
+    worst_share = max(intake_share, exhaust_share)
     _set_entity(
         states,
         "sensor.dsc_flow_net_pressure_cfm",
@@ -1067,6 +1119,8 @@ def _build_hot_computed_states(
             "unit_of_measurement": "CFM",
             "model": "intake_capacity_minus_exhaust_capacity",
             "honesty": "positive_is_over_pressure_negative_is_under_pressure",
+            "basis_honesty": "measured_curve" if worst_share == 0 else f"{worst_share}pct_of_a_side_is_nameplate_proxy",
+            "nameplate_share_pct": worst_share,
         },
     )
     imbalance = abs(net_pressure)
@@ -1165,28 +1219,41 @@ def _build_hot_computed_states(
     heat_runtime_h = runtime.hours_today("hub", "switch_dsc_hub_heater_demand")
     mat_runtime_h = runtime.hours_today("hub", "switch_dsc_hub_grow_mat_demand")
 
+    hold_attrs = {"basis": "held_condition", "on_after_s": 600, "off_after_s": 300}
     _set_entity(
         states,
         "binary_sensor.dsc_humidifier_ineffective_suspect",
-        hum_demand and hum_relay and tent_rh is not None and float(tent_rh) >= (rh_max - 0.5) and hum_runtime_h * 3600 >= 600,
+        _held_flag(
+            "binary_sensor.dsc_humidifier_ineffective_suspect",
+            bool(hum_demand and hum_relay and tent_rh is not None and float(tent_rh) >= (rh_max - 0.5) and hum_runtime_h * 3600 >= 600),
+            on_after_s=600,
+            off_after_s=300,
+        ),
+        attributes=hold_attrs,
     )
     _set_entity(
         states,
         "binary_sensor.dsc_heater_ineffective_suspect",
-        heat_demand
-        and heat_relay
-        and tent_t is not None
-        and float(tent_t) >= (target_t + 0.3)
-        and heat_runtime_h * 3600 >= 480,
+        _held_flag(
+            "binary_sensor.dsc_heater_ineffective_suspect",
+            bool(heat_demand and heat_relay and tent_t is not None and float(tent_t) >= (target_t + 0.3) and heat_runtime_h * 3600 >= 480),
+            on_after_s=600,
+            off_after_s=300,
+        ),
+        attributes=hold_attrs,
     )
+    # The condition itself must persist for the hold — that IS continuous runtime, so the
+    # cumulative-today runtime gate is gone.
     _set_entity(
         states,
         "binary_sensor.dsc_heater_temp_oos_latch",
-        heat_demand
-        and heat_relay
-        and tent_t is not None
-        and float(tent_t) < (target_t - 1.5)
-        and heat_runtime_h * 3600 >= 480,
+        _held_flag(
+            "binary_sensor.dsc_heater_temp_oos_latch",
+            bool(heat_demand and heat_relay and tent_t is not None and float(tent_t) < (target_t - 1.5)),
+            on_after_s=600,
+            off_after_s=300,
+        ),
+        attributes=hold_attrs,
     )
 
     any_pot = any(_pot_in_service(inventory, n) for n in range(1, 5))

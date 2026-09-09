@@ -8,6 +8,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from . import __version__
 from .climate_mode import migrate_legacy_clone_mode
 from .compose_store import get_helper, get_roster_slots
 from .computed_ops import build_computed_hass_states
@@ -195,6 +196,7 @@ def _capture_space_snapshot(space_id: str, fleet: dict[str, Any]) -> dict[str, A
         if lh is not None:
             snap["lights_on_today_h"] = lh
 
+    snap.update(_version_stamp(fleet))
     return snap
 
 
@@ -205,14 +207,24 @@ def _capture_room_snapshot(fleet: dict[str, Any]) -> dict[str, Any]:
         v = _maybe_float(hub.get(key))
         if v is not None:
             snap[key] = v
+    snap.update(_version_stamp(fleet))
     return snap
+
+
+def _version_stamp(fleet: dict[str, Any]) -> dict[str, Any]:
+    """The project keeps two version schemes apart on purpose: the brain/SPA (__version__,
+    three-part) and the fleet firmware train (four-part). The permanent grow record used to
+    write the firmware stamp into brain_version and nothing at all on space/room rows."""
+    out: dict[str, Any] = {"brain_version": str(__version__)}
+    fw = fleet.get("version") or fleet.get("expected_firmware")
+    if fw:
+        out["fleet_firmware"] = str(fw)
+    return out
 
 
 def _capture_core_snapshot(fleet: dict[str, Any]) -> dict[str, Any]:
     snap: dict[str, Any] = {}
-    version = fleet.get("version") or fleet.get("expected_firmware")
-    if version:
-        snap["brain_version"] = str(version)
+    snap.update(_version_stamp(fleet))
     alert = _hass_extra_state(fleet, "sensor.dsc_active_alert_count")
     if alert is not None:
         try:

@@ -194,7 +194,9 @@ class FleetState:
 
         surface = self.surface or SURFACE_VERSION
         set_entity("sensor.dsc_ha_surface_version", surface)
-        set_entity("sensor.dsc_active_alert_count", 0)
+        # No hardcoded sensor.dsc_active_alert_count = 0 here: the raw view does not know
+        # the count, and a placeholder zero read as false-healthy to anything consuming
+        # the raw view (v1 automation rules did). The computed view carries the real one.
 
         if self.hub.values.get("temp_c") is not None:
             set_entity("sensor.dsc_hub_temperature", self.hub.values["temp_c"])
@@ -334,6 +336,14 @@ class FleetState:
             set_entity("sensor.dsc_canopy_temperature", self.canopy["temp_c"])
         if self.canopy.get("rh_pct") is not None:
             set_entity("sensor.dsc_canopy_humidity", self.canopy["rh_pct"])
+        for zone, row in (self.canopy.get("zones") or {}).items():
+            if not isinstance(row, dict):
+                continue
+            zattrs = {"role": row.get("role"), "friendly_name": row.get("friendly_name")}
+            if row.get("temp_c") is not None:
+                set_entity(f"sensor.dsc_canopy_{zone}_temperature", row["temp_c"], True, zattrs)
+            if row.get("rh_pct") is not None:
+                set_entity(f"sensor.dsc_canopy_{zone}_humidity", row["rh_pct"], True, zattrs)
 
         # Every datapoint of a *bound* Zigbee device becomes an entity the SPA and
         # the automation rule engine can read: numbers -> sensor.dsc_zigbee_<role>_<key>,
