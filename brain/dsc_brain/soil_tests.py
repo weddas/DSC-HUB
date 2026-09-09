@@ -222,8 +222,9 @@ def _plausibility_penalty(avg: dict[str, Any]) -> tuple[float, list[str]]:
     if ph is not None and not (3.0 <= ph <= 9.0):
         penalty += 30
         reasons.append("pH outside 3-9")
-    npk = [_f(k) for k in ("nitrogen", "phosphorus", "potassium")]
-    if npk and all(v in (None, 0.0) for v in npk) and (moist or 0.0) > 5.0:
+    # Only channels the probe actually reported count; an absent channel is not a zero.
+    npk = [v for v in (_f(k) for k in ("nitrogen", "phosphorus", "potassium")) if v is not None]
+    if npk and all(v == 0.0 for v in npk) and (moist or 0.0) > 5.0:
         penalty += 20
         reasons.append("N/P/K all zero in wet media")
     return penalty, reasons

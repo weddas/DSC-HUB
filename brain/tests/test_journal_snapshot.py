@@ -170,9 +170,16 @@ def test_add_core_entry_persists_snapshot(tmp_path: Path) -> None:
     assert row["snapshot"]["active_alert_count"] == 0
 
 
-def test_backfill_space_snapshot_from_history(tmp_path: Path) -> None:
+def test_backfill_space_snapshot_from_history(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import time as _time
+
     from dsc_brain.journal_snapshot import backfill_journal_snapshots
     from dsc_brain.settings import record_history
+
+    # The fixture writes history at ts=1000.0 (1970). record_history prunes rows older than
+    # the retention window when its throttle interval has elapsed, so whether the first
+    # write survived depended on what the rest of the suite had done recently. Pin it.
+    monkeypatch.setattr("dsc_brain.settings._last_history_prune", _time.time())
 
     db = tmp_path / "ops.sqlite3"
     add_space_entry(
