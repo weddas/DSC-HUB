@@ -57,6 +57,44 @@ POT_MAP = {
     "soil_potassium": "potassium",
 }
 
+# Physically/practically plausible ranges for the calibrated soil metrics. A probe's
+# on-device calibration can be wrong (seen live: pH 114 from a raw 6.8), and since the
+# desks now trust the live reading over the firmware fault flag, an impossible calibrated
+# value would render straight onto the gauge. Reject out-of-range values so the gauge shows
+# "no data" instead of a garbage number; the raw channel and the rejected value are kept.
+# pH and moisture are hard physical bounds; the rest are generous sanity limits that never
+# clip a legitimate reading.
+# Only the channels the probe actually MEASURES. N/P/K are derived from EC downstream
+# (the desks label them "from EC"), not raw probe reads, so they are not clamped here —
+# the EC bound below covers their source.
+SOIL_PLAUSIBLE: dict[str, tuple[float, float]] = {
+    "ph": (0.0, 14.0),
+    "moisture_pct": (0.0, 100.0),
+    "soil_temp_c": (-10.0, 70.0),
+    "ec_us": (0.0, 20000.0),
+}
+
+def _reject_implausible_soil(values: dict[str, Any]) -> list[str]:
+    """Null out calibrated soil readings outside their physical range, in place.
+
+    Keeps the rejected number under ``<field>_implausible`` and records the rejected field
+    names under ``soil_implausible`` for honest surfacing. Raw channels are never touched.
+    Returns the list of rejected fields.
+    """
+    rejected: list[str] = []
+    for field, (lo, hi) in SOIL_PLAUSIBLE.items():
+        v = values.get(field)
+        if isinstance(v, bool):
+            continue
+        if isinstance(v, (int, float)) and not (lo <= float(v) <= hi):
+            values[f"{field}_implausible"] = float(v)
+            values[field] = None
+            rejected.append(field)
+    if rejected:
+        values["soil_implausible"] = rejected
+    return rejected
+
+
 POT_BINARY_OID_TO_KEY: dict[str, str] = {
     "clock_valid_bs": "clock_valid",
     "clock_valid": "clock_valid",
@@ -562,6 +600,11 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
                     if bin_field is not None:
                         raw = getattr(st, "state", None)
                         binaries[bin_field] = raw in (True, "on", "ON", 1, "1")
+                # Reject physically-impossible calibrated readings (e.g. a probe's bad
+                # on-device pH cal turning raw 6.8 into 114). The gauge then shows "no data"
+                # instead of a garbage number; the rejected value is kept under
+                # <field>_implausible and the raw channel is untouched.
+                _reject_implausible_soil(values)
                 if binaries:
                     values["binaries"] = binaries
 

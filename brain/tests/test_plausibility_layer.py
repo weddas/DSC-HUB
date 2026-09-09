@@ -69,3 +69,40 @@ def test_fault_binary_masks_its_zone(temp_db: Path, monkeypatch: pytest.MonkeyPa
     assert values["temp_c"] is None and values["rh_pct"] is None and values["vpd_kpa"] is None
     assert values["clone_temp_c"] == 23.0 and values["clone_vpd_kpa"] is not None  # aux zone untouched
     assert "temp_c" in values["climate_fault_masked"]
+
+
+def test_reject_implausible_soil_ph_out_of_range() -> None:
+    """A bad probe cal (pH 114 from a valid raw 6.8) is rejected, not shown; raw untouched."""
+    from dsc_brain.esphome_client import _reject_implausible_soil
+
+    values = {"ph": 114.0, "ph_raw": 6.8, "moisture_pct": 42.0, "ec_us": 1500.0}
+    rejected = _reject_implausible_soil(values)
+    assert rejected == ["ph"]
+    assert values["ph"] is None
+    assert values["ph_implausible"] == 114.0
+    assert values["ph_raw"] == 6.8  # raw channel never touched
+    assert values["moisture_pct"] == 42.0 and values["ec_us"] == 1500.0
+    assert values["soil_implausible"] == ["ph"]
+
+
+def test_reject_implausible_soil_keeps_valid_and_multi() -> None:
+    from dsc_brain.esphome_client import _reject_implausible_soil
+
+    # valid pH passes; impossible moisture rejected
+    values = {"ph": 6.8, "moisture_pct": 150.0}
+    rejected = _reject_implausible_soil(values)
+    assert rejected == ["moisture_pct"]
+    assert values["ph"] == 6.8 and values["moisture_pct"] is None
+
+    # nothing to reject
+    clean = {"ph": 6.2, "moisture_pct": 55.0, "soil_temp_c": 21.0, "ec_us": 1200.0}
+    assert _reject_implausible_soil(clean) == []
+    assert "soil_implausible" not in clean
+
+
+def test_reject_implausible_soil_ignores_none_and_nonnumeric() -> None:
+    from dsc_brain.esphome_client import _reject_implausible_soil
+
+    values = {"ph": None, "moisture_pct": "n/a"}
+    assert _reject_implausible_soil(values) == []
+    assert values["ph"] is None
