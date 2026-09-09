@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Button, Card, StatusChip } from "./ui";
 import { DecisionLayer } from "./DecisionLayer";
 import { call_service, clear_calibration, fan_calibration_summary, type FanCalTarget } from "../lib/fleetApi";
+import { useEntityBus } from "../hooks/useEntityBus";
 
 /** Load the per-duct calibration state. Shared by the record card and the fan wizard. */
 export function useFanCalSummary() {
@@ -265,6 +266,67 @@ function TargetRow({ target, onCleared }: { target: FanCalTarget; onCleared: () 
   );
 }
 
+/**
+ * How fast a tent's air is replaced — the one airflow figure that is arithmetic rather than
+ * a model, and the thing a calibration is ultimately *for*.
+ *
+ * Shown next to the curves because it is where a better curve visibly pays off: calibrate a
+ * fan and this number stops being a rating and starts being a measurement. It inherits the
+ * fans' own honesty, and it separates the tent's air being replaced from air that actually
+ * leaves the building — a fan exhausting to the room moves it next door.
+ */
+function AirExchangeRow({ spaceId, label }: { spaceId: string; label: string }) {
+  const { entity, state } = useEntityBus();
+  const ach = entity(`sensor.dsc_ach_${spaceId}`);
+  const mins = state(`sensor.dsc_air_exchange_minutes_${spaceId}`, "");
+  const attrs = (ach?.attributes ?? {}) as Record<string, unknown>;
+  const value = Number(ach?.state);
+
+  if (!Number.isFinite(value) || value <= 0) {
+    return (
+      <div style={{ padding: "8px 0", borderTop: "1px solid var(--dsc-hairline)" }}>
+        <strong>{label}</strong>{" "}
+        <span className="dsc-muted">— no air being moved, or no fan reporting.</span>
+      </div>
+    );
+  }
+
+  const measured = String(attrs.honesty ?? "") === "measured_curve";
+  const outside = Number(attrs.to_outside_cfm ?? 0);
+  const flow = Number(attrs.exchange_cfm ?? 0);
+
+  return (
+    <div style={{ padding: "8px 0", borderTop: "1px solid var(--dsc-hairline)" }}>
+      <div className="dsc-chip-row" style={{ alignItems: "baseline", gap: 8 }}>
+        <strong>{label}</strong>
+        {/* A number, not a .dsc-chip: chips are uppercased status words here, and "/ HOUR"
+            is not a unit. */}
+        <span className="dsc-cal-point" style={{ fontSize: "var(--dsc-fs-md)" }}>
+          {value}× / hour
+        </span>
+        {mins && mins !== "unavailable" ? (
+          <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
+            turns over every {mins} min
+          </span>
+        ) : null}
+      </div>
+      <p className="dsc-kpi-sub" style={{ margin: "4px 0 0" }}>
+        {flow} CFM through {String(attrs.volume_m3 ?? "—")} m³, driven by the{" "}
+        {String(attrs.driven_by ?? "—")} side.{" "}
+        {measured ? "From your measured curve." : "From fan ratings — calibrate to make this real."}
+      </p>
+      {outside < flow ? (
+        <p className="dsc-kpi-sub" style={{ margin: "2px 0 0" }}>
+          {outside > 0
+            ? `${outside} CFM of that leaves the building; the rest moves`
+            : "None of that leaves the building — it moves"}{" "}
+          the tent's air into the room, so what comes back in is room air.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function FanCalibrationRecord() {
   const { targets, error, reload } = useFanCalSummary();
 
@@ -291,6 +353,11 @@ export function FanCalibrationRecord() {
           {targets.map((t) => (
             <TargetRow key={t.cal_prefix} target={t} onCleared={() => void reload()} />
           ))}
+          <p className="dsc-kpi-sub" style={{ margin: "14px 0 0", fontWeight: 600 }}>
+            Air changes — what the curves are for
+          </p>
+          <AirExchangeRow spaceId="4x8" label="4×8 tent" />
+          <AirExchangeRow spaceId="2x4" label="2×4 tent" />
         </>
       ) : null}
     </Card>

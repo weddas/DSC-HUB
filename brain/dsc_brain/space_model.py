@@ -11,22 +11,47 @@ from typing import Any
 from .paths import default_db, DEFAULT_DB
 from .db import open_db, schema_once
 
+# height_cm is what turns a footprint into a volume, and a volume is what turns airflow
+# into air changes per hour. 210 cm is the height of both tent models in the twin
+# (grow-tent-240x120x210, grow-tent-120x60x210) and the common size for both footprints —
+# a DEFAULT the operator can correct, not a measurement. The ACH sensors say which height
+# they used so a wrong one is visible rather than silently scaling every number.
+DEFAULT_TENT_HEIGHT_CM = 210.0
+
 KIT_SPACES: tuple[dict[str, Any], ...] = (
     {
         "space_id": "4x8",
         "kind": "tent",
         "size_label": "4×8",
         "size_m2": 2.97,
-        "extra": {},
+        "extra": {"height_cm": DEFAULT_TENT_HEIGHT_CM},
     },
     {
         "space_id": "2x4",
         "kind": "tent",
         "size_label": "2×4",
         "size_m2": 0.74,
-        "extra": {},
+        "extra": {"height_cm": DEFAULT_TENT_HEIGHT_CM},
     },
 )
+
+
+def space_volume_m3(space: dict[str, Any]) -> float:
+    """Footprint x height. 0 when either is unknown — never a guessed volume."""
+    try:
+        area = float(space.get("size_m2") or 0)
+    except (TypeError, ValueError):
+        return 0.0
+    extra = space.get("extra") or {}
+    try:
+        height_cm = float(extra.get("height_cm") or 0)
+    except (TypeError, ValueError):
+        height_cm = 0.0
+    if height_cm <= 0:
+        height_cm = DEFAULT_TENT_HEIGHT_CM
+    if area <= 0:
+        return 0.0
+    return round(area * (height_cm / 100.0), 3)
 
 # Researched / kit nameplate defaults — operator Update in Settings.
 KIT_DEVICE_DEFAULTS: tuple[dict[str, Any], ...] = (

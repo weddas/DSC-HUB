@@ -70,6 +70,9 @@ class FanInstance:
     #: Helper holding its duct diameter, and the built-in default when unset.
     duct_entity: str
     duct_default_cm: float
+    #: Where its air goes (exhaust) or comes from (intake). "outside" is the only one that
+    #: exchanges the house's air as well as the tent's; "room" moves it next door.
+    destination: str = "room"
 
 
 _FANS: tuple[FanInstance, ...] = (
@@ -85,6 +88,7 @@ _FANS: tuple[FanInstance, ...] = (
         cal_prefix="dsc_cal_cfm_out",
         duct_entity="input_number.dsc_duct_out_cm",
         duct_default_cm=15.0,
+        destination="outside",
     ),
     FanInstance(
         key="recirc",
@@ -98,6 +102,7 @@ _FANS: tuple[FanInstance, ...] = (
         cal_prefix="dsc_cal_cfm_recirc",
         duct_entity="input_number.dsc_duct_recirc_cm",
         duct_default_cm=15.0,
+        destination="room",
     ),
     FanInstance(
         key="intake_main",
@@ -111,6 +116,7 @@ _FANS: tuple[FanInstance, ...] = (
         cal_prefix="dsc_cal_cfm_intake_main",
         duct_entity="input_number.dsc_duct_intake_main_cm",
         duct_default_cm=10.0,
+        destination="room",
     ),
     FanInstance(
         key="intake_clone",
@@ -124,6 +130,7 @@ _FANS: tuple[FanInstance, ...] = (
         cal_prefix="dsc_cal_cfm_intake_clone",
         duct_entity="input_number.dsc_duct_intake_clone_cm",
         duct_default_cm=10.0,
+        destination="room",
     ),
 )
 
@@ -456,6 +463,106 @@ def fan_calibration_summary() -> list[dict[str, Any]]:
             }
         )
     return out
+
+
+# ---- Air changes per hour --------------------------------------------------------------
+# The one airflow number that is arithmetic rather than a model: how many times an hour the
+# air in a tent is replaced. plan-spatial-layout S7 keeps it deliberately separate from
+# anything that claims to know where the air goes — a velocity field in a turbulent,
+# obstacle-filled box could not be validated with one anemometer, but a throughput divided
+# by a volume is just division.
+_CFM_TO_M3H = 1.699  # 1 ft^3/min = 1.699 m^3/h
+
+
+def _exchange_side(space_id: str, cfm_values: dict[str, float]) -> tuple[float, str, list[FanInstance]]:
+    """Which powered side moves the air through this space, and how much.
+
+    Not the sum of both sides, and not the smaller of them. In steady state what goes in
+    must come out, so the two sides are the same flow counted twice — adding them would
+    double it. Both tents also carry passive vents, so the LARGER powered side sets the
+    throughflow and the passive openings make up the difference on the other side: a 4x8
+    pulling 462 CFM out against 60 CFM of powered intake draws the balance in through its
+    vents, which is exactly how a negative-pressure tent is meant to run.
+
+    A tent with only a powered intake (the 2x4) is the same story in reverse.
+    """
+    intake = [f for f in fan_instances(space_id) if f.side == "intake"]
+    exhaust = [f for f in fan_instances(space_id) if f.side == "exhaust"]
+    in_cfm = sum(cfm_values.get(f.cfm_id, 0.0) for f in intake)
+    out_cfm = sum(cfm_values.get(f.cfm_id, 0.0) for f in exhaust)
+    # A side with no fans on it never drives anything. Comparing the two totals alone made
+    # a tie at zero pick "exhaust" for the 2x4, which has no exhaust fan at all, and the
+    # space then reported nothing instead of reporting its intake.
+    if not exhaust:
+        return in_cfm, "intake", intake
+    if not intake:
+        return out_cfm, "exhaust", exhaust
+    if out_cfm >= in_cfm:
+        return out_cfm, "exhaust", exhaust
+    return in_cfm, "intake", intake
+
+
+def emit_air_exchange(
+    states: dict[str, dict[str, Any]],
+    cfm_values: dict[str, float],
+    spaces: list[dict[str, Any]],
+) -> None:
+    """Publish air changes per hour, and minutes per exchange, for each space."""
+    from .space_model import space_volume_m3
+
+    for space in spaces:
+        space_id = str(space.get("space_id") or "")
+        if not space_id:
+            continue
+        volume_m3 = space_volume_m3(space)
+        cfm, driver, fans = _exchange_side(space_id, cfm_values)
+        ach_id = f"sensor.dsc_ach_{space_id}"
+        min_id = f"sensor.dsc_air_exchange_minutes_{space_id}"
+
+        # "0 changes/hour" is a real, useful fact when the fans ARE reporting and are simply
+        # off. It is a lie when nothing is reporting at all — a dark hub would publish a
+        # confident zero. So availability follows whether any driving fan is reporting, not
+        # whether the number happens to be zero.
+        reporting = any(
+            str((states.get(f.pct_id) or {}).get("state", "unavailable")) != "unavailable" for f in fans
+        )
+        if volume_m3 <= 0 or not fans or not reporting:
+            for eid in (ach_id, min_id):
+                _set_entity(states, eid, None, available=False, attributes={"space_id": space_id})
+            continue
+
+        # A total is only as measured as its parts (same rule as the capacity totals).
+        honesty, proxy_share = _capacity_honesty(states, cfm_values, tuple(f.cfm_id for f in fans))
+        ach = round(cfm * _CFM_TO_M3H / volume_m3, 1)
+        # This is the TENT's air being replaced, which is not the same as fresh air: a fan
+        # exhausting to the room moves the tent's air next door, and what comes back in is
+        # room air. Only the `outside` share exchanges the house as well, so it is broken
+        # out rather than folded into one number that would read as fresh-air ventilation.
+        outside_cfm = round(
+            sum(cfm_values.get(f.cfm_id, 0.0) for f in fans if f.destination == "outside"), 1
+        )
+        shared = {
+            "space_id": space_id,
+            "volume_m3": volume_m3,
+            "exchange_cfm": round(cfm, 1),
+            "to_outside_cfm": outside_cfm,
+            "driven_by": driver,
+            "driving_fans": [f.label for f in fans],
+            "honesty": honesty,
+            "nameplate_share_pct": proxy_share,
+            # The vents are assumed to pass the flow; a restrictive tent exchanges less.
+            "model": "tent_air_replaced__larger_powered_side_over_volume__vents_make_up_the_rest",
+        }
+        _set_entity(states, ach_id, ach, available=True, attributes={**shared, "unit_of_measurement": "/h"})
+        # Minutes-per-exchange has no value at zero flow: the tent never turns over, and
+        # "infinity minutes" is not a reading. ACH 0 already says it.
+        _set_entity(
+            states,
+            min_id,
+            round(60.0 / ach, 2) if ach > 0 else None,
+            available=ach > 0,
+            attributes={**shared, "unit_of_measurement": "min"},
+        )
 
 
 def _capacity_honesty(
@@ -1425,6 +1532,11 @@ def _build_hot_computed_states(
             "nameplate_share_pct": worst_share,
         },
     )
+    # Air changes per hour, per space — arithmetic on the flow above and the tent volume.
+    from .space_model import list_spaces
+
+    emit_air_exchange(states, cfm_values, list_spaces())
+
     imbalance = abs(net_pressure)
     mass_ok = imbalance < max(5.0, 0.05 * max(intake_capacity, exhaust_capacity, 1.0))
     _set_entity(
