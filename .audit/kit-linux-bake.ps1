@@ -114,7 +114,8 @@ if ($LASTEXITCODE -ne 0) { throw "bake-on-linux failed on Pi" }
 
 # The bake now runs DETACHED, so artifacts do not exist yet. Poll the log, then fetch:
 #   plink ... "tail -f /var/log/dsc-bake.log"
-#   pscp  ... "dsc@<pi>:/opt/dsc-hub-bake-out/dsc-hub-<ver>-*" deploy\n$LocalDeploy = Join-Path $RepoRoot "deploy"
+#   pscp  ... "dsc@<pi>:/opt/dsc-hub-bake-out/dsc-hub-<ver>-*" deploy\
+$LocalDeploy = Join-Path $RepoRoot "deploy"
 New-Item -ItemType Directory -Force -Path $LocalDeploy | Out-Null
 Write-Host "=== Bake launched detached. Poll: plink ... 'tail -20 /var/log/dsc-bake.log' ==="
 Write-Host "=== Fetch when complete into: $LocalDeploy ==="
