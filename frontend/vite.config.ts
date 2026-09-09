@@ -37,6 +37,29 @@ export default defineConfig(({ mode }) => {
     target,
     changeOrigin: true,
     ws: true,
+    // http-proxy emits "error" for a dropped upstream socket (the brain restarting, the
+    // WS falling over); with no listener Node 24 turned that into an unhandled
+    // ECONNABORTED and the dev server died with 0xC0000409 (twice on 2026-09-07).
+    configure(proxy: { on(event: string, cb: (...a: any[]) => void): void }) {
+      proxy.on("error", (err: NodeJS.ErrnoException, _req: unknown, res: unknown) => {
+        const code = err?.code || err?.message;
+        console.warn(`[proxy] ${target}: ${code}`);
+        const r = res as { writableEnded?: boolean; headersSent?: boolean; writeHead?: (n: number) => void; end?: (s?: string) => void; destroy?: () => void } | undefined;
+        if (r && typeof r.writeHead === "function" && !r.headersSent && !r.writableEnded) {
+          try {
+            r.writeHead(502);
+            r.end?.("brain unreachable");
+          } catch {
+            /* socket already gone */
+          }
+        } else if (r && typeof r.destroy === "function") {
+          r.destroy(); // raw upgrade socket
+        }
+      });
+      proxy.on("proxyReqWs", (_proxyReq: unknown, _req: unknown, socket: { on(e: string, cb: (err: Error) => void): void }) => {
+        socket.on("error", (err) => console.warn(`[proxy ws] ${target}: ${(err as NodeJS.ErrnoException).code || err.message}`));
+      });
+    },
     bypass(req: { method?: string; url?: string; headers: Record<string, string | string[] | undefined> }) {
       const accept = String(req.headers.accept || "");
       // Route entry (hash routes never reach the server, but a hard reload does).

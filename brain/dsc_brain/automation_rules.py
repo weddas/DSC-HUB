@@ -1023,6 +1023,14 @@ async def _tick_loop() -> None:
             evaluate_automation_rules()
         except Exception as exc:  # noqa: BLE001
             _logger.warning("automation tick failed: %s", exc)
+        try:
+            # Schedule-shift plans advance here too, so a lights-on slide steps on the
+            # brain's clock rather than on GET /fleet/computed traffic.
+            from .computed_ops import tick_schedule_shift_plans
+
+            tick_schedule_shift_plans()
+        except Exception as exc:  # noqa: BLE001
+            _logger.warning("schedule shift tick failed: %s", exc)
         await asyncio.sleep(RULE_TICK_S)
 
 

@@ -151,6 +151,67 @@ def ensure_schema(conn: sqlite3.Connection, name: str, sql: str) -> None:
         _finish(key)
 
 
+_VERSION_TABLE = (
+    "CREATE TABLE IF NOT EXISTS dsc_schema_version ("
+    " name TEXT PRIMARY KEY, version INTEGER NOT NULL, applied_at REAL NOT NULL)"
+)
+
+
+def schema_version(conn: sqlite3.Connection, name: str) -> int:
+    """The migration version recorded for ``name`` in this database (0 = never migrated)."""
+    conn.execute(_VERSION_TABLE)
+    row = conn.execute("SELECT version FROM dsc_schema_version WHERE name = ?", (name,)).fetchone()
+    return int(row[0]) if row else 0
+
+
+def migrate(conn: sqlite3.Connection, name: str, steps: list[str]) -> int:
+    """Bring ``name``'s schema to ``len(steps)`` by applying the steps not yet recorded.
+
+    ``steps`` is an ordered, append-only list of DDL scripts; step ``i`` moves the schema
+    from version ``i`` to ``i + 1``. Each step runs in its own transaction and the version
+    row is written in that same transaction, so a crash mid-migration leaves either the
+    old version or the new one, never a half-applied step. Idempotent (the module's
+    ``CREATE TABLE IF NOT EXISTS`` first step stays valid on a pre-mechanism database,
+    which simply records version 1 on first contact).
+
+    Coordinated with ``schema_once`` per database file so two threads on first use do not
+    both migrate; returns the version now recorded. Modules that need an ALTER TABLE
+    append a step rather than editing the first one.
+    """
+    import time as _time
+
+    if not steps:
+        return schema_version(conn, name)
+    key = (db_file(conn), name)
+    if _schema_state.get(key) == "done":
+        return len(steps)
+    first = schema_once(conn, name)
+    if not first:
+        return len(steps)
+    try:
+        conn.execute(_VERSION_TABLE)
+        current = schema_version(conn, name)
+        for i in range(current, len(steps)):
+            conn.execute("BEGIN")
+            try:
+                conn.executescript(steps[i]) if ";" in steps[i].strip().rstrip(";") else conn.execute(steps[i])
+                conn.execute(
+                    "INSERT INTO dsc_schema_version(name, version, applied_at) VALUES (?, ?, ?)"
+                    " ON CONFLICT(name) DO UPDATE SET version = excluded.version,"
+                    " applied_at = excluded.applied_at",
+                    (name, i + 1, _time.time()),
+                )
+                conn.execute("COMMIT")
+            except Exception:
+                conn.execute("ROLLBACK")
+                raise
+        return len(steps)
+    finally:
+        # migrate() is synchronous: release waiters now rather than at the caller's
+        # ``with conn:`` exit (there may not be one).
+        _finish(key)
+
+
 def reset_schema_cache() -> None:
     """Forget every schema pass — after a factory reset drops the tables, or between tests."""
     with _lock:
