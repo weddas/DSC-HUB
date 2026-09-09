@@ -1,7 +1,93 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button, Card, StatusChip } from "./ui";
 import { DecisionLayer } from "./DecisionLayer";
-import { clear_calibration, fan_calibration_summary, type FanCalTarget } from "../lib/fleetApi";
+import { call_service, clear_calibration, fan_calibration_summary, type FanCalTarget } from "../lib/fleetApi";
+
+/** Load the per-duct calibration state. Shared by the record card and the fan wizard. */
+export function useFanCalSummary() {
+  const [targets, setTargets] = useState<FanCalTarget[] | null>(null);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      const data = await fan_calibration_summary();
+      setTargets(data.targets);
+      setError("");
+    } catch (exc) {
+      setError(exc instanceof Error ? exc.message : "Could not read calibration state");
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  return { targets, error, reload: load };
+}
+
+/**
+ * Duct diameter for one target — the number that turns m/s into CFM.
+ *
+ * It has to be editable next to the wizard: get it wrong and every point scales with the
+ * square of the error, silently. These helpers existed in the UI for a long time but had
+ * never held a value on any host, so nothing could have converted even if it had tried.
+ */
+export function DuctSizeField({ target, onSaved }: { target: FanCalTarget; onSaved: () => void }) {
+  const [draft, setDraft] = useState(String(target.duct_cm || ""));
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState("");
+
+  // The wizard reuses one instance of this field across duct selections, so switching from
+  // a 6" duct to a 4" one left 15.24 sitting in the box — one click from writing it onto
+  // the 4" intake and silently doubling every reading. Reset the draft when the target
+  // changes (adjusting state during render, rather than an effect that paints stale first).
+  const [seenPrefix, setSeenPrefix] = useState(target.cal_prefix);
+  if (seenPrefix !== target.cal_prefix) {
+    setSeenPrefix(target.cal_prefix);
+    setDraft(String(target.duct_cm || ""));
+    setNote("");
+  }
+
+  const save = async () => {
+    const cm = Number(draft);
+    if (!Number.isFinite(cm) || cm <= 0 || cm > 60) {
+      setNote("Enter a duct diameter in cm (e.g. 10.16 for 4\", 15.24 for 6\").");
+      return;
+    }
+    setBusy(true);
+    try {
+      await call_service("input_number", "set_value", { entity_id: target.duct_entity, value: cm });
+      setNote("Saved.");
+      onSaved();
+    } catch (exc) {
+      setNote(exc instanceof Error ? exc.message : "Could not save duct size");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div>
+      <label>
+        {target.label} duct diameter (cm)
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          max="60"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+        />
+      </label>
+      <div className="dsc-row-actions" style={{ marginTop: 6 }}>
+        <Button variant="secondary" disabled={busy} onClick={() => void save()}>
+          Save duct size
+        </Button>
+      </div>
+      {note ? <p className="dsc-kpi-sub">{note}</p> : null}
+    </div>
+  );
+}
 
 /**
  * What the last calibration actually was, and whether it is doing anything.
@@ -53,7 +139,7 @@ function TargetRow({ target, onCleared }: { target: FanCalTarget; onCleared: () 
         <strong>{target.label}</strong>
         <StatusChip label={chip} tone={tone} />
         <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
-          rated {target.nameplate_cfm || "—"} CFM
+          rated {target.nameplate_cfm || "—"} CFM · {target.duct_cm || "—"} cm duct
         </span>
       </div>
 
@@ -136,22 +222,7 @@ function TargetRow({ target, onCleared }: { target: FanCalTarget; onCleared: () 
 }
 
 export function FanCalibrationRecord() {
-  const [targets, setTargets] = useState<FanCalTarget[] | null>(null);
-  const [error, setError] = useState("");
-
-  const load = useCallback(async () => {
-    try {
-      const data = await fan_calibration_summary();
-      setTargets(data.targets);
-      setError("");
-    } catch (exc) {
-      setError(exc instanceof Error ? exc.message : "Could not read calibration state");
-    }
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const { targets, error, reload } = useFanCalSummary();
 
   const usedCount = (targets ?? []).filter((t) => t.in_use).length;
   const storedCount = (targets ?? []).filter((t) => t.calibrated).length;
@@ -174,7 +245,7 @@ export function FanCalibrationRecord() {
             </p>
           ) : null}
           {targets.map((t) => (
-            <TargetRow key={t.cal_prefix} target={t} onCleared={() => void load()} />
+            <TargetRow key={t.cal_prefix} target={t} onCleared={() => void reload()} />
           ))}
         </>
       ) : null}

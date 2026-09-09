@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+import math
 from typing import Any
 
 from .compose_store import (
@@ -18,6 +19,7 @@ from .compose_store import (
     set_helper,
     update_roster_slot,
 )
+from .device_calibration import set_calibration_step
 from .settings import delete_roster, list_roster, upsert_roster
 from .stage_model import expected_stage, stage_family, tent_id
 
@@ -30,6 +32,54 @@ CAL_PREFIX_BY_SCRIPT: dict[str, str] = {
 }
 
 CAL_STEPS = (25, 50, 75, 100)
+
+# ---- Anemometer -> airflow -------------------------------------------------------------
+# The wizard asks for m/s because that is what the operator's anemometer reads. Nothing
+# ever converted it: the reading was written straight into a store the brain consumes as
+# CFM, so a 9 m/s sample became "9 CFM" against a 200 CFM fan and the curve was thrown out
+# as implausible. Every calibration ever captured was unusable for this reason.
+_M3S_TO_CFM = 2118.88  # 1 m^3/s = 2118.88 ft^3/min
+
+CAL_DUCT_CM_HELPER: dict[str, str] = {
+    "dsc_cal_cfm_out": "input_number.dsc_duct_out_cm",
+    "dsc_cal_cfm_recirc": "input_number.dsc_duct_recirc_cm",
+    "dsc_cal_cfm_intake_main": "input_number.dsc_duct_intake_main_cm",
+    "dsc_cal_cfm_intake_clone": "input_number.dsc_duct_intake_clone_cm",
+}
+
+# The rig as built: OUT and RECIRC are 6" inline fans (440 CFM nameplate), both intakes are
+# 4" (200 CFM). These are DEFAULTS so a first calibration works out of the box, not
+# assertions — the wizard shows the diameter it is about to use and the operator can
+# correct it before sampling. The helpers existed in the UI but had never held a value on
+# any host, which is why nothing could have converted even if it had tried.
+CAL_DUCT_CM_DEFAULT: dict[str, float] = {
+    "dsc_cal_cfm_out": 15.24,
+    "dsc_cal_cfm_recirc": 15.24,
+    "dsc_cal_cfm_intake_main": 10.16,
+    "dsc_cal_cfm_intake_clone": 10.16,
+}
+
+
+def cal_duct_cm(prefix: str) -> float:
+    """Duct diameter in cm for a calibration target: operator value, else the built default."""
+    key = CAL_DUCT_CM_HELPER.get(prefix)
+    if key:
+        try:
+            val = float(get_helper(key, 0) or 0)
+        except (TypeError, ValueError):
+            val = 0.0
+        if val > 0:
+            return val
+    return CAL_DUCT_CM_DEFAULT.get(prefix, 0.0)
+
+
+def ms_to_cfm(ms: float, duct_cm: float) -> float:
+    """Round duct: CFM = velocity (m/s) x cross-section (m^2) x 2118.88."""
+    if ms <= 0 or duct_cm <= 0:
+        return 0.0
+    radius_m = (duct_cm / 100.0) / 2.0
+    area_m2 = math.pi * radius_m * radius_m
+    return round(ms * area_m2 * _M3S_TO_CFM, 1)
 
 
 def strain_slug(name: str) -> str:
@@ -392,6 +442,9 @@ def apply_climate_want() -> dict[str, Any]:
 def cal_start() -> dict[str, Any]:
     set_helper("input_boolean.dsc_cal_active", "on")
     set_helper("sensor.dsc_learn_activity", "cal_sampling")
+    # Only abort/finish reset this before, so starting a session after a mid-run reload
+    # resumed at a stale step and wrote the next point under the wrong duty.
+    set_helper("cal_step_index", 0)
     return {"active": True}
 
 
@@ -402,23 +455,56 @@ def cal_hold_next() -> dict[str, Any]:
 
 
 def cal_save_point() -> dict[str, Any]:
-    prefix = str(get_helper("cal_fan_prefix", "dsc_cal_cfm_out"))
-    idx = int(float(get_helper("cal_step_index", 0) or 0))
-    step_pct = CAL_STEPS[min(idx, len(CAL_STEPS) - 1)]
-    cfm_key_map = {
-        "dsc_cal_cfm_out": "sensor.dsc_cfm_exhaust_out",
-        "dsc_cal_cfm_recirc": "sensor.dsc_cfm_exhaust_recirc",
-        "dsc_cal_cfm_intake_main": "sensor.dsc_cfm_intake_main",
-        "dsc_cal_cfm_intake_clone": "sensor.dsc_cfm_intake_2x4",
-    }
-    from .computed_ops import build_computed_hass_states
-    from .fleet_state import get_fleet_state
+    """Store one curve point: the operator's anemometer reading, converted to CFM.
 
-    computed = build_computed_hass_states(get_fleet_state())
-    cfm_entity = cfm_key_map.get(prefix, "sensor.dsc_cfm_exhaust_out")
-    cfm_val = float(computed.get(cfm_entity, {}).get("state", 0) or 0)
+    This used to read `sensor.dsc_cfm_*` back off the computed state and store THAT — the
+    model's own output, which is the nameplate proxy whenever no curve exists yet. So the
+    calibration was circular: it recorded the estimate it was supposed to be replacing, and
+    never once looked at the measurement. (The SPA then overwrote the point with the raw
+    m/s, which is what actually landed in the store and masked the circularity.)
+    """
+    prefix = str(get_helper("cal_fan_prefix", "dsc_cal_cfm_out"))
+    # The desk sets the step it is sampling right before calling this. Prefer it over the
+    # running index, which drifts if the page is reloaded mid-session.
+    step_pct = 0
+    try:
+        step_pct = int(float(get_helper("input_number.dsc_cal_step_pct", 0) or 0))
+    except (TypeError, ValueError):
+        step_pct = 0
+    if step_pct not in CAL_STEPS:
+        idx = int(float(get_helper("cal_step_index", 0) or 0))
+        step_pct = CAL_STEPS[min(max(idx, 0), len(CAL_STEPS) - 1)]
+
+    try:
+        ms = float(get_helper("input_number.dsc_cal_reading_ms", 0) or 0)
+    except (TypeError, ValueError):
+        ms = 0.0
+    if ms <= 0:
+        raise ValueError("no anemometer reading to save — enter m/s before saving a point")
+
+    duct_cm = cal_duct_cm(prefix)
+    if duct_cm <= 0:
+        raise ValueError(
+            f"duct diameter for {prefix} is unknown — set it before calibrating, "
+            "or the reading cannot be converted to airflow"
+        )
+
+    cfm_val = ms_to_cfm(ms, duct_cm)
+    if cfm_val <= 0:
+        raise ValueError("converted airflow is zero — check the reading and the duct diameter")
+
+    # Both stores, in the same unit. `_cal_points_from_storage` prefers the
+    # device_calibration rows and falls back to the helpers; writing only one leaves the
+    # other holding a stale (or wrong-unit) point that can come back later.
     set_cal_point(prefix, step_pct, cfm_val)
-    return {"prefix": prefix, "step_pct": step_pct, "cfm": cfm_val}
+    set_calibration_step(prefix, "fan_cfm", str(step_pct), cfm_val, "CFM")
+    return {
+        "prefix": prefix,
+        "step_pct": step_pct,
+        "reading_ms": ms,
+        "duct_cm": duct_cm,
+        "cfm": cfm_val,
+    }
 
 
 def cal_skip_point() -> dict[str, Any]:

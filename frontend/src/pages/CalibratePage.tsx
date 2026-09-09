@@ -6,8 +6,8 @@ import { TargetNumber } from "../components/TentTargets";
 import { SoftCalWizard } from "../components/SoftCalWizard";
 import { SoilTestWizard } from "../components/SoilTestWizard";
 import { CalOutcomeStrip } from "../components/CalOutcomeStrip";
-import { FanCalibrationRecord } from "../components/FanCalibrationRecord";
 import { save_calibration } from "../lib/fleetApi";
+import { DuctSizeField, FanCalibrationRecord, useFanCalSummary } from "../components/FanCalibrationRecord";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleet } from "../hooks/useFleet";
 import { useFleetActions } from "../hooks/useFleetActions";
@@ -39,6 +39,9 @@ function FanCalibrateWizard() {
   // happened — the wizard's own "saved" message says nothing about whether the curve
   // survived the plausibility gate.
   const [recordNonce, setRecordNonce] = useState(0);
+  // The duct diameter converts the anemometer reading into airflow, so it has to be right
+  // BEFORE sampling starts — an error there scales every point by its square.
+  const { targets: calTargets, reload: reloadCal } = useFanCalSummary();
   const { callService } = useFleetActions();
   const [phase, setPhase] = useState<WizardPhase>("pick");
   const [targetIdx, setTargetIdx] = useState(0);
@@ -53,6 +56,7 @@ function FanCalibrateWizard() {
   const [confirmStart, setConfirmStart] = useState(false);
 
   const target = CAL_TARGETS[targetIdx];
+  const ductTarget = (calTargets ?? []).find((t) => t.cal_prefix === target.prefix) ?? null;
   const stepPct = STEP_PCTS[stepIdx];
   const calActive = state("input_boolean.dsc_cal_active") === "on";
   const curveStatus = state("sensor.dsc_cfm_curves_status", "—");
@@ -108,24 +112,26 @@ function FanCalibrateWizard() {
         entity_id: "input_number.dsc_cal_reading_ms",
         value: ms,
       });
-      await callService("script", "turn_on", { entity_id: "script.dsc_cal_save_point" });
-      await callService("input_number", "set_value", {
-        entity_id: `input_number.${target.prefix}_${stepPct}`,
-        value: ms,
-      });
-      await save_calibration(target.prefix, "fan_cfm", [
-        { step_key: String(stepPct), measured_value: ms, unit: "m/s" },
-      ]);
+      // script.dsc_cal_save_point is the ONLY writer of a curve point. It converts m/s to
+      // CFM with the duct diameter and writes both stores. The desk used to also write the
+      // raw m/s straight into the CFM curve helper and into device_calibration — which is
+      // why every calibration ever captured was an order of magnitude out and got thrown
+      // away as implausible.
+      const saved = (await callService("script", "turn_on", {
+        entity_id: "script.dsc_cal_save_point",
+      })) as { cfm?: number; duct_cm?: number } | null;
+      const cfm = saved?.cfm;
+      const savedText = cfm != null ? `${ms} m/s = ${cfm} CFM` : `${ms} m/s`;
       const next = stepIdx + 1;
       if (next >= STEP_PCTS.length) {
         await callService("script", "turn_on", { entity_id: "script.dsc_cal_finish" });
         setPhase("done");
         setRecordNonce((n) => n + 1);
-        setStatus(`Curve points saved for ${target.label}. Status: ${curveStatus}`);
+        setStatus(`Curve points saved for ${target.label} (last: ${savedText}).`);
       } else {
         setStepIdx(next);
         setMsReading("");
-        setStatus(`Point @${stepPct}% saved. Hold fan at ${STEP_PCTS[next]}% and measure.`);
+        setStatus(`Saved @${stepPct}%: ${savedText}. Hold fan at ${STEP_PCTS[next]}% and measure.`);
         await callService("script", "turn_on", { entity_id: "script.dsc_cal_hold_next" });
       }
     } catch (exc) {
@@ -204,6 +210,16 @@ function FanCalibrateWizard() {
               </button>
             ))}
           </div>
+          {ductTarget ? (
+            <div style={{ margin: "12px 0" }}>
+              <p className="dsc-kpi-sub" style={{ margin: "0 0 6px" }}>
+                Your anemometer reads m/s; airflow is m/s × the duct's cross-section. Check this
+                matches the duct you are about to measure — {ductTarget.duct_cm} cm is{" "}
+                {(ductTarget.duct_cm / 2.54).toFixed(0)}″.
+              </p>
+              <DuctSizeField target={ductTarget} onSaved={() => void reloadCal()} />
+            </div>
+          ) : null}
           <div className="dsc-row-actions">
             <Button variant="primary" disabled={saving} onClick={() => setConfirmStart(true)}>
               Start {target.label} session (holds live fans)
@@ -231,8 +247,12 @@ function FanCalibrateWizard() {
       {phase === "session" ? (
         <Card className="dsc-glass" title={`2 · Sample ${target.label} @ ${stepPct}%`} icon="gauge">
           <p className="dsc-honesty">
-            Set the fan to {stepPct}%. Hold the anemometer at the duct centreline and enter the measured m/s — CFM is
-            calculated for you.
+            Set the fan to {stepPct}%. Hold the anemometer at the duct centreline and enter the measured m/s —
+            converted to CFM using the {ductTarget?.duct_cm ?? "—"} cm duct.
+          </p>
+          <p className="dsc-kpi-sub" style={{ margin: "4px 0 0" }}>
+            Centreline runs faster than the duct average, so a single-point reading is an
+            over-estimate; treat the curve as a good approximation, not a traverse.
           </p>
           <label>
             Anemometer m/s @ {stepPct}%

@@ -294,6 +294,9 @@ def fan_calibration_summary() -> list[dict[str, Any]]:
     and the screen still says "calibrated". Every field here is read through the same
     helpers the live computation uses, so the desk cannot disagree with the airflow numbers.
     """
+    # Deferred: compose_ops imports device_calibration, which this module also uses.
+    from .compose_ops import CAL_DUCT_CM_HELPER, cal_duct_cm
+
     helpers = all_helpers()
     memo: dict[str, list[tuple[float, float]]] = {}
     plate_for = {prefix: plate_id for plate_id, prefix in _CAL_PREFIX_PLATE.items()}
@@ -349,6 +352,10 @@ def fan_calibration_summary() -> list[dict[str, Any]]:
                 # anything else here is the bug, not a preference.
                 "stored_unit": sorted(units)[0] if len(units) == 1 else ("mixed" if units else ""),
                 "nameplate_cfm": nameplate,
+                # The anemometer reads m/s; this is what turns it into airflow. Shown so a
+                # wrong duct size is visible rather than silently scaling every point.
+                "duct_cm": cal_duct_cm(prefix),
+                "duct_entity": CAL_DUCT_CM_HELPER.get(prefix, ""),
                 "measured_top": round(measured_top, 2),
                 "pct_of_nameplate": round(100.0 * measured_top / nameplate, 1) if nameplate > 0 else None,
                 "in_use": in_use,

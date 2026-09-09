@@ -692,6 +692,9 @@ export type FanCalTarget = {
   /** The unit the capture was stored under. The curve is consumed as CFM. */
   stored_unit: string;
   nameplate_cfm: number;
+  /** Duct diameter used to turn the anemometer's m/s into CFM. */
+  duct_cm: number;
+  duct_entity: string;
   measured_top: number;
   pct_of_nameplate: number | null;
   /** False when the curve gate rejected it and the fan is on its nameplate instead. */
