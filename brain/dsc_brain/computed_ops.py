@@ -1125,6 +1125,16 @@ def _hub_values_for_light_loop(fleet: Any, runtime: RuntimeMemo) -> dict[str, An
         delivered = sensors.get("light_delivered_hours")
     if delivered is not None:
         out["light_delivered_hours"] = delivered
+    # The hub's catch-up debt. This function is an explicit whitelist, so a value not copied
+    # here is invisible to light_loop no matter what /fleet carries — adding the field to the
+    # snapshot was not enough on its own (caught on the Pi: the entity published as None
+    # while /fleet showed 7.85).
+    debt = fleet.hub.values.get("light_debt_hours")
+    if debt is None:
+        sensors = fleet.hub.values.get("sensors") or {}
+        debt = sensors.get("light_debt_hours")
+    if debt is not None:
+        out["light_debt_hours"] = debt
     return out
 
 
