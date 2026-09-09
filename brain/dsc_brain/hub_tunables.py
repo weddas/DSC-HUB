@@ -29,6 +29,7 @@ from typing import Any
 
 from .hub_controls import HUB_NUMBER_ENTITY_TO_OID, HUB_SELECT_ENTITY_TO_OID, HUB_SWITCH_ENTITY_TO_OID
 from .settings import connect
+from .db import ensure_schema
 
 _logger = logging.getLogger(__name__)
 
@@ -118,7 +119,7 @@ TUNABLE_BY_ID: dict[str, dict[str, Any]] = {t["entity_id"]: t for t in TUNABLES}
 
 
 def _ensure(conn) -> None:
-    conn.executescript(SCHEMA)
+    ensure_schema(conn, "hub_tunables", SCHEMA)
 
 
 # ---- fleet access ---------------------------------------------------------------------
@@ -331,8 +332,11 @@ def list_tunables(db_path=None, fleet: Any = None) -> dict[str, Any]:
         echo = _echo(eid, controls)
         present = eid in controls
         state = _state_for(row, echo, meta["kind"], online, now)
-        if not present and online:
-            state = "missing"  # the running firmware has no such entity
+        # "missing" means the running firmware has no such entity. Only claim it when the
+        # snapshot actually carries controls; an empty controls dict on an online hub is a
+        # poll gap, and telling the operator to reflash for a dropped frame is wrong.
+        if not present and online and controls:
+            state = "missing"
         out.append(
             {
                 **meta,

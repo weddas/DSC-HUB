@@ -11,6 +11,7 @@ import httpx
 
 from .compose_store import get_helper
 from .event_log import record_grow_log
+from .paths import EXPECTED_FIRMWARE
 from .sensor_trust import emit_sensor_trust
 from .integrations import cannalib_base_url, cannalib_headers
 from .runtime_history import HistoryMemo, RuntimeMemo, cycle_count_since, midnight_ts
@@ -102,12 +103,15 @@ def _reduced_kit(inventory: list[dict[str, Any]] | None) -> tuple[bool, dict[str
     active = len(offline) > 0
     return active, {
         "planned_oos": ", ".join(planned) if planned else "",
-        "offline": ", ".join(offline) if offline else "a live lever is parked",
+        # Empty = nothing offline = the good state. Never put warning prose in the empty case.
+        "offline": ", ".join(offline) if offline else "",
     }
 
 
 def _fleet_version_status(fleet: Any) -> tuple[str, str]:
-    expected = getattr(fleet, "expected_firmware", None) or "7.0.0.0"
+    # Fall back to the release constant, never to a stale literal — a hardcoded 7.0.0.0 kept
+    # fleet_version_status at "warn" on a fleet that was on the current train.
+    expected = getattr(fleet, "expected_firmware", None) or EXPECTED_FIRMWARE
     exp_short = ".".join(str(expected).split(".")[:3])
     drift = False
     if fleet.hub and fleet.hub.online and fleet.hub.firmware:

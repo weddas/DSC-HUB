@@ -533,7 +533,9 @@ export function DevicesSettingsPage() {
                   <tbody>
                     {probeStations.map((st) => {
                       const draft = probeDrafts[st.seat_id] ?? { idle_home_pot_id: st.idle_home_pot_id, tent: st.tent };
-                      const moist = st.thereabouts?.moisture_pct;
+                      // Same guard RootPage applies to the same field: an untrustworthy home has no
+                      // "thereabouts" worth printing, whatever the payload happens to carry.
+                      const moist = st.home_trustworthy === false ? null : st.thereabouts?.moisture_pct;
                       return (
                         <tr key={st.seat_id}>
                           <td>

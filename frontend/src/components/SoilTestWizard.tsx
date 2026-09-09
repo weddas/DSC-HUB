@@ -292,7 +292,7 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
               <StatusChip label={`Home ${selectedStation.idle_home_pot_id || "—"}`} tone="muted" />
             </div>
           ) : null}
-          {selectedStation?.thereabouts ? (
+          {selectedStation && Object.keys(selectedStation.thereabouts ?? {}).length ? (
             <div style={{ marginTop: 10 }}>
               <p className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
                 Thereabouts @ idle home:

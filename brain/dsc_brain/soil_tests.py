@@ -129,11 +129,11 @@ def list_probe_stations() -> list[dict[str, Any]]:
             src_pot = fleet.pots[source_id]
             thereabouts = dict(src_pot.values or {})
             thereabouts_updated_at = src_pot.last_seen
-        # Independent of home_trustworthy: even a "trustworthy" home can go quiet.
-        thereabouts_stale = bool(
-            thereabouts_updated_at is not None
-            and (time.time() - float(thereabouts_updated_at)) > 900
-        )
+        # Independent of home_trustworthy: even a "trustworthy" home can go quiet — and a
+        # home that has NEVER produced a reading is the worst case, not a fresh one.
+        never_read = thereabouts_updated_at is None
+        thereabouts_stale = never_read or (time.time() - float(thereabouts_updated_at)) > 900
+        thereabouts_state = "no_reading" if never_read else ("stale" if thereabouts_stale else "fresh")
         out.append(
             {
                 "seat_id": seat_id,
@@ -144,7 +144,10 @@ def list_probe_stations() -> list[dict[str, Any]]:
                 "thereabouts_source": source_id or None,
                 "thereabouts_updated_at": thereabouts_updated_at,
                 "thereabouts_stale": thereabouts_stale,
-                "online": bool(home_trust["online"]),
+                "thereabouts_state": thereabouts_state,
+                # `online` is the STATION's own link. It used to mirror the idle home's,
+                # so Devices painted a green badge on a probe that had never reported.
+                "online": bool(seat_trust["online"]),
                 "home_online": bool(home_trust["online"]),
                 "home_trustworthy": bool(home_trust["trustworthy"]),
                 "home_sensor_fault": bool(home_trust["sensor_fault"]),

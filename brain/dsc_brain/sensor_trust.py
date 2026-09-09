@@ -10,6 +10,7 @@ Soak-chosen thresholds (7.3 pass):
 from __future__ import annotations
 
 import statistics
+import math
 import time
 from typing import Any
 
@@ -190,7 +191,10 @@ def _dryback_pct(pot_n: int, moisture: float | None, rate: float | None) -> floa
         return None
     if rate is not None and rate > 0.5:
         return 0.0
-    return round((peak - float(moisture)) / peak * 100.0, 1)
+    if not math.isfinite(peak) or not math.isfinite(float(moisture)):
+        return None
+    val = round((peak - float(moisture)) / peak * 100.0, 1)
+    return val if math.isfinite(val) else None
 
 
 def emit_sensor_trust(
@@ -223,6 +227,8 @@ def emit_sensor_trust(
             moisture_f = float(moisture) if moisture is not None else None
         except (TypeError, ValueError):
             moisture_f = None
+        if moisture_f is not None and not math.isfinite(moisture_f):
+            moisture_f = None  # a NaN reading is no reading — it must never become "nan %"
         # Stations still get rate/dryback when moisture is live — Root should not say "no channel".
         # Stuck/untrusted stay plant-only so idle park flats do not trip trust.
         rate = _moisture_rate_per_hour(n) if moisture_f is not None else None
@@ -247,6 +253,21 @@ def emit_sensor_trust(
             )
             if pot is not None:
                 pot.values["dryback_pct"] = dryback
+        else:
+            # House convention (see coldest_root_zone_temp): no computation means
+            # `unavailable` + a reason, never a leaked float repr and never a stale model claim.
+            set_entity(
+                states,
+                f"sensor.dsc_probe{n}_dryback_pct",
+                "unavailable",
+                available=False,
+                attributes={
+                    "unit_of_measurement": "%",
+                    "reason": "no trusted moisture" if moisture_f is None else "no daily peak yet",
+                },
+            )
+            if pot is not None:
+                pot.values.pop("dryback_pct", None)
         stuck_raw = (
             not probe_station
             and rate is not None
