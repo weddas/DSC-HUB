@@ -23,7 +23,15 @@ def connect(db_path: Path | None = None) -> sqlite3.Connection:
         return _conn
     if not path.exists():
         raise FileNotFoundError(f"cannalib DB missing: {path}")
-    conn = sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True, check_same_thread=False)
+    # immutable=1: the export is a WAL-mode file on a read-only bind mount. Without it
+    # SQLite must create the -shm/-wal side files next to the database even for a SELECT,
+    # which fails on the :ro mount — every catalog query raised "unable to open database
+    # file" and corpus_counts silently reported 0 (live Pi, both 7.0.0 and 8.1.0, found
+    # 2026-09-09). The trade: SQLite trusts the file not to change while we hold it, so
+    # a refreshed export needs a container restart to be seen.
+    conn = sqlite3.connect(
+        f"file:{path.as_posix()}?mode=ro&immutable=1", uri=True, check_same_thread=False
+    )
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA query_only=ON")
     conn.execute("PRAGMA busy_timeout=30000")
