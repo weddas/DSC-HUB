@@ -1,12 +1,12 @@
-# DSC-HUB 8.1.0 — factory SD image
+# DSC-HUB 8.2.0 — factory SD image
 
 Build a Raspberry Pi OS Lite **aarch64** `.img.xz` for **Pi 4 and Pi 5** with brain, SPA, Mosquitto, Z2M, USB flash tooling, and Ethernet-first SoftAP policy baked in.
 
 ## Output
 
-- `deploy/dsc-hub-8.1.0-arm64.img.xz` (name may vary)
+- `deploy/dsc-hub-8.2.0-arm64.img.xz` (name may vary)
 - Kit firmware binaries under `/opt/dsc-hub/firmware/kit/` + `kit-manifest.json`
-- Preloaded Docker images: `dsc-hub-brain:8.1.0`, `eclipse-mosquitto:2`, `koenkk/zigbee2mqtt:2`
+- Preloaded Docker images: `dsc-hub-brain:8.2.0`, `eclipse-mosquitto:2`, `koenkk/zigbee2mqtt:2`
 
 ## Build host
 
@@ -18,13 +18,13 @@ Build a Raspberry Pi OS Lite **aarch64** `.img.xz` for **Pi 4 and Pi 5** with br
 
 ```bash
 # On Linux builder / Pi (as root or docker-capable user):
-export DSC_BAKE_OUT=/opt/dsc-hub-bake-out DSC_VERSION=8.1.0
+export DSC_BAKE_OUT=/opt/dsc-hub-bake-out DSC_VERSION=8.2.0
 bash services/dsc-hub/image/bake-on-linux.sh
-# → deploy/dsc-hub-8.1.0-payload.tar.gz + dsc-hub-8.1.0-docker.tar.gz
+# → deploy/dsc-hub-8.2.0-payload.tar.gz + dsc-hub-8.2.0-docker.tar.gz
 
 # Optional SD inject (needs stock raspios lite .img + root):
 sudo bash services/dsc-hub/image/bake-sd-image.sh /path/to/raspios-lite-arm64.img
-# → deploy/dsc-hub-8.1.0-arm64.img.xz
+# → deploy/dsc-hub-8.2.0-arm64.img.xz
 ```
 
 ```powershell
@@ -58,7 +58,7 @@ sudo bash services/dsc-hub/image/bake-sd-image.sh /path/to/raspios-lite-arm64.im
 Wire docker preload + packages into a fuller pi-gen later if needed. Current path: **payload/docker bake on Pi** then **bake-sd-image.sh** inject into official Lite arm64.
 
 **Bake history:** the 2026-09-06 8.0.0 bake completed (artifacts archived on the Pi at
-`/opt/dsc-hub-bake-archive/2026-09-06/`). **2026-09-07:** rebaked as 8.1.0.
+`/opt/dsc-hub-bake-archive/2026-09-06/`). **2026-09-07:** rebaked as 8.2.0.
 
 **Trap — kit secrets:** `bake-on-linux.sh` *generates* a fresh `firmware/v4/secrets.yaml`
 when one is absent, and that file is gitignored so it is never in the repo or the upload

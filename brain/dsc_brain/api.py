@@ -1,4 +1,4 @@
-"""DSC Brain API — Pi Release 8.1.0."""
+"""DSC Brain API — Pi Release 8.2.0."""
 
 from __future__ import annotations
 

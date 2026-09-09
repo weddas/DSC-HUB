@@ -1,4 +1,4 @@
-"""Kit setup / commission — SD installer 8.1.0."""
+"""Kit setup / commission — SD installer 8.2.0."""
 
 from __future__ import annotations
 

@@ -9,5 +9,13 @@ serial:
   adapter: ember
 frontend:
   enabled: false
+device_options:
+  # Retain each device's last state on the broker. Without this, a reconnecting subscriber
+  # (the brain, after ANY restart) receives nothing until the device next transmits — and
+  # on-change safety sensors (leak) can be silent for hours, so a brain restart left the
+  # leak rail and both canopy sensors blank. mosquitto runs with persistence on, so retained
+  # state also survives a broker restart. Applied live 2026-09-10 and verified: a fresh
+  # subscriber immediately receives all five devices.
+  retain: true
 advanced:
   log_level: info

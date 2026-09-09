@@ -39,7 +39,7 @@ def temp_db(monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def test_version_is_pi_train() -> None:
-    assert __version__.startswith("8.1.0")
+    assert __version__.startswith("8.2.0")
 
 
 def test_settings_defaults(temp_db: Path) -> None:
@@ -464,9 +464,11 @@ def test_health_endpoint() -> None:
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "ok"
-    assert body["version"] == "8.1.0"
-    assert body["surface"] == "8.1.0"
-    assert body["expected_firmware"] == "8.1.0.0"  # ESPHome-only firmware train
+    assert body["version"] == "8.2.0"
+    assert body["surface"] == "8.2.0"
+    # Two independent tracks: the surface moved to 8.2.0, the FIRMWARE train did not.
+    # Bumping this would flag every seat out-of-date and force a fleet OTA.
+    assert body["expected_firmware"] == "8.1.0.0"
 
 
 def test_pot3_default_out_of_service(temp_db: Path) -> None:
