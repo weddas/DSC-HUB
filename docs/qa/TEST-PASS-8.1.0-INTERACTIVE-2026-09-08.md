@@ -12,13 +12,21 @@ were not reachable, and one test physically took the rig down.
 
 ## Headline
 
-The pass found **26 new defects** — three Critical — verified five
+The pass found **53 new defects** — ten Critical — verified five
 previously-logged entries, reversed one that had been closed wrongly, and caused
-**two unplanned outages** (both traced to the same root-on-USB fragility).
+**three unplanned outages**. Two were the root-on-USB fragility. The third,
+on 2026-09-09, was caused by leaving a browser tab open on the Alerts page:
+it wedged the brain, which in turn **rebooted the hub**. That chain is §M and is
+the single most important thing in this document.
+
+**Withdrawn by the author: four claims.** Three findings and one near-miss were
+wrong and are retracted in place rather than deleted — §I and §M both end with
+the corrections table. Every one of the four was a case of reading a stalled or
+missing number as a system fault when it was a sampling fault.
 
 ### The one architectural theme worth fixing first
 
-Five separate defects are the same idea: **stability is treated as
+**Seven** separate defects are the same idea: **stability is treated as
 correctness.** Nothing in the stack asks whether a reading is *physically
 possible* — only whether it is *settled*.
 
@@ -29,6 +37,8 @@ possible* — only whether it is *settled*.
 | `quality_score` | `100 − variance*10` | The steadier a dead sensor, the better it scores |
 | `sensor_clamp` | Range guard, `temp_c.max 50.0` | Sits **exactly on** the sensor's rail value |
 | `plausible_vpd_kpa` | Plausibility predicate | Dead code — zero callers |
+| `_cfm_from_pct` | Claims `measured_curve` on ≥2 non-zero points | A curve that never moves (14.3 at every duty) is still "measured" |
+| `thereabouts_stale` | `updated_at is not None and age > 900` | Never-had-a-reading evaluates to **not stale** |
 
 Chained, they produced pot1: a loose connector opens → firmware latches
 19.9 % / 48 µS / pH 5.0 → the stuck detector stays quiet → a soil test certifies
@@ -613,26 +623,38 @@ because the values were steady. The rejection path's message is telling:
 *"readings not stable — wait for solid capture"*. Instability is the only thing
 that can fail a capture.
 
-### Energy: broken estimate, and suggestions that invert
+### Energy: RETRACTED — this section was wrong
+
+**The finding originally written here has been withdrawn.** It claimed
+`/energy/estimate` returned `ok:false` and that every suggestion's
+`delta_vs_current` equalled its own `total_cost`, inverting the advice.
+
+That reproduction was invalid. I called the endpoints **without the `lights_on`
+query parameter**, which the SPA always supplies. With no baseline the estimator
+correctly returns `ok:false, total_cost 0.0`, and `delta = candidate − 0` is
+then trivially the candidate's cost. The bug was in my curl, not the product.
+
+Verified from the browser's own network log on 2026-09-09:
 
 ```
-GET /energy/estimate?space_id=4x8  -> ok:false  "no schedule: lights-on unset"
-GET /energy/estimate?space_id=2x4  -> ok:false  (same)
+GET /energy/suggestions?space_id=4x8&lights_on=06%3A00%3A00&want_hours=12 -> 200
+
+current      cost 1.8336   delta  0.0
+max_offpeak  cost 1.1808   delta -0.6528
+night_heat   cost 1.3152   delta -0.5184
+morning      cost 1.8336   delta  0.0
 ```
 
-Downstream of the `lights-on_time` read failure. But the suggestions endpoint
-still returns three confident options, each differenced against that zero:
+`current` is present, `morning` is correctly zero, and savings are correctly
+negative. The rendered card reads `EST. $1.83/DAY · 5.76 KWH · Max off-peak Δ
+$-0.65`. The behaviour is right.
 
-```
-max_offpeak  22:00  total 1.1808  delta_vs_current 1.1808
-night_heat   20:00  total 1.3152  delta_vs_current 1.3152
-morning      06:00  total 1.8336  delta_vs_current 1.8336
-```
-
-`delta == total` throughout. The proof is `morning` — `lights_on 06:00` is the
-schedule the brain already believes is current, so its delta must be zero; it
-claims **+$1.83**. Every option, including the cheapest, presents as a cost
-*increase*.
+The `NO SCHEDULE FOR ESTIMATE` text I first captured was the **first-paint
+state** before fleet state loaded, not a steady state. One small real residue was
+kept and filed separately: `LightEnergyPanel.tsx:100-107` collapses
+`estimate === null` (loading) and `estimate.ok === false` (genuinely no schedule)
+into the same amber warn chip, so the card briefly asserts something untrue
+during load. Low severity.
 
 ### Two data paths, one screen
 
@@ -660,12 +682,347 @@ reveal.
 
 ---
 
+## M. Fifth sweep, 2026-09-09 — the API surface, and an outage I caused
+
+This sweep worked the routes the browser sweeps never touch, then went back to
+the dash as a user. It produced the most important finding of the whole pass, by
+causing it.
+
+### The headline: a browser tab left open on Alerts rebooted the hub
+
+**COMPLETED — reproduced end to end, fully recovered, no restart performed.**
+
+I left a tab on `#/alerts` and went to read code. The chain:
+
+1. The Alerts desk retries `/grow-log?hours=24&limit=120` and
+   `/settings/automations` **with no in-flight guard** — new requests fire while
+   the previous ones are still pending. The tab logged 9,600+ requests.
+2. Both routes stopped completing. The panels sat on `Loading…` / `Loading
+   rules…` indefinitely, and the header printed `— rules`.
+3. Within ~2 minutes **every** route stopped responding:
+
+```
+/settings/automations   60.0s  no response
+/grow-log               60.0s  no response
+/health /system/time /settings/alerts   25.0s each
+/openapi.json  /  /docs  /health        12.0s each
+```
+
+`/openapi.json` is served from memory and touches no disk. TCP connect to 8787
+still succeeded in **0.01 s**, ICMP 0 % loss, port 22 open. The process was alive
+and the socket healthy — nothing was returning.
+
+This is a **different signature** from the 2026-09-08 USB brownout, where
+`/openapi.json` still returned 200 and only DB-backed routes 500'd. Recorded
+because the two are easy to confuse and the treatment differs.
+
+4. **The hub rebooted.** `uptime` 14704 s → **304 s**, `heartbeat` 497 → 11.
+5. The hub's own event field records why:
+
+```
+last_evt = EVT|H|API_BLIP|301|
+```
+
+301 seconds of API outage, against the firmware's reboot threshold at
+`firmware/v4/dsc-hub-v4_0.yaml:5480`:
+
+```cpp
+bool api_problem = (!api_ok && id(api_ever_connected) && down_age >= 300000u) ||
+                   (api_ok && hs_age >= 900000u);
+return api_problem && id(link_rec_stage) >= 2;
+// -> id(link_rec_reason_str) = "safe_reboot_api_wedge";
+```
+
+**The firmware did exactly what it is documented to do** — the file header states
+the ladder plainly: *"Bounce ~180s / reboot ~300s need a dead API client."* The
+fault is entirely upstream: the brain made itself look like a dead API client.
+
+That is not a theoretical cost. The same header records the 5 Aug 2026 incident
+where a recovery reboot restored Full Auto OFF mid-window and lost **~5.5 h of
+light**.
+
+### Root cause: every database read is a write transaction
+
+`brain/dsc_brain/catalog.py:55` and `brain/dsc_brain/settings.py:114`, both:
+
+```python
+conn = sqlite3.connect(path)      # no timeout=
+conn.row_factory = sqlite3.Row
+conn.executescript(SCHEMA)        # write-locking DDL — on every call
+```
+
+Grepping both files for `journal_mode`, `WAL`, `busy_timeout` and `timeout=`
+returns **zero matches**. Three compounding faults:
+
+| Fault | Consequence |
+|---|---|
+| No WAL | Default rollback journal — the writer's EXCLUSIVE lock blocks *every* reader, and ingestion appends continuously to a 2,024,502-row history table |
+| `executescript(SCHEMA)` per connect | 8 statements (settings) / 6 (catalog) of DDL per request — **every read takes a write lock** |
+| No `busy_timeout` | Leaves the 5 s Python default, across 65 `connect()` call sites, one connection per call |
+
+Under the SPA's retry loop these serialise until the threadpool and connection
+pool exhaust and uvicorn stops accepting.
+
+The proof it is contention and not query cost: once idle, `/grow-log` returns
+**5,051 bytes in 13 ms** and `/health` in 19 ms.
+
+**Recovery.** The brain healed itself ~2 minutes after the tab was closed, with no
+intervention. I deliberately did **not** restart it — the restart earlier in this
+pass took the host down with it (§H).
+
+### Post-reboot state check — COMPLETED
+
+The 5 Aug failure mode did **not** recur:
+
+| Check | After reboot |
+|---|---|
+| `tent_full_auto_mode` | **on** |
+| `auto_photoperiod` | **on** |
+| heater / humidifier / dehumidifier / grow-mat auto | all **on** |
+| `grow_stage` | Early Flowering (preserved) |
+| target temp / min / max | 22.0 / 25.0 / 28.0 (preserved) |
+| `light_debt_hours` / `light_delivered_hours` | 6.4658 / 5.5342 (preserved exactly) |
+| emergency failsafe / climate sensor fault | False / False |
+| temp / RH | 23.2 °C / 61.1 % |
+
+One state change: `manual_light_hold` **on → off**. That is by design —
+`restore_value: false`, commented *"Deliberately NOT persisted: after a power
+cycle the schedule is authoritative"* — and it self-heals at lights-off, which is
+where we were. Flagged to the operator anyway, since it was their setting.
+
+### Reading keys that do not exist — a family, not a one-off
+
+The known Critical (`lights_on_time` vs the hub's `lights-on_time` object_id) is
+not isolated. Two more of exactly the same shape, both verified live:
+
+**1. `lights_on` can never be true.** `brain/dsc_brain/api.py:656-668` has five
+chances and misses all five:
+
+```python
+twin = hub_vals.get("twin_sf1000_on")     # flat key — does not exist
+sf   = hub_vals.get("sf1000_on")          # flat key — does not exist
+twin_st = (hass.get("light.dsc_hub_twin_sf1000") or {}).get("state")             # None
+sf_st   = (hass.get("light.dsc_hub_sf1000_dimmer") or {}).get("state")           # None
+win     = (hass.get("binary_sensor.dsc_hub_4x8_window_open") or {}).get("state") # None
+```
+
+The hub's 54 flat value keys contain no light state at all. The real data is
+nested: `hub.values["controls"]["light.dsc_hub_twin_sf1000"]` and
+`hub.values["binaries"]["binary_sensor.dsc_hub_4x8_window_open"]`. And
+`to_hass_states()` emits only **18** hub entities — all `sensor.*` plus two link
+`binary_sensor`s — so the three `hass` lookups cannot resolve either.
+
+Result: `GET /control/root-steering` returns `act_allowed: false` on all four pots
+with `reason: "lights_off"`. Root steering can never actuate in any photoperiod.
+And `"lights_off"` is asserted as **fact** when the truth is *no signal*.
+
+The rest of the brain reads these correctly — `computed_ops`, `dash_computed`,
+`automation_rules`, `esphome_client` all go through `values["controls"]` /
+`values["binaries"]`. `api.py` is the outlier.
+
+**2. The `CLOCK INVALID` chip can never render.** `system_info.py:81` does
+`values.get("clock_valid")` on the flat dict. The hub publishes it at
+`values["binaries"]["binary_sensor.dsc_hub_clock_valid"]`, currently **False**.
+The flat lookup returns `None`, so `/system/time` reports `hub.valid: null`, and
+the SPA gates its warning on `d.hub.valid === false`. The firmware is sending the
+bad news and the brain is dropping it on a key mismatch.
+
+### The Time card shows nothing wrong while every clock is wrong
+
+`SystemCards.tsx:74-135`. Live state: brain clock **420.8 s slow** (measured
+against Cloudflare's `trace` timestamp — Windows +4.1 s, Pi −420.8 s), hub
+`raw: "unsynced"`, `ntp.synced: null`. The card renders **no warning of any
+kind**:
+
+- `driftTone` derives only from `d.hub.drift_s`; with no hub epoch that is
+  `null`, so the tone is `undefined` — no `state="failed"`, no chip
+- the `CLOCK INVALID` chip needs `hub.valid === false`, and it is `null` (above)
+- the Brain clock row is a plain `<Stated>` with no validation at all
+
+The one carrier of the bad news is the untoned prose *"hub clock not synced yet"*.
+
+Worse, drift is computed as `hub_epoch − brain_ref` (`system_info.py:103`) — the
+Pi is the assumed truth. So the moment the hub **does** sync correctly, drift
+reads ≈ +420 s, `driftTone` becomes `bad`, and the card prints *"drift 420 s —
+check the hub's NTP reach"*, sending the operator to fix a device that is right.
+
+And NTP health is **structurally unknowable**: `_ntp_status()` shells out to
+`timedatectl`, which does not exist inside the brain container. The module
+docstring frames the missing-binary branch as the exception; on the real topology
+it is the only branch that ever runs. The single surface that would have caught
+the 7-minute host clock error is permanently blind.
+
+### A flat calibration still counts as `measured_curve` — CRITICAL
+
+`computed_ops.py:191-211`. The only gate on claiming `honesty: "measured_curve"`:
+
+```python
+measured = [v for _, v in points if v > 0]
+if len(measured) < 2:
+    return round(pct / 100.0 * nameplate, 1), "linear", "capacity_proxy_nameplate"
+```
+
+Two non-zero numbers. Nothing checks they **vary** with duty, are monotonic, or
+are plausible against the nameplate. The live calibration data:
+
+```
+dsc_cal_cfm_out           25/50/75/100%  ->  14.3, 14.3, 14.3, 14.3   (identical)
+dsc_cal_cfm_intake_main   25/50/75/100%  ->   6.8,  6.9,  6.8,  6.8   (flat)
+dsc_cal_cfm_intake_clone  25/50/75/100%  ->   5.0,  7.5,  8.0,  9.0   (real)
+```
+
+Nameplates are 440 and 200 CFM. Both flat sets pass the gate, interpolate to a
+horizontal line, and are stamped `measured_curve`. `cfm_curves_status` even
+reports **"3/4 curves"**, counting them as good.
+
+The consequence is the alarm on the Climate desk:
+
+| Sensor | Value | Honesty |
+|---|---|---|
+| `cfm_intake_main` | 3.3 | `measured_curve` |
+| `cfm_intake_2x4` | 5.5 | `measured_curve` |
+| `cfm_exhaust_out` | 8.6 | `measured_curve` |
+| `cfm_exhaust_recirc` | **198.0** | `capacity_proxy_nameplate` |
+| `cfm_intake_capacity_total` | 6.7 | |
+| `cfm_exhaust_capacity_total` | 206.6 | |
+| `flow_net_pressure_cfm` | **−199.9** | |
+
+The only fan that reads plausibly is the one whose calibration has **fewer than
+two points** and therefore honestly falls back to nameplate. **The system is more
+wrong for having been calibrated.** This is the fifth instance of the standing
+theme, in its purest form: a curve that does not move is still called *measured*.
+
+### USB flash — the 8.0.0 zero-byte class is still open
+
+**COMPLETED as far as the topology allows** (no adapter attached; nothing flashed).
+
+`usb_flash.py:208` — the entire pre-flash validation:
+
+```python
+if not binary.is_file():
+```
+
+No `st_size` check, no ESP image magic-byte (`0xE9`) check, no hash. A zero-byte
+`.bin` passes. 8.0.0 shipped **nine** zero-byte kit binaries, so that input is
+known to occur. The Setup page's own copy promises *"One device at a time. Never
+green on fail."*
+
+`GET /settings/usb-flash/manifest` returns nine roles with only
+`{binary, chip, boot_mode_note}` — it never stats the files it names, so the
+operator cannot see a bad payload before committing.
+
+Two further live proofs the feature cannot work here at all:
+
+- `firmware_dir` reports `/app/services/dsc-hub/firmware/kit` — the **fallback**
+  branch, which only returns when `/opt/dsc-hub/firmware/kit` is not a directory.
+  Worse, that fallback calls `mkdir(parents=True, exist_ok=True)`: a getter with a
+  filesystem side effect, silently creating the empty directory it then reports as
+  authoritative.
+- `GET /settings/usb-flash/ports` returns `[]`. No `/dev` passthrough into the
+  container.
+
+And a safety gap the empty port list is currently masking: `list_serial_ports()`
+enumerates everything under `/dev/serial/by-id` with no filtering, and
+`queue_usb_flash()` validates the port only as *non-empty*. The Pi's
+`/dev/ttyUSB0` is the **SkyConnect Zigbee coordinator** — the one device the
+project's hard safety rules say must never be flashed. Fixing the passthrough
+arms this.
+
+### Setup state — a live grow believes it is uncommissioned
+
+`GET /setup/state` on a rig with 2,024,502 history rows, an online fleet and a
+running flower cycle:
+
+```json
+{"commissioned": false, "phase": "usb_flash", "version": "8.1.0", "surface": "8.1.0"}
+```
+
+`kit_commissioned` only ever flips via `POST /setup/commission`, and this kit
+predates the wizard. `SetupPage.tsx:148` gates **only** on `state.commissioned`,
+so `#/setup` does not say "already commissioned" — it drops the operator into
+step 2 of 6, **the USB flash step**, on a live 4-seat fleet in flower.
+
+Two smaller finds in the same file: the header subtitle is the string literal
+`"DSC-HUB 8.0"` while `state.version` is right there reading `8.1.0`; and
+`postSetupCommission(false)` is the only call site, the API body defaults to
+`false`, and the helper defaults to `false` — so `require_hub_online` is dead code
+and the hub-online go-live gate can never fire.
+
+### Probe stations — a green badge for a device that has never reported
+
+`GET /settings/probe-stations`, verified against `/fleet`:
+
+| Field | pot4 station | Truth |
+|---|---|---|
+| `online` | **true** | `/fleet` pot4 `online: false`, `last_seen: null` |
+| `seat_online` | false | correct |
+
+`soil_tests.py:147` assigns the top-level `online` from `home_trust` — the *idle
+home* pot's online — then duplicates it verbatim as `home_online` on the next
+line. Both SPA consumers render the top-level field as a **device** badge:
+`DevicesSettingsPage.tsx:540` prints `{st.seat_id} ONLINE`. So Devices › Probe
+stations currently shows a green **"pot4 ONLINE"** for a probe that has never
+reported.
+
+And `soil_tests.py:133`:
+
+```python
+thereabouts_stale = bool(
+    thereabouts_updated_at is not None
+    and (time.time() - float(thereabouts_updated_at)) > 900
+)
+```
+
+When the home is untrustworthy the code deliberately leaves `thereabouts = {}`
+and `updated_at = None` — and this evaluates to `False`, i.e. **not stale**. The
+comment directly above it (*"Independent of home_trustworthy: even a trustworthy
+home can go quiet"*) shows the author reasoned about the trustworthy-but-quiet
+case and missed the never-had-data case. That missed case is the live one on both
+stations. `RootPage` keys its `READING STALE` tag off this flag, so the tag can
+never appear for the worst state.
+
+Two consumer-side follow-ons: `SoilTestWizard.tsx:295` guards with
+`{selectedStation?.thereabouts ? … }` — `{}` is truthy, so a labelled **empty**
+readings table renders today; and `DevicesSettingsPage.tsx:536` reads
+`st.thereabouts?.moisture_pct` with none of the `home_trustworthy` guarding that
+`RootPage.tsx:241` applies to the same field.
+
+### Smaller finds from the same sweep
+
+| Finding | Evidence |
+|---|---|
+| `fleet_version_status` permanently `warn` | `dash_computed.py:110` defaults `expected_firmware` to `"7.0.0.0"`; hub reports `8.1.0.0`; also 3-part vs 4-part, so it can never match |
+| `reduced_kit` attribute inverted | state `off` (nothing offline) while its `offline` attribute reads `"a live lever is parked"` — the empty and non-empty strings look swapped (`dash_computed.py:103-106`) |
+| `probe1_dryback_pct` = string `"nan"` | still stamped `honesty: "peak_today_to_now"`; the same payload gets it right elsewhere — `coldest_root_zone_temp` uses `unavailable` + `reason` |
+| Hub `target_temp` outside its own band | main 22.0 against min 25.0 / max 28.0; clone 22.0 against min 24.0 / max 27.0; nothing validates target ∈ [min, max] |
+| Photoperiod shown is local intent, not device truth | `time.dsc_hub_lights_on_time = "06:00:00"` comes from the brain's own helper (`light_loop.py:252`), stamped `honesty: "ok"`, while the write that would push it to the hub fails on the object_id mismatch — and the hub publishes nothing to reconcile against |
+| `datetime` lights-on helper stuck on a date | holds `"2026-08-29"`; `_normalize_clock_time` correctly rejects it and its docstring shows the author knew — but the rejection is silent. Latent only: the `time.*` entity resolves first |
+
+### Corrections — three of my own findings withdrawn this sweep
+
+Recorded as prominently as the finds.
+
+| Claim | Why it was wrong |
+|---|---|
+| "Energy suggestions invert the advice" | **My curl omitted `lights_on`**, which the SPA always sends. With it: `max_offpeak delta −0.6528`. Correct. §L retracted in place |
+| "4×8 shows 0.0 light hours with `honesty: ok`" | Correct behaviour. It was 03:00, the window is 06:00–18:00, the last cycle ended 16:48 **yesterday**. I read a since-midnight counter as a rolling one |
+| "The photoperiod read path is blank" | `time.dsc_hub_lights_on_time = 06:00:00` does exist in computed state. Rewritten into the sharper true finding above |
+
+A fourth was caught before filing: hub `uptime` looked frozen across a 180 s
+sample, but it advances in exact **300 s** steps — a 5-minute publish interval. It
+was the third stall-shaped artefact of this pass, after the false "ingestion has
+stalled" (§I) and the false "Windows clock is fast" (§I). The pattern is now
+explicit: **on this rig, "it stopped moving" is far more often my sampling than
+the system.**
+
+---
+
 ## Honest gaps — what this pass did NOT cover
 
 | Area | Why | To run it |
 |---|---|---|
 | **Cameras, entirely** | the test caused an outage | powered USB hub |
-| **USB flash end-to-end** | would reflash a live seat; no adapter attached | bench seat |
+| **USB flash end-to-end** | §M covered the manifest, ports, firmware_dir and the validation path by inspection; an actual flash still needs a bench seat and an adapter | bench seat |
 | **Twin 3D rendering** | Browser pane fires no rAF — cannot initialise | real browser |
 | **Hub switch/number/select writes** | hub offline for the first half; not revisited | hub online, deliberate window |
 | **Alert config / automation rule writes** | not reached | next pass |
@@ -674,6 +1031,18 @@ reveal.
 | **Accessibility** | not attempted | dedicated a11y pass |
 | **Hub latency soak** | single sample | full photoperiod |
 
-Every page is now walked. What remains unrun is the physical-hardware work
-(cameras, flashing, calibration), the actuator writes that were deliberately not
-performed on a live flowering tent, and accessibility.
+Every page is now walked, and §M walked the API surface behind them —
+`/setup/*`, `/soft-cal/sessions`, `/energy/*`, `/settings/usb-flash/*`,
+`/settings/probe-stations`, `/settings/stage-rail`, `/system/*`,
+`/fleet/computed` (299 entities) and `/cameras`.
+
+What remains unrun is the physical-hardware work (cameras, flashing, an
+anemometer walk), the actuator writes deliberately not performed on a live
+flowering tent, and accessibility.
+
+**One caveat on how the remaining work should be done.** §M showed that a browser
+tab left polling this brain can wedge it and reboot the hub. Until the SQLite
+WAL / `busy_timeout` / schema-init fixes land, further interactive testing should
+keep browser sessions short and closed between runs, and prefer direct API calls
+over leaving a desk open. That is a constraint on the *method*, not a reason to
+skip the work.
