@@ -880,6 +880,30 @@ async def settings_hub_tunables_patch(body: HubTunablePatch) -> dict[str, Any]:
     return {"row": await push_now(body.entity_id)}
 
 
+@app.get("/settings/hub-tunables/auto-reconcile")
+def hub_tunables_auto_get() -> dict[str, Any]:
+    from .hub_tunables import AUTO_DEBOUNCE_SEC, AUTO_MAX_FIXES, AUTO_MODES, get_auto_mode
+
+    return {
+        "mode": get_auto_mode(),
+        "modes": list(AUTO_MODES),
+        "debounce_s": AUTO_DEBOUNCE_SEC,
+        "max_fixes_per_hour": AUTO_MAX_FIXES,
+    }
+
+
+@app.put("/settings/hub-tunables/auto-reconcile")
+def hub_tunables_auto_put(body: dict[str, Any]) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .hub_tunables import set_auto_mode
+
+    try:
+        return {"mode": set_auto_mode(str(body.get("mode") or ""))}
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
 @app.post("/settings/hub-tunables/{entity_id}/adopt")
 def settings_hub_tunables_adopt(entity_id: str) -> dict[str, Any]:
     if _demo_mode():

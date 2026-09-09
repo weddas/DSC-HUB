@@ -47,8 +47,46 @@ CREATE TABLE IF NOT EXISTS hub_tunables (
 );
 """
 
+# Added by the auto-reconcile pass; ALTERed in for databases that predate it.
+_AUTO_COLUMNS = (
+    ("differs_since", "REAL NOT NULL DEFAULT 0"),
+    ("auto_fixes", "INTEGER NOT NULL DEFAULT 0"),
+    ("auto_window_start", "REAL NOT NULL DEFAULT 0"),
+)
+
 PUSH_RETRY_SEC = 60.0
 PUSH_MAX_ATTEMPTS = 5
+
+# --- auto-reconcile ---------------------------------------------------------------------
+# `differs` is a DELIBERATE stalemate: the hub reports a value the brain did not write, and
+# the 2026-09-07 decision is that a hub-side change is never silently overwritten. Operators
+# asked for it to settle itself, so the policy is explicit rather than implied:
+#
+#   manual     — today's behaviour. differs waits for Adopt or Push. The default, so a
+#                deploy changes nothing about how the grow is driven.
+#   hub_wins   — the hub's value is adopted as the new desired. Right when the operator
+#                changes things at the panel or in the ESPHome UI and means them.
+#   brain_wins — the brain re-pushes its desired value. Right when Settings is the source
+#                of truth and the hub drifted (an NVS restore, a stray write).
+#
+# Both automatic modes still: wait out a debounce so an echo lag is never mistaken for a
+# change, refuse to act under manual takeover or a reconnect override, and JOURNAL every
+# correction. "Never SILENTLY overwrite" is the rule — an auto-fix that writes itself into
+# the settings journal is not silent.
+SETTING_AUTO_RECONCILE = "hub_tunables_auto_reconcile"
+AUTO_MODES = ("manual", "hub_wins", "brain_wins")
+DEFAULT_AUTO_MODE = "manual"
+
+# A value must disagree for this long before either mode acts. Longer than ECHO_GRACE_SEC
+# and longer than one ingest poll, so a lagging echo can never trigger a correction.
+AUTO_DEBOUNCE_SEC = 180.0
+
+# Flip-flop guard. If the hub keeps re-asserting its own value, brain_wins would fight it
+# every poll forever. After this many corrections to one entity inside AUTO_WINDOW_SEC the
+# row is left alone and reported, because that is a real disagreement a human should see —
+# not something to loop on.
+AUTO_MAX_FIXES = 3
+AUTO_WINDOW_SEC = 3600.0
 # The echo lags one ingest poll (~5–10 s); a push younger than this with a stale echo is
 # still `pending`, not `differs`.
 ECHO_GRACE_SEC = 20.0
@@ -132,6 +170,10 @@ TUNABLE_BY_ID: dict[str, dict[str, Any]] = {t["entity_id"]: t for t in TUNABLES}
 
 def _ensure(conn) -> None:
     ensure_schema(conn, "hub_tunables", SCHEMA)
+    have = {r["name"] for r in conn.execute("PRAGMA table_info(hub_tunables)")}
+    for col, decl in _AUTO_COLUMNS:
+        if col not in have:
+            conn.execute(f"ALTER TABLE hub_tunables ADD COLUMN {col} {decl}")
 
 
 # ---- fleet access ---------------------------------------------------------------------
@@ -436,9 +478,16 @@ def set_desired(entity_id: str, value: Any, *, source: str = "operator", db_path
     return _row_view(entity_id, db_path)
 
 
-def adopt(entity_id: str, db_path=None) -> dict[str, Any]:
-    """Take the hub's current value as desired (HUB DIFFERS → SYNCED)."""
-    controls = hub_controls()
+def adopt(entity_id: str, db_path=None, controls: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
+    """Take the hub's current value as desired (HUB DIFFERS → SYNCED).
+
+    ``controls`` lets a caller adopt the echo IT decided on. The auto-reconciler debounces a
+    disagreement over several polls, so re-reading the fleet here could adopt a newer value
+    it never waited out — a different number from the one it judged. The manual Adopt button
+    passes nothing and reads live, which is what it should do.
+    """
+    if controls is None:
+        controls = hub_controls()
     echo = _echo(entity_id, controls)
     if echo is None:
         raise ValueError("the hub has not reported this entity")
@@ -546,13 +595,127 @@ def _set_push_result(entity_id: str, *, ok: bool, error: str = "", db_path=None)
 _last_stage: str | None = None
 
 
+def get_auto_mode(db_path=None) -> str:
+    """Which side wins a `differs` stalemate, if either."""
+    from .settings import get_setting
+
+    mode = str(get_setting(SETTING_AUTO_RECONCILE, DEFAULT_AUTO_MODE, db_path) or "").strip().lower()
+    return mode if mode in AUTO_MODES else DEFAULT_AUTO_MODE
+
+
+def set_auto_mode(mode: str, db_path=None) -> str:
+    from .settings import set_setting
+
+    m = str(mode or "").strip().lower()
+    if m not in AUTO_MODES:
+        raise ValueError(f"mode must be one of {list(AUTO_MODES)}")
+    before = get_auto_mode(db_path)
+    set_setting(SETTING_AUTO_RECONCILE, m, db_path)
+    if m != before:
+        try:
+            from .settings_journal import journal_setting_change
+
+            journal_setting_change("Hub sync auto-reconcile", before, m, domain="climate", source="operator")
+        except Exception:  # noqa: BLE001
+            pass
+    return m
+
+
+async def _auto_reconcile(
+    rows: dict[str, dict[str, Any]],
+    controls: dict[str, dict[str, Any]],
+    *,
+    now: float,
+    db_path=None,
+) -> list[dict[str, Any]]:
+    """Settle `differs` rows according to the operator's chosen policy.
+
+    Returns one record per correction, for the poll summary and for the journal. Callers
+    must already have checked takeover/override — this does not re-check, because the only
+    caller bails earlier and duplicating the guard would hide a future caller that forgets.
+    """
+    mode = get_auto_mode(db_path)
+    done: list[dict[str, Any]] = []
+    if mode == "manual":
+        return done
+
+    conn = connect(db_path)
+    try:
+        _ensure(conn)
+        for eid, row in rows.items():
+            if int(row.get("pending") or 0):
+                continue  # a push is already in flight; let it finish or fail
+            if eid not in controls:
+                continue
+            meta = metadata(eid, controls)
+            echo = _echo(eid, controls)
+            if echo is None or _same(row.get("desired"), echo, meta.get("kind", "number")):
+                # Agreed (or nothing to compare) — clear any differ timer we were holding.
+                if float(row.get("differs_since") or 0):
+                    _upsert(conn, eid, differs_since=0.0)
+                continue
+
+            since = float(row.get("differs_since") or 0)
+            if not since:
+                # First poll that sees the disagreement: start the clock, act on a later
+                # poll. An echo that lags one ingest tick must never look like a change.
+                _upsert(conn, eid, differs_since=now)
+                continue
+            if now - since < AUTO_DEBOUNCE_SEC:
+                continue
+
+            # Flip-flop guard: a hub that keeps re-asserting its own value would otherwise
+            # be fought forever. Count corrections in a rolling window and stand down.
+            window_start = float(row.get("auto_window_start") or 0)
+            fixes = int(row.get("auto_fixes") or 0)
+            if not window_start or now - window_start > AUTO_WINDOW_SEC:
+                window_start, fixes = now, 0
+            if fixes >= AUTO_MAX_FIXES:
+                continue
+
+            try:
+                if mode == "hub_wins":
+                    adopt(eid, db_path=db_path, controls=controls)
+                    detail = {"entity_id": eid, "mode": mode, "from": row.get("desired"), "to": echo}
+                else:
+                    await _push_entity(eid, row["desired"])
+                    _set_push_result(eid, ok=True, db_path=db_path)
+                    detail = {"entity_id": eid, "mode": mode, "from": echo, "to": row.get("desired")}
+            except Exception as exc:  # noqa: BLE001 — a failed auto-fix must not kill ingest
+                _set_push_result(eid, ok=False, error=str(exc), db_path=db_path)
+                continue
+
+            _upsert(conn, eid, differs_since=0.0, auto_fixes=fixes + 1, auto_window_start=window_start)
+            done.append(detail)
+    finally:
+        conn.close()
+
+    # Journalled, not silent. The 2026-09-07 rule forbids overwriting a hub-side change
+    # WITHOUT the operator knowing; this is how they know.
+    for d in done:
+        label = metadata(d["entity_id"], controls).get("label") or d["entity_id"]
+        try:
+            from .settings_journal import journal_setting_change
+
+            journal_setting_change(
+                f"Hub sync auto-reconciled · {label}",
+                d["from"],
+                d["to"],
+                domain="climate",
+                source=f"auto:{d['mode']}",
+            )
+        except Exception:  # noqa: BLE001
+            pass
+    return done
+
+
 async def on_fleet_poll(fleet: Any, db_path=None) -> dict[str, Any]:
     """Adopt new entities, confirm echoes, retry due pushes, and stamp stage presets.
 
     Never raises — the ingest loop must not die because a push failed.
     """
     global _last_stage
-    summary: dict[str, Any] = {"adopted": [], "confirmed": [], "pushed": [], "stage": None}
+    summary: dict[str, Any] = {"adopted": [], "confirmed": [], "pushed": [], "stage": None, "auto_reconciled": []}
     try:
         controls = hub_controls(fleet)
         if not hub_online(fleet) or not controls:
@@ -606,9 +769,24 @@ async def on_fleet_poll(fleet: Any, db_path=None) -> dict[str, Any]:
                 summary["pushed"].append(eid)
             except Exception as exc:  # noqa: BLE001
                 _set_push_result(eid, ok=False, error=str(exc), db_path=db_path)
+
+        # Settle any stalemate the operator has asked us to settle. Deliberately last: the
+        # in-flight pushes above get their chance to land first.
+        summary["auto_reconciled"] = await _auto_reconcile(
+            _load_rows(db_path), controls, now=now, db_path=db_path
+        )
     except Exception as exc:  # noqa: BLE001
         _logger.warning("hub tunables reconcile failed: %s", exc)
     return summary
+
+
+def _load_rows(db_path=None) -> dict[str, dict[str, Any]]:
+    conn = connect(db_path)
+    try:
+        _ensure(conn)
+        return _load(conn)
+    finally:
+        conn.close()
 
 
 async def apply_stage_targets(stage: str, *, db_path=None, push: bool = True) -> dict[str, Any] | None:
