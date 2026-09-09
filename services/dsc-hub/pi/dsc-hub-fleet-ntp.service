@@ -1,6 +1,6 @@
 [Unit]
 Description=DSC-HUB: redirect SoftAP fleet NTP (udp/123 on wlan0) to the local chrony
-After=network.target chrony.service
+After=network.target chrony.service docker.service
 Wants=chrony.service
 
 [Service]
