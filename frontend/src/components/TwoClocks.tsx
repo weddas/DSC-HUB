@@ -135,7 +135,7 @@ export function TentClock({ tent, showEyebrow = true }: { tent: TentPhotoperiodI
       <Tooltip
         content={
           <>
-            <TipRow k={`${label} lamp`} v={hubLit != null ? (hubLit ? "LIT · hub window open" : "DARK · hub window closed") : schedule.valid ? (lit ? "LIT" : "DARK") : "no schedule"} tone={shownLit ? "ok" : undefined} />
+            <TipRow k={`${label} window`} v={hubLit != null ? (hubLit ? "OPEN · hub photoperiod window" : "SHUT · hub photoperiod window") : schedule.valid ? (lit ? "OPEN" : "SHUT") : "no schedule"} tone={shownLit ? "ok" : undefined} />
             {schedule.valid ? <TipRow k={clock.key.toLowerCase()} v={clock.value} tone={conflict ? "bad" : undefined} /> : null}
             {/* State the OBSERVATION, not a guessed cause. The old copy claimed "the hub's
                 lights-on time differs from the SPA's" — but the SPA reads its lights-on
@@ -143,7 +143,7 @@ export function TentClock({ tent, showEyebrow = true }: { tent: TentPhotoperiodI
                 could never be the real cause. It sent the operator to check a setting that
                 was already correct. The genuine disagreement is the hub's own window sensor
                 (its clock) against the same time recomputed here (this device's clock). */}
-            {conflict ? <TipRow k="conflict" v={`hub says ${hubLit ? "LIT" : "DARK"}, this clock says ${lit ? "LIT" : "DARK"} — same lights-on time (${String(input.lightsOnTime ?? "—")}), so check the hub clock against this device's`} tone="bad" /> : null}
+            {conflict ? <TipRow k="conflict" v={`hub says window ${hubLit ? "OPEN" : "SHUT"}, this clock says ${lit ? "OPEN" : "SHUT"} — same lights-on time (${String(input.lightsOnTime ?? "—")}), so check the hub clock against this device's`} tone="bad" /> : null}
             {hubClock.untrusted ? <TipRow k="hub clock" v={`${hubClock.reason} — the hub's window flags run on that clock and cannot be trusted until it syncs`} tone="bad" /> : null}
             <TipRow k="window" v={`${String(input.lightsOnTime ?? "—")} + ${Math.round(input.expectedHours)} h${tent === "clone" && schedule.followsMain ? " · follows 4×8" : ""}`} tone="muted" />
             <TipRow k="fixture" v={lampText} tone={lampText.includes("NOT WIRED") ? "muted" : undefined} />
@@ -151,15 +151,22 @@ export function TentClock({ tent, showEyebrow = true }: { tent: TentPhotoperiodI
           </>
         }
       >
-        <div className={`dsc-clock-state${conflict ? " is-conflict" : ""}`} tabIndex={0} aria-label={`${label} lamp ${hubLit != null ? (hubLit ? "lit" : "dark") : schedule.valid ? (lit ? "lit" : "dark") : "no schedule"}${conflict ? ", hub and schedule disagree" : ""}, ${clock.key.toLowerCase()} ${clock.value}`}>
+        <div className={`dsc-clock-state${conflict ? " is-conflict" : ""}`} tabIndex={0} aria-label={`${label} photoperiod window ${hubLit != null ? (hubLit ? "open" : "shut") : schedule.valid ? (lit ? "open" : "shut") : "no schedule"}${conflict ? ", hub and schedule disagree" : ""}, ${clock.key.toLowerCase()} ${clock.value}, fixture ${lampText.toLowerCase()}`}>
           <span className="dsc-clock-key">STATE</span>
           <span className={`dsc-clock-big${shownLit ? " is-lit" : ""}`}>
             <Icon name={shownLit ? "photoperiod-day" : "photoperiod-night"} size={14} className={shownLit ? "dsc-icon--lamp" : "dsc-icon--muted"} />
-            {hubLit != null || schedule.valid ? (shownLit ? "LIT" : "DARK") : "—"}
+            {hubLit != null || schedule.valid ? (shownLit ? "WINDOW OPEN" : "WINDOW SHUT") : "—"}
           </span>
+          {/* The schedule window and the actual fixture are two different facts. Showing
+              only the window as "LIT" put a STATE/LIT pill (aria: "lamp lit") beside a
+              DARK badge while the sole 4x8 fixture was OFF at 0 cycles and 0.0 h — the
+              operator could not reconcile any of it. Twin PWM genuinely is not wired, so
+              0.0 h is honest; the label was the defect. */}
+          <span className="dsc-clock-key">FIXTURE</span>
+          <span className={`dsc-clock-sub${lampText.includes("NOT WIRED") ? " is-muted" : ""}`}>{lampText}</span>
           <span className="dsc-clock-key">{clock.key}</span>
           <span className={`dsc-clock-big${conflict ? " is-conflict" : ""}`}>{clock.value}</span>
-          {conflict ? <StatusTag label={`HUB ${hubLit ? "LIT" : "DARK"} · SCHEDULE ${lit ? "LIT" : "DARK"}`} tone="bad" live title={`${windowId} disagrees with the clock computed from the SPA's lights-on time — one of them is wrong`} /> : null}
+          {conflict ? <StatusTag label={`HUB WINDOW ${hubLit ? "OPEN" : "SHUT"} · SCHEDULE ${lit ? "OPEN" : "SHUT"}`} tone="bad" live title={`${windowId} disagrees with the clock computed from the SPA's lights-on time — one of them is wrong`} /> : null}
           {hubClock.untrusted ? <StatusTag label="HUB CLOCK UNSYNCED" tone="bad" live title={`${hubClock.reason}. Photoperiod windows run on the hub's clock; this window state is not trustworthy until it syncs.`} /> : null}
         </div>
       </Tooltip>

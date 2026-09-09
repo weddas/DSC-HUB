@@ -421,7 +421,15 @@ export function DevicesSettingsPage() {
                           <span className="dsc-device-row-name">{seatId}</span>
                           <span className="dsc-device-row-sub">{[fn, place].filter(Boolean).join(" · ") || String((row as Record<string, unknown>).role ?? "")}</span>
                         </button>
-                        <StatusChip label={online ? "ONLINE" : "OFFLINE"} tone={online ? "ok" : row.in_service ? "bad" : "muted"} />
+                        {/* A parked seat is not unreachable — it is deliberately not in service, and
+                            nothing is expected to answer for it. Badging it OFFLINE contradicted this
+                            page's own footer ("0 offline · 5 out of service"), the nav ("ALL ONLINE")
+                            and the Kit page, which called the same three seats out of service. Only an
+                            IN-SERVICE seat can be offline; that is the same predicate the counters use. */}
+                        <StatusChip
+                          label={!row.in_service ? "OUT OF SERVICE" : online ? "ONLINE" : "OFFLINE"}
+                          tone={!row.in_service ? "muted" : online ? "ok" : "bad"}
+                        />
                         <Toggle checked={Boolean(row.in_service)} label={`${seatId} in service`} onChange={(next) => setPendingInService({ seatId, next })} />
                         <button type="button" className="dsc-device-row-open" onClick={() => setOpenSeat(seatId)} aria-label={`Details for ${seatId}`}>
                           ›

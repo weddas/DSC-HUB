@@ -4697,6 +4697,11 @@ input[type="checkbox"]:disabled {
 .dsc-clock-key { font-size: 10px; letter-spacing: 0.12em; color: var(--dsc-gray-5); }
 .dsc-clock-big { font-size: 18px; font-weight: 600; color: var(--dsc-white); font-variant-numeric: tabular-nums; }
 .dsc-clock-big.is-lit { color: var(--dsc-lamp); }
+/* The measured fixture, shown under the scheduled window so the two facts read as two
+   facts. Deliberately quieter than .dsc-clock-big: the window is the headline, the
+   fixture is the check on it. */
+.dsc-clock-sub { font-size: 12px; font-weight: 500; color: var(--dsc-white); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dsc-clock-sub.is-muted { color: var(--dsc-muted); }
 .dsc-clock-rail { position: relative; height: 10px; background: var(--dsc-gray-2); border-radius: 2px; overflow: visible; }
 .dsc-clock-lit { position: absolute; top: 0; bottom: 0; background: var(--dsc-rail); }
 .dsc-clock-now { position: absolute; top: -3px; width: 2px; height: 16px; background: var(--dsc-teal); box-shadow: 0 0 6px var(--dsc-teal-glow); }

@@ -5,6 +5,7 @@ import { Panel, PhaseChip } from "../components/Panel";
 import { DrybackChart } from "../components/DrybackChart";
 import { HeatLines } from "../components/EquipmentTiles";
 import { paths } from "../lib/paths";
+import { steeringReasonText } from "../lib/steeringReason";
 import { phaseLabel, probeSteering, type RootSteeringSnapshot } from "../lib/rootSteering";
 import { phaseFromStage } from "../hooks/useZones";
 import { DecisionLayer } from "../components/DecisionLayer";
@@ -265,13 +266,24 @@ export function LiveRootPage() {
                           label={st.reading_mode === "idle" ? "IDLE" : st.reading_mode.toUpperCase()}
                           tone={st.reading_mode === "idle" ? "ok" : "warn"}
                         />
-                        <StatusTag
-                          label={homeOk ? "HOME ONLINE" : "HOME DARK"}
-                          tone={homeOk ? "ok" : "bad"}
-                        />
-                        {st.home_sensor_fault ? <StatusTag label="HOME FAULT" tone="bad" /> : null}
-                        {st.home_modbus_ok === false ? <StatusTag label="HOME PROBE DARK" tone="warn" /> : null}
-                        {st.thereabouts_stale ? <StatusTag label="READING STALE" tone="warn" /> : null}
+                        {/* ONE health chip naming the most specific cause. An idle station used
+                            to show four overlapping ones at once — HOME DARK + HOME FAULT +
+                            HOME PROBE DARK + READING STALE — where "HOME DARK" and "HOME PROBE
+                            DARK" are near-synonyms and the stale state is already spelled out
+                            in the line below ("last seen >15 min ago"). Four chips for one
+                            condition dilute the signal instead of adding to it. */}
+                        {(() => {
+                          const health = st.home_sensor_fault
+                            ? { label: "HOME FAULT", tone: "bad" as const, why: "The station's home sensor reports a fault." }
+                            : st.home_modbus_ok === false
+                              ? { label: "HOME PROBE DARK", tone: "bad" as const, why: "The home probe is not answering on Modbus." }
+                              : !homeOk
+                                ? { label: "HOME DARK", tone: "bad" as const, why: "The station's home is offline or its reading is not trustworthy." }
+                                : st.thereabouts_stale
+                                  ? { label: "HOME ONLINE · STALE", tone: "warn" as const, why: "Home is online but the last reading is over 15 minutes old." }
+                                  : { label: "HOME ONLINE", tone: "ok" as const, why: "Home is online and reading." };
+                          return <StatusTag label={health.label} tone={health.tone} title={health.why} />;
+                        })()}
                       </div>
                       <p className="dsc-muted" style={{ margin: 0, fontSize: "var(--dsc-fs-sm)" }}>
                         Home {homeLabel} · moisture{" "}
@@ -664,7 +676,7 @@ function RootProbeCard({
             {showDryback ? `dry-back −${fmtChip(dryV, 0)} % since the last wet point (sensor)` : "dry-back not available"}
             {Number.isFinite(rateV) ? ` · ${rateV.toFixed(2)} %/h` : ""}
             {" · last shot — (no pump bound) · next feed —"}
-            {steering?.reason ? ` · steering: ${steering.reason}` : ""}
+            {steeringReasonText(steering?.reason) ? ` · steering: ${steeringReasonText(steering?.reason)}` : ""}
           </p>
           <DrybackChart probe={probe} tent={plant.tent} moistureBand={mBand} />
         </>

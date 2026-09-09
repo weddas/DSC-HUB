@@ -203,9 +203,9 @@ export function wantChipLabel(
       return named;
     case "warn":
     case "stale":
-      return `approaching · ${named}`;
+      return `setpoint near edge · ${named}`;
     case "critical":
-      return `outside · ${named}`;
+      return `setpoint outside · ${named}`;
     case "muted":
       return rail.emptyLabel ?? named;
     default: {
@@ -225,13 +225,19 @@ export function draftTone(
   if (!band) return { tone: "muted", label: rail?.emptyLabel ?? "no plant/stage rail" };
   const tone = zoneTone({ value, band, margin: (band.max - band.min) * 0.12 });
   const source = band.source === "plant" ? "plant Want" : "stage rail";
+  // Say WHAT is in band. This chip judges the SETPOINT being edited against the plants'
+  // rail — it is not a statement about the current reading. Sitting beside a Got readout,
+  // a bare "in-band · plant Want" was read as a claim about Got, which made the 4x8 cockpit
+  // look self-contradicting: it annotated Temp-min "in-band" while Got 24.6 C was below
+  // that very min of 25.0 (reported 2026-09-10). Both statements were true about different
+  // quantities; only the wording was ambiguous.
   const base =
     tone === "ok"
-      ? `in-band · ${source}`
+      ? `setpoint in ${source}`
       : tone === "warn" || tone === "stale"
-        ? `approaching · ${source}`
+        ? `setpoint near edge of ${source}`
         : tone === "critical"
-          ? `outside · ${source}`
+          ? `setpoint outside ${source}`
           : source;
   if (rail && band.source === "stage") {
     return { tone, label: wantChipLabel(rail, tone, base) };

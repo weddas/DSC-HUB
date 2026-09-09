@@ -20,7 +20,16 @@ export function zoneTone(opts: {
   if (opts.fault) return "critical";
   if (isValidBand(opts.band)) {
     const m = opts.margin ?? 0;
-    if (opts.value < opts.band.min - m || opts.value > opts.band.max + m) {
+    // A value outside the band the CARD PRINTS must never paint "ok". The margin is an
+    // anti-flap tolerance, and on a narrow band it used to swallow a real excursion: the
+    // 4x8 VPD band is 1.2-1.4 (0.2 wide) while defaultBandMargin's kPa floor is 0.05, i.e.
+    // a quarter of the band — so 1.44 kPa rendered GREEN beside a label reading
+    // "want 1.2-1.4" (observed live 2026-09-10). On an honesty-first dashboard the ring
+    // and the number it sits next to cannot disagree.
+    //
+    // The margin keeps its real job: deciding how far out is far enough to be critical,
+    // which is where hysteresis actually matters.
+    if (opts.value < opts.band.min || opts.value > opts.band.max) {
       const far =
         opts.value < opts.band.min - m * 3 || opts.value > opts.band.max + m * 3;
       return far ? "critical" : "warn";
