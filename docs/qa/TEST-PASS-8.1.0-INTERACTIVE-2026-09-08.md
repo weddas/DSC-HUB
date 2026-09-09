@@ -12,7 +12,7 @@ were not reachable, and one test physically took the rig down.
 
 ## Headline
 
-The pass found **53 new defects** — ten Critical — verified five
+The pass found **59 new defects** — ten Critical — verified five
 previously-logged entries, reversed one that had been closed wrongly, and caused
 **three unplanned outages**. Two were the root-on-USB fragility. The third,
 on 2026-09-09, was the SPA flooding the brain with ~17 `/fleet/computed`
@@ -1077,16 +1077,226 @@ the system.**
 
 ---
 
+## N. Sixth sweep, 2026-09-09 — areas 2 and 5 closed out
+
+The operator asked for the two partial areas finished in full so a fix agent
+could be started. Both are now **COMPLETED**.
+
+### N.1 Area 2 — write-then-undo, the four outstanding targets
+
+The brief listed eight write/undo targets. Four were done in §B (setpoints,
+global modifiers, journal entries, root steering). These are the other four.
+
+**Every one was restored and verified byte-identical to a baseline captured
+before the first write.** Baselines were taken off-box (`/tmp` on the Pi is
+tmpfs and does not survive a reboot).
+
+| Target | Result | Restore |
+|---|---|---|
+| Automation rules | **COMPLETED** — write/undo + 8-case validation matrix | `PUT {"rules":[]}` → byte-identical |
+| Alert config | **COMPLETED** — 5-case validation matrix + quiet-hours round trip | `clear_quiet_hours` → byte-identical |
+| Stage rail | **COMPLETED** — write/undo + 9-case validation matrix | `POST /reset?stage=…` → byte-identical |
+| Probe stations | **COMPLETED** — write/undo + 4-case validation matrix | PATCH back → inventory `extra` byte-identical |
+
+#### Automation rules
+
+Baseline `{"rules":[]}`. The test rule was made safe two ways over: `enabled`
+defaults to **False** (`_normalize_rule:505`) and `raw_true = rule["enabled"] and
+…` (`:1036`), so a disabled rule can never fire; and the action was `banner`,
+which has no actuator path at all.
+
+Validation behaved correctly in 7 of 8 cases — duplicate id, invalid action type,
+banner without text, `entity_id` without a dot, `all` and `any` together, `rules`
+not a list (422), and `window.start == window.end` all rejected with useful
+messages.
+
+**The eighth is a defect.** `id: "BadID"` returned **200** and stored `badid`:
+
+```python
+rid = str(row.get("id") or "").strip().lower()   # lowercased FIRST
+if not _RULE_ID_RE.match(rid):                    # regex never sees uppercase
+    raise ValueError(f"invalid rule id {rid!r} — slug, lowercase, 2–48 chars")
+```
+
+The message promises lowercase is enforced; it is silently coerced. Breaks
+round-trip fidelity, and `MyRule` + `myrule` in one PUT collide on an id the
+caller never sent.
+
+#### Alert config
+
+All five validation cases correct, including the one that matters:
+`the emergency failsafe alert cannot be disabled` → 400.
+
+`quiet_hours` set → read back → `clear_quiet_hours` → byte-identical. The window
+chosen (12:00–13:00) was already in the past at 17:24 local, so it could have no
+effect even while set.
+
+**`alerts` was deliberately left untouched**, because `patch_alert_prefs` merges
+and has **no removal path** — no delete verb, no null-means-remove, no full-map
+PUT. Anything written there is permanent. `quiet_hours` has a proper clear path,
+which shows the omission is an inconsistency rather than a decision. Filed rather
+than demonstrated: creating unremovable state on a live rig to prove a point is
+not a trade worth making.
+
+#### Stage rail
+
+`PATCH` Germination `temp 25.0 → 26.5` → `changed: true`, `updated_at` stamped.
+Validation correct for unknown stage, unknown field, out-of-bounds, and
+non-numeric.
+
+The first attempts at the cross-field guards did not actually exercise them —
+`vpd_min: 1.9` and `rh_min: 95` are caught by the *bounds* check first. Re-run
+with in-bounds violations, and the guards do fire:
+
+```
+vpd_min 0.9 vs existing vpd_max 0.8   → 400  "VPD min must not exceed VPD max"
+rh_min 85   vs existing rh_max 80     → 400  "RH min must not exceed RH max"
+vpd_min 0.9 + vpd_max 1.1 together    → 200  (self-consistent, correctly allowed)
+```
+
+Note the guard correctly merges the patch over the *current stored row*, not over
+defaults.
+
+**`POST /settings/stage-rail/apply` was deliberately NOT called.** It runs
+`apply_stage_targets()`, which stamps the preset onto the hub as live setpoints.
+That is an actuator write on a day-61 flowering tent and is the operator's call,
+not a test step. The write/undo target in the brief is the stage-rail *store*,
+which is fully covered.
+
+#### Probe stations
+
+`PATCH pot2 {idle_home_pot_id: pot1→pot3, tent: 2x4→4x8}` → 200, persisted.
+
+**This produced live proof of the §M static finding.** Repointing the idle home
+flipped the station's `online` from **true → false** — because that field is the
+*home* pot's online, and pot3 is offline. Nothing about pot2 changed; it stayed
+online and reporting throughout. Setting `idle_home_pot_id: pot2` (itself) then
+flipped it back to true. The SPA renders this as a per-device badge
+(`{st.seat_id} ONLINE`), so repointing one station changes the health badge shown
+against a different, healthy device.
+
+Three validation gaps, all returning **200**:
+
+| Input | Stored | Should be |
+|---|---|---|
+| `tent: "the moon"` | verbatim | rejected — no allow-list against zone/space ids |
+| `idle_home_pot_id: "pot99"` | verbatim | rejected — no existence check |
+| `idle_home_pot_id: "pot2"` on seat pot2 | verbatim | rejected — a roving probe cannot idle at itself |
+
+Only `unknown seat` (404) is checked. Self-home also collapses the `home_*` and
+`seat_*` field families onto one device, defeating the distinction they exist to
+draw.
+
+### N.2 Area 5 — USB flash wizard, end to end
+
+**COMPLETED as far as the topology permits.** Nothing was flashed; no device was
+touched. That is not a gap in the test — §M established the feature cannot
+complete a flash on this deployment, and this sweep proved it from the running
+system rather than from the source.
+
+**The job path was run end to end.** Safe by construction: `_run_job` checks
+`binary.is_file()` *before* building the esptool command, and `firmware_dir` is
+empty, so esptool is never invoked. Ports used were deliberately fake
+(`/dev/ttyQA0`, `/dev/ttyQA-NONEXISTENT`) — never `/dev/ttyUSB0`, which is the
+SkyConnect Zigbee coordinator.
+
+```
+POST /settings/usb-flash/jobs {"role":"hub","port":"/dev/ttyQA0"}   → 200 queued
+GET  /settings/usb-flash/jobs/<id>
+  status = failed
+  detail = Missing firmware binary for hub:
+           /app/services/dsc-hub/firmware/kit/hub.bin. Bake kit binaries into the image.
+```
+
+That is **correct and honest behaviour** — it fails, names the exact path, and
+never reaches the flasher. "Never green on fail" is honoured for this case. It
+also confirms live what §M inferred: the container resolves `firmware_dir` to the
+fallback path, and that directory is empty.
+
+**Validation** — unknown role (400, listing all nine valid roles), empty port
+(400 `port is required`), missing `role` field (422), unknown job id (404). All
+correct.
+
+**Concurrency guard** — three jobs fired in parallel:
+
+```
+job1 http=200   job2 http=409   job3 http=409
+{"detail":"usb flash job already in progress: e29c0600-…"}
+```
+
+Exactly one admitted, the other two rejected naming the running job. Correct.
+
+**The wizard UI**, read from the live rig at `#/setup`:
+
+```
+Kit Setup
+DSC-HUB 8.0 · step 2/5: usb_flash
+USB FLASH — One device at a time. Never green on fail.
+Role [hub ▾ …9 roles]   Port [— select — ▾]
+[Flash]  [Skip (record debt)]  [Next: Fleet join]
+```
+
+Three things confirmed visually that §M had only from the API: the hardcoded
+`DSC-HUB 8.0` against a `state.version` of `8.1.0`; a live production grow landing
+directly on the **USB flash step**; and an empty port list.
+
+One new defect: **the `Flash` button is enabled with no port selected** —
+`disabled: false`, port `value: ""`, one option (the placeholder). The brain
+rejects the click correctly (400), so it is not dangerous, but it is a false
+affordance on a page whose own copy promises never to look ready when it is not.
+
+**Two permanent rows left behind.** `usb_flash_jobs` has GET-list, GET-by-id and
+POST — no delete verb, no retention, no prune. So the two failed test jobs
+(`hub` / `/dev/ttyQA0` and `pot1` / `/dev/ttyQA-NONEXISTENT`, both "Missing
+firmware binary") cannot be removed through the API. Disclosed rather than hidden;
+filed as its own Low finding.
+
+### N.3 Found while testing: the 4×8 has been dark for 18.8 h
+
+Not part of areas 2 or 5, but found during them and grow-affecting, so it is
+recorded here.
+
+`/history` (independent of the frozen ledger) over 24 h:
+
+```
+Tue 08 Sep 17:26:49   4x8 window OPEN    · Twin SF1000 ON
+Tue 08 Sep 22:38:49   4x8 window CLOSE   · Twin SF1000 OFF
+                      … no further transitions
+```
+
+At 17:26 Wed — inside the 06:00–18:00 window — both `4x8_window_open` and the
+Twin SF1000 read **off**, and have since 22:38 Tuesday. Day 61, Early Flowering,
+two plants.
+
+This is the known Critical still live and unfixed:
+
+```
+hub_clock_epoch = 'unsynced'   clock_valid = False   learning_paused = True
+```
+
+`clock_valid` false → `tick_lateral_ledgers` aborts
+(`firmware/v4/dsc-hub-fleet-heal.yaml:552`) → the window never opens. The ledger
+is frozen with it: `light_delivered_hours` reads **5.5341668128967285**,
+byte-identical to a sample taken ~15 h earlier. That 5.53 is Tuesday's
+17:26→22:38 run, not today's — so the dashboard's `−6.47 h` deviation understates
+the shortfall by roughly a full day.
+
+The Pi clock was re-measured against Cloudflare in the same session: still
+**−420.8 s**, unchanged. The numeric-NTP workaround in the DNS entry remains the
+fix and remains the operator's call — it is a host config change on a live grow.
+
+---
+
 ## Honest gaps — what this pass did NOT cover
 
 | Area | Why | To run it |
 |---|---|---|
 | **Cameras, entirely** | the test caused an outage | powered USB hub |
-| **USB flash end-to-end** | §M covered the manifest, ports, firmware_dir and the validation path by inspection; an actual flash still needs a bench seat and an adapter | bench seat |
+| **USB flash end-to-end** | **CLOSED in §N** — job path, validation and concurrency guard all run against the live brain; an actual flash still needs a bench seat, an adapter, and the container fixes from §M | bench seat |
 | **Twin 3D rendering** | Browser pane fires no rAF — cannot initialise | real browser |
 | **Hub switch/number/select writes** | hub offline for the first half; not revisited | hub online, deliberate window |
-| **Alert config / automation rule writes** | not reached | next pass |
-| **Stage rail / probe station writes** | not reached | next pass |
+| **Alert config / automation rule writes** | **CLOSED in §N** — both write/undo tested and restored byte-identical | — |
+| **Stage rail / probe station writes** | **CLOSED in §N** — both write/undo tested and restored byte-identical. `stage-rail/apply` deliberately not called: it stamps live setpoints onto a flowering tent | operator-chosen window for `/apply` |
 | **Kit Calibrate wizard interaction** | rendered only; anemometer walk not run | with an anemometer |
 | **Accessibility** | not attempted | dedicated a11y pass |
 | **Hub latency soak** | single sample | full photoperiod |
