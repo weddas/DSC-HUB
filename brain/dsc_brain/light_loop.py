@@ -26,6 +26,9 @@ class LightLoopSnapshot:
     schedule_valid: bool
     honesty: str
     main_on_source: str | None = None  # "hub" (read back) | "brain" (stored helper) | None
+    # The hub's own catch-up debt for this cycle (target + carry - delivered). Distinct from
+    # deviation_2x4, which is elapsed-vs-expected — only THIS one steers catch-up.
+    light_debt_hours: float | None = None
 
 
 _VEG_STAGES = {
@@ -211,6 +214,7 @@ def build_light_loop(*, helpers: dict, hub_values: dict, now_ts: float) -> Light
         schedule_valid=schedule_valid,
         honesty=honesty,
         main_on_source=main_on_source,
+        light_debt_hours=_opt_float(hub_values.get("light_debt_hours")),
     )
 
 
@@ -272,6 +276,22 @@ def emit_light_loop(states: dict, snapshot: LightLoopSnapshot, set_entity: SetEn
             round(snapshot.deviation_2x4, 2),
             available=True,
             attributes=dict(schedule_attrs),
+        )
+    # The hub's OWN catch-up debt, surfaced as an entity so the desk can say when a running
+    # catch-up will end. Deliberately not derived from the deviation above: that is a
+    # different computation (elapsed-vs-expected), and projecting an end time from a number
+    # the hub does not steer on would put a confident wrong time on screen.
+    if snapshot.light_debt_hours is not None:
+        set_entity(
+            states,
+            "sensor.dsc_hub_light_debt_hours",
+            round(float(snapshot.light_debt_hours), 2),
+            available=True,
+            attributes={
+                "honesty": "ok",
+                "unit_of_measurement": "h",
+                "source": "hub photoperiod: target + carry - delivered, this cycle",
+            },
         )
     if snapshot.main_on_time is not None:
         on_attrs: dict[str, Any] = {"honesty": snapshot.honesty}

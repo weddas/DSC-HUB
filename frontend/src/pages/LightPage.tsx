@@ -17,6 +17,9 @@ import { DutyStrip } from "../components/DutyStrip";
 import { PhotoperiodTimeline } from "../components/PhotoperiodTimeline";
 import { TargetNumber } from "../components/TentTargets";
 import { useEntityBus } from "../hooks/useEntityBus";
+import { projectCatchup, fmtHours, holdReleaseWarning } from "../lib/lightCatchup";
+import { fmtDurationMs } from "../lib/formatDuration";
+import { useTentLightSchedule } from "../hooks/useTentLightSchedule";
 import { useInspector } from "../components/InspectorHost";
 import { ArcGauge } from "../viz/charts";
 import { draftTone, tentWantRail } from "../lib/tentWant";
@@ -46,6 +49,22 @@ export function LiveLightPage() {
   const darkViolation = state("binary_sensor.dsc_clone_dark_period_violation") === "on";
   const missing = state("binary_sensor.dsc_clone_light_missing_in_window") === "on";
   const catchup = state("binary_sensor.dsc_hub_light_catchup_active") === "on";
+  // Catch-up projection. The debt is the hub's own (sensor.dsc_hub_light_debt_hours), NOT
+  // the deviation shown lower down — deviation is elapsed-vs-expected and does not steer
+  // catch-up, so projecting an end time from it would put a confident wrong time on screen.
+  const cloneSchedule = useTentLightSchedule("clone");
+  const catchupPlan = catchup
+    ? projectCatchup({
+        debtH: num("sensor.dsc_hub_light_debt_hours"),
+        darkRemainingH: cloneSchedule.untilOnMs != null ? cloneSchedule.untilOnMs / 3_600_000 : null,
+        minDarkH: num("number.dsc_hub_min_dark_hours"),
+      })
+    : null;
+  // The cancel lives in hub firmware (it forgives this cycle's debt). Until the hub is
+  // flashed the entity does not exist — render the affordance as an honest "possible with"
+  // row rather than a dead button, the same convention the INVENTED settings rows use.
+  const cancelEntity = "switch.dsc_hub_light_catchup_cancel";
+  const canCancelCatchup = available(cancelEntity);
   const cloneDesk = buildCloneLightDesk({ state, num, entity });
   const lightOn = cloneDesk.sfOn;
   const windowOpen = state("binary_sensor.dsc_hub_4x8_window_open") === "on";
@@ -178,7 +197,69 @@ export function LiveLightPage() {
           <span className="dsc-mission-title">Manual photoperiod override active</span>
           <span className="dsc-mission-detail">
             — {manualHold ? "manual light hold is on. " : ""}{!autoPhoto ? "auto photoperiod is off. " : ""}Catch-up and dark alerts may reflect operator intent; confirm before clearing holds.
+            {/* The concrete consequence, not "confirm before clearing". Releasing a hold
+                while catch-up wants the lamp does not leave it where it is — the firmware
+                self-heals the hold only when want_on goes false, and during catch-up it is
+                true, so the fixture is driven straight to target. */}
+            {manualHold && catchupPlan ? (
+              <strong className="dsc-light-holdwarn"> {holdReleaseWarning(catchupPlan)}</strong>
+            ) : null}
           </span>
+        </div>
+      ) : null}
+
+      {/* Catch-up, said out loud: what it is doing, when it is expected to stop, what the
+          next scheduled change is, and how to call it off. Previously the only signal was a
+          CATCH-UP ACTIVE tag, and the clock chip counted the NOMINAL window — which reads
+          OFF IN while the lamp is going to keep running past it. */}
+      {catchupPlan ? (
+        <div className="dsc-mission dsc-mission--warn dsc-catchup" role="status">
+          <span className="dsc-mission-dot" aria-hidden="true" />
+          <div className="dsc-catchup-body">
+            <div className="dsc-mission-title">
+              Catch-up is repaying {fmtHours(catchupPlan.debtH)} of light
+            </div>
+            <div className="dsc-mission-detail">
+              {catchupPlan.runsForH == null ? (
+                <>The lamp runs at its target brightness until the debt is repaid or the minimum dark period is reached. The end time is not shown because the hub has not reported the dark floor or the next lights-on.</>
+              ) : catchupPlan.cutShort ? (
+                <>
+                  Expected to run about <strong>{fmtHours(catchupPlan.runsForH)}</strong>, then stop at the{" "}
+                  {fmtHours(catchupPlan.minDarkH ?? 0)} minimum dark floor with{" "}
+                  <strong>{fmtHours(catchupPlan.carriesH)}</strong> still owed — that carries into the next cycle.
+                </>
+              ) : (
+                <>
+                  Expected to run about <strong>{fmtHours(catchupPlan.runsForH)}</strong>, until the debt is repaid.
+                </>
+              )}
+              {cloneSchedule.untilOnMs != null ? (
+                <> Next scheduled lights-on is in {fmtDurationMs(cloneSchedule.untilOnMs)}.</>
+              ) : null}{" "}
+              These are projections from the hub&apos;s own debt — it re-evaluates every tick.
+            </div>
+            <div className="dsc-chip-row" style={{ marginTop: 6 }}>
+              {canCancelCatchup ? (
+                <EntityToggle
+                  confirm={{
+                    body:
+                      `Cancel this catch-up? The ${fmtHours(catchupPlan.debtH)} still owed is written off for this cycle only — ` +
+                      `the lamp returns to the normal window and tomorrow's schedule is unchanged. This does not turn the lamp off by itself if the nominal window is open.`,
+                    confirmLabel: "Cancel catch-up",
+                  }}
+                  entityId={cancelEntity}
+                  label="Cancel catch-up"
+                  icon="stopwatch"
+                />
+              ) : (
+                <span className="dsc-muted dsc-catchup-invented">
+                  Cancelling a catch-up needs a hub control that this firmware does not carry yet —
+                  possible after the next hub flash. Turning Auto photoperiod off stops the lamp but
+                  keeps the debt, so it resumes when you turn it back on.
+                </span>
+              )}
+            </div>
+          </div>
         </div>
       ) : null}
 
@@ -407,7 +488,11 @@ export function LiveLightPage() {
               <EntityToggle confirm entityId="switch.dsc_hub_auto_photoperiod" label="Auto photoperiod" icon="lighting" />
               <EntityToggle
                 confirm={{
-                  body: "Manual light hold freezes the SF1000 at its current on/off + brightness and stops the photoperiod schedule (and any active catch-up) from moving it until you clear the hold.",
+                  // The old copy described only what the hold DOES, which left the release
+                  // unexplained — and the release is the surprising half during catch-up.
+                  body:
+                    "Manual light hold freezes the SF1000 at its current on/off + brightness and stops the photoperiod schedule (and any active catch-up) from moving it until you clear the hold." +
+                    (manualHold && catchupPlan ? ` ${holdReleaseWarning(catchupPlan)}` : ""),
                 }}
                 entityId="switch.dsc_hub_manual_light_hold"
                 label="Manual light hold"

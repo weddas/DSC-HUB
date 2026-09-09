@@ -1765,6 +1765,41 @@ switch:
       - globals.set: {id: manual_light_hold, value: 'false'}
       - script.execute: tx_panel_sync
 
+  # ===== Cancel the running light catch-up (operator ask, 2026-09-10) =====
+  # Catch-up repays light DEBT by running the lamp past the nominal window. There was no
+  # way to say "let this one go" short of disabling the whole photoperiod — which kills
+  # tomorrow's schedule AND leaves the debt, so re-enabling just resumes the catch-up.
+  #
+  # This forgives the CURRENT cycle only, by the same "freeze paid" move the 2x4-inactive
+  # path already uses: mark the cycle's target as delivered, so debt_s falls to 0,
+  # catchup_want goes false, and the light lands at the nominal window from here on. The
+  # schedule itself is untouched — tomorrow runs normally.
+  #
+  # Momentary: it is an action, not a state. It publishes itself back off so the SPA never
+  # shows a latched "cancelled" toggle that means nothing once the cycle rolls.
+  - platform: template
+    name: "Light Catchup Cancel"
+    id: light_catchup_cancel_switch
+    icon: "mdi:timer-off-outline"
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+          int dur = id(clone_active) ? id(clone_light_hours) : 0;
+          if (dur > 0) {
+            uint32_t target = (uint32_t) dur * 3600u + id(photo_carry_s);
+            if (id(photo_delivered_s) < target) id(photo_delivered_s) = target;
+          }
+          // Clear the carry too: it is last cycle's unpaid debt folded forward, and
+          // forgiving today while silently keeping yesterday's would surprise the operator
+          // the moment the next cycle started catching up again.
+          id(photo_carry_s) = 0;
+          id(photo_catchup_active) = false;
+          ESP_LOGI("photoperiod", "catch-up cancelled by operator; cycle marked paid");
+      - lambda: 'id(light_catchup_cancel_switch).publish_state(false);'
+      - script.execute: tx_panel_sync
+    turn_off_action:
+      - lambda: 'id(light_catchup_cancel_switch).publish_state(false);'
+
   # ===== v2.3 · MANUAL TAKEOVER — the master "give me the wheel" =====
   # ON  = you drive EVERY output from HA. The device stops driving fans
   #       (local_manual_mode), stops driving the light (manual_light_hold),

@@ -6131,3 +6131,19 @@ button.dsc-metric:focus-visible { outline: 2px solid var(--dsc-teal); outline-of
    letter-spacing lands just inside 44px; nowrap makes a future longer tag overflow visibly
    instead of silently stacking. */
 .dsc-alert-zone--reminder { color: var(--dsc-teal); font-size: 9px; letter-spacing: 0; white-space: nowrap; }
+
+/* ---------------------------------------------- light catch-up disclosure (2026-09-10) */
+/* The hold-release consequence is the one sentence an operator must not skim, so it gets
+   weight inside the override banner rather than sitting as another muted line. */
+.dsc-light-holdwarn { color: var(--dsc-amber); display: block; margin-top: 4px; }
+.dsc-catchup { align-items: flex-start; }
+.dsc-catchup-body { display: grid; gap: 3px; min-width: 0; }
+/* The "possible after a flash" note is deliberately dashed, matching the INVENTED settings
+   rows — an affordance that is honestly absent, never a dead button. */
+.dsc-catchup-invented {
+  font-size: var(--dsc-fs-sm);
+  border: 1px dashed var(--dsc-gray-4);
+  border-radius: var(--dsc-radius-sm);
+  padding: 4px 8px;
+  line-height: 1.45;
+}

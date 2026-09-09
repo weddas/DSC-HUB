@@ -23,6 +23,8 @@ HUB_SWITCH_ENTITY_TO_OID: dict[str, str] = {
     "switch.dsc_hub_auto_photoperiod": "auto_photoperiod",
     # LIGHT-only schedule hold — operator clear via SPA/API (Pass 5).
     "switch.dsc_hub_manual_light_hold": "manual_light_hold_switch",
+    # Momentary: writing ON forgives the current cycle's light debt and ends catch-up.
+    "switch.dsc_hub_light_catchup_cancel": "light_catchup_cancel_switch",
     # Policy switches the brain owns a desired value for (hub_tunables.py).
     "switch.dsc_hub_lock_wifi_ap": "lock_wifi_ap",
     "switch.dsc_hub_mat_vote_pot_1": "mat_vote_pot_1",
@@ -60,6 +62,8 @@ HUB_SWITCH_OID_TO_ENTITY: dict[str, str] = {
     "brain_stage_targets_switch": "switch.dsc_hub_brain_stage_targets",
     "manual_light_hold": "switch.dsc_hub_manual_light_hold",
     "manual_light_hold_switch": "switch.dsc_hub_manual_light_hold",
+    "light_catchup_cancel": "switch.dsc_hub_light_catchup_cancel",
+    "light_catchup_cancel_switch": "switch.dsc_hub_light_catchup_cancel",
     "humidifier_auto": "switch.dsc_hub_humidifier_auto",
     "humidifier_auto_switch": "switch.dsc_hub_humidifier_auto",
     "dehumidifier_auto": "switch.dsc_hub_dehumidifier_auto",

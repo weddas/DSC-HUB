@@ -432,7 +432,11 @@ export function LiveClimatePage() {
             <div className="dsc-mode-row">
               <EntityToggle
                 confirm={{
-                  body: "Full Auto ON hands fans and appliance demand back to the brain. OFF freezes them at their current state until you re-enable it or take manual takeover.",
+                  // arm_full_auto also clears manual_light_hold ("schedule owns the light
+                  // now"), so this toggle can turn the LAMP on — during a catch-up it goes
+                  // straight to target. The old copy mentioned only fans and appliances,
+                  // which pointed the operator away from the thing that would change.
+                  body: "Full Auto ON hands fans and appliance demand back to the brain, and releases any manual light hold — if a photoperiod window or a light catch-up is running, the lamp will come on. OFF freezes fans and appliances at their current state until you re-enable it or take manual takeover.",
                 }}
                 entityId="switch.dsc_hub_tent_full_auto_mode"
                 label="Full Auto"
