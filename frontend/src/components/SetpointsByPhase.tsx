@@ -46,9 +46,14 @@ export function SetpointsByPhase({ zone }: { zone: ZoneModel }) {
       </div>
       {zone.vpd.band && zone.stage ? (
         <p className="dsc-panel-foot">
-          Live want {zone.vpd.band.min.toFixed(1)}–{zone.vpd.band.max.toFixed(1)} kPa
+          <strong>Live band</strong> {zone.vpd.band.min.toFixed(1)}–{zone.vpd.band.max.toFixed(1)} kPa
           {zone.rh.band ? ` · RH ${Math.round(zone.rh.band.min)}–${Math.round(zone.rh.band.max)} %` : ""}
-          {" — "}the stage preset, narrowed by any plant rail. Bands shift when the stage changes · edit Want in Targets.
+          {zone.temp.band ? ` · ${Math.round(zone.temp.band.min)}–${Math.round(zone.temp.band.max)} °C` : ""}
+          {" — "}
+          {zone.wantSource === "plant"
+            ? "the plants' own rail (it can sit outside the preset row above); this is the band every in-band chip and the Overview card use."
+            : "the stage preset above, narrowed by any plant rail; this is the band every in-band chip and the Overview card use."}
+          {" "}The rows above are the stage presets for reference. Edit Want in Targets.
         </p>
       ) : (
         <p className="dsc-panel-foot">No stage preset is set for this zone — pick one in Command, or assign a plant.</p>

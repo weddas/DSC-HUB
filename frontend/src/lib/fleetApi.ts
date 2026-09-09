@@ -1108,10 +1108,36 @@ export async function getSoftCalAdvice(body: {
   return resp.json();
 }
 
+/**
+ * Share one in-flight request between callers that ask for the same URL within a short
+ * window. On load /settings/probe-stations was fetched four times in immediate succession
+ * (Root, Devices, SoilTestWizard, …) and /energy/estimate twice per space with identical
+ * queries; every caller now gets the same promise.
+ */
+const _sharedGets = new Map<string, { at: number; p: Promise<unknown> }>();
+const SHARED_GET_WINDOW_MS = 750;
+
+export function sharedGetJson<T>(url: string, errLabel: string): Promise<T> {
+  const now = Date.now();
+  const hit = _sharedGets.get(url);
+  if (hit && now - hit.at < SHARED_GET_WINDOW_MS) return hit.p as Promise<T>;
+  const p = (async () => {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(formatApiError(await resp.text(), errLabel));
+    return (await resp.json()) as T;
+  })();
+  _sharedGets.set(url, { at: now, p });
+  void p.finally(() => {
+    // Keep the entry only for the dedupe window; never serve a stale body later.
+    window.setTimeout(() => {
+      if (_sharedGets.get(url)?.p === p) _sharedGets.delete(url);
+    }, SHARED_GET_WINDOW_MS);
+  });
+  return p;
+}
+
 export async function getProbeStations(): Promise<ProbeStation[]> {
-  const resp = await fetch("/settings/probe-stations");
-  if (!resp.ok) throw new Error("probe stations fetch failed");
-  const data = (await resp.json()) as { stations?: ProbeStation[] };
+  const data = await sharedGetJson<{ stations?: ProbeStation[] }>("/settings/probe-stations", "probe stations fetch failed");
   return data.stations ?? [];
 }
 
@@ -1392,9 +1418,7 @@ export async function getEnergyEstimate(
     lights_on: lightsOn,
     want_hours: String(wantHours),
   });
-  const resp = await fetch(`/energy/estimate?${q}`);
-  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "energy estimate failed"));
-  return resp.json();
+  return sharedGetJson<EnergyEstimate>(`/energy/estimate?${q}`, "energy estimate failed");
 }
 
 export type EnergySuggestion = {

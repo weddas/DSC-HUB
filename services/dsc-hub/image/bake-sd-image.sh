@@ -61,6 +61,36 @@ chmod +x "${MNT}/opt/dsc-hub/pi/"*.sh 2>/dev/null || true
 
 echo "dsc-brain" > "${MNT}/etc/hostname"
 
+# Network + time hardening, baked in so a fresh card never repeats 2026-09-06/09:
+#  * dhcpcd's resolv.conf hook emptied /etc/resolv.conf on renewals (the IPv4 lease carries
+#    no DNS) — NTP, pypi and github all died with it. Resolver is static; hook disabled.
+#  * dhcpcd solicited leases on docker's veth* and took the eth0 default route with them.
+#  * systemd-timesyncd's default pool needed the resolver that had just been emptied, so the
+#    Pi ran 7 min slow, the hub's SNTP had no source, clock_valid went false and the 4x8
+#    photoperiod window closed early. Numeric servers cannot be broken by a resolver.
+# Mirrors services/dsc-hub/pi/bring-up-eth0.sh, which applies the same on a live host.
+mkdir -p "${MNT}/etc/systemd/timesyncd.conf.d"
+cat > "${MNT}/etc/systemd/timesyncd.conf.d/dsc-hub.conf" <<'EOF'
+# DSC-HUB: numeric NTP so a dead resolver cannot stop time sync (baked; see bring-up-eth0.sh).
+[Time]
+NTP=162.159.200.1 162.159.200.123 216.239.35.0 216.239.35.4
+FallbackNTP=time.cloudflare.com time.google.com
+EOF
+if [[ -f "${MNT}/etc/dhcpcd.conf" ]] && ! grep -q '^nohook resolv.conf' "${MNT}/etc/dhcpcd.conf"; then
+  cat >> "${MNT}/etc/dhcpcd.conf" <<'EOF'
+
+# DSC-HUB (baked): the resolver is static and container interfaces are never managed.
+nohook resolv.conf
+denyinterfaces veth* docker0 br-*
+EOF
+fi
+rm -f "${MNT}/etc/resolv.conf"
+cat > "${MNT}/etc/resolv.conf" <<'EOF'
+# DSC-HUB static resolver (baked; dhcpcd nohook resolv.conf). bring-up-eth0.sh adds the LAN router on a live host.
+nameserver 1.1.1.1
+nameserver 8.8.8.8
+EOF
+
 mkdir -p "${MNT}/etc/systemd/system/multi-user.target.wants"
 ln -sfn /etc/systemd/system/dsc-hub-net-policy.service \
   "${MNT}/etc/systemd/system/multi-user.target.wants/dsc-hub-net-policy.service"

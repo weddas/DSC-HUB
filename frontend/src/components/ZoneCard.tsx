@@ -37,7 +37,12 @@ function wantText(z: ZoneModel): string | null {
   const rh = z.rh.band ? `${Math.round(z.rh.band.min)}–${Math.round(z.rh.band.max)}` : null;
   const vpd = z.vpd.band ? `${z.vpd.band.min.toFixed(1)}–${z.vpd.band.max.toFixed(1)}` : null;
   const parts = [t, rh, vpd].filter(Boolean);
-  return parts.length ? `WANT ${parts.join(" · ")}` : null;
+  if (!parts.length) return null;
+  // Name the basis. Overview and Climate both said "Want" while showing different numbers —
+  // this card carries the LIVE band (the plants' catalog/stage rail, temp as its midpoint);
+  // Climate's setpoint table lists the stage PRESETS as a reference.
+  const basis = z.wantSource === "plant" ? "PLANT BAND" : z.wantSource === "stage" ? "STAGE BAND" : "WANT";
+  return `${basis} ${parts.join(" · ")}`;
 }
 
 function lampTag(z: ZoneModel): { label: string; tone: "lamp" | "muted"; dashed: boolean; title: string } | null {
@@ -131,7 +136,20 @@ export function ZoneCard({
             onClick={() => navigate(paths.light({ zone: tent }))}
           />
         ) : null}
-        {want ? <StatusTag icon="target-goal" label={want} tone="muted" title={nonGrow ? "Want band from the role preset" : "Want band from the plant rail / stage preset"} /> : null}
+        {want ? (
+          <StatusTag
+            icon="target-goal"
+            label={want}
+            tone="muted"
+            title={
+              nonGrow
+                ? "Live band from the role preset"
+                : zone.wantSource === "plant"
+                  ? "Live band from the plants' own rail (catalog / stage defaults per probe) — temperature shown as the band midpoint. This is the band the in-band chips use. Climate › Setpoints by phase lists the stage presets for reference."
+                  : "Live band from the stage preset (no plant rail) — temperature shown as the band midpoint. This is the band the in-band chips use."
+            }
+          />
+        ) : null}
         {zone.appliances.map((a) => (
           <StatusTag
             key={a.id}

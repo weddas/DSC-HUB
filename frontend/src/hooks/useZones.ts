@@ -83,6 +83,8 @@ export interface ZoneModel {
   roleSince: number | null;
   stage: string | null;
   stageShort: string | null;
+  /** Where the live climate band came from: the plants' own rail or the stage preset. */
+  wantSource: "plant" | "stage" | null;
   /** Hub grow_stage select vs the plants' expected stage, when the brain says they disagree. */
   stageConflict: { hub: string; plant: string; phaseMismatch: boolean } | null;
   phase: PhaseKey | null;
@@ -384,6 +386,7 @@ export function useZones(): { main: ZoneModel; clone: ZoneModel; room: ZoneModel
         roleSince: meta?.role_since ?? null,
         stage: role === "grow" ? stage : role === "dry" ? "Dry Mode" : null,
         stageShort: role === "grow" ? (stageRail?.short ?? stage) : role.toUpperCase(),
+        wantSource: rail.temp?.source ?? rail.rh?.source ?? rail.vpd?.source ?? null,
         stageConflict: (() => {
           if (tent !== "main" || role !== "grow") return null;
           const e = entity("binary_sensor.dsc_stage_disagreement");
@@ -438,6 +441,7 @@ export function useZones(): { main: ZoneModel; clone: ZoneModel; room: ZoneModel
       roleSince: null,
       stage: null,
       stageShort: null,
+      wantSource: null,
       stageConflict: null,
       phase: null,
       day: null,
