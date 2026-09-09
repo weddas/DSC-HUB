@@ -10,7 +10,10 @@ Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=/opt/dsc-hub
 ExecStart=/usr/bin/docker compose --env-file /opt/dsc-hub/.env up -d --remove-orphans
-ExecStop=/usr/bin/docker compose --env-file /opt/dsc-hub/.env down
+# `stop`, never `down`: `down` REMOVES the containers, so every docker restart / shutdown
+# destroyed brain, z2m and mosquitto (live 2026-09-09 — dockerd then failed to start and
+# the kit sat with no brain, MQTT or Zigbee until the stack was recreated by hand).
+ExecStop=/usr/bin/docker compose --env-file /opt/dsc-hub/.env stop
 TimeoutStartSec=300
 
 [Install]
