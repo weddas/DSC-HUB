@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "gen:entities": "python ../brain/scripts/gen_entity_maps.py",
+    "gen:entities:check": "python ../brain/scripts/gen_entity_maps.py --check",
     "build": "vite build",
     "build:spa": "vite build",
     "preview": "vite preview",

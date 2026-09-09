@@ -16,6 +16,7 @@
 
 ## Learned Workspace Facts
 
+- The shared HA-shaped entity-id tables have ONE source of truth: `brain/dsc_brain/entity_tables.py`. The SPA's copies in `frontend/src/lib/generated/*.gen.ts` are emitted by `brain/scripts/gen_entity_maps.py` (`npm run gen:entities` in `frontend/`) — never hand-edit a `.gen.ts`. `brain/tests/test_entity_maps_generated.py` runs the generator in `--check` mode, so a one-sided rename fails pytest instead of silently blanking a dial (and stopping actuation) on the Pi.
 - Product path is Pi-only: ESPHome hub/panel/probes plus Pi DSC-Brain (SPA on `:8787` under `frontend/`; catalogs in `data/`); Home Assistant lab (packages/HACS/Sync/`homeassistant/`) was retired 2026-09 — do not revive; keep HA-shaped entity/`call_service` dialect on the brain only. Release direction is a single SD-card Pi image with full first-boot kit setup; ESP/Sonoff firmware via USB plug-into-Pi flash wizard in the SPA during onboarding.
 - Live kit probes are 1–2 (`KIT_PROBE_NUMBERS`); pot3/4 are retired from the kit (Device inventory / Advanced restore only); F-001 AC relay and F-002 clone mister are on hold indefinitely (honest OOS UI stays — not version gates or pending install work).
 - Domain model is probe · plant · assignment: `assigned_plant_id` (roster | None) is separate from `idle_home` (Soil Test dock). Roster has 10 slots; retire/delete by slot number, not probe-only — stock and detached must be deletable.

@@ -2,6 +2,7 @@ import { parseBlendLayers, type SoilLayer } from "../components/chrome";
 import type { FleetSnapshot } from "./fleetModel";
 import { inventoryInService } from "./fleetModel";
 import { fmtReading } from "./formatReading";
+import { ALL_PROBE_NUMBERS, KIT_PROBE_NUMBERS } from "./generated/kitProbes.gen";
 
 export { fmtReading } from "./formatReading";
 
@@ -190,11 +191,11 @@ export function probesInTent(
     .filter((s) => s.tent === tent && s.plantName !== "—" && s.plantName.trim() !== "");
 }
 
-/** Full entity universe (Device restore / maps). Not the Live kit. */
-export const ALL_PROBE_NUMBERS = [1, 2, 3, 4] as const;
-
-/** Operator kit — Live Root, honesty, Fleet pulse, idle-home defaults. */
-export const KIT_PROBE_NUMBERS = [1, 2] as const;
+// Probe number sets are GENERATED from brain/dsc_brain/entity_tables.py
+// (KIT_DEFS's probe rows expand from KIT_PROBE_NUMBERS there, so the two
+// cannot be allowed to drift). Edit the Python table, then run
+// `npm run gen:entities`.
+export { ALL_PROBE_NUMBERS, KIT_PROBE_NUMBERS };
 
 export function probeLabel(n: number): string {
   return `Probe ${n}`;

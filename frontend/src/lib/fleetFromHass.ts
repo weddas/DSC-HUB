@@ -2,23 +2,9 @@ import type { HassEntity } from "../vite-env";
 import type { FleetSnapshot } from "./fleetModel";
 import { inventoryInService } from "./fleetModel";
 import { ENTITY_FLEET_MAP } from "./entityFleetMap";
-
-const IN_SERVICE_ENTITIES: Record<string, string> = {
-  ac: "input_boolean.dsc_ac_in_service",
-  mister: "input_boolean.dsc_clone_humidifier_in_service",
-  pot1: "input_boolean.dsc_probe1_in_service",
-  pot2: "input_boolean.dsc_probe2_in_service",
-  pot3: "input_boolean.dsc_probe3_in_service",
-  pot4: "input_boolean.dsc_probe4_in_service",
-  tank: "input_boolean.dsc_tank_in_service",
-};
-
-const SONOFF_FW: Record<string, string> = {
-  heater: "sensor.dsc_heater_firmware_version",
-  heatmat: "sensor.dsc_heatmat_firmware_version",
-  humidifier: "sensor.dsc_humidifier_firmware_version",
-  dehumidifier: "sensor.dsc_dehumidifier_firmware_version",
-};
+// Seat → entity tables are GENERATED from brain/dsc_brain/entity_tables.py.
+// Rename ids there, then run `npm run gen:entities`.
+import { IN_SERVICE_ENTITIES, SONOFF_FW, SONOFF_RELAY } from "./generated/fleetEntities.gen";
 
 /** Minimal hass shim for components not yet migrated (history, helpers). */
 export function fleetToHassCompat(fleet: FleetSnapshot): Record<string, HassEntity> {
@@ -174,13 +160,7 @@ export function fleetToHassCompat(fleet: FleetSnapshot): Record<string, HassEnti
   }
 
   for (const [id, seat] of Object.entries(fleet.sonoffs)) {
-    const relayMap: Record<string, string> = {
-      heater: "switch.dsc_heater_main_relay",
-      heatmat: "switch.dsc_heatmat_main_relay",
-      humidifier: "switch.dsc_humidifier_main_relay",
-      dehumidifier: "switch.dsc_de_humidifier_main_relay",
-    };
-    const relay = relayMap[id];
+    const relay = SONOFF_RELAY[id];
     if (relay && seat.values.relay_on != null) {
       set(relay, seat.values.relay_on ? "on" : "off", seat.online);
     }
