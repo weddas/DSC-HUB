@@ -1212,6 +1212,95 @@ def journals_export_zip(kinds: str = Query("")) -> Response:
     return Response(content=body, media_type="application/zip", headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
 
+# ------------------------------------------------------------------- journal reminders
+# Pass S6. Cadence reminders anchored to the JOURNAL, not to a clock: logging a watering is
+# what moves the next due date. Nothing here actuates — a due reminder is a card, never a
+# command to the hub.
+
+
+class ReminderBody(BaseModel):
+    scope_kind: str = "plant"
+    scope_id: str = ""
+    action: str = "water"
+    every_days: float = 3.0
+    label: str = ""
+    anchor_ts: float | None = None
+
+
+class ReminderPatch(BaseModel):
+    every_days: float | None = None
+    action: str | None = None
+    label: str | None = None
+    enabled: bool | None = None
+    anchor_ts: float | None = None
+
+
+@app.get("/reminders")
+def reminders_list(
+    scope_kind: str | None = Query(None),
+    scope_id: str | None = Query(None),
+) -> dict[str, Any]:
+    from .journal_reminders import REMINDABLE_ACTIONS, list_reminders
+
+    rows = list_reminders(scope_kind=scope_kind, scope_id=scope_id)
+    return {
+        "reminders": rows,
+        "due": [r for r in rows if r["due"]],
+        "actions": list(REMINDABLE_ACTIONS),
+    }
+
+
+@app.post("/reminders")
+def reminders_create(body: ReminderBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .journal_reminders import create_reminder
+
+    try:
+        return {"reminder": create_reminder(
+            body.scope_kind, body.scope_id, body.action, body.every_days,
+            label=body.label, anchor_ts=body.anchor_ts,
+        )}
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.patch("/reminders/{reminder_id}")
+def reminders_patch(reminder_id: int, body: ReminderPatch) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .journal_reminders import update_reminder
+
+    patch = {k: v for k, v in body.model_dump().items() if v is not None}
+    try:
+        return {"reminder": update_reminder(reminder_id, patch)}
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.post("/reminders/{reminder_id}/snooze")
+def reminders_snooze(reminder_id: int, hours: float = Query(24.0)) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .journal_reminders import snooze_reminder
+
+    try:
+        return {"reminder": snooze_reminder(reminder_id, hours)}
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.delete("/reminders/{reminder_id}")
+def reminders_delete(reminder_id: int) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .journal_reminders import delete_reminder
+
+    if not delete_reminder(reminder_id):
+        raise HTTPException(404, "no such reminder")
+    return {"ok": True}
+
+
 # ---------------------------------------------------------------- journal actions + media
 # Pass S6. Actions give an entry a TYPE and typed fields so the journal can be counted and
 # charted; media gives it a photo, which is the one thing the kit cannot record for itself.
@@ -3115,7 +3204,8 @@ _ASSET_EXTS = (
 _API_FIRST_SEGMENTS = frozenset(
     {
         "admin", "ai", "api", "cameras", "catalogs", "control", "decision", "energy",
-        "fleet", "grow-log", "health", "history", "journal", "journals", "learning", "rooms",
+        "fleet", "grow-log", "health", "history", "journal", "journals", "learning",
+        "reminders", "rooms",
         "roster", "settings", "setup", "soft-cal", "soil-tests", "spaces", "system", "v1",
         "want", "ws", "zones",
     }

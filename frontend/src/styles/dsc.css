@@ -6122,3 +6122,12 @@ button.dsc-metric:focus-visible { outline: 2px solid var(--dsc-teal); outline-of
   border: 1px solid var(--dsc-gray-3);
   display: block;
 }
+
+/* Reminder cards share the Alerts desk but are advisory, not hub conditions — a cooler
+   edge so they read as "you asked for this" rather than "the kit is unhappy". */
+.dsc-alert-card.is-reminder { border-left-color: var(--dsc-teal); }
+/* The zone track is 44px (36px on mobile) and REMINDER is eight characters, so it has to
+   be sized to fit rather than left to wrap into "REMIND / ER". 9px mono with no extra
+   letter-spacing lands just inside 44px; nowrap makes a future longer tag overflow visibly
+   instead of silently stacking. */
+.dsc-alert-zone--reminder { color: var(--dsc-teal); font-size: 9px; letter-spacing: 0; white-space: nowrap; }

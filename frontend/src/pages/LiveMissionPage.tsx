@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAlertPrefs } from "../hooks/useAlertPrefs";
 import { useNavigate } from "react-router-dom";
 import { Button, Icon, StatusTag } from "../components/ui";
@@ -15,6 +15,7 @@ import { useSettledAvailability } from "../hooks/useSettledAvailability";
 import { useAlertSnooze } from "../hooks/useAlertSnooze";
 import { useAlertSince } from "../hooks/useAlertSince";
 import { fmtDurationMs } from "../lib/formatDuration";
+import { fetchReminders, reminderLateBy, reminderSince, snoozeReminder, type Reminder } from "../lib/remindersApi";
 import { ALERT_ENTITY_IDS, alertRoute, playbookFor } from "../lib/alertPlaybook";
 import { growLogSeverity, type DisplayGrowLogEvent } from "../lib/growLogFilter";
 import {
@@ -112,6 +113,20 @@ export function LiveMissionPage() {
   const snoozedIds = ALERT_ENTITY_IDS.filter((id) => state(id) === "on" && isSnoozed(id) && alertPrefs.isEnabled(id));
   const disabledActive = ALERT_ENTITY_IDS.filter((id) => state(id) === "on" && !alertPrefs.isEnabled(id)).length;
   const sinceOf = useAlertSince(activeIds);
+
+  // Pass S6 — cadence reminders share this desk rather than opening a second inbox. They
+  // are advisory only: nothing here is sent to the hub, and snoozing moves the card without
+  // touching the cadence (only logging the entry does that).
+  const [dueReminders, setDueReminders] = useState<Reminder[]>([]);
+  const loadReminders = useCallback(() => {
+    fetchReminders()
+      .then((r) => setDueReminders(r.due))
+      // A brain that predates reminders (or is briefly down) must not blank the Alerts desk.
+      .catch(() => setDueReminders([]));
+  }, []);
+  useEffect(() => {
+    loadReminders();
+  }, [loadReminders]);
 
   // Rules — read-only view of automation v2 with an enabled toggle; the editor stays in Settings.
   const [rules, setRules] = useState<AutomationRule[] | null>(null);
@@ -222,13 +237,53 @@ export function LiveMissionPage() {
       </header>
 
       <div className="dsc-alerts-grid">
-        <Panel legendIcon="bell" legend={`ACTIVE NOW · ${activeIds.length}`} tone={activeIds.length ? "bad" : "ok"} live={activeIds.length > 0}>
-          {activeIds.length === 0 ? (
+        <Panel legendIcon="bell" legend={`ACTIVE NOW · ${activeIds.length + dueReminders.length}`} tone={activeIds.length ? "bad" : dueReminders.length ? "warn" : "ok"} live={activeIds.length > 0}>
+          {activeIds.length === 0 && dueReminders.length === 0 ? (
             <p className="dsc-alerts-empty">
               Nothing active. {snoozedIds.length ? `${snoozedIds.length} acknowledged until the next hub boot.` : "The hub has nothing to say."}
             </p>
           ) : (
             <div className="dsc-alert-list">
+              {dueReminders.map((r) => (
+                <article key={`reminder-${r.id}`} className="dsc-alert-card is-reminder">
+                  {/* The zone column is a narrow fixed grid track sized for short words
+                      ("4x8", "WARN"). Stacking a scope AND an 8-character REMINDER chip in
+                      it made the chip bleed over the title. The tag alone lives here; the
+                      scope moves to the detail line, which has room. */}
+                  <span className="dsc-alert-zone dsc-alert-zone--reminder">REMINDER</span>
+                  <div className="dsc-alert-body">
+                    <div className="dsc-alert-title">
+                      {r.label || `${r.action.charAt(0).toUpperCase()}${r.action.slice(1)}`} · every {r.every_days}
+                      {r.every_days === 1 ? " day" : " days"}
+                    </div>
+                    <div className="dsc-alert-did">{r.scope_id} · {reminderSince(r)}</div>
+                    {/* Say plainly that this is a note to self, not something the kit did or
+                        will do — the other cards on this desk describe hub behaviour. */}
+                    <div className="dsc-alert-fix">
+                      You asked to be reminded. Nothing is automated — log the entry when you have done it
+                      and the next one moves out by itself.
+                    </div>
+                  </div>
+                  <div className="dsc-alert-side">
+                    <span className="dsc-alert-since">{reminderLateBy(r)}</span>
+                    <button
+                      type="button"
+                      className="dsc-alert-cta"
+                      onClick={() => navigate(r.scope_kind === "plant" ? `/logs?kind=plant&id=${encodeURIComponent(r.scope_id)}` : `/logs?kind=space&id=${encodeURIComponent(r.scope_id)}`)}
+                    >
+                      LOG IT →
+                    </button>
+                    <button
+                      type="button"
+                      className="dsc-alert-ack"
+                      onClick={() => void snoozeReminder(r.id, 24).then(loadReminders).catch(() => undefined)}
+                      title="Hide for a day — the cadence is untouched, and this does NOT count as done"
+                    >
+                      <Icon name="snooze" size={11} /> snooze 24 h
+                    </button>
+                  </div>
+                </article>
+              ))}
               {activeIds.map((id) => {
                 const pb = playbookFor(id, "alert");
                 const route = alertRoute(id);
