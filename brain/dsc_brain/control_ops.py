@@ -193,7 +193,7 @@ async def _hub_switch(entity_id: str, on: bool) -> dict[str, Any]:
             # see on/off even when hub poll lags or resets the live control.
             if entity_id == _MANUAL_TAKEOVER_EID:
                 set_helper(entity_id, state)
-            return {"entity_id": entity_id, "state": state}
+            return {"confirmed": False, "confirm_via": "/fleet hub.values.controls on the next poll", "entity_id": entity_id, "state": state}
         finally:
             try:
                 await client.disconnect()
@@ -223,7 +223,7 @@ async def _hub_in_service_switch(seat_id: str, on: bool) -> dict[str, Any]:
             await client.connect(login=True)
             client.switch_command(key, on)
             entity_id = HUB_SWITCH_OID_TO_ENTITY.get(oid, f"switch.dsc_hub_{oid}")
-            return {"entity_id": entity_id, "state": "on" if on else "off"}
+            return {"confirmed": False, "confirm_via": "/fleet hub.values.controls on the next poll", "entity_id": entity_id, "state": "on" if on else "off"}
         finally:
             try:
                 await client.disconnect()
@@ -267,7 +267,7 @@ async def _sonoff_switch(entity_id: str, on: bool) -> dict[str, Any]:
             from . import appliance_driver as _driver
 
             _driver._relay_commanded[seat_id] = on
-            return {"entity_id": entity_id, "state": "on" if on else "off"}
+            return {"confirmed": False, "confirm_via": "/fleet hub.values.controls on the next poll", "entity_id": entity_id, "state": "on" if on else "off"}
         finally:
             try:
                 await client.disconnect()
@@ -295,7 +295,7 @@ async def _hub_number(entity_id: str, value: float) -> dict[str, Any]:
         try:
             await client.connect(login=True)
             client.number_command(key, value)
-            return {"entity_id": entity_id, "state": str(value)}
+            return {"confirmed": False, "confirm_via": "/fleet hub.values.controls on the next poll", "entity_id": entity_id, "state": str(value)}
         finally:
             try:
                 await client.disconnect()
@@ -318,6 +318,9 @@ def _parse_hhmmss(raw: str) -> tuple[int, int, int]:
     return hour, minute, second
 
 
+# Every _hub_* / _sonoff_switch response below carries confirmed=False: it echoes the
+# value that was COMMANDED, not a read-back. /control/service returned the requested value
+# immediately while /fleet kept the old one for 30–70 s, which read as "applied".
 async def _hub_time(entity_id: str, raw: str) -> dict[str, Any]:
     """Write an ESPHome `datetime` (type: time) entity on the hub.
 
@@ -352,7 +355,7 @@ async def _hub_time(entity_id: str, raw: str) -> dict[str, Any]:
         try:
             await client.connect(login=True)
             client.time_command(key, hour, minute, second)
-            return {"entity_id": entity_id, "state": f"{hour:02d}:{minute:02d}:{second:02d}"}
+            return {"confirmed": False, "confirm_via": "/fleet hub.values.controls on the next poll", "entity_id": entity_id, "state": f"{hour:02d}:{minute:02d}:{second:02d}"}
         finally:
             try:
                 await client.disconnect()
@@ -381,7 +384,7 @@ async def _hub_fan(entity_id: str, percentage: int) -> dict[str, Any]:
         try:
             await client.connect(login=True)
             client.fan_command(key, state=pct > 0, speed_level=pct)
-            return {"entity_id": entity_id, "state": "on" if pct > 0 else "off", "percentage": pct}
+            return {"confirmed": False, "confirm_via": "/fleet hub.values.controls on the next poll", "entity_id": entity_id, "state": "on" if pct > 0 else "off", "percentage": pct}
         finally:
             try:
                 await client.disconnect()
@@ -420,10 +423,10 @@ async def _hub_light(entity_id: str, on: bool, brightness: int | None = None) ->
                 }
             if on:
                 client.light_command(key, state=True)
-                return {"entity_id": entity_id, "state": "on"}
+                return {"confirmed": False, "confirm_via": "/fleet hub.values.controls on the next poll", "entity_id": entity_id, "state": "on"}
             # Explicit brightness=0 helps monochromatic PWM clear sticky ON.
             client.light_command(key, state=False, brightness=0.0)
-            return {"entity_id": entity_id, "state": "off", "brightness": 0}
+            return {"confirmed": False, "confirm_via": "/fleet hub.values.controls on the next poll", "entity_id": entity_id, "state": "off", "brightness": 0}
         finally:
             try:
                 await client.disconnect()
@@ -451,7 +454,7 @@ async def _hub_select(entity_id: str, option: str) -> dict[str, Any]:
         try:
             await client.connect(login=True)
             client.select_command(key, option)
-            return {"entity_id": entity_id, "state": option}
+            return {"confirmed": False, "confirm_via": "/fleet hub.values.controls on the next poll", "entity_id": entity_id, "state": option}
         finally:
             try:
                 await client.disconnect()

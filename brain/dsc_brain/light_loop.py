@@ -136,6 +136,15 @@ def build_light_loop(*, helpers: dict, hub_values: dict, now_ts: float) -> Light
         main_on_time = _normalize_clock_time(helpers.get("datetime.dsc_hub_lights_on_time"))
     raw_source = helpers.get("_lights_on_source")
     main_on_source = raw_source if raw_source in ("hub", "brain") else None
+    # A stored value that was present but rejected (e.g. the datetime helper stuck on a
+    # YYYY-MM-DD) used to vanish silently. Keep the rejection visible.
+    rejected_anchor: str | None = None
+    if main_on_time is None:
+        for key in ("time.dsc_hub_lights_on_time", "datetime.dsc_hub_lights_on_time"):
+            raw = helpers.get(key)
+            if raw not in (None, "") and str(raw).strip().lower() not in ("unavailable", "unknown", "none"):
+                rejected_anchor = f"{key}={raw!r} is not HH:MM"
+                break
 
     photoperiod = _helper_str(
         helpers,
@@ -176,7 +185,7 @@ def build_light_loop(*, helpers: dict, hub_values: dict, now_ts: float) -> Light
 
     if follows_main and main_on_time is None:
         schedule_valid = False
-        honesty = "no schedule: main on-time unset"
+        honesty = f"no schedule: main on-time unset ({rejected_anchor})" if rejected_anchor else "no schedule: main on-time unset"
     else:
         schedule_valid = True
         # "ok" only when the anchor was read back from the device. A brain-stored helper is
@@ -244,6 +253,11 @@ def emit_light_loop(states: dict, snapshot: LightLoopSnapshot, set_entity: SetEn
                 attrs_4x8["honesty"] = (
                     "got via photoperiod window (Twin unavailable or history unhealthy)"
                 )
+            elif snapshot.got_hours_4x8_source == "twin":
+                # Derived from the Twin SF1000's on-time as the hub sees it — not a lux
+                # or PAR measurement. Lamps run from a plug the hub cannot see are invisible
+                # here, so this was ~8 h wrong on 2026-09-08 while stamped "ok".
+                attrs_4x8["honesty"] = "derived from Twin SF1000 on-time via the hub — lamps the hub cannot see are not counted"
         set_entity(
             states,
             "sensor.dsc_lights_on_today_4x8",

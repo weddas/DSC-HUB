@@ -109,6 +109,8 @@ DEFAULT_SETTINGS: dict[str, str] = {
     # fleet_history grows ~1 row per numeric metric per seat per poll (~2s).
     # Rows older than this are pruned (best-effort, throttled). 0 disables.
     "fleet_history_retention_days": "45",
+    # Manual irrigation shot length (s) for Root › Shots; irrigact caps it.
+    "irrigation_shot_s": "2",
 }
 
 
@@ -451,6 +453,15 @@ def list_history_bucketed(
 
 
 _LAST_RECORDED: dict[tuple[str, str], tuple[float, float]] = {}
+
+
+def history_has_rows(seat_id: str, metric: str, db_path: Path | None = None) -> bool:
+    conn = connect(db_path)
+    row = conn.execute(
+        "SELECT 1 FROM fleet_history WHERE seat_id=? AND metric=? LIMIT 1", (seat_id, metric)
+    ).fetchone()
+    conn.close()
+    return row is not None
 
 
 def record_history_throttled(

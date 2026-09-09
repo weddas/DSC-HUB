@@ -76,7 +76,7 @@ export function LiveRootPage() {
     setShotBusy(n);
     setShotMsg(null);
     try {
-      const res = await post_irrigation_shot(`pot${n}`, 2);
+      const res = await post_irrigation_shot(`pot${n}`); // length is the brain's irrigation_shot_s setting
       setShotMsg(res.ok ? `Shot sent to ${probeLabel(n)} · 2 s.` : `Shot withheld: ${res.detail ?? "no pump bound"}`);
     } catch (e) {
       setShotMsg(e instanceof Error ? e.message : "shot failed");

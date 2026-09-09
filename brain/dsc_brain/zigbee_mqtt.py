@@ -352,8 +352,33 @@ def _legacy_label_to_zone(label: str) -> str:
     return "shared"
 
 
+_BINDINGS_CACHE: tuple[float, dict[str, dict[str, Any]]] | None = None
+_BINDINGS_TTL_S = 30.0
+
+
+def cached_zigbee_bindings() -> dict[str, dict[str, Any]]:
+    """load_zigbee_bindings() memoised for the MQTT hot path.
+
+    _on_message did a settings-DB read per device report (dozens a minute); bindings only
+    change through save_zigbee_bindings (which invalidates this) or a profile import /
+    factory reset, which the TTL covers.
+    """
+    global _BINDINGS_CACHE
+    now = time.time()
+    if _BINDINGS_CACHE is not None and now - _BINDINGS_CACHE[0] < _BINDINGS_TTL_S:
+        return _BINDINGS_CACHE[1]
+    out = load_zigbee_bindings()
+    _BINDINGS_CACHE = (now, out)
+    return out
+
+
+def invalidate_bindings_cache() -> None:
+    global _BINDINGS_CACHE
+    _BINDINGS_CACHE = None
+
+
 def load_zigbee_bindings() -> dict[str, dict[str, Any]]:
-    """ieee → binding dict."""
+    """ieee → binding dict (always from the settings DB; see cached_zigbee_bindings)."""
     out: dict[str, dict[str, Any]] = {}
     raw = get_setting("zigbee_device_bindings", "")
     if raw:
@@ -394,6 +419,7 @@ def save_zigbee_bindings(bindings: dict[str, Any]) -> dict[str, dict[str, Any]]:
     Immediately re-routes cached MQTT device states into by_role / canopy so
     Climate/Overview update on Save without waiting for the next payload.
     """
+    invalidate_bindings_cache()
     cleaned: dict[str, dict[str, Any]] = {}
     if not isinstance(bindings, dict):
         raise ValueError("bindings must be an object keyed by ieee")
@@ -819,7 +845,7 @@ class ZigbeeMqttIngest:
             fleet_state.system["zigbee_device_states"] = dict(self._device_states)
             stamp_role_buckets(fleet_state)
             fleet_state.system["zigbee_placements"] = _placement_map()
-            fleet_state.system["zigbee_device_bindings"] = load_zigbee_bindings()
+            fleet_state.system["zigbee_device_bindings"] = cached_zigbee_bindings()
             update_fleet_state(fleet_state)
 
         # Universal device→task path (any ieee with a recipe)

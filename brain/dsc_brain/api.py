@@ -757,7 +757,17 @@ def control_irrigation_shot(body: dict[str, Any] | None = None) -> dict[str, Any
 
     b = body or {}
     pot_id = str(b.get("pot_id") or "")
-    duration_s = float(b.get("duration_s") or 2.0)
+    # An actuator parameter belongs to the brain (tier N, capped in irrigact), not to a
+    # constant in the Root desk. A caller may still pass an explicit duration.
+    if b.get("duration_s") is not None:
+        duration_s = float(b["duration_s"])
+    else:
+        from .settings import get_setting
+
+        try:
+            duration_s = float(get_setting("irrigation_shot_s", "2") or 2.0)
+        except (TypeError, ValueError):
+            duration_s = 2.0
     return irrigation_shot(pot_id=pot_id, duration_s=duration_s)
 
 @app.get("/fleet/computed")
@@ -1365,9 +1375,20 @@ def history_get(
             "GET /history requested for unmapped entity_id=%s — not in ENTITY_METRIC_MAP", entity_id
         )
     points = query_entity_history(entity_id, hours, max_points=max_points)
-    # Distinguishes "recorder never heard of this entity" from "tracked but genuinely
-    # empty in range" — both otherwise looked identical as points: [].
-    return {"entity_id": entity_id, "hours": hours, "max_points": max_points, "points": points, "tracked": tracked}
+    # Three states, not two: unmapped (tracked False), mapped but never written (recorded
+    # False), and recorded but empty in this range. Collapsing the middle one into
+    # "tracked" made a never-recorded channel look healthy.
+    from .history_ops import is_recorded
+
+    recorded = bool(points) or (tracked and is_recorded(entity_id))
+    return {
+        "entity_id": entity_id,
+        "hours": hours,
+        "max_points": max_points,
+        "points": points,
+        "tracked": tracked,
+        "recorded": recorded,
+    }
 
 
 @app.get("/grow-log")

@@ -101,6 +101,10 @@ HUB_VALUE_KEYS: frozenset[str] = frozenset(
 COMPUTED_SEAT = "computed"
 
 
+# Binaries a pot node publishes itself (esphome_client POT_BINARY_OID_TO_KEY values).
+POT_DEVICE_BINARIES = frozenset({"sensor_fault", "modbus_probe_online", "clock_valid"})
+
+
 def resolve_entity_metric(entity_id: str) -> tuple[str, str] | None:
     """entity_id → (seat_id, metric), or None when the recorder has no such series.
 
@@ -128,6 +132,12 @@ def resolve_entity_metric(entity_id: str) -> tuple[str, str] | None:
         n, _, rest = obj[9:].partition("_")
         if n.isdigit() and rest:
             return (f"pot{n}", rest)
+    # Device-published probe binaries (recorded per seat as bin_<key>); computed trust
+    # flags (sensor_stuck, untrusted) stay with the computed seat below.
+    if domain == "binary_sensor" and obj.startswith("dsc_probe") and "_" in obj[9:]:
+        n, _, rest = obj[9:].partition("_")
+        if n.isdigit() and rest in POT_DEVICE_BINARIES:
+            return (f"pot{n}", f"bin_{rest}")
     if domain in ("sensor", "binary_sensor") and obj.startswith("dsc_"):
         return (COMPUTED_SEAT, eid)
     return None
@@ -135,6 +145,20 @@ def resolve_entity_metric(entity_id: str) -> tuple[str, str] | None:
 
 def is_tracked(entity_id: str) -> bool:
     return resolve_entity_metric(entity_id) is not None
+
+
+def is_recorded(entity_id: str) -> bool:
+    """True when at least one sample has ever been written for this entity's series.
+
+    `tracked` only says the recorder knows the name; the probe fault binaries were
+    tracked:True for weeks with zero rows, which read as "healthy and recorded".
+    """
+    src = resolve_entity_metric(entity_id)
+    if src is None:
+        return False
+    from .settings import history_has_rows
+
+    return history_has_rows(src[0], src[1])
 
 
 def query_entity_history(

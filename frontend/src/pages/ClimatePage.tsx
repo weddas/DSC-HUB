@@ -652,6 +652,19 @@ export function LiveClimatePage() {
                     tone={canopyStale ? "warn" : "ok"}
                   />
                 ) : null}
+                {/* Every bound canopy sensor, per zone — fleet.canopy alone is one slot and used
+                    to throw the 2×4 sensor's live readings away. */}
+                {Object.entries((fleet.canopy?.zones as Record<string, { temp_c?: number; rh_pct?: number; friendly_name?: string }> | undefined) ?? {})
+                  .filter(([zone]) => `canopy_${zone}` !== canopyRole)
+                  .map(([zone, row]) => (
+                    <StatusChip
+                      key={zone}
+                      label={`Canopy ${zone} ${Number.isFinite(Number(row.temp_c)) ? `${Number(row.temp_c).toFixed(1)}°C` : "—"} / ${
+                        Number.isFinite(Number(row.rh_pct)) ? `${Number(row.rh_pct).toFixed(0)}% RH` : "— RH"
+                      }${row.friendly_name ? ` (${row.friendly_name})` : ""}`}
+                      tone="ok"
+                    />
+                  ))}
               </div>
               {zigbeeClimateRows.length ? (
                 <SettingsTable

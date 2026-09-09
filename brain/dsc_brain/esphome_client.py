@@ -441,6 +441,12 @@ class EsphomeIngest:
         for metric, value in values.items():
             if isinstance(value, (int, float)):
                 record_history(seat_id, metric, float(value), now)
+        # Device binaries (sensor_fault, modbus_probe_online, clock_valid, ...) live nested
+        # under values["binaries"], so the numeric loop above never saw them and no seat
+        # but the hub ever had a fault history — a dead probe's failure had no timeline.
+        if role != "hub":
+            for key, on in (values.get("binaries") or {}).items():
+                record_history_throttled(seat_id, f"bin_{key}", 1.0 if on else 0.0, now)
 
 
 def _record_hub_chart_history(

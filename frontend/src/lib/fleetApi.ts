@@ -988,12 +988,12 @@ export async function put_automations(rules: AutomationRule[]): Promise<{ rules:
 /** IrrigAct manual shot — the brain withholds it (honest OOS payload) when no plug_pump is bound. */
 export async function post_irrigation_shot(
   potId: string,
-  durationS = 2,
+  durationS?: number,
 ): Promise<{ ok?: boolean; detail?: string; kind?: string }> {
   const resp = await fetch("/control/irrigation/shot", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ pot_id: potId, duration_s: durationS }),
+    body: JSON.stringify(durationS == null ? { pot_id: potId } : { pot_id: potId, duration_s: durationS }),
   });
   if (!resp.ok) throw new Error(formatApiError(await resp.text(), "irrigation shot failed"));
   return resp.json();
