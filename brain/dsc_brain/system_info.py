@@ -78,7 +78,13 @@ def _hub_clock(values: dict[str, Any]) -> dict[str, Any]:
             epoch = float(raw)
         except (TypeError, ValueError):
             epoch = None
-    cv = values.get("clock_valid")
+    # The hub publishes clock_valid nested under values["binaries"] (see esphome_client /
+    # dash_computed). The flat spelling never existed, so this read was permanently None and
+    # the SPA's CLOCK INVALID chip (gated on === false) could never render.
+    bins = values.get("binaries") or {}
+    cv = bins.get("binary_sensor.dsc_hub_clock_valid")
+    if cv is None:
+        cv = values.get("clock_valid")
     valid: bool | None
     if isinstance(cv, bool):
         valid = cv
@@ -118,6 +124,9 @@ def time_info(now: float | None = None) -> dict[str, Any]:
             "online": bool(getattr(getattr(fleet, "hub", None), "online", False)),
             "uptime_s": hub_vals.get("uptime"),
             "drift_s": drift,
+            # hub_epoch minus the brain's own clock. The brain is NOT an absolute reference —
+            # when the Pi itself is unsynced a correctly-synced hub shows as "drifted".
+            "drift_basis": "hub_minus_brain",
             "reported_age_s": hub_age,
             "note": (
                 "this firmware does not publish its clock — flash a build with the Hub Clock text sensor to see drift"

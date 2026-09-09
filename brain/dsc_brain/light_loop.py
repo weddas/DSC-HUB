@@ -25,6 +25,7 @@ class LightLoopSnapshot:
     deviation_2x4: float | None
     schedule_valid: bool
     honesty: str
+    main_on_source: str | None = None  # "hub" (read back) | "brain" (stored helper) | None
 
 
 _VEG_STAGES = {
@@ -133,6 +134,8 @@ def build_light_loop(*, helpers: dict, hub_values: dict, now_ts: float) -> Light
     main_on_time = _normalize_clock_time(helpers.get("time.dsc_hub_lights_on_time"))
     if main_on_time is None:
         main_on_time = _normalize_clock_time(helpers.get("datetime.dsc_hub_lights_on_time"))
+    raw_source = helpers.get("_lights_on_source")
+    main_on_source = raw_source if raw_source in ("hub", "brain") else None
 
     photoperiod = _helper_str(
         helpers,
@@ -176,7 +179,13 @@ def build_light_loop(*, helpers: dict, hub_values: dict, now_ts: float) -> Light
         honesty = "no schedule: main on-time unset"
     else:
         schedule_valid = True
-        honesty = "ok"
+        # "ok" only when the anchor was read back from the device. A brain-stored helper is
+        # the operator's intent, not the hub's schedule — say so instead of stamping it ok.
+        honesty = (
+            "brain-stored schedule — hub published no lights-on read-back"
+            if main_on_source == "brain"
+            else "ok"
+        )
 
     return LightLoopSnapshot(
         main_on_time=main_on_time,
@@ -192,6 +201,7 @@ def build_light_loop(*, helpers: dict, hub_values: dict, now_ts: float) -> Light
         deviation_2x4=deviation,
         schedule_valid=schedule_valid,
         honesty=honesty,
+        main_on_source=main_on_source,
     )
 
 
@@ -250,12 +260,15 @@ def emit_light_loop(states: dict, snapshot: LightLoopSnapshot, set_entity: SetEn
             attributes=dict(schedule_attrs),
         )
     if snapshot.main_on_time is not None:
+        on_attrs: dict[str, Any] = {"honesty": snapshot.honesty}
+        if snapshot.main_on_source:
+            on_attrs["source"] = snapshot.main_on_source
         set_entity(
             states,
             "time.dsc_hub_lights_on_time",
             snapshot.main_on_time,
             available=True,
-            attributes={"honesty": snapshot.honesty},
+            attributes=on_attrs,
         )
     elif not snapshot.schedule_valid:
         # Honest empty: Follow claimed with unset on-time.

@@ -262,9 +262,15 @@ HUB_SELECT_ENTITY_TO_OID: dict[str, str] = {
 }
 
 # ESPHome datetime (type: time) → HA/SPA time.* entity_ids (ingest only).
+# ESPHome derives object_id from `name:`, not from `id:` — "Lights-On Time"
+# sanitises to `lights-on_time` (hyphen kept, space -> underscore). Both the
+# id-shaped and the real name-slug spellings are accepted so ingest and writes
+# resolve on a live hub.
 HUB_TIME_OID_TO_ENTITY: dict[str, str] = {
     "lights_on_time": "time.dsc_hub_lights_on_time",
+    "lights-on_time": "time.dsc_hub_lights_on_time",
     "clone_lights_on_time": "time.dsc_hub_clone_lights_on_time",
+    "clone_lights-on_time": "time.dsc_hub_clone_lights_on_time",
 }
 
 HUB_TIME_ENTITY_TO_OID: dict[str, str] = {

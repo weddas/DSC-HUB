@@ -638,6 +638,54 @@ def setup_commission(body: SetupCommissionBody | None = None) -> dict[str, Any]:
         raise HTTPException(400, str(exc)) from exc
 
 
+def _derive_lights_on(payload: dict[str, Any], hass: dict[str, Any]) -> bool:
+    """Is a lamp actually energised right now?
+
+    The hub publishes lamp state nested under `hub.values["controls"]` as
+    `light.*` entries ({"state": "on"|"off", ...}); its ~54 flat value keys
+    carry no light state at all, and `to_hass_states()` emits only sensor /
+    binary_sensor link entities. Reading the flat or hass spellings alone made
+    this permanently False, which parked root steering at act_allowed:false.
+
+    Lamp state wins when it is known. The photoperiod window binary is only a
+    fallback for when no lamp entity is reporting — an open window is a
+    schedule fact, not proof that a lamp is drawing power.
+    """
+    hub_vals = (payload.get("hub") or {}).get("values") or {}
+    controls = hub_vals.get("controls") or {}
+    binaries = hub_vals.get("binaries") or {}
+
+    lamp_eids = ("light.dsc_hub_twin_sf1000", "light.dsc_hub_sf1000_dimmer")
+    lamp_seen = False
+    for eid in lamp_eids:
+        for src in (controls, hass):
+            ctrl = src.get(eid)
+            if not isinstance(ctrl, dict):
+                continue
+            st = str(ctrl.get("state", "")).lower()
+            if st in ("on", "off"):
+                lamp_seen = True
+                if st == "on":
+                    return True
+    # Legacy flat spellings, kept as an alias for older hub builds.
+    for key in ("twin_sf1000_on", "sf1000_on"):
+        val = hub_vals.get(key)
+        if isinstance(val, bool):
+            lamp_seen = True
+            if val:
+                return True
+    if lamp_seen:
+        return False
+
+    win_eids = ("binary_sensor.dsc_hub_4x8_window_open", "binary_sensor.dsc_hub_2x4_window_open")
+    for eid in win_eids:
+        if bool(binaries.get(eid)):
+            return True
+        if str((hass.get(eid) or {}).get("state", "")).lower() == "on":
+            return True
+    return False
+
+
 @app.get("/fleet")
 def fleet(
     include_hass: bool = Query(False, alias="include_hass"),
@@ -653,19 +701,8 @@ def fleet(
     payload = state.to_dict()
     merge_inventory_oos_seats(payload, inventory)
     payload["inventory"] = inventory
-    lights_on = False
-    hub_vals = (payload.get("hub") or {}).get("values") or {}
-    twin = hub_vals.get("twin_sf1000_on")
-    sf = hub_vals.get("sf1000_on")
-    # Prefer explicit light state from hass_states when present
     hass = state.to_hass_states(inventory)
-    twin_st = (hass.get("light.dsc_hub_twin_sf1000") or {}).get("state")
-    sf_st = (hass.get("light.dsc_hub_sf1000_dimmer") or {}).get("state")
-    win = (hass.get("binary_sensor.dsc_hub_4x8_window_open") or {}).get("state")
-    if twin_st == "on" or sf_st == "on" or win == "on":
-        lights_on = True
-    elif twin is True or sf is True:
-        lights_on = True
+    lights_on = _derive_lights_on(payload, hass)
     reading_ok: dict[str, bool] = {}
     for pot_id, pot in (payload.get("pots") or {}).items():
         vals = (pot or {}).get("values") or {}

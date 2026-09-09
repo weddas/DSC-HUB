@@ -24,6 +24,7 @@ from .hub_controls import (
     HUB_SWITCH_ENTITY_TO_OID,
     HUB_SWITCH_OID_TO_ENTITY,
     HUB_TIME_ENTITY_TO_OID,
+    HUB_TIME_OID_TO_ENTITY,
 )
 
 _IN_SERVICE_ENTITY_TO_SEAT: dict[str, str] = {
@@ -329,10 +330,15 @@ async def _hub_time(entity_id: str, raw: str) -> dict[str, Any]:
     if not host:
         raise RuntimeError("hub host not configured")
 
+    # The live hub publishes the name-slug object_id (`lights-on_time`), not the
+    # YAML `id:` (`lights_on_time`). Ask for every alias of this entity and take
+    # whichever the device actually exposes, the same way `_hub_switch` does.
+    alias_oids = {o for o, e in HUB_TIME_OID_TO_ENTITY.items() if e == entity_id}
+    alias_oids.add(oid)
     keys = await _ensure_entity_keys(
-        host, api_key, "hub", set(HUB_TIME_ENTITY_TO_OID.values()), _time_keys
+        host, api_key, "hub", set(HUB_TIME_OID_TO_ENTITY) | alias_oids, _time_keys
     )
-    key = keys.get(oid)
+    key = next((keys[o] for o in alias_oids if o in keys), None)
     if key is None:
         raise RuntimeError(f"hub time {oid} not found")
 

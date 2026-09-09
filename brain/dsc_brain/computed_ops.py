@@ -181,6 +181,27 @@ def _cal_points_memoized(
     return points
 
 
+# A stored calibration only earns `measured_curve` if it behaves like one. Two non-zero
+# numbers used to be the whole gate, so a probe that returned 14.3 at every duty step was
+# "measured", interpolated to a horizontal line, and drove a -200 CFM under-pressure alarm.
+_CURVE_MIN_SPAN_FRAC = 0.10  # top-to-bottom spread must be >=10 % of the top reading
+_CURVE_NOISE_FRAC = 0.05  # a step may dip this much (of the top reading) and still count
+
+
+def _curve_points_usable(points: list[tuple[float, float]]) -> bool:
+    """True when >=2 positive points that vary with duty and never fall as duty rises."""
+    live = [(x, y) for x, y in points if y > 0]
+    if len(live) < 2:
+        return False
+    top = max(y for _, y in live)
+    if top - min(y for _, y in live) < _CURVE_MIN_SPAN_FRAC * top:
+        return False
+    for (_x0, y0), (_x1, y1) in zip(live, live[1:]):
+        if y1 < y0 - _CURVE_NOISE_FRAC * top:
+            return False
+    return True
+
+
 def _cfm_from_pct_memoized(
     pct: float,
     nameplate: float,
@@ -189,9 +210,10 @@ def _cfm_from_pct_memoized(
     memo: dict[str, list[tuple[float, float]]],
 ) -> tuple[float, str, str]:
     points = _cal_points_memoized(cal_prefix, helpers, memo)
-    measured = [v for _, v in points if v > 0]
-    if len(measured) < 2:
-        return round(pct / 100.0 * nameplate, 1), "linear", "capacity_proxy_nameplate"
+    if not _curve_points_usable(points):
+        measured = [v for _, v in points if v > 0]
+        honesty = "capacity_proxy_nameplate" if len(measured) < 2 else "capacity_proxy_nameplate_flat_calibration"
+        return round(pct / 100.0 * nameplate, 1), "linear", honesty
     xs = [p[0] for p in points]
     ys = [p[1] for p in points]
     if pct <= xs[0]:
@@ -601,7 +623,7 @@ def _build_cold_computed_states(
     curve_count = sum(
         1
         for prefix in ("dsc_cal_cfm_out", "dsc_cal_cfm_recirc", "dsc_cal_cfm_intake_main", "dsc_cal_cfm_intake_clone")
-        if len([v for _, v in _cal_points_memoized(prefix, helpers, cal_memo) if v > 0]) >= 2
+        if _curve_points_usable(_cal_points_memoized(prefix, helpers, cal_memo))
     )
     _set_entity(states, "sensor.dsc_cfm_curves_status", f"{curve_count}/4 curves")
     _set_entity(states, "sensor.dsc_learn_status", "idle" if not cal_active else "cal_active")
@@ -759,10 +781,19 @@ def _need_summary_text(got: dict[str, Any], bands: dict[str, Any]) -> str:
     return "; ".join(bits) if bits else "On target vs Want bands"
 
 
+# The photoperiod anchor is a device fact. When the hub publishes it, the hub wins over the
+# brain's stored helper; when only the helper exists the snapshot says so, so the Light page
+# can stop stamping the brain's own wish `honesty: ok` as if it had been read back.
+_LIGHTS_ON_DEVICE_FIRST = ("time.dsc_hub_lights_on_time", "datetime.dsc_hub_lights_on_time")
+LIGHTS_ON_SOURCE_KEY = "_lights_on_source"
+
+
 def _helpers_for_light_loop(helpers: dict[str, Any], fleet: Any) -> dict[str, Any]:
     """Merge compose helpers with live hub control states light_loop needs."""
     merged = dict(helpers)
     if not fleet.hub:
+        if any(eid in merged for eid in _LIGHTS_ON_DEVICE_FIRST):
+            merged[LIGHTS_ON_SOURCE_KEY] = "brain"
         return merged
     controls = fleet.hub.values.get("controls") or {}
     for eid in (
@@ -774,10 +805,18 @@ def _helpers_for_light_loop(helpers: dict[str, Any], fleet: Any) -> dict[str, An
         "datetime.dsc_hub_lights_on_time",
         "switch.dsc_hub_auto_photoperiod",
     ):
+        ctrl = controls.get(eid)
+        has_ctrl = isinstance(ctrl, dict) and ctrl.get("state") not in (None, "")
+        if eid in _LIGHTS_ON_DEVICE_FIRST:
+            if has_ctrl:
+                merged[eid] = ctrl.get("state")
+                merged[LIGHTS_ON_SOURCE_KEY] = "hub"
+            elif eid in merged and merged.get(LIGHTS_ON_SOURCE_KEY) != "hub":
+                merged[LIGHTS_ON_SOURCE_KEY] = "brain"
+            continue
         if eid in merged:
             continue
-        ctrl = controls.get(eid)
-        if isinstance(ctrl, dict) and ctrl.get("state") is not None:
+        if has_ctrl:
             merged[eid] = ctrl.get("state")
     return merged
 

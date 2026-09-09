@@ -76,6 +76,16 @@ export function TimeCard() {
   const d = t.data;
   const drift = d?.hub.drift_s;
   const driftTone: "ok" | "warn" | "bad" | undefined = drift == null ? undefined : Math.abs(drift) < 5 ? "ok" : Math.abs(drift) < 60 ? "warn" : "bad";
+  // Unknown is not fine. An unsynced hub reports valid:null / raw:"unsynced" and no epoch, so a
+  // card that only reacted to drift_s and valid===false rendered every clock on the box wrong
+  // as calm. Any of these is the state the card exists to catch.
+  const hubUnsynced = !!d && d.hub.online && (d.hub.valid === false || d.hub.raw === "unsynced");
+  const ntpBad = !!d && d.ntp.synced !== true;
+  const hubStateText = hubUnsynced
+    ? "hub clock not synced — photoperiod windows cannot open until it is"
+    : driftTone === "bad"
+      ? `hub and brain clocks disagree by ${drift} s — one of them is unsynced; see the NTP row`
+      : undefined;
   return (
     <SettingsCard
       id="time"
@@ -99,6 +109,14 @@ export function TimeCard() {
             label="NTP"
             description={d.ntp.detail}
             scope="brain"
+            state={ntpBad ? "failed" : undefined}
+            stateText={
+              ntpBad
+                ? d.ntp.synced === false
+                  ? "brain clock is not NTP-synced — the drift below is measured against it"
+                  : "NTP health is unknown from inside the container — the brain clock is unverified"
+                : undefined
+            }
             control={
               <Stated>
                 {d.ntp.synced === true ? "synced" : d.ntp.synced === false ? "not synced" : "unknown on this host"}
@@ -114,13 +132,14 @@ export function TimeCard() {
               `The hub's sntp clock in ${d.hub.timezone}, reported ${d.hub.reported_age_s != null ? `${fmtDur(d.hub.reported_age_s)} ago` : "with the last poll"}. Light windows and stage clocks run on it.`
             }
             scope="firmware"
-            state={driftTone === "bad" ? "failed" : undefined}
-            stateText={driftTone === "bad" ? `drift ${drift} s — check the hub's NTP reach` : undefined}
+            state={hubUnsynced || driftTone === "bad" ? "failed" : undefined}
+            stateText={hubStateText}
             control={
               <span className="dsc-row-actions" style={{ alignItems: "center" }}>
                 <Stated>{d.hub.epoch != null ? formatClock(d.hub.epoch * 1000) : d.hub.online ? "not published" : "hub offline"}</Stated>
-                {drift != null ? <StatusChip label={`${drift > 0 ? "+" : ""}${drift} s`} tone={driftTone} /> : null}
-                {d.hub.valid === false ? <StatusChip label="CLOCK INVALID" tone="warn" /> : null}
+                {drift != null ? <StatusChip label={`${drift > 0 ? "+" : ""}${drift} s vs brain`} tone={driftTone} /> : null}
+                {d.hub.valid === false ? <StatusChip label="CLOCK INVALID" tone="bad" /> : null}
+                {d.hub.valid !== false && d.hub.raw === "unsynced" ? <StatusChip label="UNSYNCED" tone="warn" /> : null}
               </span>
             }
             consumers={[{ label: "Light › Schedule", href: `#${paths.settings("light")}` }]}
