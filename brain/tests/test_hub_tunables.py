@@ -233,3 +233,156 @@ def test_hub_tunables_api(db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     assert rs["targets"]["ec_target_ms"] == 2.2
     assert client.patch("/settings/root-steering-targets", json={"targets": {"ec_target_ms": 2.6}}).json()["targets"]["ec_target_ms"] == 2.6
     assert client.patch("/settings/root-steering-targets", json={"targets": {"nope": 1}}).status_code == 400
+
+
+# ---- S6: firmware defaults + reset, and the brain-held helper tunables -------------------
+
+
+def test_defaults_are_transcribed_and_survive_a_narrower_firmware(db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Every default is the firmware's own power-on value, and one the device would take."""
+    from dsc_brain import hub_tunables as ht
+
+    fleet = _fleet(BASE)
+    monkeypatch.setattr(ht, "_fleet", lambda: fleet)
+    rows = {r["entity_id"]: r for r in ht.list_tunables(db, fleet)["rows"]}
+
+    # Transcribed from firmware/v4 globals + initial_value (spot checks across all kinds).
+    assert rows["number.dsc_hub_target_temp"]["default"] == "25"
+    assert rows["number.dsc_hub_sf1000_ramp_floor"]["default"] == "32"
+    assert rows["number.dsc_hub_min_dark_hours"]["default"] == "4"
+    assert rows["number.dsc_hub_de_strat_pulse_level"]["default"] == "55"
+    assert rows["switch.dsc_hub_humidifier_intake_routing"]["default"] == "on"
+    assert rows["switch.dsc_hub_brain_stage_targets"]["default"] == "off"
+    assert rows["select.dsc_hub_priority_tent"]["default"] == "4x8 Main"
+
+    # Every recorded default must be inside that row's own range / option list.
+    for row in ht.list_tunables(db, fleet)["rows"]:
+        if row["default"] is None:
+            continue
+        assert ht.coerce(row["entity_id"], row["default"], ht.hub_controls(fleet)) == row["default"]
+
+    # The live firmware here calls the strategy options something else, so the transcribed
+    # "VPD" would be rejected by the device: the row carries no default rather than a lie.
+    assert rows["select.dsc_hub_control_strategy"]["default"] is None
+    # Same rule for a number whose live range excludes the transcribed default.
+    narrow = _fleet({**BASE, "number.dsc_hub_ladder_wait_heat": {"state": "120.0", "min": 60, "max": 200, "step": 10}})
+    rows = {r["entity_id"]: r for r in ht.list_tunables(db, narrow)["rows"]}
+    assert rows["number.dsc_hub_ladder_wait_heat"]["default"] is None
+
+
+def test_is_default_and_reset_go_through_the_push_path(db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from dsc_brain import hub_tunables as ht
+
+    fleet = _fleet(BASE)
+    monkeypatch.setattr(ht, "_fleet", lambda: fleet)
+    ht.adopt_missing(ht.hub_controls(fleet), db)
+
+    rows = {r["entity_id"]: r for r in ht.list_tunables(db, fleet)["rows"]}
+    # Adopted 25 and the firmware default is 25.
+    assert rows["number.dsc_hub_target_temp"]["is_default"] is True
+    # Never adopted (firmware did not report it) -> no answer, not a false "yes".
+    assert rows["number.dsc_hub_sunrise_duration"]["desired"] is None
+    assert rows["number.dsc_hub_sunrise_duration"]["is_default"] is None
+
+    ht.set_desired("number.dsc_hub_target_temp", 27, db_path=db)
+    rows = {r["entity_id"]: r for r in ht.list_tunables(db, fleet)["rows"]}
+    assert rows["number.dsc_hub_target_temp"]["is_default"] is False
+
+    row = ht.reset_to_default("number.dsc_hub_target_temp", db)
+    assert row["desired"] == "25"
+    assert row["source"] == "default"
+    assert row["is_default"] is True
+    # A reset is an ordinary desired write: it queues a push like any other edit.
+    assert row["state"] in ("pending", "synced")
+
+    # No recorded default -> refused, not silently ignored.
+    monkeypatch.setitem(ht.TUNABLE_BY_ID["number.dsc_hub_target_temp"], "default", None)
+    with pytest.raises(ValueError):
+        ht.reset_to_default("number.dsc_hub_target_temp", db)
+    with pytest.raises(ValueError):
+        ht.reset_to_default("sensor.dsc_hub_temperature", db)
+
+
+def test_helper_tunable_defaults_match_sensor_trust(db: Path) -> None:
+    """The stated default must be the fallback that actually runs when the helper is unset."""
+    import re
+    from pathlib import Path as _Path
+
+    from dsc_brain import hub_tunables as ht
+
+    src = (_Path(ht.__file__).parent / "sensor_trust.py").read_text(encoding="utf-8")
+    used = {m.group(1): float(m.group(2)) for m in re.finditer(r'_helper_float\("([^"]+)",\s*([0-9.]+)\)', src)}
+    assert used, "sensor_trust no longer reads its thresholds through _helper_float"
+    for spec in ht.HELPER_TUNABLES:
+        assert spec["entity_id"] in used, f"{spec['entity_id']} is no longer read by sensor_trust"
+        assert float(spec["default"]) == used[spec["entity_id"]]
+
+
+def test_helper_tunables_validate_write_and_reset(db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from dsc_brain import hub_tunables as ht
+
+    fleet = _fleet(BASE)
+    monkeypatch.setattr(ht, "_fleet", lambda: fleet)
+
+    rows = {r["entity_id"]: r for r in ht.list_helper_tunables()}
+    ph = rows["input_number.dsc_trust_mad_ph"]
+    assert ph["value"] == 0.6 and ph["is_default"] is True
+    assert ph["stored"] is False  # nothing written yet - the fallback is what runs
+
+    with pytest.raises(ValueError):
+        ht.set_helper_tunable("input_number.dsc_trust_mad_ph", 99)
+    with pytest.raises(ValueError):
+        ht.set_helper_tunable("input_number.dsc_trust_mad_ph", "nope")
+    with pytest.raises(ValueError):
+        ht.set_helper_tunable("input_number.dsc_not_a_setting", 1)
+
+    row = ht.set_helper_tunable("input_number.dsc_trust_mad_ph", 1.2)
+    assert row["value"] == 1.2 and row["is_default"] is False and row["stored"] is True
+    # The consumer reads the same store, so the write actually changes the running value.
+    from dsc_brain.sensor_trust import _helper_float
+
+    assert _helper_float("input_number.dsc_trust_mad_ph", 0.6) == 1.2
+
+    back = ht.reset_helper_tunable("input_number.dsc_trust_mad_ph")
+    assert back["value"] == 0.6 and back["is_default"] is True
+
+    # Helpers ride the hub-tunables snapshot so the SPA needs one poll, not two.
+    assert [r["entity_id"] for r in ht.list_tunables(db, fleet)["helpers"]] == [
+        h["entity_id"] for h in ht.HELPER_TUNABLES
+    ]
+
+
+def test_settings_defaults_and_helper_routes(db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from fastapi.testclient import TestClient
+
+    from dsc_brain import hub_tunables as ht
+    from dsc_brain.api import app
+
+    fleet = _fleet(BASE)
+    monkeypatch.setattr(ht, "_fleet", lambda: fleet)
+    monkeypatch.setattr("dsc_brain.api.get_fleet_state", lambda: fleet, raising=False)
+
+    async def fake_push(entity_id: str, desired: str) -> None:
+        return None
+
+    monkeypatch.setattr(ht, "_push_entity", fake_push)
+    client = TestClient(app)
+
+    body = client.get("/settings/hub-tunables").json()
+    rows = {r["entity_id"]: r for r in body["rows"]}
+    assert rows["number.dsc_hub_target_temp"]["default"] == "25"
+    assert [h["entity_id"] for h in body["helpers"]] == [h["entity_id"] for h in ht.HELPER_TUNABLES]
+
+    client.patch("/settings/hub-tunables", json={"entity_id": "number.dsc_hub_target_temp", "value": 29})
+    reset = client.post("/settings/hub-tunables/number.dsc_hub_target_temp/reset")
+    assert reset.status_code == 200
+    assert reset.json()["row"]["desired"] == "25"
+    assert client.post("/settings/hub-tunables/sensor.dsc_hub_temperature/reset").status_code == 400
+
+    ok = client.patch("/settings/helper-tunables", json={"entity_id": "input_number.dsc_trust_mad_ec", "value": 400})
+    assert ok.status_code == 200 and ok.json()["row"]["value"] == 400
+    assert client.patch("/settings/helper-tunables", json={"entity_id": "input_number.dsc_trust_mad_ec", "value": 9e9}).status_code == 400
+    assert client.patch("/settings/helper-tunables", json={"entity_id": "input_number.nope", "value": 1}).status_code == 400
+    undo = client.post("/settings/helper-tunables/input_number.dsc_trust_mad_ec/reset")
+    assert undo.status_code == 200 and undo.json()["row"]["value"] == 250.0
+    assert client.post("/settings/helper-tunables/input_number.nope/reset").status_code == 400

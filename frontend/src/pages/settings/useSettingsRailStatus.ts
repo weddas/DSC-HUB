@@ -5,6 +5,7 @@ import { usePreferences } from "../../hooks/usePreference";
 import { useSettingsManifest } from "../../hooks/useSettingsManifest";
 import { useZoneMeta } from "../../hooks/useZoneMeta";
 import { useHubTunables } from "../../hooks/useHubTunables";
+import { helpersOf } from "../../components/settings/tunableDefaultsApi";
 import { useAlertPrefs } from "../../hooks/useAlertPrefs";
 import { ALERT_ENTITY_IDS } from "../../lib/alertPlaybook";
 import { changedPreferenceKeys } from "../../lib/preferences";
@@ -74,14 +75,23 @@ export function useSettingsRailStatus(): Partial<Record<SettingsSectionId, RailS
   }
 
   // Hub-owned rows: a section with a row the hub disagrees on or a queued push says so.
+  // Failing that, say how many rows the operator has moved off the firmware default —
+  // "where is this kit not stock?" is the question the rail is there to answer.
   if (hub.data) {
     for (const section of ["climate", "light", "root"] as const) {
       const rows = hub.data.rows.filter((r) => r.section === section && r.present);
       const differs = rows.filter((r) => r.state === "differs").length;
       const pending = rows.filter((r) => r.state === "pending" || r.state === "held").length;
+      const changed = rows.filter((r) => (r as { is_default?: boolean | null }).is_default === false).length;
       if (differs) out[section] = { text: `${differs} hub differ${differs === 1 ? "s" : ""}`, tone: "bad" };
       else if (pending) out[section] = { text: `${pending} queued to hub`, tone: "warn" };
+      else if (changed) out[section] = { text: `${changed} off default` };
     }
+    // Sensors keeps its offsets subtitle when there are offsets; a changed trust threshold
+    // is only worth saying when nothing louder is already being said.
+    const helpers = helpersOf(hub.data);
+    const changedHelpers = (helpers ?? []).filter((h) => !h.is_default).length;
+    if (changedHelpers && !out.sensors?.tone) out.sensors = { text: `${changedHelpers} threshold off default` };
   } else if (hub.state === "error") {
     out.climate = { text: "brain predates hub rows", tone: "warn" };
   }

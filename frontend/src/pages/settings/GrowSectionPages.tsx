@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { SettingRow, SettingsCard, Stated } from "../../components/settings/SettingRow";
-import { HelperNumberRow, HubTunableRow, HubTunableRows } from "../../components/settings/HubTunableRow";
+import { HelperTunableRows, HubTunableRow, HubTunableRows } from "../../components/settings/HubTunableRow";
 import { StageRailCard } from "../../components/settings/StageRailCard";
 import { ZonesSettingsCard } from "../../components/settings/ZonesSettingsCard";
 import { SpaceEnergySettingsCard } from "../../components/settings/SpaceEnergySettingsCard";
@@ -607,11 +607,9 @@ export function SensorsSettingsPage() {
           />
         }
       >
-        <HelperNumberRow entityId="input_number.dsc_dht_delta_t_c" label="DHT disagreement · temperature" description="Tent and room sensors further apart than this raise the climate-sensor-fault alert." fallback={4} unit="°C" step={0.5} min={0.5} max={15} />
-        <HelperNumberRow entityId="input_number.dsc_dht_delta_rh" label="DHT disagreement · humidity" fallback={15} unit="%" step={1} min={2} max={40} />
-        <HelperNumberRow entityId="input_number.dsc_trust_mad_ph" label="Peer drift · pH" description="A probe this far from the median of its peers is distrusted." fallback={0.6} unit="pH" step={0.1} min={0.1} max={3} />
-        <HelperNumberRow entityId="input_number.dsc_trust_mad_ec" label="Peer drift · EC" fallback={250} unit="µS/cm" step={10} min={20} max={2000} />
-        <HelperNumberRow entityId="input_number.dsc_trust_mad_moisture" label="Peer drift · moisture" fallback={12} unit="%" step={1} min={2} max={50} />
+        {/* Brain-owned rows: label, range, default and reset all come from the brain's
+            registry, so the SPA cannot drift from the value the trust code actually uses. */}
+        <HelperTunableRows group="trust" />
       </SettingsCard>
     </>
   );

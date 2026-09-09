@@ -3,6 +3,7 @@ import { Button, StatusChip } from "../ui";
 import { SlideDrawer } from "../chrome";
 import { DecisionLayer } from "../DecisionLayer";
 import { SettingRow, SettingsCard, Stated, Toggle } from "./SettingRow";
+import type { HubTunableWithDefault } from "./tunableDefaultsApi";
 import { useHubTunables } from "../../hooks/useHubTunables";
 import { usePreference } from "../../hooks/usePreference";
 import { useSettingsManifest } from "../../hooks/useSettingsManifest";
@@ -360,6 +361,7 @@ function TunablesSyncTable() {
             <th>Entity</th>
             <th>Desired</th>
             <th>Hub</th>
+            <th>Firmware default</th>
             <th>State</th>
             <th>Source</th>
           </tr>
@@ -372,6 +374,7 @@ function TunablesSyncTable() {
               </td>
               <td>{r.desired ?? "—"}</td>
               <td>{r.hub ?? "—"}</td>
+              <td className="dsc-muted">{(r as HubTunableWithDefault).default ?? "—"}</td>
               <td className={r.state === "synced" ? "is-ok" : r.state === "failed" || r.state === "differs" ? "is-bad" : r.state === "pending" || r.state === "held" ? "is-warn" : undefined}>{r.state}</td>
               <td className="dsc-muted">{r.source ?? "—"}</td>
             </tr>
