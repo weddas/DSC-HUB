@@ -26,6 +26,9 @@ interface BrainContextValue {
 
 const BrainStoreContext = createContext<Store<BrainContextValue> | null>(null);
 
+/** /ws/fleet pushes every ~2 s; past this with nothing applied the socket is treated as dead. */
+const FLEET_STALE_MS = 15_000;
+
 function useBrainStore(): Store<BrainContextValue> {
   const store = useContext(BrainStoreContext);
   if (!store) {
@@ -61,40 +64,62 @@ export function BrainProvider({ children }: { children: ReactNode }) {
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const pollRef = useRef<number | null>(null);
+  /** Mirror of lastUpdatedAt for the watchdog — a ref so the interval never goes stale. */
+  const lastAppliedRef = useRef<number | null>(null);
 
   const applyFleet = useCallback((data: Record<string, unknown>) => {
     setFleet(data);
     setTick((t) => t + 1);
     setError(null);
     setLoading(false);
-    setLastUpdatedAt(Date.now());
+    const now = Date.now();
+    lastAppliedRef.current = now;
+    setLastUpdatedAt(now);
   }, []);
 
-  const computedChain = useRef(Promise.resolve());
+  // One in-flight fetch is always enough: every response is the whole current state, so a
+  // second request issued while the first is pending can only return the same thing later.
+  // The previous promise chain serialised calls but never coalesced or dropped them — three
+  // producers (the 2 s /ws/fleet push, the 5 s computed poll, the onclose fallback) could
+  // build a backlog that then drained back-to-back at ~17 req/s and buried the brain's accept
+  // queue. On 2026-09-09 that outage ran 301 s and tripped the hub's safe_reboot_api_wedge.
+  const computedInflight = useRef<Promise<void> | null>(null);
 
   const refreshComputed = useCallback(() => {
-    const run = async () => {
+    if (computedInflight.current) return computedInflight.current;
+    const run = (async () => {
       try {
         const data = await get_fleet_computed();
         setComputed(data);
         setTick((t) => t + 1);
       } catch {
         /* computed helpers are non-fatal */
+      } finally {
+        computedInflight.current = null;
       }
-    };
-    computedChain.current = computedChain.current.then(run, run);
-    return computedChain.current;
+    })();
+    computedInflight.current = run;
+    return run;
   }, []);
 
-  const refresh = useCallback(async () => {
-    try {
-      const [data] = await Promise.all([get_fleet_state(), refreshComputed()]);
-      applyFleet(data);
-    } catch (exc) {
-      const msg = exc instanceof Error ? exc.message : "fleet fetch failed";
-      setError(msg);
-      setLoading(false);
-    }
+  const fleetInflight = useRef<Promise<void> | null>(null);
+
+  const refresh = useCallback(() => {
+    if (fleetInflight.current) return fleetInflight.current;
+    const run = (async () => {
+      try {
+        const [data] = await Promise.all([get_fleet_state(), refreshComputed()]);
+        applyFleet(data);
+      } catch (exc) {
+        const msg = exc instanceof Error ? exc.message : "fleet fetch failed";
+        setError(msg);
+        setLoading(false);
+      } finally {
+        fleetInflight.current = null;
+      }
+    })();
+    fleetInflight.current = run;
+    return run;
   }, [applyFleet, refreshComputed]);
 
   useEffect(() => {
@@ -126,6 +151,14 @@ export function BrainProvider({ children }: { children: ReactNode }) {
     };
 
     const computedPoll = window.setInterval(() => {
+      // A half-open socket never fires onclose, so the polling fallback below never starts and
+      // the fleet snapshot freezes while computed keeps updating. If nothing has landed for a
+      // few WS cadences, pull the whole snapshot (coalesced — at most one request in flight).
+      const applied = lastAppliedRef.current;
+      if (applied != null && Date.now() - applied > FLEET_STALE_MS) {
+        void refresh();
+        return;
+      }
       void refreshComputed();
     }, 5000);
 

@@ -21,17 +21,34 @@ function shortTime(ts: number): string {
   return new Date(ts * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-export function useRecentGrowLog(hours = 24, limit = 60): { events: DisplayGrowLogEvent[]; loading: boolean } {
+export function useRecentGrowLog(
+  hours = 24,
+  limit = 60,
+): { events: DisplayGrowLogEvent[]; loading: boolean; error: string | null } {
   const [events, setEvents] = useState<DisplayGrowLogEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
+    let inflight = false; // never stack a second /grow-log behind one that has not answered
     const load = () => {
-      void get_grow_log(hours, limit).then((rows) => {
-        if (cancelled) return;
-        setEvents(prepareGrowLog(rows));
-        setLoading(false);
-      });
+      if (inflight) return;
+      inflight = true;
+      get_grow_log(hours, limit)
+        .then((rows) => {
+          if (cancelled) return;
+          setEvents(prepareGrowLog(rows));
+          setError(null);
+          setLoading(false);
+        })
+        .catch((e: unknown) => {
+          if (cancelled) return;
+          setError(e instanceof Error ? e.message : "grow log unavailable");
+          setLoading(false);
+        })
+        .finally(() => {
+          inflight = false;
+        });
     };
     load();
     const timer = window.setInterval(load, 45_000);
@@ -40,7 +57,7 @@ export function useRecentGrowLog(hours = 24, limit = 60): { events: DisplayGrowL
       window.clearInterval(timer);
     };
   }, [hours, limit]);
-  return { events, loading };
+  return { events, loading, error };
 }
 
 /** time · glyph · text rows, newest first. Events only — journals live on Logs. */

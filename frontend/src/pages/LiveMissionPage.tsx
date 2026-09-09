@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAlertPrefs } from "../hooks/useAlertPrefs";
 import { useNavigate } from "react-router-dom";
 import { Button, Icon, StatusTag } from "../components/ui";
@@ -120,7 +120,10 @@ export function LiveMissionPage() {
   const [savingId, setSavingId] = useState<string | null>(null);
   // Rules and targets load independently: an older brain (the Pi today) serves the rules
   // but not the targets route, and a missing targets list only loses the friendly labels.
+  const rulesInflight = useRef(false);
   const loadRules = async () => {
+    if (rulesInflight.current) return; // the 30 s timer must not queue behind a slow brain
+    rulesInflight.current = true;
     try {
       const a = await get_automations();
       setRules(a.rules);
@@ -132,6 +135,8 @@ export function LiveMissionPage() {
       setTargets(await get_automation_targets());
     } catch {
       setTargets(null);
+    } finally {
+      rulesInflight.current = false;
     }
   };
   useEffect(() => {
