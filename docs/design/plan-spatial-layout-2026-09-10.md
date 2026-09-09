@@ -168,6 +168,8 @@ Rule: **air gets a *shape*, not a *number*, except for ACH — which is arithmet
 hour) and unlimited fans without touching the twin at all. The twin work (S4-S6, S9) is the larger
 and more visible half, but it is not what unblocks the model.
 
+**DECIDED 2026-09-10:** start at **S1 + S2**. S5 will ship list editing and twin drag together.
+
 ---
 
 ## 5. Rules
@@ -187,8 +189,10 @@ and more visible half, but it is not what unblocks the model.
 
 ## 6. Open decisions for the operator
 
-1. **Twin editing or list editing first?** Recommendation: **list first.** It is a tenth of the work,
-   it is usable on a phone, and it makes the twin work a pure rendering job afterwards.
+1. ~~**Twin editing or list editing first?**~~ **DECIDED 2026-09-10: both together.** The data model
+   is shared, so S5 ships the list *and* twin drag in one pass rather than leaving placement
+   half-editable. Note this makes S5 the largest slice in the plan; build the list first inside
+   that slice so there is always something usable if drag runs long.
 2. **How far does air go?** Recommendation: **stop at S8** (ACH, axis, warnings). S9's shaded
    exchange regions look impressive and are the hardest to keep honest.
 3. **Do "known" (uncontrolled) devices earn their keep?** Recommendation: **yes** — an unplugged

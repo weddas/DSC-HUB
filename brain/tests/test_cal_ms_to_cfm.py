@@ -17,7 +17,6 @@ import math
 import pytest
 
 from dsc_brain.compose_ops import (
-    CAL_DUCT_CM_DEFAULT,
     cal_duct_cm,
     cal_save_point,
     cal_start,
@@ -63,14 +62,18 @@ def test_the_live_2x4_readings_become_a_plausible_curve(temp_db) -> None:  # noq
 
 
 def test_duct_defaults_match_the_fans_as_built(temp_db) -> None:  # noqa: ANN001
+    from dsc_brain.computed_ops import fan_instances
+
     assert cal_duct_cm("dsc_cal_cfm_out") == SIX_INCH
     assert cal_duct_cm(CLONE) == FOUR_INCH
-    assert set(CAL_DUCT_CM_DEFAULT) == {
+    # Every fan in the registry carries its own duct default — no separate list to drift.
+    assert {f.cal_prefix for f in fan_instances()} == {
         "dsc_cal_cfm_out",
         "dsc_cal_cfm_recirc",
         "dsc_cal_cfm_intake_main",
         "dsc_cal_cfm_intake_clone",
     }
+    assert all(f.duct_default_cm > 0 for f in fan_instances())
 
 
 def test_an_operator_duct_size_overrides_the_default(temp_db) -> None:  # noqa: ANN001

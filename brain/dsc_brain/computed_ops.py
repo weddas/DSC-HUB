@@ -6,6 +6,7 @@ import datetime
 import json
 import logging
 import time
+from dataclasses import dataclass
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -32,29 +33,124 @@ _COLD_CACHE: dict[str, Any] = {"ts": 0.0, "key": None, "states": {}}
 _HOT_TTL_SEC = 2.0
 _COLD_TTL_SEC = 45.0
 
-FAN_PCT_ENTITIES: dict[str, str] = {
-    "sensor.dsc_fan_intake_main_pct": "fan.dsc_hub_4_inch_intake_fan_main",
-    "sensor.dsc_fan_intake_2x4_pct": "fan.dsc_hub_4_inch_intake_fan_2x4",
-    "sensor.dsc_fan_exhaust_room_pct": "fan.dsc_hub_6_inch_exhaust_room",
-    "sensor.dsc_fan_exhaust_outside_pct": "fan.dsc_hub_6_inch_exhaust_outside",
-}
+# ---- The fans, as instances -----------------------------------------------------------
+# A fan used to be a NAME, restated in six parallel four-entry literals: FAN_PCT_ENTITIES,
+# CFM_SPECS, _CAL_PREFIX_PLATE, CAL_PREFIX_DEVICE, FAN_CAL_TARGETS, and the duct maps in
+# compose_ops. Adding a fifth fan meant editing all six in step, and every one of them was
+# an opportunity to pair the wrong duty with the wrong duct.
+#
+# A fan is now one row that says everything about itself. The literals below are kept as
+# PROJECTIONS of this list — callers that want a dict still get one — so nothing outside
+# this module had to change, but there is exactly one place to add a fan.
+#
+# plan-spatial-layout-2026-09-10.md S1/S2. The next step is loading these rows from
+# space_device instead of declaring them here; the shape is chosen to make that a swap.
+
+
+@dataclass(frozen=True)
+class FanInstance:
+    """One physical fan: how it is driven, rated, calibrated, and ducted."""
+
+    key: str
+    label: str
+    #: "intake" pushes air in, "exhaust" pulls it out. Decides which total it joins.
+    side: str
+    #: The tent it moves air for.
+    space_id: str
+    #: Hub entity that carries its duty.
+    fan_entity: str
+    #: Computed percent sensor published for it.
+    pct_id: str
+    #: Computed CFM sensor published for it.
+    cfm_id: str
+    #: Helper holding its rated free-air capacity.
+    plate_id: str
+    #: Prefix for its stored calibration curve, and its device_calibration id.
+    cal_prefix: str
+    #: Helper holding its duct diameter, and the built-in default when unset.
+    duct_entity: str
+    duct_default_cm: float
+
+
+_FANS: tuple[FanInstance, ...] = (
+    FanInstance(
+        key="out",
+        label="OUT exhaust",
+        side="exhaust",
+        space_id="4x8",
+        fan_entity="fan.dsc_hub_6_inch_exhaust_outside",
+        pct_id="sensor.dsc_fan_exhaust_outside_pct",
+        cfm_id="sensor.dsc_cfm_exhaust_out",
+        plate_id="input_number.dsc_cfm_out_max",
+        cal_prefix="dsc_cal_cfm_out",
+        duct_entity="input_number.dsc_duct_out_cm",
+        duct_default_cm=15.0,
+    ),
+    FanInstance(
+        key="recirc",
+        label="RECIRC",
+        side="exhaust",
+        space_id="4x8",
+        fan_entity="fan.dsc_hub_6_inch_exhaust_room",
+        pct_id="sensor.dsc_fan_exhaust_room_pct",
+        cfm_id="sensor.dsc_cfm_exhaust_recirc",
+        plate_id="input_number.dsc_cfm_recirc_max",
+        cal_prefix="dsc_cal_cfm_recirc",
+        duct_entity="input_number.dsc_duct_recirc_cm",
+        duct_default_cm=15.0,
+    ),
+    FanInstance(
+        key="intake_main",
+        label="Intake 4x8",
+        side="intake",
+        space_id="4x8",
+        fan_entity="fan.dsc_hub_4_inch_intake_fan_main",
+        pct_id="sensor.dsc_fan_intake_main_pct",
+        cfm_id="sensor.dsc_cfm_intake_main",
+        plate_id="input_number.dsc_cfm_intake_main_max",
+        cal_prefix="dsc_cal_cfm_intake_main",
+        duct_entity="input_number.dsc_duct_intake_main_cm",
+        duct_default_cm=10.0,
+    ),
+    FanInstance(
+        key="intake_clone",
+        label="Intake 2x4",
+        side="intake",
+        space_id="2x4",
+        fan_entity="fan.dsc_hub_4_inch_intake_fan_2x4",
+        pct_id="sensor.dsc_fan_intake_2x4_pct",
+        cfm_id="sensor.dsc_cfm_intake_2x4",
+        plate_id="input_number.dsc_cfm_intake_clone_max",
+        cal_prefix="dsc_cal_cfm_intake_clone",
+        duct_entity="input_number.dsc_duct_intake_clone_cm",
+        duct_default_cm=10.0,
+    ),
+)
+
+
+def fan_instances(space_id: str | None = None) -> list[FanInstance]:
+    """Every fan, or every fan in one space."""
+    if space_id is None:
+        return list(_FANS)
+    return [f for f in _FANS if f.space_id == space_id]
+
+
+def fan_by_cal_prefix(cal_prefix: str) -> FanInstance | None:
+    return next((f for f in _FANS if f.cal_prefix == cal_prefix), None)
+
+
+# ---- Projections of the registry, for callers that still want the old shapes -----------
+# Iterated once, to publish one independent entity per fan — order carries no meaning.
+FAN_PCT_ENTITIES: dict[str, str] = {f.pct_id: f.fan_entity for f in _FANS}
 
 CFM_SPECS: list[tuple[str, str, str, str]] = [
-    ("sensor.dsc_cfm_exhaust_out", "sensor.dsc_fan_exhaust_outside_pct", "input_number.dsc_cfm_out_max", "dsc_cal_cfm_out"),
-    ("sensor.dsc_cfm_exhaust_recirc", "sensor.dsc_fan_exhaust_room_pct", "input_number.dsc_cfm_recirc_max", "dsc_cal_cfm_recirc"),
-    ("sensor.dsc_cfm_intake_main", "sensor.dsc_fan_intake_main_pct", "input_number.dsc_cfm_intake_main_max", "dsc_cal_cfm_intake_main"),
-    ("sensor.dsc_cfm_intake_2x4", "sensor.dsc_fan_intake_2x4_pct", "input_number.dsc_cfm_intake_clone_max", "dsc_cal_cfm_intake_clone"),
+    (f.cfm_id, f.pct_id, f.plate_id, f.cal_prefix) for f in _FANS
 ]
 
 # nameplate helper -> calibration prefix, so a curve is always judged against its own fan.
-_CAL_PREFIX_PLATE: dict[str, str] = {plate_id: cal_prefix for _c, _p, plate_id, cal_prefix in CFM_SPECS}
+_CAL_PREFIX_PLATE: dict[str, str] = {f.plate_id: f.cal_prefix for f in _FANS}
 
-CAL_PREFIX_DEVICE: dict[str, str] = {
-    "dsc_cal_cfm_out": "dsc_cal_cfm_out",
-    "dsc_cal_cfm_recirc": "dsc_cal_cfm_recirc",
-    "dsc_cal_cfm_intake_main": "dsc_cal_cfm_intake_main",
-    "dsc_cal_cfm_intake_clone": "dsc_cal_cfm_intake_clone",
-}
+CAL_PREFIX_DEVICE: dict[str, str] = {f.cal_prefix: f.cal_prefix for f in _FANS}
 
 LIGHT_OFF_LUX = 5.0
 LIGHT_OFF_PAR = 10.0
@@ -262,13 +358,8 @@ def _cfm_from_pct_memoized(
     return round(val, 1), "curve", "measured_curve"
 
 
-# The four ducts, in the order the Calibrate desk shows them.
-FAN_CAL_TARGETS: list[tuple[str, str]] = [
-    ("dsc_cal_cfm_out", "OUT exhaust"),
-    ("dsc_cal_cfm_recirc", "RECIRC"),
-    ("dsc_cal_cfm_intake_main", "Intake 4x8"),
-    ("dsc_cal_cfm_intake_clone", "Intake 2x4"),
-]
+# The ducts, in the order the Calibrate desk shows them — a projection of the registry.
+FAN_CAL_TARGETS: list[tuple[str, str]] = [(f.cal_prefix, f.label) for f in _FANS]
 
 _PROXY_REASON_TEXT: dict[str, str] = {
     "capacity_proxy_nameplate": "No calibration stored — using the fan's rated capacity.",
@@ -295,14 +386,15 @@ def fan_calibration_summary() -> list[dict[str, Any]]:
     helpers the live computation uses, so the desk cannot disagree with the airflow numbers.
     """
     # Deferred: compose_ops imports device_calibration, which this module also uses.
-    from .compose_ops import CAL_DUCT_CM_HELPER, cal_duct_cm
+    from .compose_ops import cal_duct_cm
 
     helpers = all_helpers()
     memo: dict[str, list[tuple[float, float]]] = {}
     plate_for = {prefix: plate_id for plate_id, prefix in _CAL_PREFIX_PLATE.items()}
     out: list[dict[str, Any]] = []
 
-    for prefix, label in FAN_CAL_TARGETS:
+    for fan in fan_instances():
+        prefix, label = fan.cal_prefix, fan.label
         device_id = CAL_PREFIX_DEVICE.get(prefix, prefix)
         plate_id = plate_for.get(prefix, "")
         nameplate = float(helpers.get(plate_id, 0) or 0)
@@ -355,7 +447,7 @@ def fan_calibration_summary() -> list[dict[str, Any]]:
                 # The anemometer reads m/s; this is what turns it into airflow. Shown so a
                 # wrong duct size is visible rather than silently scaling every point.
                 "duct_cm": cal_duct_cm(prefix),
-                "duct_entity": CAL_DUCT_CM_HELPER.get(prefix, ""),
+                "duct_entity": fan.duct_entity if fan else "",
                 "measured_top": round(measured_top, 2),
                 "pct_of_nameplate": round(100.0 * measured_top / nameplate, 1) if nameplate > 0 else None,
                 "in_use": in_use,

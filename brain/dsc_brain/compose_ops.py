@@ -40,43 +40,22 @@ CAL_STEPS = (25, 50, 75, 100)
 # as implausible. Every calibration ever captured was unusable for this reason.
 _M3S_TO_CFM = 2118.88  # 1 m^3/s = 2118.88 ft^3/min
 
-CAL_DUCT_CM_HELPER: dict[str, str] = {
-    "dsc_cal_cfm_out": "input_number.dsc_duct_out_cm",
-    "dsc_cal_cfm_recirc": "input_number.dsc_duct_recirc_cm",
-    "dsc_cal_cfm_intake_main": "input_number.dsc_duct_intake_main_cm",
-    "dsc_cal_cfm_intake_clone": "input_number.dsc_duct_intake_clone_cm",
-}
-
-# The rig as built: OUT and RECIRC are 6" inline fans (440 CFM nameplate), both intakes are
-# 4" (200 CFM). These are DEFAULTS so a first calibration works out of the box, not
-# assertions — the wizard shows the diameter it is about to use and the operator can
-# correct it before sampling. The helpers existed in the UI but had never held a value on
-# any host, which is why nothing could have converted even if it had tried.
-#
-# Nominal METRIC trade sizes (150 / 100 mm), not converted inches (152.4 / 101.6): the desk
-# offers 100/125/150/200/250/300 mm as the common sizes, and a default outside that set left
-# a fresh install with no size highlighted and two vocabularies on one screen. The 1.5 %
-# diameter difference is ~3 % in area — far inside the error of the single centreline reading
-# the curve is built from, so matching the picker is worth more than the false precision.
-CAL_DUCT_CM_DEFAULT: dict[str, float] = {
-    "dsc_cal_cfm_out": 15.0,
-    "dsc_cal_cfm_recirc": 15.0,
-    "dsc_cal_cfm_intake_main": 10.0,
-    "dsc_cal_cfm_intake_clone": 10.0,
-}
-
-
+# Duct geometry per fan lives on the fan registry (computed_ops._FANS), the one place a fan
+# is described. The two maps that used to restate it here are gone: their only readers were
+# computed_ops (which owns the registry) and a test, so a projection would have been
+# indirection for its own sake.
 def cal_duct_cm(prefix: str) -> float:
     """Duct diameter in cm for a calibration target: operator value, else the built default."""
-    key = CAL_DUCT_CM_HELPER.get(prefix)
-    if key:
-        try:
-            val = float(get_helper(key, 0) or 0)
-        except (TypeError, ValueError):
-            val = 0.0
-        if val > 0:
-            return val
-    return CAL_DUCT_CM_DEFAULT.get(prefix, 0.0)
+    from .computed_ops import fan_by_cal_prefix
+
+    fan = fan_by_cal_prefix(prefix)
+    if fan is None:
+        return 0.0
+    try:
+        val = float(get_helper(fan.duct_entity, 0) or 0)
+    except (TypeError, ValueError):
+        val = 0.0
+    return val if val > 0 else fan.duct_default_cm
 
 
 def ms_to_cfm(ms: float, duct_cm: float) -> float:
