@@ -1416,9 +1416,58 @@ export type SpaceDevice = {
   watts: number;
   duty_source: string;
   enabled: boolean;
-  /** Brain-side free-form fields; `catalog_id` binds the lamp to a CannaLib lights record. */
+  /** Brain-side free-form fields; `catalog_id` binds the lamp to a CannaLib lights record,
+   *  and kind/role/tier/binding describe the device instance (plan-spatial-layout L1). */
   extra?: Record<string, unknown>;
 };
+
+/** What the brain can do with a device. See plan-spatial-layout §2. */
+export type DeviceTier = "driven" | "switched" | "known";
+
+export type DeviceTierInfo = { id: DeviceTier; note: string };
+
+/** The four instance fields, lifted out of `extra` for the editor. */
+export type SpaceDeviceInstance = {
+  kind?: string;
+  role?: string;
+  tier?: DeviceTier | "";
+  binding?: string;
+};
+
+export function deviceInstance(device: SpaceDevice): SpaceDeviceInstance {
+  const extra = (device.extra ?? {}) as Record<string, unknown>;
+  return {
+    kind: String(extra.kind ?? ""),
+    role: String(extra.role ?? ""),
+    tier: (String(extra.tier ?? "") || "") as DeviceTier | "",
+    binding: String(extra.binding ?? ""),
+  };
+}
+
+/**
+ * Whether the desk may render a control for this device.
+ *
+ * Mirrors the brain's `device_controllable`. Unknown tier is NOT controllable: a row that
+ * has not said what it is gets no control, rather than a control that silently does nothing.
+ */
+export function deviceControllable(device: SpaceDevice): boolean {
+  const { tier, binding } = deviceInstance(device);
+  return (tier === "driven" || tier === "switched") && Boolean(binding);
+}
+
+export async function getDeviceTiers(): Promise<{ tiers: DeviceTierInfo[]; kinds: string[] }> {
+  const resp = await fetch("/spaces/device-tiers");
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "device tiers failed"));
+  return resp.json();
+}
+
+export async function deleteSpaceDevice(spaceId: string, deviceId: string): Promise<void> {
+  const resp = await fetch(
+    `/spaces/${encodeURIComponent(spaceId)}/devices/${encodeURIComponent(deviceId)}`,
+    { method: "DELETE" },
+  );
+  if (!resp.ok) throw new Error(formatApiError(await resp.text(), "device removal failed"));
+}
 
 export async function getSpaces(): Promise<
   Array<{ space_id: string; size_label?: string; devices: SpaceDevice[] }>
@@ -1432,7 +1481,7 @@ export async function getSpaces(): Promise<
 export async function putSpaceDevice(
   spaceId: string,
   deviceId: string,
-  patch: Partial<SpaceDevice>,
+  patch: Partial<SpaceDevice> & SpaceDeviceInstance,
 ): Promise<SpaceDevice> {
   const resp = await fetch(`/spaces/${encodeURIComponent(spaceId)}/devices/${encodeURIComponent(deviceId)}`, {
     method: "PUT",

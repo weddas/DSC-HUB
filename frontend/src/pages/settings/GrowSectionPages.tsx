@@ -4,6 +4,7 @@ import { HelperTunableRows, HubTunableRow, HubTunableRows } from "../../componen
 import { StageRailCard } from "../../components/settings/StageRailCard";
 import { ZonesSettingsCard } from "../../components/settings/ZonesSettingsCard";
 import { SpaceEnergySettingsCard } from "../../components/settings/SpaceEnergySettingsCard";
+import { SpaceDevicesCard } from "../../components/settings/SpaceDevicesCard";
 import { AutomationRulesCard } from "../../components/settings/AutomationRulesCard";
 import { CLIMATE_ZONES, ZONE_LABELS } from "../../components/settings/settingsConstants";
 import { useGlobalModifiers, useSaveState } from "../../hooks/useGlobalModifiers";
@@ -349,6 +350,9 @@ export function LightSettingsPage() {
           description="Per-space devices with their watts drive the energy estimate."
         />
       </SettingsCard>
+      <div id="devices" style={{ scrollMarginTop: 80 }}>
+        <SpaceDevicesCard />
+      </div>
       <div id="tariff" style={{ scrollMarginTop: 80 }}>
         <SpaceEnergySettingsCard />
       </div>

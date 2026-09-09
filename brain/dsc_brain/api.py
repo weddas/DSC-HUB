@@ -363,6 +363,12 @@ class SpaceDeviceBody(BaseModel):
     duty_source: str | None = None
     enabled: bool | None = None
     extra: dict[str, Any] | None = None
+    # plan-spatial-layout §2 / L1. These live inside `extra` in the store, beside catalog_id;
+    # they are lifted to the top level here so a caller does not have to know that.
+    kind: str | None = None
+    role: str | None = None
+    tier: str | None = None
+    binding: str | None = None
 
 
 class CameraBody(BaseModel):
@@ -2856,14 +2862,51 @@ def zones_patch(zone_id: str, body: ZonePatchBody) -> dict[str, Any]:
 
 @app.put("/spaces/{space_id}/devices/{device_id}")
 def spaces_device_put(space_id: str, device_id: str, body: SpaceDeviceBody) -> dict[str, Any]:
-    from .space_model import upsert_space_device
+    """Add a device to a space, or change one. Many devices may share a kind and a role."""
+    if _demo_mode():
+        _demo_forbidden()
+    from .space_model import list_space_devices, upsert_space_device
 
     patch = body.model_dump(exclude_none=True)
     patch["device_id"] = device_id
+    # Fold the four instance fields into `extra`, merging over whatever is already stored so
+    # a PUT that only sets a tier does not drop the device's catalog_id.
+    instance = {k: patch.pop(k) for k in ("kind", "role", "tier", "binding") if k in patch}
+    if instance:
+        existing = next(
+            (d for d in list_space_devices(space_id) if d["device_id"] == device_id), None
+        )
+        base = dict((existing or {}).get("extra") or {})
+        base.update(patch.get("extra") or {})
+        base.update(instance)
+        patch["extra"] = base
     try:
         return upsert_space_device(space_id, patch)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
+
+
+@app.delete("/spaces/{space_id}/devices/{device_id}")
+def spaces_device_delete(space_id: str, device_id: str) -> dict[str, Any]:
+    """Forget a device: it stops counting toward power and airflow. The hardware is untouched."""
+    if _demo_mode():
+        _demo_forbidden()
+    from .space_model import delete_space_device
+
+    if not delete_space_device(space_id, device_id):
+        raise HTTPException(404, f"no device {device_id} in {space_id}")
+    return {"space_id": space_id, "device_id": device_id, "removed": True}
+
+
+@app.get("/spaces/device-tiers")
+def spaces_device_tiers() -> dict[str, Any]:
+    """The vocabulary the device editor offers, so the desk cannot invent a tier."""
+    from .space_model import DEVICE_KINDS, DEVICE_TIERS, TIER_NOTE
+
+    return {
+        "tiers": [{"id": t, "note": TIER_NOTE[t]} for t in DEVICE_TIERS],
+        "kinds": list(DEVICE_KINDS),
+    }
 
 
 # ---- cameras (plan-settings § S7) --------------------------------------------------------

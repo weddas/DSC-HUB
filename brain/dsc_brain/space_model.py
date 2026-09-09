@@ -53,6 +53,74 @@ def space_volume_m3(space: dict[str, Any]) -> float:
         return 0.0
     return round(area * (height_cm / 100.0), 3)
 
+# ---- Device tiers ----------------------------------------------------------------------
+# plan-spatial-layout §2. A device the brain can PLACE is not necessarily one it can DRIVE:
+# the hub has a fixed number of PWM channels and relays, and beyond those a fan is either on
+# a smart plug (on/off, often with real power metering) or simply present. All three cost
+# money and move air; only one has a control. Blurring them is how a UI ends up offering a
+# button that does nothing.
+DEVICE_TIERS: tuple[str, ...] = ("driven", "switched", "known")
+
+TIER_NOTE: dict[str, str] = {
+    "driven": "Brain sets its level and reads its state back.",
+    "switched": "On/off only, through a smart plug. The brain cannot set its level.",
+    "known": "Not controlled at all — it still draws power and moves air.",
+}
+
+DEVICE_KINDS: tuple[str, ...] = (
+    "fan",
+    "light",
+    "filter",
+    "heater",
+    "humidifier",
+    "dehumidifier",
+    "pump",
+    "sensor",
+    "camera",
+    "other",
+)
+
+
+def normalise_device(device: dict[str, Any]) -> dict[str, Any]:
+    """Validate the tier/binding pair, which is the part that must not be fudged.
+
+    A `driven` or `switched` device is defined by having something to drive; a `known` one is
+    defined by having nothing. Storing a binding on a `known` device (or none on a driven
+    one) produces a row that claims a control it does not have, which is exactly what the
+    tier exists to prevent.
+    """
+    out = dict(device)
+    kind = str(out.get("kind") or "").strip().lower()
+    if kind and kind not in DEVICE_KINDS:
+        raise ValueError(f"unknown device kind {kind!r}")
+    tier = str(out.get("tier") or "").strip().lower()
+    if tier and tier not in DEVICE_TIERS:
+        raise ValueError(f"unknown device tier {tier!r} (expected one of {', '.join(DEVICE_TIERS)})")
+    binding = str(out.get("binding") or "").strip()
+
+    if tier in ("driven", "switched") and not binding:
+        raise ValueError(f"a {tier} device needs a binding — the entity or plug the brain talks to")
+    if tier == "known" and binding:
+        raise ValueError("a known device has no binding: it is not controlled by anything")
+
+    out["kind"] = kind
+    out["tier"] = tier
+    out["binding"] = binding
+    out["role"] = str(out.get("role") or "").strip()
+    return out
+
+
+def device_controllable(device: dict[str, Any]) -> bool:
+    """True only when the brain has something to press. Unknown tier is NOT controllable.
+
+    The safe direction: a row that has not said what it is gets no control rendered, rather
+    than a control that silently does nothing.
+    """
+    extra = device.get("extra") or {}
+    tier = str(extra.get("tier") or "").strip().lower()
+    return tier in ("driven", "switched") and bool(str(extra.get("binding") or "").strip())
+
+
 # Researched / kit nameplate defaults — operator Update in Settings.
 KIT_DEVICE_DEFAULTS: tuple[dict[str, Any], ...] = (
     {
@@ -63,7 +131,13 @@ KIT_DEVICE_DEFAULTS: tuple[dict[str, Any], ...] = (
         "duty_source": "photoperiod",
         "enabled": True,
         # CannaLib lights-catalog record this lamp is; the Light page's maker PPFD card keys off it.
-        "extra": {"catalog_id": "spider_farmer_sf1000"},
+        "extra": {
+            "catalog_id": "spider_farmer_sf1000",
+            "kind": "light",
+            "role": "canopy_light",
+            "tier": "driven",
+            "binding": "light.dsc_hub_sf1000_dimmer",
+        },
     },
     {
         "space_id": "4x8",
@@ -72,6 +146,9 @@ KIT_DEVICE_DEFAULTS: tuple[dict[str, Any], ...] = (
         "watts": 480.0,
         "duty_source": "photoperiod",
         "enabled": True,
+        # A nameplate entry: it lights the 4x8 and costs 480 W, and the brain drives no part
+        # of it. Exactly the case the "known" tier exists for.
+        "extra": {"kind": "light", "role": "canopy_light", "tier": "known", "binding": ""},
     },
 )
 
@@ -169,10 +246,30 @@ def ensure_kit_spaces(db_path: Path | None = None) -> list[dict[str, Any]]:
             )
         for dev in KIT_DEVICE_DEFAULTS:
             existing = conn.execute(
-                "SELECT 1 FROM space_device WHERE space_id=? AND device_id=?",
+                "SELECT extra_json FROM space_device WHERE space_id=? AND device_id=?",
                 (dev["space_id"], dev["device_id"]),
             ).fetchone()
             if existing:
+                # The kit devices predate kind/role/tier/binding, so on any existing install
+                # they carry none and the device list would show two "tier not set" rows for
+                # kit we already know the answer for. Fill in ONLY the keys that are absent:
+                # watts, label and any operator-set field are never touched, and a tier the
+                # operator has already chosen wins over ours.
+                try:
+                    have = json.loads(existing["extra_json"] or "{}")
+                except (TypeError, ValueError, json.JSONDecodeError):
+                    have = {}
+                missing = {k: v for k, v in (dev.get("extra") or {}).items() if k not in have}
+                if missing:
+                    conn.execute(
+                        "UPDATE space_device SET extra_json=?, updated_at=? WHERE space_id=? AND device_id=?",
+                        (
+                            json.dumps({**have, **missing}, separators=(",", ":")),
+                            now,
+                            dev["space_id"],
+                            dev["device_id"],
+                        ),
+                    )
                 continue
             conn.execute(
                 """
@@ -192,6 +289,22 @@ def ensure_kit_spaces(db_path: Path | None = None) -> list[dict[str, Any]]:
             )
         conn.commit()
     return list_spaces(db_path)
+
+
+def delete_space_device(space_id: str, device_id: str, *, db_path: Path | None = None) -> bool:
+    """Forget a device. Returns False when there was nothing to forget.
+
+    This removes the brain's *record* of the device, not the device: a driven fan keeps
+    running on whatever the hub told it. What stops is counting its power and its airflow.
+    """
+    init_space_tables(db_path)
+    with _connect(db_path) as conn:
+        cur = conn.execute(
+            "DELETE FROM space_device WHERE space_id=? AND device_id=?",
+            (str(space_id), str(device_id)),
+        )
+        conn.commit()
+        return bool(cur.rowcount)
 
 
 def list_space_devices(space_id: str, *, db_path: Path | None = None) -> list[dict[str, Any]]:
@@ -237,11 +350,23 @@ def upsert_space_device(
     if not device_id:
         raise ValueError("device_id required")
     now = time.time()
-    label = str(device.get("label") or device_id)
-    watts = float(device.get("watts") or 0.0)
-    duty_source = str(device.get("duty_source") or "photoperiod")
-    enabled = 1 if device.get("enabled", True) else 0
-    extra = device.get("extra") if isinstance(device.get("extra"), dict) else {}
+    # Absent keys keep whatever the row already holds. This is reached as a PATCH — the
+    # device editor sends only the field it is changing — and defaulting to zero instead
+    # silently wiped a device's wattage every time its tier was changed.
+    prior = next(
+        (d for d in list_space_devices(space_id, db_path=db_path) if d["device_id"] == device_id),
+        None,
+    ) or {}
+    label = str(device.get("label") or prior.get("label") or device_id)
+    watts = float(device["watts"] if device.get("watts") is not None else prior.get("watts") or 0.0)
+    duty_source = str(device.get("duty_source") or prior.get("duty_source") or "photoperiod")
+    enabled_in = device.get("enabled", prior.get("enabled", True))
+    enabled = 1 if enabled_in else 0
+    extra = dict(device.get("extra")) if isinstance(device.get("extra"), dict) else dict(prior.get("extra") or {})
+    # kind/role/tier/binding live in extra alongside catalog_id, the pattern the SF1000 lamp
+    # already set. Validated here so a bad tier/binding pair can never reach the store.
+    if any(k in extra for k in ("kind", "role", "tier", "binding")):
+        extra.update(normalise_device(extra))
     with _connect(db_path) as conn:
         conn.execute(
             """
