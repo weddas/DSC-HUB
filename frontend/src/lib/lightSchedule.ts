@@ -76,6 +76,26 @@ export function computeLightSchedule(
     };
   }
 
+  // A window whose length runs past midnight (e.g. lights-on 15:00 + 12 h ends 03:00 the
+  // NEXT day) is still running in the small hours — and the window that is running then
+  // started YESTERDAY. Checking only `onToday` made every such photoperiod flip to DARK the
+  // instant the clock rolled over, and report "on in 14h 56m" (the time to today's 15:00)
+  // while the hub correctly held the lamp LIT. Seen live 2026-09-10 00:04.
+  const onYesterday = new Date(onToday.getTime() - 86_400_000);
+  const offYesterday = new Date(onYesterday.getTime() + hours * 3_600_000);
+  if (nowDate >= onYesterday && nowDate < offYesterday) {
+    return {
+      valid: true,
+      phase: "lit",
+      sinceOnMs: nowDate.getTime() - onYesterday.getTime(),
+      untilOffMs: offYesterday.getTime() - nowDate.getTime(),
+      untilOnMs: null,
+      sinceOffMs: null,
+      lightsOnAt: onYesterday,
+      lightsOffAt: offYesterday,
+    };
+  }
+
   if (nowDate < onToday) {
     const offYesterday = new Date(offToday.getTime() - 86_400_000);
     return {

@@ -137,7 +137,13 @@ export function TentClock({ tent, showEyebrow = true }: { tent: TentPhotoperiodI
           <>
             <TipRow k={`${label} lamp`} v={hubLit != null ? (hubLit ? "LIT · hub window open" : "DARK · hub window closed") : schedule.valid ? (lit ? "LIT" : "DARK") : "no schedule"} tone={shownLit ? "ok" : undefined} />
             {schedule.valid ? <TipRow k={clock.key.toLowerCase()} v={clock.value} tone={conflict ? "bad" : undefined} /> : null}
-            {conflict ? <TipRow k="conflict" v={`schedule says ${lit ? "LIT" : "DARK"} — the hub's lights-on time differs from the SPA's ${String(input.lightsOnTime ?? "—")}`} tone="bad" /> : null}
+            {/* State the OBSERVATION, not a guessed cause. The old copy claimed "the hub's
+                lights-on time differs from the SPA's" — but the SPA reads its lights-on
+                time FROM the hub entity, so that comparison is a value against itself and
+                could never be the real cause. It sent the operator to check a setting that
+                was already correct. The genuine disagreement is the hub's own window sensor
+                (its clock) against the same time recomputed here (this device's clock). */}
+            {conflict ? <TipRow k="conflict" v={`hub says ${hubLit ? "LIT" : "DARK"}, this clock says ${lit ? "LIT" : "DARK"} — same lights-on time (${String(input.lightsOnTime ?? "—")}), so check the hub clock against this device's`} tone="bad" /> : null}
             {hubClock.untrusted ? <TipRow k="hub clock" v={`${hubClock.reason} — the hub's window flags run on that clock and cannot be trusted until it syncs`} tone="bad" /> : null}
             <TipRow k="window" v={`${String(input.lightsOnTime ?? "—")} + ${Math.round(input.expectedHours)} h${tent === "clone" && schedule.followsMain ? " · follows 4×8" : ""}`} tone="muted" />
             <TipRow k="fixture" v={lampText} tone={lampText.includes("NOT WIRED") ? "muted" : undefined} />
