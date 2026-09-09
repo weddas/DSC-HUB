@@ -12,6 +12,7 @@ from .appliance_driver import get_appliance_status
 from .climate_math import finalize_hub_climate
 from .event_log import record_grow_log
 from .fleet_state import FleetState, SeatState, get_fleet_state, update_fleet_state
+from .fleet_state import fleet_state_lock
 from .global_modifiers import apply_temp_rh_offsets
 from .hub_failover import on_hub_reconnect, snapshot_from_hub_values
 from .hub_controls import (
@@ -88,6 +89,8 @@ class EsphomeIngest:
     def __init__(self) -> None:
         self._task: asyncio.Task[None] | None = None
         self._running = False
+        # Shallow copy of the system dict each poll started from (see _run's merge).
+        self._poll_base_system: dict[str, Any] = {}
 
     def start(self) -> None:
         if self._task is not None:
@@ -113,14 +116,26 @@ class EsphomeIngest:
         while self._running:
             try:
                 state = await self._poll_once()
-                # Zigbee MQTT may have advanced canopy during this long poll —
-                # stamp ingest cache so we never clobber role-bound climate.
-                apply_zigbee_cache_to_state(state)
-                # Tuya lane rows ride the same role buckets; its own keys are stamped here.
                 from .tuya_local import apply_tuya_cache_to_state
 
-                apply_tuya_cache_to_state(state)
-                update_fleet_state(state)
+                with fleet_state_lock():
+                    # The poll started from a copy of `system` taken seconds ago. Anything
+                    # another writer (Zigbee, Tuya, automation banners) stored since would
+                    # be silently rolled back if we published that copy, so start from the
+                    # LATEST system dict and lay only the keys this poll actually wrote on
+                    # top — a value the poll did not reassign is still the same object.
+                    base = self._poll_base_system
+                    merged = dict(get_fleet_state().system)
+                    for key, val in state.system.items():
+                        if key not in base or base[key] is not val:
+                            merged[key] = val
+                    state.system = merged
+                    # Zigbee MQTT may have advanced canopy during the poll — stamp the
+                    # ingest cache so we never clobber role-bound climate.
+                    apply_zigbee_cache_to_state(state)
+                    # Tuya lane rows ride the same role buckets; its own keys are stamped here.
+                    apply_tuya_cache_to_state(state)
+                    update_fleet_state(state)
                 # Brain-owned hub tunables: adopt new entities, confirm echoes, push what is
                 # queued (never while takeover / reconnect override holds). Never raises.
                 from .hub_tunables import on_fleet_poll
@@ -142,6 +157,8 @@ class EsphomeIngest:
         state.sonoffs = dict(prev.sonoffs)
         state.canopy = dict(prev.canopy)
         state.system = dict(prev.system)
+        # Same value objects as `state.system` starts with — see the merge in `_run`.
+        self._poll_base_system = dict(state.system)
 
         inventory = {r["seat_id"]: r for r in list_inventory()}
         try:
@@ -155,6 +172,11 @@ class EsphomeIngest:
             key=lambda item: (0 if item[0] == "hub" else 1, item[0]),
         )
 
+        # Plan first, fetch every device concurrently (different hosts, different locks),
+        # then apply in seat order. Sequential fetches — each holding a session 3–8 s —
+        # made one full pass take ~30 s, so the hub half of the snapshot was already
+        # ~25 s old by the time it was published and up to ~60 s old before the next one.
+        plan: list[tuple[str, dict[str, Any], str, str | None, str, str]] = []
         for seat_id, row in seat_order:
             role = row.get("role", "")
             host = row.get("host") or os.environ.get(f"DSC_{seat_id.upper()}_HOST")
@@ -166,28 +188,42 @@ class EsphomeIngest:
                 # in_service gates WRITES, not observation. An out-of-service Sonoff
                 # whose relay is physically ON is exactly the state the failsafe exists
                 # for, so keep reading it (read-only) instead of going blind.
-                if role.startswith("sonoff") and host:
-                    try:
-                        readings = await _fetch_device(host, api_key or "", role, seat_id)
-                        self._apply_readings(state, seat_id, role, readings)
-                        seat = state.sonoffs.get(seat_id)
-                        if seat is not None:
-                            seat.values["in_service"] = False
-                        continue
-                    except Exception as exc:  # noqa: BLE001
-                        _logger.debug("ESPHome OOS %s @ %s: %s", seat_id, host, exc)
+                kind = "oos_read" if role.startswith("sonoff") and host else "oos_mark"
+            elif not host:
+                kind = "skip"
+            else:
+                kind = "read"
+            plan.append((seat_id, row, role, host, api_key or "", kind))
+
+        async def fetch(seat_id: str, host: str, api_key: str, role: str) -> dict[str, Any] | Exception:
+            try:
+                return await _fetch_device(host, api_key, role, seat_id)
+            except Exception as exc:  # noqa: BLE001
+                return exc
+
+        to_fetch = [(sid, host, key, role) for sid, _row, role, host, key, kind in plan if kind in ("read", "oos_read")]
+        fetched = await asyncio.gather(*(fetch(sid, host or "", key, role) for sid, host, key, role in to_fetch))
+        results: dict[str, dict[str, Any] | Exception] = {sid: res for (sid, _h, _k, _r), res in zip(to_fetch, fetched)}
+
+        for seat_id, _row, role, host, _api_key, kind in plan:
+            if kind == "skip":
+                continue
+            if kind == "oos_mark":
                 self._mark_oos_seat(state, seat_id, role, prev)
                 continue
-            if not host:
+            res = results.get(seat_id)
+            if isinstance(res, dict):
+                self._apply_readings(state, seat_id, role, res)
+                if kind == "oos_read":
+                    seat = state.sonoffs.get(seat_id)
+                    if seat is not None:
+                        seat.values["in_service"] = False
                 continue
-            polled = False
-            try:
-                readings = await _fetch_device(host, api_key or "", role, seat_id)
-                self._apply_readings(state, seat_id, role, readings)
-                polled = True
-            except Exception as exc:  # noqa: BLE001
-                _logger.debug("ESPHome %s @ %s: %s", seat_id, host, exc)
-            if not polled:
+            if kind == "oos_read":
+                _logger.debug("ESPHome OOS %s @ %s: %s", seat_id, host, res)
+                self._mark_oos_seat(state, seat_id, role, prev)
+            else:
+                _logger.debug("ESPHome %s @ %s: %s", seat_id, host, res)
                 self._mark_stale_seat(state, seat_id, role, prev)
 
         self._expire_unpolled_seats(state, prev, inventory)

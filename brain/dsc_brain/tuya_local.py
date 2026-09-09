@@ -31,6 +31,7 @@ from typing import Any, Callable
 
 from .device_bindings import normalize_binding, role_conflicts
 from .fleet_state import FleetState, get_fleet_state, update_fleet_state
+from .fleet_state import fleet_state_lock
 from .settings import get_setting, set_setting
 from .tuya_catalog import (
     default_dps_map,
@@ -784,10 +785,11 @@ class TuyaLane:
         try:
             from .zigbee_mqtt import stamp_role_buckets
 
-            fleet = get_fleet_state()
-            apply_tuya_cache_to_state(fleet)
-            stamp_role_buckets(fleet)
-            update_fleet_state(fleet)
+            with fleet_state_lock():
+                fleet = get_fleet_state()
+                apply_tuya_cache_to_state(fleet)
+                stamp_role_buckets(fleet)
+                update_fleet_state(fleet)
         except Exception as exc:  # noqa: BLE001
             _logger.debug("tuya publish skipped: %s", exc)
 

@@ -1005,6 +1005,53 @@ def _clear_effect(rid: str, owned: dict[str, Any], fleet: FleetState) -> None:
             _service("number", "set_value", {"entity_id": eid, "value": clamp_setpoint(eid, float(sp["restore"]))})
 
 
+# ------------------------------------------------------------------- engine tick
+
+RULE_TICK_S = 2.0
+_tick_task: "asyncio.Task[None] | None" = None
+_tick_running = False
+
+
+async def _tick_loop() -> None:
+    while _tick_running:
+        try:
+            evaluate_automation_rules()
+        except Exception as exc:  # noqa: BLE001
+            _logger.warning("automation tick failed: %s", exc)
+        await asyncio.sleep(RULE_TICK_S)
+
+
+def start_automation_ticker() -> None:
+    """Run the rule engine on a fixed cadence, independent of any client.
+
+    Until this existed the engine only ran inside GET /fleet and the /ws/fleet loop — i.e.
+    only while a browser was watching. A safety cut-out that nobody had open never fired.
+    """
+    global _tick_task, _tick_running
+    if _tick_task is not None:
+        return
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        _logger.warning("automation ticker not started — no running event loop")
+        return
+    _tick_running = True
+    _tick_task = loop.create_task(_tick_loop())
+    _logger.info("automation rule engine ticking every %.0fs", RULE_TICK_S)
+
+
+async def stop_automation_ticker() -> None:
+    global _tick_task, _tick_running
+    _tick_running = False
+    if _tick_task:
+        _tick_task.cancel()
+        try:
+            await _tick_task
+        except asyncio.CancelledError:
+            pass
+        _tick_task = None
+
+
 # ------------------------------------------------------------------- evaluate
 
 

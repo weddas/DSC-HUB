@@ -93,22 +93,26 @@ async def _ensure_entity_keys(
     if cache_key in store and all(oid in store[cache_key] for oid in object_ids):
         return store[cache_key]
 
+    # Discovery is a Native API session like any other: without the host lock it raced
+    # the ingest poll on a single-client device. Callers take the lock again for the
+    # command itself; the lock is not held across the two.
     client = make_api_client(host, api_key)
-    try:
-        await client.connect(login=True)
-        entities, _services = await client.list_entities_services()
-        keys: dict[str, int] = dict(store.get(cache_key, {}))
-        for ent in entities:
-            oid = str(getattr(ent, "object_id", ""))
-            if oid in object_ids and hasattr(ent, "key"):
-                keys[oid] = int(ent.key)
-        store[cache_key] = keys
-        return keys
-    finally:
+    async with host_lock(host):
         try:
-            await client.disconnect()
-        except Exception:  # noqa: BLE001
-            pass
+            await client.connect(login=True)
+            entities, _services = await client.list_entities_services()
+            keys: dict[str, int] = dict(store.get(cache_key, {}))
+            for ent in entities:
+                oid = str(getattr(ent, "object_id", ""))
+                if oid in object_ids and hasattr(ent, "key"):
+                    keys[oid] = int(ent.key)
+            store[cache_key] = keys
+            return keys
+        finally:
+            try:
+                await client.disconnect()
+            except Exception:  # noqa: BLE001
+                pass
 
 
 async def _ensure_select_meta(
@@ -122,21 +126,22 @@ async def _ensure_select_meta(
         return keys, _select_options[cache_key]
 
     client = make_api_client(host, api_key)
-    try:
-        await client.connect(login=True)
-        entities, _services = await client.list_entities_services()
-        opts: dict[str, list[str]] = dict(_select_options.get(cache_key, {}))
-        for ent in entities:
-            oid = str(getattr(ent, "object_id", ""))
-            if oid in object_ids and hasattr(ent, "options"):
-                opts[oid] = list(getattr(ent, "options", []) or [])
-        _select_options[cache_key] = opts
-        return keys, opts
-    finally:
+    async with host_lock(host):
         try:
-            await client.disconnect()
-        except Exception:  # noqa: BLE001
-            pass
+            await client.connect(login=True)
+            entities, _services = await client.list_entities_services()
+            opts: dict[str, list[str]] = dict(_select_options.get(cache_key, {}))
+            for ent in entities:
+                oid = str(getattr(ent, "object_id", ""))
+                if oid in object_ids and hasattr(ent, "options"):
+                    opts[oid] = list(getattr(ent, "options", []) or [])
+            _select_options[cache_key] = opts
+            return keys, opts
+        finally:
+            try:
+                await client.disconnect()
+            except Exception:  # noqa: BLE001
+                pass
 
 
 async def _ensure_switch_keys(host: str, api_key: str, cache_key: str, object_ids: set[str]) -> dict[str, int]:

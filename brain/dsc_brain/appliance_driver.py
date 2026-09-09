@@ -77,48 +77,42 @@ def _demands_from_discovered(
 
 
 async def _read_hub_demands(hub_row: dict[str, Any]) -> dict[str, bool] | None:
-    host = hub_row.get("host") or ""
-    api_key = _api_key_for("hub", hub_row) or get_setting("dsc_hub_api_key", "")
-    if not host:
+    """Hub demand switches from the ingest snapshot; None when the hub is dark or stale.
+
+    This used to open its own Native API session to the hub every 2 s and hold it ~0.8 s,
+    while the ingest poll held the same single-client hub for 5–8 s of every cycle. The two
+    contended on one host lock, and every operator write queued behind both — measured
+    brain→hub round trips of 50–70 s. The ingest snapshot already carries every demand
+    switch under hub.values["controls"], so read it there and leave the hub to the poll.
+    Freshness is judged by the hub seat's last_seen against STALE_SEC, so the failsafe
+    still trips when the hub goes dark; it simply no longer needs a second connection to
+    find that out.
+    """
+    if not (hub_row.get("host") or ""):
         return None
+    from .fleet_state import get_fleet_state
+    from .hub_controls import HUB_SWITCH_OID_TO_ENTITY
 
-    client = make_api_client(host, api_key)
-    try:
-        async with host_lock(host):
-            await client.connect(login=True)
-            entities, _services = await client.list_entities_services()
-            global _hub_switch_keys
-            if not _hub_switch_keys:
-                for ent in entities:
-                    oid = str(getattr(ent, "object_id", ""))
-                    if oid in DEMAND_TO_SEAT and hasattr(ent, "key"):
-                        _hub_switch_keys[oid] = int(ent.key)
-
-            key_to_oid = {v: k for k, v in _hub_switch_keys.items()}
-            live: dict[str, bool] = {}
-
-            def on_state(state: Any) -> None:
-                oid = key_to_oid.get(getattr(state, "key", -1))
-                if oid:
-                    on = bool(getattr(state, "state", False))
-                    if isinstance(getattr(state, "state", None), str):
-                        on = str(state.state).lower() in ("on", "true", "1")
-                    live[oid] = on
-
-            unsub = client.subscribe_states(on_state)
-            await asyncio.sleep(0.8)
-            if unsub:
-                unsub()
-
-            return _demands_from_discovered(_hub_switch_keys, live)
-    except Exception as exc:  # noqa: BLE001
-        _logger.debug("hub demand read failed @ %s: %s", host, exc)
+    hub = get_fleet_state().hub
+    if hub is None or not hub.online:
         return None
-    finally:
-        try:
-            await client.disconnect()
-        except Exception:  # noqa: BLE001
-            pass
+    last_seen = float(hub.last_seen or 0.0)
+    if last_seen <= 0.0 or time.time() - last_seen > STALE_SEC:
+        return None
+    controls = (hub.values or {}).get("controls") or {}
+    live: dict[str, bool] = {}
+    for oid in DEMAND_TO_SEAT:
+        eid = HUB_SWITCH_OID_TO_ENTITY.get(oid)
+        ctrl = controls.get(eid) if eid else None
+        if not isinstance(ctrl, dict):
+            continue
+        st = ctrl.get("state")
+        if st is None:
+            continue
+        live[oid] = str(st).strip().lower() in ("on", "true", "1")
+    # Only object_ids the firmware actually exposes — an undiscovered alias reported as
+    # False would overwrite the real switch's ON on the same tick (heatmat chatter).
+    return live or None
 
 
 async def _set_sonoff_relay(

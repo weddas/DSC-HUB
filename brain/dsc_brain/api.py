@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import re
@@ -493,6 +494,11 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
     from .computed_history import start_computed_recorder, stop_computed_recorder
 
     start_computed_recorder()
+    # Rules evaluate on their own clock in every mode; demo writes are still refused by
+    # the control proxy, so the engine ticking there is honest and harmless.
+    from .automation_rules import start_automation_ticker, stop_automation_ticker
+
+    start_automation_ticker()
     from .cameras import start_camera_poller, stop_camera_poller
 
     if is_demo_mode():
@@ -509,6 +515,7 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
         # Cameras are LAN/USB fetches — software-only demo mode never captures.
         start_camera_poller()
     yield
+    await stop_automation_ticker()
     stop_computed_recorder()
     stop_camera_poller()
     if is_demo_mode():
@@ -691,13 +698,11 @@ def fleet(
     include_hass: bool = Query(False, alias="include_hass"),
     include_computed: bool = Query(False, alias="include_computed"),
 ) -> dict[str, Any]:
+    # A GET must not actuate. The rule engine used to run here (and in the WS loop), so a
+    # dashboard refresh could flip a relay and a closed browser meant no rules at all; it
+    # now ticks on its own (automation_rules.start_automation_ticker).
     state = get_fleet_state()
     inventory = list_inventory()
-    try:
-        evaluate_automation_rules(state, inventory)
-        inventory = list_inventory()  # a rule may have flipped a seat's in_service
-    except Exception as exc:  # noqa: BLE001
-        _logger.warning("automation rule eval (/fleet) failed: %s", exc)
     payload = state.to_dict()
     merge_inventory_oos_seats(payload, inventory)
     payload["inventory"] = inventory
@@ -756,25 +761,38 @@ def fleet_computed() -> dict[str, Any]:
     return {"hass_extras": build_computed_hass_states(state, inventory)}
 
 
+_WS_SNAPSHOT: tuple[float, dict[str, Any]] | None = None
+_WS_SNAPSHOT_TTL_S = 1.0
+_WS_PUSH_S = 2.0
+
+
+def _ws_snapshot() -> dict[str, Any]:
+    """The fleet payload every /ws/fleet client sends this second.
+
+    Each socket used to rebuild to_dict() + inventory on its own 2 s timer and run the rule
+    engine as a side effect, so N open dashboards meant N engine passes and N serialisations
+    per tick. One snapshot is now built at most once per TTL and shared.
+    """
+    global _WS_SNAPSHOT
+    now = time.monotonic()
+    if _WS_SNAPSHOT is not None and now - _WS_SNAPSHOT[0] < _WS_SNAPSHOT_TTL_S:
+        return _WS_SNAPSHOT[1]
+    st = get_fleet_state()
+    inv = list_inventory()
+    payload = st.to_dict()
+    merge_inventory_oos_seats(payload, inv)
+    payload["inventory"] = inv
+    _WS_SNAPSHOT = (now, payload)
+    return payload
+
+
 @app.websocket("/ws/fleet")
 async def fleet_ws(websocket: WebSocket) -> None:
     await websocket.accept()
     try:
         while True:
-            st = get_fleet_state()
-            inv = list_inventory()
-            try:
-                evaluate_automation_rules(st, inv)
-                inv = list_inventory()
-            except Exception as exc:  # noqa: BLE001
-                _logger.warning("automation rule eval (ws) failed: %s", exc)
-            ws_payload = st.to_dict()
-            merge_inventory_oos_seats(ws_payload, inv)
-            ws_payload["inventory"] = inv
-            await websocket.send_json(ws_payload)
-            import asyncio
-
-            await asyncio.sleep(2.0)
+            await websocket.send_json(_ws_snapshot())
+            await asyncio.sleep(_WS_PUSH_S)
     except WebSocketDisconnect:
         pass
 

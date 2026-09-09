@@ -13,6 +13,7 @@ from typing import Any, Callable
 from .device_bindings import CLASS_ROLE_KINDS as _CLASS_ROLE_KINDS
 from .device_bindings import VALID_ZONES as _VALID_ZONES
 from .fleet_state import FleetState, get_fleet_state, update_fleet_state
+from .fleet_state import fleet_state_lock
 from .settings import get_setting, list_inventory, set_setting
 
 _logger = logging.getLogger(__name__)
@@ -805,13 +806,14 @@ class ZigbeeMqttIngest:
         if self._canopy:
             self._canopy["last_topic"] = topic
 
-        fleet_state = get_fleet_state()
-        fleet_state.system = dict(fleet_state.system)
-        fleet_state.system["zigbee_device_states"] = dict(self._device_states)
-        stamp_role_buckets(fleet_state)
-        fleet_state.system["zigbee_placements"] = _placement_map()
-        fleet_state.system["zigbee_device_bindings"] = load_zigbee_bindings()
-        update_fleet_state(fleet_state)
+        with fleet_state_lock():  # paho thread vs the ingest loop's publish
+            fleet_state = get_fleet_state()
+            fleet_state.system = dict(fleet_state.system)
+            fleet_state.system["zigbee_device_states"] = dict(self._device_states)
+            stamp_role_buckets(fleet_state)
+            fleet_state.system["zigbee_placements"] = _placement_map()
+            fleet_state.system["zigbee_device_bindings"] = load_zigbee_bindings()
+            update_fleet_state(fleet_state)
 
         # Universal device→task path (any ieee with a recipe)
         ieee: str | None = None

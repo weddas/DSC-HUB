@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import threading
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -402,8 +403,15 @@ def _stringify(value: Any) -> str:
     return str(value)
 
 
-# Module-level cache updated by ingest loop
+# Module-level cache updated by ingest loop. Three writers touch it — the uvicorn loop
+# (ESPHome ingest, automation banners), the paho MQTT thread (Zigbee) and the Tuya lane —
+# so every read-modify-write holds `fleet_state_lock()`; the swap itself always does.
 _fleet = FleetState()
+_fleet_lock = threading.RLock()
+
+
+def fleet_state_lock() -> threading.RLock:
+    return _fleet_lock
 
 
 def get_fleet_state() -> FleetState:
@@ -412,5 +420,6 @@ def get_fleet_state() -> FleetState:
 
 def update_fleet_state(state: FleetState) -> None:
     global _fleet
-    state.updated_at = time.time()
-    _fleet = state
+    with _fleet_lock:
+        state.updated_at = time.time()
+        _fleet = state
