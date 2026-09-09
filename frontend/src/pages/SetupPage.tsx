@@ -217,7 +217,7 @@ export function SetupPage() {
             </select>
           </label>
           {manifest && manifest.firmware_dir_exists === false ? (
-            <p className="dsc-honesty">No kit firmware directory on this brain ({manifest.firmware_dir}) — nothing here can be flashed.</p>
+            <p className="dsc-honesty">No kit firmware directory on this brain ({manifest.firmware_dir}) — nothing here can be flashed. Stage the kit binaries under the brain's firmware dir (or bake an image that includes them) first.</p>
           ) : null}
           <label style={{ display: "block", marginTop: 8 }}>
             Port{" "}
@@ -230,6 +230,13 @@ export function SetupPage() {
               ))}
             </select>
           </label>
+          {ports.length === 0 ? (
+            <p className="dsc-honesty">
+              No serial ports are visible to the brain. On the containerised Pi the brain has no USB
+              passthrough (the SoftAP Zigbee coordinator shares the bus, so it is deliberately not
+              exposed) — flash from a host-side helper or the ESPHome dashboard instead of here.
+            </p>
+          ) : null}
           {bootNote ? <p className="dsc-honesty">{bootNote}</p> : null}
           {jobDetail ? (
             <pre className="dsc-muted" style={{ whiteSpace: "pre-wrap", fontSize: "var(--dsc-fs-sm)" }}>
