@@ -46,6 +46,9 @@ CFM_SPECS: list[tuple[str, str, str, str]] = [
     ("sensor.dsc_cfm_intake_2x4", "sensor.dsc_fan_intake_2x4_pct", "input_number.dsc_cfm_intake_clone_max", "dsc_cal_cfm_intake_clone"),
 ]
 
+# nameplate helper -> calibration prefix, so a curve is always judged against its own fan.
+_CAL_PREFIX_PLATE: dict[str, str] = {plate_id: cal_prefix for _c, _p, plate_id, cal_prefix in CFM_SPECS}
+
 CAL_PREFIX_DEVICE: dict[str, str] = {
     "dsc_cal_cfm_out": "dsc_cal_cfm_out",
     "dsc_cal_cfm_recirc": "dsc_cal_cfm_recirc",
@@ -188,9 +191,21 @@ def _cal_points_memoized(
 _CURVE_MIN_SPAN_FRAC = 0.10  # top-to-bottom spread must be >=10 % of the top reading
 _CURVE_NOISE_FRAC = 0.05  # a step may dip this much (of the top reading) and still count
 
+# ...and it has to be in the same units as the fan it describes. Varying is not enough:
+# the live 2x4 intake curve read 5.0/7.5/8.0/9.0 against a 200 CFM nameplate — a clean
+# monotonic rise, 4.5 % of the fan's rating, almost certainly an anemometer's m/s rather
+# than CFM. It passed the span gate, was stamped `measured_curve`, and became the intake
+# side of `flow_net_pressure_cfm` while the exhaust side used nameplate proxy: 5.9 CFM in
+# vs 224.4 CFM out, a -218.5 CFM "under-pressure" that no tent could actually be in. A
+# curve that disagrees with the nameplate by an order of magnitude is a unit error, not a
+# measurement, and the nameplate proxy is the more honest answer.
+_CURVE_MIN_PLATE_FRAC = 0.25  # top point >=25 % of nameplate (ducting/filter derate is real)
+_CURVE_MAX_PLATE_FRAC = 1.5  # ...and no more than 1.5x it; a fan cannot beat its rating
 
-def _curve_points_usable(points: list[tuple[float, float]]) -> bool:
-    """True when >=2 positive points that vary with duty and never fall as duty rises."""
+
+def _curve_points_usable(points: list[tuple[float, float]], nameplate: float = 0.0) -> bool:
+    """True when >=2 positive points that vary with duty, never fall as duty rises, and —
+    when a nameplate is known — sit in a plausible band around it."""
     live = [(x, y) for x, y in points if y > 0]
     if len(live) < 2:
         return False
@@ -200,7 +215,22 @@ def _curve_points_usable(points: list[tuple[float, float]]) -> bool:
     for (_x0, y0), (_x1, y1) in zip(live, live[1:]):
         if y1 < y0 - _CURVE_NOISE_FRAC * top:
             return False
+    if nameplate > 0 and not (_CURVE_MIN_PLATE_FRAC * nameplate <= top <= _CURVE_MAX_PLATE_FRAC * nameplate):
+        return False
     return True
+
+
+def _proxy_reason(points: list[tuple[float, float]], nameplate: float) -> str:
+    """Why the nameplate proxy is being used — the operator has to be able to act on it."""
+    live = [(x, y) for x, y in points if y > 0]
+    if len(live) < 2:
+        return "capacity_proxy_nameplate"
+    top = max(y for _, y in live)
+    if top - min(y for _, y in live) < _CURVE_MIN_SPAN_FRAC * top:
+        return "capacity_proxy_nameplate_flat_calibration"
+    if nameplate > 0 and not (_CURVE_MIN_PLATE_FRAC * nameplate <= top <= _CURVE_MAX_PLATE_FRAC * nameplate):
+        return "capacity_proxy_nameplate_calibration_implausible_vs_nameplate"
+    return "capacity_proxy_nameplate_calibration_not_monotonic"
 
 
 def _cfm_from_pct_memoized(
@@ -211,10 +241,8 @@ def _cfm_from_pct_memoized(
     memo: dict[str, list[tuple[float, float]]],
 ) -> tuple[float, str, str]:
     points = _cal_points_memoized(cal_prefix, helpers, memo)
-    if not _curve_points_usable(points):
-        measured = [v for _, v in points if v > 0]
-        honesty = "capacity_proxy_nameplate" if len(measured) < 2 else "capacity_proxy_nameplate_flat_calibration"
-        return round(pct / 100.0 * nameplate, 1), "linear", honesty
+    if not _curve_points_usable(points, nameplate):
+        return round(pct / 100.0 * nameplate, 1), "linear", _proxy_reason(points, nameplate)
     xs = [p[0] for p in points]
     ys = [p[1] for p in points]
     if pct <= xs[0]:
@@ -716,10 +744,14 @@ def _build_cold_computed_states(
             _set_entity(states, f"sensor.dsc_probe{pot_n}_need_summary", need)
 
     cal_active = get_helper("input_boolean.dsc_cal_active", "off") == "on"
+    # Count a curve only against its own fan's nameplate: "3/4 curves" while three of them
+    # are an order of magnitude off the fans they describe is the calibration screen lying.
     curve_count = sum(
         1
-        for prefix in ("dsc_cal_cfm_out", "dsc_cal_cfm_recirc", "dsc_cal_cfm_intake_main", "dsc_cal_cfm_intake_clone")
-        if _curve_points_usable(_cal_points_memoized(prefix, helpers, cal_memo))
+        for plate_id, prefix in _CAL_PREFIX_PLATE.items()
+        if _curve_points_usable(
+            _cal_points_memoized(prefix, helpers, cal_memo), float(helpers.get(plate_id, 0) or 0)
+        )
     )
     _set_entity(states, "sensor.dsc_cfm_curves_status", f"{curve_count}/4 curves")
     _set_entity(states, "sensor.dsc_learn_status", "idle" if not cal_active else "cal_active")
