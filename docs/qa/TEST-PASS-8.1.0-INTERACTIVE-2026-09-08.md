@@ -15,14 +15,22 @@ were not reachable, and one test physically took the rig down.
 The pass found **53 new defects** — ten Critical — verified five
 previously-logged entries, reversed one that had been closed wrongly, and caused
 **three unplanned outages**. Two were the root-on-USB fragility. The third,
-on 2026-09-09, was caused by leaving a browser tab open on the Alerts page:
-it wedged the brain, which in turn **rebooted the hub**. That chain is §M and is
-the single most important thing in this document.
+on 2026-09-09, was the SPA flooding the brain with ~17 `/fleet/computed`
+requests a second until its accept queue saturated, which in turn **rebooted the
+hub**. That chain is §M and is the single most important thing in this document
+— including the two wrong root causes I published before reading the server log.
 
-**Withdrawn by the author: four claims.** Three findings and one near-miss were
-wrong and are retracted in place rather than deleted — §I and §M both end with
-the corrections table. Every one of the four was a case of reading a stalled or
-missing number as a system fault when it was a sampling fault.
+**Withdrawn by the author.** Claims that did not survive checking are retracted
+in place rather than deleted; §I and §M each end with a corrections table. Nine
+went in §I. Six more went in §M: three published findings, two published root
+causes for the outage, and one near-miss caught before filing.
+
+Two patterns account for almost all of them. **Reading a stalled or missing
+number as a system fault when it was a sampling fault** — the false "ingestion
+has stalled", the backwards clock comparison, the "frozen" hub uptime that
+advances in exact 300 s steps. And **reasoning from source code to a cause
+without first reading the system's own telemetry** — which produced both wrong
+answers for the §M outage.
 
 ### The one architectural theme worth fixing first
 
@@ -688,18 +696,16 @@ This sweep worked the routes the browser sweeps never touch, then went back to
 the dash as a user. It produced the most important finding of the whole pass, by
 causing it.
 
-### The headline: a browser tab left open on Alerts rebooted the hub
+### The headline: the SPA floods the brain, and that rebooted the hub
 
-**COMPLETED — reproduced end to end, fully recovered, no restart performed.**
+**COMPLETED — reproduced, root-caused from the brain's own container log, and
+corrected twice along the way.** The corrections are recorded below because two
+wrong diagnoses were published before the right one.
 
-I left a tab on `#/alerts` and went to read code. The chain:
-
-1. The Alerts desk retries `/grow-log?hours=24&limit=120` and
-   `/settings/automations` **with no in-flight guard** — new requests fire while
-   the previous ones are still pending. The tab logged 9,600+ requests.
-2. Both routes stopped completing. The panels sat on `Loading…` / `Loading
-   rules…` indefinitely, and the header printed `— rules`.
-3. Within ~2 minutes **every** route stopped responding:
+**What happened.** Twice during this sweep the brain stopped answering *any*
+route from an external client — including `/openapi.json`, which is served from
+memory and touches no disk — while TCP connect to 8787 still succeeded in
+**0.01 s**, ICMP showed 0 % loss and port 22 was open:
 
 ```
 /settings/automations   60.0s  no response
@@ -708,22 +714,17 @@ I left a tab on `#/alerts` and went to read code. The chain:
 /openapi.json  /  /docs  /health        12.0s each
 ```
 
-`/openapi.json` is served from memory and touches no disk. TCP connect to 8787
-still succeeded in **0.01 s**, ICMP 0 % loss, port 22 open. The process was alive
-and the socket healthy — nothing was returning.
+Both times it recovered on its own (~120 s and ~201 s). No restart was performed
+— the restart earlier in this pass took the host down with it (§H).
 
-This is a **different signature** from the 2026-09-08 USB brownout, where
-`/openapi.json` still returned 200 and only DB-backed routes 500'd. Recorded
-because the two are easy to confuse and the treatment differs.
-
-4. **The hub rebooted.** `uptime` 14704 s → **304 s**, `heartbeat` 497 → 11.
-5. The hub's own event field records why:
+**The hub rebooted.** `uptime` 14704 s → **304 s**, `heartbeat` 497 → 11, and the
+hub's own event field records why:
 
 ```
 last_evt = EVT|H|API_BLIP|301|
 ```
 
-301 seconds of API outage, against the firmware's reboot threshold at
+301 seconds of API outage against the firmware's threshold at
 `firmware/v4/dsc-hub-v4_0.yaml:5480`:
 
 ```cpp
@@ -733,42 +734,98 @@ return api_problem && id(link_rec_stage) >= 2;
 // -> id(link_rec_reason_str) = "safe_reboot_api_wedge";
 ```
 
-**The firmware did exactly what it is documented to do** — the file header states
-the ladder plainly: *"Bounce ~180s / reboot ~300s need a dead API client."* The
-fault is entirely upstream: the brain made itself look like a dead API client.
+The firmware did exactly what it is documented to do — the file header states the
+ladder plainly: *"Bounce ~180s / reboot ~300s need a dead API client."* Something
+upstream made the brain look like a dead API client. That is not a theoretical
+cost: the same header records the 5 Aug 2026 incident where a recovery reboot
+restored Full Auto OFF mid-window and lost **~5.5 h of light**.
 
-That is not a theoretical cost. The same header records the 5 Aug 2026 incident
-where a recovery reboot restored Full Auto OFF mid-window and lost **~5.5 h of
-light**.
+### Root cause — from the brain's container log
 
-### Root cause: every database read is a write transaction
+The operator pulled `docker logs dsc-hub-brain`. It settles it:
 
-`brain/dsc_brain/catalog.py:55` and `brain/dsc_brain/settings.py:114`, both:
-
-```python
-conn = sqlite3.connect(path)      # no timeout=
-conn.row_factory = sqlite3.Row
-conn.executescript(SCHEMA)        # write-locking DDL — on every call
+```
+_=1788937434481   <- normal 5 s poll
+_=1788937439481
+_=1788937444480
+...
+_=1788937910042   <- then this
+_=1788937910096      54 ms
+_=1788937910160      64 ms
+_=1788937910216      56 ms
+_=1788937910270      54 ms      ... ~90 more inside 5.4 s
 ```
 
-Grepping both files for `journal_mode`, `WAL`, `busy_timeout` and `timeout=`
-returns **zero matches**. Three compounding faults:
+**Every line is `200 OK`.** No traceback, no `database is locked`, nothing
+blocked. The server never stopped serving. A client is issuing
+`/fleet/computed` at roughly **17 requests per second** in sustained bursts,
+hundreds in a row, over a single keep-alive connection. The cache-buster is
+`Date.now()` evaluated at *issue* time, so those spacings are real issue
+intervals, not queue timestamps.
 
-| Fault | Consequence |
+The external symptom — every route timing out while TCP connect succeeds
+instantly — is uvicorn's accept queue being saturated by the flood. It is not a
+blocked handler.
+
+**Confirmed by removing the client.** With every browser closed, ten consecutive
+`/health` probes over 50 s: `0.044, 0.016, 0.023, 0.008, 0.016, 0.023, 0.016,
+0.016, 0.006, 0.022 s` — ten for ten, zero failures.
+
+### The amplifier — `frontend/src/hooks/useBrain.tsx`
+
+```ts
+const computedChain = useRef(Promise.resolve());
+
+const refreshComputed = useCallback(() => {
+  const run = async () => { const data = await get_fleet_computed(); ... };
+  computedChain.current = computedChain.current.then(run, run);   // queue, never coalesce
+  return computedChain.current;
+}, []);
+```
+
+The chain **serialises but never coalesces or drops**. Three independent
+producers feed it with no shared guard:
+
+| Producer | Cadence |
 |---|---|
-| No WAL | Default rollback journal — the writer's EXCLUSIVE lock blocks *every* reader, and ingestion appends continuously to a 2,024,502-row history table |
-| `executescript(SCHEMA)` per connect | 8 statements (settings) / 6 (catalog) of DDL per request — **every read takes a write lock** |
-| No `busy_timeout` | Leaves the 5 s Python default, across 65 `connect()` call sites, one connection per call |
+| `ws.onmessage` (`:107`) | every `/ws/fleet` push — `api.py:776` sleeps 2.0 s |
+| `computedPoll` (`:128`) | 5 s interval |
+| `refresh()` via `onclose` fallback (`:120`) | a second 5 s interval |
 
-Under the SPA's retry loop these serialise until the threadpool and connection
-pool exhaust and uvicorn stops accepting.
+So however a backlog arises, it drains **back to back at whatever rate the server
+can answer a 299-entity payload** — which is exactly the observed 40–60 ms. One
+pending refresh is always sufficient, since each fetch returns the whole current
+state.
 
-The proof it is contention and not query cost: once idle, `/grow-log` returns
-**5,051 bytes in 13 ms** and `/health` in 19 ms.
+**Fix:** coalesce. If a refresh is in flight, return the in-flight promise
+instead of chaining another.
 
-**Recovery.** The brain healed itself ~2 minutes after the tab was closed, with no
-intervention. I deliberately did **not** restart it — the restart earlier in this
-pass took the host down with it (§H).
+**Not established:** what creates the backlog in the first place. The hook's
+effect cleanup is correct (`ws.close()`, `clearInterval`, `pollRef` cleared) and
+its deps are all stable `useCallback`s, so it is not a remount leak. Browser
+timer throttling on a backgrounded tab or a sleeping machine, with the
+accumulated callbacks firing on resume, would fit — but that is a hypothesis,
+not a finding.
+
+### Two published diagnoses that were wrong
+
+Both were stated with more confidence than the evidence carried.
+
+**1. "A blocked ASGI event loop caused by SQLite lock contention."** I reasoned
+from the code — both `connect()` implementations run `executescript(SCHEMA)` with
+no WAL and no `busy_timeout` — to a cause, without ever looking at the server's
+own log. The log shows unbroken `200 OK`. Those SQLite facts are real and are
+still filed, but as a **latent** risk, not as the cause of anything observed.
+
+**2. "My browser tab / my curls wedged it."** The operator is on
+**192.168.86.10 — the same IP I was testing from** — and had the dashboard open
+throughout. My traffic was indistinguishable from theirs in the log, and was
+most likely *competing with* a flood already in progress rather than starting
+one. Every "five sequential curls did it" claim is withdrawn.
+
+The lesson is the same one this pass keeps re-learning: **reason from the
+system's own telemetry before reasoning from its source.** One `docker logs`
+would have skipped both wrong answers.
 
 ### Post-reboot state check — COMPLETED
 
@@ -998,17 +1055,20 @@ readings table renders today; and `DevicesSettingsPage.tsx:536` reads
 | Photoperiod shown is local intent, not device truth | `time.dsc_hub_lights_on_time = "06:00:00"` comes from the brain's own helper (`light_loop.py:252`), stamped `honesty: "ok"`, while the write that would push it to the hub fails on the object_id mismatch — and the hub publishes nothing to reconcile against |
 | `datetime` lights-on helper stuck on a date | holds `"2026-08-29"`; `_normalize_clock_time` correctly rejects it and its docstring shows the author knew — but the rejection is silent. Latent only: the `time.*` entity resolves first |
 
-### Corrections — three of my own findings withdrawn this sweep
+### Corrections — six of my own claims withdrawn this sweep
 
-Recorded as prominently as the finds.
+Recorded as prominently as the finds. Two of these were the outage's root cause,
+and both were published before I read the server's own log.
 
 | Claim | Why it was wrong |
 |---|---|
 | "Energy suggestions invert the advice" | **My curl omitted `lights_on`**, which the SPA always sends. With it: `max_offpeak delta −0.6528`. Correct. §L retracted in place |
 | "4×8 shows 0.0 light hours with `honesty: ok`" | Correct behaviour. It was 03:00, the window is 06:00–18:00, the last cycle ended 16:48 **yesterday**. I read a since-midnight counter as a rolling one |
 | "The photoperiod read path is blank" | `time.dsc_hub_lights_on_time = 06:00:00` does exist in computed state. Rewritten into the sharper true finding above |
+| "A blocked ASGI loop from SQLite lock contention" | The brain's container log shows unbroken `200 OK` — nothing was blocked. The SQLite facts are real but latent; refiled as such |
+| "My browser tab / my curls wedged it" | The operator browses from **192.168.86.10 — the same IP as this rig** — and had the dashboard open throughout. My traffic was competing with a flood, not causing it |
 
-A fourth was caught before filing: hub `uptime` looked frozen across a 180 s
+A sixth was caught before filing: hub `uptime` looked frozen across a 180 s
 sample, but it advances in exact **300 s** steps — a 5-minute publish interval. It
 was the third stall-shaped artefact of this pass, after the false "ingestion has
 stalled" (§I) and the false "Windows clock is fast" (§I). The pattern is now
@@ -1040,9 +1100,11 @@ What remains unrun is the physical-hardware work (cameras, flashing, an
 anemometer walk), the actuator writes deliberately not performed on a live
 flowering tent, and accessibility.
 
-**One caveat on how the remaining work should be done.** §M showed that a browser
-tab left polling this brain can wedge it and reboot the hub. Until the SQLite
-WAL / `busy_timeout` / schema-init fixes land, further interactive testing should
-keep browser sessions short and closed between runs, and prefer direct API calls
-over leaving a desk open. That is a constraint on the *method*, not a reason to
-skip the work.
+**One caveat on how the remaining work should be done.** §M showed that an open
+SPA session can flood the brain until its accept queue saturates, and that this
+is enough to reboot the hub. Until `refreshComputed` coalesces, further
+interactive testing should keep browser sessions short and closed between runs,
+and should prefer direct API calls. Note also that the operator browses from the
+**same IP** as this test rig, so a second dashboard may be open during any test —
+check with them before attributing load. That is a constraint on the *method*,
+not a reason to skip the work.
