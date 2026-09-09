@@ -75,7 +75,11 @@ PUSH_MAX_ATTEMPTS = 5
 # the settings journal is not silent.
 SETTING_AUTO_RECONCILE = "hub_tunables_auto_reconcile"
 AUTO_MODES = ("manual", "hub_wins", "brain_wins")
-DEFAULT_AUTO_MODE = "manual"
+# Operator decision 2026-09-10: brain_wins. Settings is the source of truth for this rig, so
+# a hub that has drifted (an NVS restore, a stray write, a baked stage table) is corrected
+# back rather than left stalemated. Still never silent — every correction is journalled, and
+# the debounce / in-flight / flip-flop guards below all still apply.
+DEFAULT_AUTO_MODE = "brain_wins"
 
 # A value must disagree for this long before either mode acts. Longer than ECHO_GRACE_SEC
 # and longer than one ingest poll, so a lagging echo can never trigger a correction.

@@ -7,8 +7,22 @@ from typing import Any
 
 from .settings import get_setting, set_setting
 
+# The four fans are physically different — 4" intake into the main tent, 4" intake into the
+# 2x4, 6" exhaust to the room, 6" exhaust outside — with different ducting and static
+# pressure, and only one of the four has a measured curve. One multiplier across all of them
+# meant trimming the noisy 2x4 intake also trimmed the room exhaust (operator, 2026-09-10).
+FAN_SCALE_ENTITIES: tuple[str, ...] = (
+    "fan.dsc_hub_4_inch_intake_fan_main",
+    "fan.dsc_hub_4_inch_intake_fan_2x4",
+    "fan.dsc_hub_6_inch_exhaust_room",
+    "fan.dsc_hub_6_inch_exhaust_outside",
+)
+
 DEFAULT_MODIFIERS: dict[str, Any] = {
+    # Legacy single multiplier. KEPT so an existing setting still reads, and so it can seed
+    # the per-fan map on first read — an upgrade must not silently re-scale a running fan.
     "fan_demand_scale": 1.0,
+    "fan_demand_scales": {eid: 1.0 for eid in FAN_SCALE_ENTITIES},
     "light_brightness_scale": 1.0,
     # Pot-moisture "dry" reference line on the Root band charts — was a hardcoded 30.
     "moisture_dry_pct": 30.0,
@@ -58,6 +72,18 @@ def get_global_modifiers() -> dict[str, Any]:
                 out[key] = float(parsed[key])
             except (TypeError, ValueError):
                 pass
+    # Migration: a rig that only ever had the single scalar gets it applied to every fan, so
+    # behaviour is identical until the operator moves one of them.
+    legacy = out.get("fan_demand_scale", 1.0)
+    out["fan_demand_scales"] = {eid: float(legacy) for eid in FAN_SCALE_ENTITIES}
+    stored_fans = parsed.get("fan_demand_scales")
+    if isinstance(stored_fans, dict):
+        for eid in FAN_SCALE_ENTITIES:
+            if eid in stored_fans:
+                try:
+                    out["fan_demand_scales"][eid] = float(stored_fans[eid])
+                except (TypeError, ValueError):
+                    pass
     for zone_key in ("temp_offset_c", "rh_offset_pct"):
         if isinstance(parsed.get(zone_key), dict):
             for zone in ("room", "clone", "main"):
@@ -93,6 +119,14 @@ def set_global_modifiers(patch: dict[str, Any]) -> dict[str, Any]:
         if key in patch:
             v = float(patch[key])
             current[key] = _clamp(v, 0.5, 1.5)
+    if isinstance(patch.get("fan_demand_scales"), dict):
+        for eid, val in patch["fan_demand_scales"].items():
+            if eid not in FAN_SCALE_ENTITIES:
+                raise ValueError(f"unknown fan {eid!r}")
+            try:
+                current["fan_demand_scales"][eid] = _clamp(float(val), 0.5, 1.5)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"fan_demand_scales.{eid} must be a number") from exc
     if "moisture_dry_pct" in patch:
         try:
             current["moisture_dry_pct"] = _clamp(float(patch["moisture_dry_pct"]), 5.0, 80.0)
@@ -169,11 +203,21 @@ def apply_temp_rh_offsets(
     return out_t, out_rh, rejected
 
 
-def scale_fan_demand_pct(pct: float | None) -> float | None:
+def scale_fan_demand_pct(pct: float | None, fan_entity: str | None = None) -> float | None:
+    """Scale one fan's demand by ITS OWN multiplier.
+
+    ``fan_entity`` is optional only so an old caller cannot crash; a caller that cannot name
+    its fan gets the legacy single scalar, which is the pre-2026-09-10 behaviour and is
+    wrong for three of the four fans. Pass the entity.
+    """
     if pct is None:
         return None
     mods = get_global_modifiers()
-    scale = float(mods.get("fan_demand_scale", 1.0))
+    scales = mods.get("fan_demand_scales") or {}
+    if fan_entity and fan_entity in scales:
+        scale = float(scales[fan_entity])
+    else:
+        scale = float(mods.get("fan_demand_scale", 1.0))
     return _clamp(float(pct) * scale, 0.0, 100.0)
 
 

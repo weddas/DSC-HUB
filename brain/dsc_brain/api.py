@@ -295,6 +295,9 @@ class CalibrationWriteBody(BaseModel):
 
 class GlobalModifiersPatch(BaseModel):
     fan_demand_scale: float | None = None
+    # Per-fan multipliers, keyed by fan entity id. The scalar above stays for older clients
+    # and seeds these on first read.
+    fan_demand_scales: dict[str, float] | None = None
     light_brightness_scale: float | None = None
     moisture_dry_pct: float | None = None
     temp_offset_c: dict[str, float] | None = None
@@ -1940,6 +1943,15 @@ def settings_global_modifiers_patch(body: GlobalModifiersPatch) -> dict[str, Any
     for key, label in (("fan_demand_scale", "Fan demand scale"), ("light_brightness_scale", "Light brightness scale"), ("moisture_dry_pct", "Probe dry reference line")):
         if key in patch:
             journal_setting_change(label, before.get(key), saved.get(key), domain="brain")
+    if isinstance(patch.get("fan_demand_scales"), dict):
+        # One journal line per fan, named — "Fan demand scale changed" would not say which.
+        for eid in patch["fan_demand_scales"]:
+            journal_setting_change(
+                f"Fan demand scale · {eid.rsplit('.', 1)[-1]}",
+                (before.get("fan_demand_scales") or {}).get(eid),
+                (saved.get("fan_demand_scales") or {}).get(eid),
+                domain="brain",
+            )
     for key, label in (("temp_offset_c", "temperature offset"), ("rh_offset_pct", "RH offset")):
         if isinstance(patch.get(key), dict):
             for zone in patch[key]:

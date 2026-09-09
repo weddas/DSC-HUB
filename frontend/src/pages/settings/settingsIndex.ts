@@ -62,7 +62,12 @@ export const SETTINGS_INDEX: SettingsIndexEntry[] = [
   // Zones
   { section: "zones", anchor: "zones", label: "Zones — names and roles", keywords: ["tent", "room", "role", "grow", "dry", "cure", "empty", "rename", "flip"] },
   // Climate
-  { section: "climate", anchor: "fan-demand-scale", label: "Fan demand scale", keywords: ["fan", "global modifiers", "fan_demand_scale"] },
+  // One entry per fan: the old single "fan-demand-scale" anchor no longer exists, so search
+  // would have deep-linked to nothing.
+  { section: "climate", anchor: "fan-scale-dsc_hub_4_inch_intake_fan_main", label: "Fan demand scale · 4×8 intake", keywords: ["fan", "intake", "4x8", "scale", "global modifiers"] },
+  { section: "climate", anchor: "fan-scale-dsc_hub_4_inch_intake_fan_2x4", label: "Fan demand scale · 2×4 intake", keywords: ["fan", "intake", "2x4", "scale", "global modifiers"] },
+  { section: "climate", anchor: "fan-scale-dsc_hub_6_inch_exhaust_room", label: "Fan demand scale · room exhaust", keywords: ["fan", "exhaust", "room", "scale", "global modifiers"] },
+  { section: "climate", anchor: "fan-scale-dsc_hub_6_inch_exhaust_outside", label: "Fan demand scale · outside exhaust", keywords: ["fan", "exhaust", "outside", "scale", "global modifiers"] },
   { section: "climate", anchor: "targets-desk", label: "Temperature, RH and VPD targets", keywords: ["target", "setpoint", "hub", "hysteresis", "ladder"] },
   { section: "climate", anchor: "hub-dsc_hub_target_temp", label: "4x8 target temperature", keywords: ["target", "setpoint", "temp", "hub"] },
   { section: "climate", anchor: "hub-dsc_hub_rh_target_min", label: "4x8 RH targets", keywords: ["humidity", "rh", "target", "setpoint"] },

@@ -1057,6 +1057,8 @@ export type ClimateZone = "room" | "clone" | "main";
 
 export type GlobalModifiers = {
   fan_demand_scale: number;
+  /** Per-fan multipliers keyed by fan entity id (the scalar above seeds these). */
+  fan_demand_scales: Record<string, number>;
   light_brightness_scale: number;
   /** Pot-moisture "dry" reference line on the Root band charts (%). */
   moisture_dry_pct: number;
@@ -1067,6 +1069,7 @@ export type GlobalModifiers = {
 
 export type GlobalModifiersPatch = {
   fan_demand_scale?: number;
+  fan_demand_scales?: Record<string, number>;
   light_brightness_scale?: number;
   moisture_dry_pct?: number;
   temp_offset_c?: Partial<Record<ClimateZone, number>>;

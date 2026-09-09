@@ -53,8 +53,19 @@ export function useSettingsRailStatus(): Partial<Record<SettingsSectionId, RailS
   }
 
   if (modifiers) {
-    const fan = modifiers.fan_demand_scale;
-    out.climate = fan !== 1 ? { text: `fans ×${fan.toFixed(2)}`, tone: "warn" } : { text: "fans nameplate" };
+    // Per-fan now: the rail must say HOW MANY fans are trimmed, because "fans ×0.80" was
+    // only ever true when one global multiplier covered all four.
+    const fanScales = Object.values(modifiers.fan_demand_scales ?? {});
+    const trimmed = fanScales.filter((v) => v !== 1);
+    out.climate = trimmed.length
+      ? {
+          text:
+            trimmed.length === fanScales.length && new Set(trimmed).size === 1
+              ? `fans ×${trimmed[0].toFixed(2)}`
+              : `${trimmed.length} of ${fanScales.length} fans trimmed`,
+          tone: "warn",
+        }
+      : { text: "fans nameplate" };
     const light = modifiers.light_brightness_scale;
     out.light = light !== 1 ? { text: `lamps ×${light.toFixed(2)}`, tone: "warn" } : { text: "lamps at schedule" };
     out.root = { text: `dry line ${modifiers.moisture_dry_pct}%` };

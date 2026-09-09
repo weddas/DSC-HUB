@@ -28,18 +28,22 @@ def _rows(desired: str, *, differs_since: float = 0.0, fixes: int = 0, window: f
     }
 
 
-def test_default_is_manual_so_a_deploy_changes_nothing(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_default_is_the_operators_chosen_mode(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Operator decision 2026-09-10: brain_wins — Settings is the source of truth for this
+    rig. Pinned so the default is never changed by accident: it decides what happens to a
+    live grow the moment a stalemate appears."""
     monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
     from dsc_brain.hub_tunables import DEFAULT_AUTO_MODE, get_auto_mode
 
-    assert DEFAULT_AUTO_MODE == "manual"
-    assert get_auto_mode() == "manual"
+    assert DEFAULT_AUTO_MODE == "brain_wins"
+    assert get_auto_mode() == "brain_wins"
 
 
 def test_manual_mode_never_touches_a_differing_row(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
     from dsc_brain import hub_tunables as ht
 
+    ht.set_auto_mode("manual")
     done = asyncio.run(ht._auto_reconcile(_rows("22"), _controls("25"), now=10_000.0))
     assert done == [], "manual mode acted on a stalemate"
 

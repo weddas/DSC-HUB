@@ -100,6 +100,84 @@ function ScaleRow({
   );
 }
 
+/** One fan's own multiplier. The four fans differ in size, ducting and static pressure, and
+ *  only one of the four has a measured curve — a single slider across all of them meant
+ *  trimming the noisy 2x4 intake also trimmed the room exhaust (operator, 2026-09-10). */
+const FAN_SCALE_ROWS: { entity: string; label: string; description: string }[] = [
+  {
+    entity: "fan.dsc_hub_4_inch_intake_fan_main",
+    label: "4×8 intake · 4″",
+    description: "Multiplies the demand the brain sends this fan. 1.0 is nameplate.",
+  },
+  {
+    entity: "fan.dsc_hub_4_inch_intake_fan_2x4",
+    label: "2×4 intake · 4″",
+    description: "Multiplies the demand the brain sends this fan. 1.0 is nameplate.",
+  },
+  {
+    entity: "fan.dsc_hub_6_inch_exhaust_room",
+    label: "Room exhaust · 6″",
+    description: "Multiplies the demand the brain sends this fan. 1.0 is nameplate.",
+  },
+  {
+    entity: "fan.dsc_hub_6_inch_exhaust_outside",
+    label: "Outside exhaust · 6″",
+    description: "Multiplies the demand the brain sends this fan. 1.0 is nameplate.",
+  },
+];
+
+function FanScaleRow({
+  entity,
+  label,
+  description,
+  consumers,
+}: {
+  entity: string;
+  label: string;
+  description: string;
+  consumers: { label: string; href: string }[];
+}) {
+  const { modifiers, save } = useGlobalModifiers();
+  const saveState = useSaveState();
+  const live = modifiers?.fan_demand_scales?.[entity] ?? 1;
+  const [draft, setDraft] = useState<number>(live);
+  useEffect(() => setDraft(live), [live]);
+  const commit = () => {
+    if (draft !== live) void saveState.run(() => save({ fan_demand_scales: { [entity]: draft } }));
+  };
+  return (
+    <SettingRow
+      id={`fan-scale-${entity.split(".").pop()}`}
+      label={label}
+      description={description}
+      scope="brain"
+      defaultLabel="DEFAULT 1.00"
+      isDefault={Math.abs(live - 1) < 1e-9}
+      onReset={() => void saveState.run(() => save({ fan_demand_scales: { [entity]: 1 } }))}
+      state={saveState.state}
+      stateText={saveState.text}
+      consumers={consumers}
+      control={
+        <>
+          <input
+            type="range"
+            min={0.5}
+            max={1.5}
+            step={0.05}
+            value={draft}
+            aria-label={`${label} demand scale`}
+            onChange={(e) => setDraft(Number(e.target.value))}
+            onMouseUp={commit}
+            onTouchEnd={commit}
+            onKeyUp={commit}
+          />
+          <span className="dsc-setting-value">{draft.toFixed(2)}×</span>
+        </>
+      }
+    />
+  );
+}
+
 export function ZonesSettingsPage() {
   return <ZonesSettingsCard />;
 }
@@ -197,16 +275,18 @@ export function ClimateSettingsPage() {
         loadState={loadStateOf(state)}
         loadError={error}
       >
-        <ScaleRow
-          id="fan-demand-scale"
-          field="fan_demand_scale"
-          label="Fan demand scale"
-          description="Multiplies every fan demand the brain sends. 1.0 is nameplate."
-          consumers={[
-            { label: "Climate", href: `#${paths.climate()}` },
-            { label: "Overview", href: `#${paths.overview()}` },
-          ]}
-        />
+        {FAN_SCALE_ROWS.map((f) => (
+          <FanScaleRow
+            key={f.entity}
+            entity={f.entity}
+            label={f.label}
+            description={f.description}
+            consumers={[
+              { label: "Climate", href: `#${paths.climate()}` },
+              { label: "Overview", href: `#${paths.overview()}` },
+            ]}
+          />
+        ))}
       </SettingsCard>
     </>
   );

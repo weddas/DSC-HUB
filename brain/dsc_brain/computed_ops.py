@@ -1174,7 +1174,8 @@ def _build_hot_computed_states(
             )
             continue
         pct = _fan_pct_from_controls(controls, fan_entity)
-        scaled = scale_fan_demand_pct(pct)
+        # Per-fan: this loop already knows which fan it is holding.
+        scaled = scale_fan_demand_pct(pct, fan_entity)
         fan_pcts[sensor_id] = float(scaled if scaled is not None else pct)
         _set_entity(states, sensor_id, fan_pcts[sensor_id], available=True, attributes={"unit_of_measurement": "%"})
 
