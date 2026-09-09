@@ -47,7 +47,12 @@ export function fleetToHassCompat(fleet: FleetSnapshot): Record<string, HassEnti
   }
   set("sensor.dsc_ha_surface_version", fleet.surface);
   set("sensor.dsc_fleet_version_status", fleet.version);
-  set("sensor.dsc_active_alert_count", "0");
+  // NO hardcoded sensor.dsc_active_alert_count here. The brain computes it (computed_ops)
+  // and the bus prefers that; this compat layer used to supply "0" as a fallback, so before
+  // /fleet/computed arrived — or any time it omitted the entity — the desks read a
+  // fabricated "no alerts", which is false-healthy at exactly the moment least is known.
+  // fleet_state.py:183 carries the matching refusal on the brain side. Left absent, the
+  // entity is honestly unavailable until something actually counts.
   set("binary_sensor.dsc_pi_appliance_link", fleet.system.appliance_link ? "on" : "off", true);
   set("binary_sensor.dsc_reduced_kit", fleet.system.reduced_kit ? "on" : "off", true);
 
