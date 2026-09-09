@@ -10,6 +10,19 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-09-09 — tip `94ff4d0` sensor honesty docs (docs automation)
+
+Code landed on master (`94ff4d0`). Developer SoT: [`docs/brain/SENSOR-HONESTY.md`](brain/SENSOR-HONESTY.md).
+
+| Item | Status |
+|------|--------|
+| Flatline stuck / soil-test quality / capacity honesty / held flags / adjtimex NTP / journal stamps / SPA one-clock | **done (code)** — documented |
+| Host DNS empty `resolv.conf` / SoftAP NTP to hubs | **open** — detector fixed; fleet clock still needs host DNS |
+| USB flash host↔container firmware/serial mount | **open** — job history DELETE landed; mount gap remains |
+| Unmerged prior docs #220 (plausibility/USB/setup) · #219 (concurrency) | **next-plan** — merge onto tip |
+
+---
+
 ## 2026-09-07 — 3D twin: the composed live scene (`#/twin`) + pack-3 model briefs
 
 Same branch `feat/dashboard-v2`, uncommitted, not hotpatched. First scene that *composes* the model library into the
