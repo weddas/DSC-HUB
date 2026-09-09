@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from .paths import DEFAULT_DB
+from .paths import default_db, DEFAULT_DB
 from .db import open_db, schema_once
 
 KIT_SPACES: tuple[dict[str, Any], ...] = (
@@ -52,7 +52,7 @@ KIT_DEVICE_DEFAULTS: tuple[dict[str, Any], ...] = (
 
 
 def _connect(db_path: Path | None = None) -> sqlite3.Connection:
-    path = db_path or DEFAULT_DB
+    path = db_path or default_db()
     return open_db(path)
 
 

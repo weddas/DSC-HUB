@@ -15,7 +15,7 @@ from .journal_snapshot import (
     ensure_journal_snapshot_column,
     snapshot_from_json,
 )
-from .paths import DEFAULT_DB
+from .paths import default_db, DEFAULT_DB
 from .room_model import ensure_kit_rooms, spaces_for_room
 from .space_journal import count_space_journal, list_space_journal
 from .space_occupants import occupant_plant_ids_for_space
@@ -23,7 +23,7 @@ from .db import open_db, schema_once
 
 
 def _connect(db_path: Path | None = None) -> sqlite3.Connection:
-    path = db_path or DEFAULT_DB
+    path = db_path or default_db()
     return open_db(path)
 
 

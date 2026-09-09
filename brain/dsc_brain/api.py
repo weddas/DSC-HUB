@@ -1208,6 +1208,89 @@ def journals_export_zip(kinds: str = Query("")) -> Response:
     return Response(content=body, media_type="application/zip", headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
 
+# ---------------------------------------------------------------- journal actions + media
+# Pass S6. Actions give an entry a TYPE and typed fields so the journal can be counted and
+# charted; media gives it a photo, which is the one thing the kit cannot record for itself.
+
+
+@app.get("/journals/actions")
+def journals_actions_get() -> dict[str, Any]:
+    from .journal_actions import BUILTIN_IDS, action_catalogue
+
+    return {"actions": action_catalogue(), "builtin_ids": sorted(BUILTIN_IDS)}
+
+
+@app.put("/journals/actions")
+def journals_actions_put(body: dict[str, Any]) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .journal_actions import action_catalogue, save_custom_actions
+
+    try:
+        save_custom_actions(body.get("actions"))
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return {"actions": action_catalogue()}
+
+
+@app.post("/journals/{journal_kind}/{entry_id}/media")
+async def journals_media_upload(
+    journal_kind: str,
+    entry_id: int,
+    file: UploadFile = File(...),
+    caption: str = Query(""),
+    scope_id: str = Query(""),
+) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .journal_media import MAX_UPLOAD_BYTES, MediaError, add_media
+
+    # Read with the cap in hand: a client that ignores the documented limit should not be
+    # able to spend the Pi's memory before the size check runs.
+    raw = await file.read(MAX_UPLOAD_BYTES + 1)
+    try:
+        return {
+            "media": add_media(
+                journal_kind,
+                entry_id,
+                raw,
+                content_type=file.content_type or "",
+                scope_id=scope_id,
+                caption=caption,
+                filename=file.filename or "",
+            )
+        }
+    except MediaError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.get("/journals/media/{media_id}")
+def journals_media_get(media_id: int) -> Response:
+    from .journal_media import read_media
+
+    found = read_media(media_id)
+    if not found:
+        raise HTTPException(404, "no such image")
+    path, ctype = found
+    # Immutable: the filename is a content hash, so a changed photo is a different id.
+    return Response(
+        content=path.read_bytes(),
+        media_type=ctype,
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )
+
+
+@app.delete("/journals/media/{media_id}")
+def journals_media_delete(media_id: int) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .journal_media import delete_media
+
+    if not delete_media(media_id):
+        raise HTTPException(404, "no such image")
+    return {"ok": True}
+
+
 @app.get("/journals/archive")
 def journals_archive_list() -> dict[str, Any]:
     from .journal_storage import list_archives

@@ -78,10 +78,9 @@ class CaptureError(RuntimeError):
 # ---------------------------------------------------------------------------------------
 
 
-def media_root() -> Path:
-    """`DSC_DATA/media` resolved at call time (tests point DSC_DATA at a temp dir)."""
-    base = Path(os.environ.get("DSC_DATA", str(DEFAULT_DB.parent)))
-    return base / "media"
+# media_root lives in paths.py so cameras and journal photos cannot drift onto two
+# different roots — re-exported here because callers already import it from this module.
+from .paths import media_root  # noqa: E402
 
 
 def camera_dir(camera_id: str) -> Path:

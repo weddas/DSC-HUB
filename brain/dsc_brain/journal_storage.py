@@ -146,6 +146,7 @@ def prune_journals(*, now: float | None = None, db_path: Path | None = None, kin
     """Delete rows older than each journal's retention. Archived plants are never pruned."""
     retention = get_retention()
     removed: dict[str, int] = {}
+    doomed: dict[str, list[int]] = {}
     conn = connect(db_path)
     try:
         archived = _archived_plant_ids(conn)
@@ -155,20 +156,44 @@ def prune_journals(*, now: float | None = None, db_path: Path | None = None, kin
             if days <= 0:
                 continue
             spec = JOURNALS[kind]
-            sql = f"DELETE FROM {spec['table']} WHERE {spec['ts']} < ?"
+            where = f"{spec['ts']} < ?"
             params: list[Any] = [_ts_cutoff(days, now)]
             if kind == "plant" and archived:
-                sql += f" AND plant_id NOT IN ({','.join('?' for _ in archived)})"
+                where += f" AND plant_id NOT IN ({','.join('?' for _ in archived)})"
                 params.extend(sorted(archived))
             try:
-                cur = conn.execute(sql, params)
+                # Collect the ids FIRST so the media files can go with them. Deleting the
+                # rows alone would orphan photos on disk: nothing would reference them, and
+                # the storage card would keep counting bytes the operator cannot reach.
+                doomed[kind] = [int(r["id"]) for r in conn.execute(
+                    f"SELECT id FROM {spec['table']} WHERE {where}", params
+                )]
+                cur = conn.execute(f"DELETE FROM {spec['table']} WHERE {where}", params)
                 removed[kind] = int(cur.rowcount or 0)
             except Exception as exc:  # noqa: BLE001 — a missing table is not fatal
                 _logger.debug("prune %s skipped: %s", kind, exc)
         conn.commit()
     finally:
         conn.close()
+    # Media goes AFTER the commit and after this connection is closed. delete_entry_media
+    # opens its own connection, and doing that while the DELETE above was still an open
+    # write transaction made it block on the lock until the busy timeout — the failure was
+    # then swallowed by the best-effort guard and the photos silently survived their entries.
+    for kind, ids in doomed.items():
+        _prune_media_for(kind, ids, db_path)
     return removed
+
+
+def _prune_media_for(kind: str, entry_ids: list[int], db_path: Path | None) -> None:
+    """Best effort: a journal prune must not fail because a photo could not be removed."""
+    if not entry_ids:
+        return
+    try:
+        from .journal_media import delete_entry_media
+
+        delete_entry_media(kind, entry_ids, db_path=db_path)
+    except Exception as exc:  # noqa: BLE001
+        _logger.debug("media prune for %s skipped: %s", kind, exc)
 
 
 def maybe_prune_journals(*, now: float | None = None) -> dict[str, int] | None:
@@ -206,6 +231,12 @@ def storage_stats(db_path: Path | None = None) -> dict[str, Any]:
     except OSError:
         free_bytes, total_bytes = 0, 0
     retention = get_retention()
+    try:
+        from .journal_media import media_stats
+
+        media = media_stats(db_path)
+    except Exception:  # noqa: BLE001 — the storage card must render without media
+        media = {"files": 0, "bytes": 0, "by_kind": [], "root": ""}
     conn = connect(db_path)
     journals: list[dict[str, Any]] = []
     est_total = 0.0
@@ -256,7 +287,12 @@ def storage_stats(db_path: Path | None = None) -> dict[str, Any]:
         "journals": journals,
         "fleet_history": {"rows": fh_rows, "oldest_ts": float(fh["oldest"]) if fh["oldest"] is not None else None, "newest_ts": float(fh["newest"]) if fh["newest"] is not None else None, "share_bytes": int(fh_est * scale), "retention_days": int(get_setting("fleet_history_retention_days", "45") or 45)},
         "archive": {"count": int(ar["n"] or 0), "share_bytes": int(ar_est * scale)},
-        "estimate_note": "Per-journal sizes are estimated from row lengths and scaled to the database file size; SQLite here has no dbstat.",
+        # Media is MEASURED, not estimated: the bytes come from the files on disk, and it
+        # sits outside the database file, so it is deliberately not folded into the scaled
+        # per-journal shares above. A single photo outweighs years of text entries, so
+        # showing it inside the db-size pie would misreport both halves.
+        "media": media,
+        "estimate_note": "Per-journal sizes are estimated from row lengths and scaled to the database file size; SQLite here has no dbstat. Media bytes are measured on disk and sit outside the database file.",
     }
 
 
@@ -438,6 +474,21 @@ def export_archive(archive_id: int, fmt: str = "zip", *, db_path: Path | None = 
         z.writestr("plant-journal.csv", _to_csv(a["entries"]))
         z.writestr("tent-journal.csv", _to_csv(a["tent_entries"]))
         z.writestr("header.json", json.dumps(a["header"], indent=2, default=str))
+        # The grow record is visual as well as numeric — a retired plant's photos travel
+        # with it, otherwise the archive outlives the images and the record is half a story.
+        try:
+            from .journal_media import list_media, read_media
+
+            by_entry = list_media("plant", [int(e["id"]) for e in a["entries"] if e.get("id")], db_path=db_path)
+            for entry_id, items in by_entry.items():
+                for item in items:
+                    found = read_media(int(item["id"]), db_path=db_path)
+                    if not found:
+                        continue
+                    path, _ctype = found
+                    z.write(path, arcname=f"media/{entry_id}/{path.name}")
+        except Exception as exc:  # noqa: BLE001 — a missing photo must not void the record
+            _logger.debug("archive media skipped: %s", exc)
     return f"{base}.zip", "application/zip", buf.getvalue()
 
 

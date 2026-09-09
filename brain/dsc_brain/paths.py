@@ -9,6 +9,31 @@ DATA_DIR = REPO_ROOT / "data"
 _default_brain = Path(__file__).resolve().parents[1] / "data"
 BRAIN_DATA = Path(os.environ.get("DSC_DATA", str(_default_brain)))
 DEFAULT_DB = BRAIN_DATA / "dsc_ops.sqlite3"
+
+
+def default_db() -> Path:
+    """The ops database, resolved at CALL time.
+
+    ``DEFAULT_DB`` below is computed when this module is first imported, so a module that
+    binds it opens whatever ``DSC_DATA`` said at import. In the brain process that is the
+    same thing — the environment is set before anything imports — but under pytest the
+    fixtures point ``DSC_DATA`` at a scratch dir AFTER import, so import-time binders kept
+    reading and WRITING the developer's real ``brain/data`` database (proven 2026-09-10:
+    plant_journal rows and journal_media rows from test runs were sitting in it).
+
+    Call this instead of ``db_path or DEFAULT_DB``.
+    """
+    return Path(os.environ.get("DSC_DATA", str(_default_brain))) / "dsc_ops.sqlite3"
+
+
+def media_root() -> Path:
+    """``DSC_DATA/media`` resolved at CALL time, not import time.
+
+    Media (camera frames, journal photos) lives on disk rather than in SQLite because it
+    dwarfs the journals. Resolved per call so tests can point ``DSC_DATA`` at a scratch dir
+    after this module is imported.
+    """
+    return Path(os.environ.get("DSC_DATA", str(_default_brain))) / "media"
 CANNALIB_ROOT = REPO_ROOT.parent / "CannaLib"
 CANNALIB_DB = CANNALIB_ROOT / "brain" / "data" / "dsc_brain.sqlite3"
 EXPECTED_FIRMWARE = os.environ.get("DSC_EXPECTED_FIRMWARE", "8.1.0.0")

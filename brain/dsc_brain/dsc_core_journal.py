@@ -15,14 +15,14 @@ from .journal_snapshot import (
     ensure_journal_snapshot_column,
     snapshot_from_json,
 )
-from .paths import DEFAULT_DB
+from .paths import default_db, DEFAULT_DB
 from .room_journal import count_room_journal, list_room_journal
 from .room_model import ensure_kit_rooms, list_rooms
 from .db import open_db, schema_once
 
 
 def _connect(db_path: Path | None = None) -> sqlite3.Connection:
-    path = db_path or DEFAULT_DB
+    path = db_path or default_db()
     return open_db(path)
 
 

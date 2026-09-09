@@ -13,7 +13,7 @@ from .climate_mode import migrate_legacy_clone_mode
 from .compose_store import get_helper, get_roster_slots
 from .computed_ops import build_computed_hass_states
 from .fleet_state import get_fleet_state
-from .paths import DEFAULT_DB
+from .paths import default_db, DEFAULT_DB
 from .plant_probe import parse_slot_plant_id
 from .settings import list_history, list_inventory, list_roster
 from .stage_model import tent_id
@@ -407,7 +407,7 @@ def backfill_journal_snapshots(
     if table_info is None:
         raise ValueError(f"unsupported scope kind: {scope_kind}")
     table, id_col = table_info
-    path = db_path or DEFAULT_DB
+    path = db_path or default_db()
     conn = open_db(path)
     ensure_journal_snapshot_column(conn, table)
 

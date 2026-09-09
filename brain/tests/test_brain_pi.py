@@ -31,7 +31,12 @@ from dsc_brain.settings import (
 
 @pytest.fixture()
 def temp_db(monkeypatch: pytest.MonkeyPatch) -> Path:
-    with tempfile.TemporaryDirectory() as tmp:
+    # Shadows conftest's temp_db. ignore_cleanup_errors mirrors it for the same reason:
+    # Windows keeps dsc_ops.sqlite3 locked briefly after a TestClient shuts down, so the
+    # directory cleanup raises PermissionError on teardown. It only started biting once the
+    # brain modules honoured DSC_DATA per call — before that this temp dir held no database
+    # at all, because the code under test was opening brain/data instead.
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
         db = Path(tmp) / "dsc_ops.sqlite3"
         monkeypatch.setenv("DSC_DATA", str(Path(tmp)))
         init_settings_db(db)

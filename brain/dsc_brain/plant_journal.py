@@ -15,12 +15,13 @@ from .journal_snapshot import (
     ensure_journal_snapshot_column,
     snapshot_from_json,
 )
-from .paths import DEFAULT_DB
+from .journal_actions import clean_fields, summarise, wants_snapshot
+from .paths import default_db, DEFAULT_DB
 from .db import open_db, schema_once
 
 
 def _connect(db_path: Path | None = None) -> sqlite3.Connection:
-    path = db_path or DEFAULT_DB
+    path = db_path or default_db()
     return open_db(path)
 
 
@@ -45,7 +46,22 @@ def init_plant_journal_tables(db_path: Path | None = None) -> None:
             "CREATE INDEX IF NOT EXISTS idx_plant_journal_plant ON plant_journal(plant_id, occurred_at DESC)"
         )
         ensure_journal_snapshot_column(conn, "plant_journal")
+        _ensure_action_columns(conn)
         conn.commit()
+
+
+def _ensure_action_columns(conn: sqlite3.Connection) -> None:
+    """Add ``action``/``fields_json`` to an existing table (Pass S6).
+
+    Additive and idempotent, the same shape as ensure_journal_snapshot_column: journals on
+    a live rig predate this and must keep every row they already hold. An old entry reads
+    back as action "note" with no fields, which is exactly what it was.
+    """
+    have = {r["name"] for r in conn.execute("PRAGMA table_info(plant_journal)")}
+    if "action" not in have:
+        conn.execute("ALTER TABLE plant_journal ADD COLUMN action TEXT NOT NULL DEFAULT 'note'")
+    if "fields_json" not in have:
+        conn.execute("ALTER TABLE plant_journal ADD COLUMN fields_json TEXT NOT NULL DEFAULT '{}'")
 
 
 def add_plant_entry(
@@ -55,6 +71,8 @@ def add_plant_entry(
     *,
     source: str = "operator",
     tags: list[str] | None = None,
+    action: str = "note",
+    fields: dict[str, Any] | None = None,
     db_path: Path | None = None,
     fleet: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -68,16 +86,24 @@ def add_plant_entry(
         src = "operator"
     tag_list = [str(t).strip() for t in (tags or []) if str(t).strip()]
     created = time.time()
-    fleet_ctx = fleet if fleet is not None else build_journal_fleet_context()
-    snapshot = capture_journal_snapshot("plant", pid, fleet_ctx)
+    act = str(action or "note").strip().lower() or "note"
+    clean = clean_fields(act, fields or {})
+    # Only freeze the room's state for actions that declare they want it. A bare note does
+    # not need 40 sensor readings attached; a feed does.
+    if wants_snapshot(act):
+        fleet_ctx = fleet if fleet is not None else build_journal_fleet_context()
+        snapshot = capture_journal_snapshot("plant", pid, fleet_ctx)
+    else:
+        snapshot = {}
     snapshot_raw = json.dumps(snapshot, separators=(",", ":"))
     with _connect(db_path) as conn:
         cur = conn.execute(
             """
             INSERT INTO plant_journal(
-              plant_id, occurred_at, note, source, tags_json, created_at, snapshot_json
+              plant_id, occurred_at, note, source, tags_json, created_at, snapshot_json,
+              action, fields_json
             )
-            VALUES(?, ?, ?, ?, ?, ?, ?)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 pid,
@@ -87,6 +113,8 @@ def add_plant_entry(
                 json.dumps(tag_list, separators=(",", ":")),
                 created,
                 snapshot_raw,
+                act,
+                json.dumps(clean, separators=(",", ":")),
             ),
         )
         conn.commit()
@@ -101,6 +129,9 @@ def add_plant_entry(
         "created_at": created,
         "provenance": "plant",
         "snapshot": snapshot,
+        "action": act,
+        "fields": clean,
+        "summary": summarise(act, clean),
     }
 
 
@@ -111,6 +142,14 @@ def _plant_row_to_dict(r: sqlite3.Row) -> dict[str, Any]:
         tags = []
     if not isinstance(tags, list):
         tags = []
+    keys = r.keys()
+    action = (r["action"] if "action" in keys else None) or "note"
+    try:
+        fields = json.loads((r["fields_json"] if "fields_json" in keys else None) or "{}")
+    except json.JSONDecodeError:
+        fields = {}
+    if not isinstance(fields, dict):
+        fields = {}
     return {
         "id": r["id"],
         "plant_id": r["plant_id"],
@@ -121,6 +160,9 @@ def _plant_row_to_dict(r: sqlite3.Row) -> dict[str, Any]:
         "created_at": r["created_at"],
         "provenance": "plant",
         "snapshot": snapshot_from_json(r["snapshot_json"]),
+        "action": action,
+        "fields": fields,
+        "summary": summarise(action, fields),
     }
 
 

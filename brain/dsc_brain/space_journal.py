@@ -16,7 +16,7 @@ from .journal_snapshot import (
     ensure_journal_snapshot_column,
     snapshot_from_json,
 )
-from .paths import DEFAULT_DB
+from .paths import default_db, DEFAULT_DB
 from .plant_journal import count_plant_journal, list_plant_journal
 from .db import open_db, schema_once
 
@@ -25,7 +25,7 @@ OccupantResolver = Callable[[str], list[str]]
 
 
 def _connect(db_path: Path | None = None) -> sqlite3.Connection:
-    path = db_path or DEFAULT_DB
+    path = db_path or default_db()
     return open_db(path)
 
 

@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .energy_model import parse_hhmm_to_min
-from .paths import DEFAULT_DB
+from .paths import default_db, DEFAULT_DB
 from .plant_journal import add_plant_entry
 from .space_journal import add_space_entry
 from .db import open_db, schema_once
@@ -24,7 +24,7 @@ POLICY_STEP_MIN = {
 
 
 def _connect(db_path: Path | None = None) -> sqlite3.Connection:
-    path = db_path or DEFAULT_DB
+    path = db_path or default_db()
     return open_db(path)
 
 

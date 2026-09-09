@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from .paths import DEFAULT_DB
+from .paths import default_db, DEFAULT_DB
 from .space_model import ensure_kit_spaces, init_space_tables, list_spaces
 from .db import open_db, schema_once
 
@@ -22,7 +22,7 @@ KIT_ROOM_SPACES = ("4x8", "2x4")
 
 
 def _connect(db_path: Path | None = None) -> sqlite3.Connection:
-    path = db_path or DEFAULT_DB
+    path = db_path or default_db()
     return open_db(path)
 
 
