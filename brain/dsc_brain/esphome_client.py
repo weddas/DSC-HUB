@@ -594,6 +594,7 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
                 _apply_hub_climate_modifiers(values)
                 finalize_hub_climate(values)
                 _scrub_faulted_climate(values)
+                _scrub_unbound_co2(values)
                 hub_fw = values.get("firmware_version")
                 if hub_fw:
                     fw = str(hub_fw).strip()
@@ -709,6 +710,37 @@ def _scrub_faulted_climate(values: dict[str, Any]) -> None:
                     values[k] = None
     if masked:
         values["climate_fault_masked"] = masked
+
+
+# Below this the CO2 input is floating, not sensing. A bound NDIR/analog CO2 sensor idles
+# well above it; an unconnected pin sits near zero (observed live: 0.142 V, which the hub's
+# transfer function turned into a confident-looking 172.87 ppm — physically impossible for
+# a room, where ambient is ~420).
+_CO2_BOUND_MIN_VOLTS = 0.30
+
+
+def _scrub_unbound_co2(values: dict[str, Any]) -> None:
+    """Drop the derived CO2 ppm when no CO2 sensor is actually bound.
+
+    The hub computes ``dynamic_co2_ppm`` from ``co2_sensor_voltage`` unconditionally, so
+    with nothing wired it still publishes a plausible number. The desks knew to suppress
+    it, but the raw ``/fleet`` field did not — and history, exports and any future
+    automation rule read that field, not the desk. Same class as the pH-114 bug: a computed
+    value that looks like a reading. The honesty belongs in the data.
+
+    ``co2_sensor_voltage`` is left untouched — it is a real measurement of the pin, and it
+    is the evidence for why the ppm is absent.
+    """
+    if "dynamic_co2_ppm" not in values and "co2_sensor_voltage" not in values:
+        return
+    try:
+        volts = float(values.get("co2_sensor_voltage"))
+    except (TypeError, ValueError):
+        volts = None
+    bound = volts is not None and volts >= _CO2_BOUND_MIN_VOLTS
+    values["co2_bound"] = bound
+    if not bound and values.get("dynamic_co2_ppm") is not None:
+        values["dynamic_co2_ppm"] = None
 
 
 def _hub_sensors_from_states(

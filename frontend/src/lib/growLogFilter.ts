@@ -4,7 +4,17 @@ const STAGE_OFF_CLONE_CUSTOM = /Stage\s*-\s*Off\s*;\s*Clone\s*-\s*Custom/i;
 const BOOT_STAGE_CLONE = /^Stage\s*-\s*.+;\s*Clone\s*-\s*.+$/;
 const DARK_PERIOD = /dark[- ]period/i;
 const STAGE_CHANGE = /\bstage\b/i;
-const VPD = /\bvpd\b/i;
+const VPD_MENTION = /\bvpd\b/i;
+// One-time migration/definition notices mention a metric by name but describe the SERIES,
+// not a condition of the grow. `/\bvpd\b/` alone tagged the leaf-VPD rebase advisory ALERT
+// and sorted it above real alerts on the 24 h desk (2026-09-09). An advisory is
+// informational, so it must never outrank an actual out-of-band event.
+const ADVISORY = /^advisory:/i;
+
+/** A VPD line that reports a condition — not a one-time advisory about the series. */
+function isVpdCondition(message: string): boolean {
+  return VPD_MENTION.test(message) && !ADVISORY.test(message);
+}
 
 const DUPLICATE_WINDOW_SEC = 5 * 60;
 const FLICKER_WINDOW_SEC = 30 * 60;
@@ -100,20 +110,20 @@ export function prepareGrowLog(events: GrowLogEvent[]): DisplayGrowLogEvent[] {
 
   const collapsed = collapseConsecutiveDuplicates(collapseDemandFlicker(filtered));
 
-  const alerts = collapsed.filter((ev) => DARK_PERIOD.test(ev.message) || VPD.test(ev.message));
-  const rest = collapsed.filter((ev) => !DARK_PERIOD.test(ev.message) && !VPD.test(ev.message));
+  const alerts = collapsed.filter((ev) => DARK_PERIOD.test(ev.message) || isVpdCondition(ev.message));
+  const rest = collapsed.filter((ev) => !DARK_PERIOD.test(ev.message) && !isVpdCondition(ev.message));
   return [...alerts, ...rest];
 }
 
 export function filterGrowLog(events: DisplayGrowLogEvent[], mode: GrowLogFilter): DisplayGrowLogEvent[] {
   if (mode === "all") return events;
   if (mode === "alerts") {
-    return events.filter((ev) => growLogSeverity(ev.message) === "alert" || VPD.test(ev.message));
+    return events.filter((ev) => growLogSeverity(ev.message) === "alert" || isVpdCondition(ev.message));
   }
   return events.filter((ev) => STAGE_CHANGE.test(ev.message));
 }
 
 export function growLogSeverity(message: string): "alert" | "normal" {
-  if (DARK_PERIOD.test(message) || VPD.test(message)) return "alert";
+  if (DARK_PERIOD.test(message) || isVpdCondition(message)) return "alert";
   return "normal";
 }

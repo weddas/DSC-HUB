@@ -23,26 +23,43 @@ def compute_vpd_kpa(temp_c: float | None, rh_pct: float | None) -> float | None:
 
 _LEAF_VPD_REBASE_NOTED = False
 _LEAF_VPD_REBASE_MSG = (
-    "Leaf VPD definition corrected to es(leaf) - es(air)*rh/100 (was es(leaf)*(1-rh/100)). "
-    "sensor.dsc_leaf_vpd_kpa history before this point is NOT comparable with points after it."
+    "Advisory: leaf VPD definition corrected to es(leaf) - es(air)*rh/100 "
+    "(was es(leaf)*(1-rh/100)). sensor.dsc_leaf_vpd_kpa history before this point is "
+    "NOT comparable with points after it."
 )
+# Persisted marker so the advisory is written once per DATABASE, not once per process.
+# The in-memory guard below and ``record_grow_log``'s dedupe are both process-scoped, so
+# before this key existed every brain restart re-stamped the journal — observed 5 times in
+# 30 minutes on 2026-09-09, each one tagged ALERT and sorted to the top of the 24 h desk.
+_LEAF_VPD_REBASE_KEY = "advisory.leaf_vpd_rebase.announced"
 
 
 def _note_leaf_vpd_rebase() -> None:
-    """Stamp the journal ONCE that the leaf-VPD series changed definition.
+    """Stamp the journal ONCE, ever, that the leaf-VPD series changed definition.
 
     A recorded series that silently changes meaning is the thing this project exists to
-    avoid, so the discontinuity is written down where a chart reader will meet it. Once per
-    process, and ``record_grow_log`` dedupes the identical message across restarts.
+    avoid, so the discontinuity is written down where a chart reader will meet it. It is a
+    one-time migration note, not a condition: announcing it again on every restart is noise
+    that buries real alerts.
     """
     global _LEAF_VPD_REBASE_NOTED
     if _LEAF_VPD_REBASE_NOTED:
         return
     _LEAF_VPD_REBASE_NOTED = True
     try:
+        from .settings import get_setting, set_setting
+
+        if get_setting(_LEAF_VPD_REBASE_KEY):
+            return
+
         from .event_log import record_grow_log
 
-        record_grow_log(_LEAF_VPD_REBASE_MSG)
+        # dedupe=False on purpose: the persisted key above IS the deduplication, and it is
+        # permanent. record_grow_log's own dedupe is a 90 s in-process window, so leaving it
+        # on would let a recent identical line swallow the write while the key still marked
+        # the advisory announced — the note would then be lost for good.
+        record_grow_log(_LEAF_VPD_REBASE_MSG, dedupe=False)
+        set_setting(_LEAF_VPD_REBASE_KEY, "1")
     except Exception:  # noqa: BLE001 — a journal note must never break the climate path
         pass
 

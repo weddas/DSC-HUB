@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import math
 
+from pathlib import Path
+
 import pytest
 
 from dsc_brain.climate_math import compute_leaf_vpd_kpa, compute_vpd_kpa, finalize_hub_climate
@@ -84,7 +86,12 @@ def test_brain_and_derived_layer_now_agree() -> None:
         assert mine == pytest.approx(theirs.value, abs=2e-3), (air, rh, offset)
 
 
-def test_finalize_hub_climate_publishes_the_corrected_leaf_values() -> None:
+def test_finalize_hub_climate_publishes_the_corrected_leaf_values(
+    temp_db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # temp_db: finalize_hub_climate stamps the one-time rebase advisory, which now persists
+    # a settings key. Without isolation this test wrote that key into brain/data.
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
     values: dict = {"temp_c": 26.0, "rh_pct": 60.0, "clone_temp_c": 24.0, "clone_rh_pct": 70.0, "leaf_offset_c": 2.0}
     finalize_hub_climate(values)
     assert values["leaf_vpd_kpa"] == pytest.approx(compute_leaf_vpd_kpa(26.0, 60.0, 24.0), abs=1e-3)
@@ -93,10 +100,14 @@ def test_finalize_hub_climate_publishes_the_corrected_leaf_values() -> None:
     assert values["leaf_vpd_kpa"] != compute_vpd_kpa(24.0, 60.0)
 
 
-def test_rebase_is_journalled_once(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The recorded series changes meaning, so the discontinuity must be written down."""
+def test_rebase_is_journalled_once(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The recorded series changes meaning, so the discontinuity must be written down.
+
+    Needs ``temp_db``: the advisory is now gated on a PERSISTED settings key, so without an
+    isolated database this test both reads a real one and writes the key into it."""
     import dsc_brain.climate_math as cm
 
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
     logged: list[str] = []
     monkeypatch.setattr(cm, "_LEAF_VPD_REBASE_NOTED", False)
     monkeypatch.setattr("dsc_brain.event_log.record_grow_log", lambda msg, **kw: logged.append(msg))

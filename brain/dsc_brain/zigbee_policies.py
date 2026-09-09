@@ -331,14 +331,14 @@ def _apply_active(ieee: str, params: dict[str, Any]) -> None:
     # Banner first — force_relay may block (asyncio.run on MQTT thread).
     if banner:
         _upsert_banner(banner_id, banner, tone)
-        record_grow_log(f"zigbee task BANNER {banner}")
+        record_grow_log(banner)
 
     if seat:
         upsert_inventory(seat, {"in_service": False})
         owned = _load_owned_oos()
         owned[seat] = ieee
         _save_owned_oos(owned)
-        record_grow_log(f"zigbee task OOS seat={seat} ieee={ieee} reason=tank_full")
+        record_grow_log(f"{seat} taken out of service — its water tank reads full.")
 
     if force == "off" and seat:
         _force_relay(seat, False)
@@ -356,9 +356,19 @@ def _apply_clear(ieee: str, params: dict[str, Any]) -> None:
             upsert_inventory(seat, {"in_service": True})
             owned.pop(seat, None)
             _save_owned_oos(owned)
-            record_grow_log(f"zigbee task RESTORE seat={seat} ieee={ieee} reason=tank_clear")
+            record_grow_log(f"{seat} back in service — the water-full warning cleared.")
         else:
-            record_grow_log(f"zigbee task CLEAR banner only seat={seat} ieee={ieee} (OOS not policy-owned)")
+            # Nothing changed for the grow: the banner is gone, but this seat was parked
+            # out of service by hand (or by another rule), so the policy leaves it alone.
+            # It used to be journalled verbatim — "zigbee task CLEAR banner only seat=…
+            # ieee=0x… (OOS not policy-owned)", about 7x/24h, past the 90 s dedupe window —
+            # which is developer language for a no-op. The cleared banner is the visible
+            # effect; the detail belongs in the log, not the operator's history.
+            _logger.debug(
+                "zigbee clear: banner only for seat=%s ieee=%s (out of service, not policy-owned)",
+                seat,
+                ieee,
+            )
 
 
 def evaluate_device_policies(

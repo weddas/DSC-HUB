@@ -261,15 +261,19 @@ KIT_PROBE_NUMBERS: tuple[int, ...] = (1, 2)
 
 KitDefRow = dict[str, Any]
 
-# KNOWN-DEAD IDS, transcribed as-is from the SPA rather than corrected — see
-# docs/FOLLOWUPS.md (2026-09-09). Fixing an id here changes what the live grow
-# actuates, so each one needs an operator decision, not a codegen pass:
-#   * dehumidifier.firmware_entity says "de_humidifier"; SONOFF_FW (above) and
-#     the brain publish "dsc_dehumidifier_firmware_version". Nothing resolves it.
-#   * heater/humidifier cycles_today have no producer anywhere in brain/; the
-#     brain emits *_cycles_last_hour and the *_runtime_today family instead.
-#   * ac/mister relay_entity have no producer either — expected, F-001/F-002 are
-#     on indefinite hold and control_ops._PHANTOM_RELAY_SEATS covers those seats.
+# Ids here are transcribed from the SPA rather than invented: changing one changes what
+# the live grow actuates, so each correction needs an operator decision, not a codegen
+# pass. Two such decisions have since been taken (2026-09-10) and are now settled:
+#   * dehumidifier.firmware_entity is the UN-SPLIT "dsc_dehumidifier_firmware_version",
+#     matching SONOFF_FW and what the brain publishes. The *relay* id genuinely is
+#     "switch.dsc_de_humidifier_main_relay" — that split spelling is real, not a typo,
+#     which is why the firmware one looked right beside it for so long.
+#   * heater/humidifier cycles_today ARE produced now (dash_computed counts OFF→ON
+#     transitions since local midnight); they are no longer dead ids.
+# Both are pinned by brain/tests/test_entity_table_consistency.py.
+# Still expected-dead:
+#   * ac/mister relay_entity have no producer — F-001/F-002 are on indefinite hold and
+#     control_ops._PHANTOM_RELAY_SEATS covers those seats.
 KIT_DEFS: list[KitDefRow] = [
     {
         "id": "hub",
