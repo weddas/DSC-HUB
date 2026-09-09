@@ -39,6 +39,11 @@ _relay_commanded: dict[str, bool] = {}
 _hub_switch_keys: dict[str, int] = {}
 _sonoff_switch_keys: dict[str, int] = {}
 _last_hub_ok = 0.0
+# Demands now come from the ingest snapshot, which takes one poll cycle (~10 s) to exist
+# after the brain starts. Without a grace the first ticks read "no demands" against
+# _last_hub_ok == 0 and the stale-hub failsafe cut every relay OFF on every restart.
+STARTUP_GRACE_SEC = 60.0
+_started_at = time.time()
 
 _task: asyncio.Task[None] | None = None
 _running = False
@@ -219,6 +224,10 @@ async def _tick_once() -> None:
                 relays.pop(seat_id, None)
             else:
                 relays[seat_id] = cmd
+    elif _last_hub_ok <= 0.0 and now - _started_at < STARTUP_GRACE_SEC:
+        # Never seen the hub since start and still inside the grace: unknown, not stale.
+        _publish_status(False, relays, now, demand_map)
+        return
     elif now - _last_hub_ok > STALE_SEC:
         _logger.warning("hub demand stale >%ss — Sonoff failsafe OFF", int(STALE_SEC))
         for seat_id in set(DEMAND_TO_SEAT.values()):

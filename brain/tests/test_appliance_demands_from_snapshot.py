@@ -41,3 +41,26 @@ def test_stale_or_dark_hub_is_none() -> None:
 def test_no_host_is_none() -> None:
     _publish({"switch.dsc_hub_heater_demand": {"state": "on"}})
     assert asyncio.run(drv._read_hub_demands({"seat_id": "hub", "in_service": True})) is None
+
+
+def test_startup_grace_does_not_failsafe_before_first_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[tuple[str, bool, bool]] = []
+
+    async def fake_set(seat_id: str, on: bool, inventory: dict, *, force: bool = False) -> None:
+        calls.append((seat_id, on, force))
+
+    async def no_demands(_hub_row: dict) -> None:
+        return None  # snapshot not built yet
+
+    monkeypatch.setattr(drv, "_set_sonoff_relay", fake_set)
+    monkeypatch.setattr(drv, "_read_hub_demands", no_demands)
+    monkeypatch.setattr(drv, "list_inventory", lambda: [HUB_ROW, {"seat_id": "heater", "in_service": True, "host": "10.0.0.2"}])
+    monkeypatch.setattr(drv, "_last_hub_ok", 0.0)
+    monkeypatch.setattr(drv, "_started_at", time.time())  # just started
+    asyncio.run(drv._tick_once())
+    assert calls == []  # no failsafe cut inside the grace
+    assert drv.get_appliance_status()["hub_ok"] is False
+
+    monkeypatch.setattr(drv, "_started_at", time.time() - drv.STARTUP_GRACE_SEC - 1)
+    asyncio.run(drv._tick_once())
+    assert any(on is False and force for _s, on, force in calls)  # past the grace, a dark hub still trips it
