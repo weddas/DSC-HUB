@@ -106,3 +106,24 @@ def test_reject_implausible_soil_ignores_none_and_nonnumeric() -> None:
     values = {"ph": None, "moisture_pct": "n/a"}
     assert _reject_implausible_soil(values) == []
     assert values["ph"] is None
+
+
+def test_pot_field_mapping_no_ph_phosphorus_collision() -> None:
+    """soil_phosphorus must map to phosphorus, not ph (substring collision that put a
+    phosphorus reading of 114 onto the pH gauge)."""
+    from dsc_brain.esphome_client import _pot_field_for
+
+    assert _pot_field_for("soil_ph") == "ph"
+    assert _pot_field_for("soil_phosphorus") == "phosphorus"
+    assert _pot_field_for("soil_potassium") == "potassium"
+    assert _pot_field_for("soil_ph_raw") == "ph_raw"
+    assert _pot_field_for("soil_phosphorus_raw") == "phosphorus_raw"
+    assert _pot_field_for("soil_moisture") == "moisture_pct"
+    assert _pot_field_for("soil_moisture_raw") == "moisture_pct_raw"
+    assert _pot_field_for("soil_ec") == "ec_us"
+    assert _pot_field_for("soil_conductivity") == "ec_us"
+    # prefixed object ids still resolve by trailing token
+    assert _pot_field_for("dsc_probe2_soil_ph") == "ph"
+    assert _pot_field_for("dsc_probe2_soil_phosphorus") == "phosphorus"
+    # unrelated ids map to nothing
+    assert _pot_field_for("wifi_signal") is None

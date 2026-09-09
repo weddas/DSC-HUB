@@ -74,6 +74,23 @@ SOIL_PLAUSIBLE: dict[str, tuple[float, float]] = {
     "ec_us": (0.0, 20000.0),
 }
 
+def _pot_field_for(object_id: str) -> str | None:
+    """The pot-values key for an ESPHome object_id, or None if it maps to nothing.
+
+    Matches the object_id's trailing TOKEN, not a substring: "soil_ph" is a substring of
+    "soil_phosphorus", so the old `suffix in object_id` test wrote the PHOSPHORUS reading
+    (86-120 mg/kg) into `ph` and dropped real phosphorus — a plausible-looking pH of 114
+    that was never pH (live 2026-09-09). A trailing "_raw" targets `<field>_raw` so a raw
+    channel never shadows the calibrated one.
+    """
+    is_raw = object_id.endswith("_raw")
+    base = object_id[:-4] if is_raw else object_id
+    for suffix, field in POT_MAP.items():
+        if base == suffix or base.endswith("_" + suffix):
+            return f"{field}_raw" if is_raw else field
+    return None
+
+
 def _reject_implausible_soil(values: dict[str, Any]) -> list[str]:
     """Null out calibrated soil readings outside their physical range, in place.
 
@@ -584,18 +601,12 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
                 binaries: dict[str, bool] = {}
                 for key, st in states.items():
                     object_id = key_to_object.get(key, "")
-                    for suffix, field in POT_MAP.items():
-                        if object_id.endswith(suffix) or suffix in object_id:
-                            # `soil_moisture_raw` contains `soil_moisture`, so with a plain
-                            # substring match whichever state arrived last won and the
-                            # on-device calibration was silently discarded. Raw channels
-                            # are kept under their own key and never shadow the calibrated one.
-                            target = f"{field}_raw" if object_id.endswith("_raw") else field
-                            try:
-                                values[target] = float(st.state)
-                            except (TypeError, ValueError):
-                                values[target] = st.state
-                            break
+                    target = _pot_field_for(object_id)
+                    if target is not None:
+                        try:
+                            values[target] = float(st.state)
+                        except (TypeError, ValueError):
+                            values[target] = st.state
                     bin_field = POT_BINARY_OID_TO_KEY.get(object_id)
                     if bin_field is not None:
                         raw = getattr(st, "state", None)
