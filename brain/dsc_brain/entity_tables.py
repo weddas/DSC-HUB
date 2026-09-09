@@ -256,6 +256,15 @@ KIT_PROBE_NUMBERS: tuple[int, ...] = (1, 2)
 
 KitDefRow = dict[str, Any]
 
+# KNOWN-DEAD IDS, transcribed as-is from the SPA rather than corrected — see
+# docs/FOLLOWUPS.md (2026-09-09). Fixing an id here changes what the live grow
+# actuates, so each one needs an operator decision, not a codegen pass:
+#   * dehumidifier.firmware_entity says "de_humidifier"; SONOFF_FW (above) and
+#     the brain publish "dsc_dehumidifier_firmware_version". Nothing resolves it.
+#   * heater/humidifier cycles_today have no producer anywhere in brain/; the
+#     brain emits *_cycles_last_hour and the *_runtime_today family instead.
+#   * ac/mister relay_entity have no producer either — expected, F-001/F-002 are
+#     on indefinite hold and control_ops._PHANTOM_RELAY_SEATS covers those seats.
 KIT_DEFS: list[KitDefRow] = [
     {
         "id": "hub",

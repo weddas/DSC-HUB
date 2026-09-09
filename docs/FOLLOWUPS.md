@@ -5031,3 +5031,43 @@ Resolution: S5 structure kept; master's toolchain body and the toolchain / rollb
 transplanted verbatim (re-indented). `FOLLOWUPS.md` kept both appended sections. Verified: `tsc` clean,
 `npm run build` ok, brain suite 419 passed. The `eth0-dhcpcd.conf` untracked copy was identical to master's
 tracked file and was dropped. Pi still to be hotpatched with S4/S5 + T1.
+
+## 2026-09-09 — entity-id codegen (`chore/entity-id-codegen`): Python↔TS drift found while making the tables generated
+
+`brain/dsc_brain/entity_tables.py` is now the single source of truth for the shared HA-shaped
+entity-id tables; `brain/scripts/gen_entity_maps.py` emits `frontend/src/lib/generated/*.gen.ts`
+and `brain/tests/test_entity_maps_generated.py` runs it in `--check` mode, so a one-sided rename
+fails pytest instead of silently blanking a dial on the Pi. The pass was a strict refactor:
+where the two sides already disagreed, the disagreement was **reproduced verbatim, not fixed**,
+because the entity ids are the live control surface. Each of these needs an operator decision.
+
+- **`sensor.dsc_de_humidifier_firmware_version` is a dead id.** `KIT_DEFS[dehumidifier].firmwareEntity`
+  (entity_tables.py, was `frontend/src/lib/kitInventory.ts:90`) asks for `de_humidifier`, but both the
+  brain's `SONOFF_FW` and the SPA's copy publish `sensor.dsc_dehumidifier_firmware_version` (no
+  underscore). The Kit page's dehumidifier firmware chip can never resolve. Note the *relay* id
+  genuinely is `switch.dsc_de_humidifier_main_relay` on both sides — only the firmware id disagrees,
+  which is exactly how the typo survived.
+- **`sensor.dsc_heater_cycles_today` / `sensor.dsc_humidifier_cycles_today` have no producer at all.**
+  Nothing in `brain/` emits either. The brain publishes `sensor.dsc_humidifier_cycles_last_hour`
+  (`dash_computed.py`) and the `*_runtime_today` family (`computed_ops.py`). Kit "cycles today" is
+  permanently blank.
+- **`switch.dsc_ac_main_relay` / `switch.dsc_clone_humidifier_main_relay` have no producer** — expected:
+  F-001 AC and F-002 clone mister are on indefinite hold and `control_ops._PHANTOM_RELAY_SEATS`
+  deliberately has no relay seat for `ac` / `mister`. Recorded as intentional, not a bug.
+- **`sensor.dsc_active_alert_count` contradicts the brain's own honesty rule.**
+  `frontend/src/lib/fleetFromHass.ts:50` hardcodes `set("sensor.dsc_active_alert_count", "0")`, while
+  `brain/dsc_brain/fleet_state.py:183` carries an explicit comment refusing to do exactly that,
+  because a placeholder zero reads as false-healthy to anything consuming the raw view. Out of the
+  codegen slice (it is in a hand-written function, not a table), but it should be reconciled.
+- **Five `ENTITY_FLEET_MAP` hub-vitals ids have no brain-side entity** — `sensor.dsc_hub_wifi_rssi`,
+  `_rf_status`, `_api_down_age`, `_link_recovery_bounces`, `_ha_handshake_age`. This is by design and
+  the map comment says so (the brain files them as flat `hub.values` metrics), but it means any caller
+  that reaches them through `hass.state(...)` instead of `fleetLiveNumber(...)` finds nothing.
+- **The sonoff relay table still exists four more times inside the brain** —
+  `computed_ops._SONOFF_RELAY_ENTITIES`, `control_ops._SONOFF_RELAY_ENTITY_TO_SEAT`,
+  `demo_simulator._SONOFF_RELAY_ENTITY_TO_SEAT`, and `automation_rules._SONOFF_RELAY_SEAT` (derived
+  from `RELAY_TARGETS`). All four were verified to agree with `entity_tables.SONOFF_RELAY` today.
+  Folding them onto the SoT is a clean follow-up with no behaviour change.
+
+Not attempted (explicitly out of scope): collapsing the HA-shaped dialect, renaming any entity id,
+or removing the client's four resolution fallback layers.
