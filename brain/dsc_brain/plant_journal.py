@@ -189,7 +189,8 @@ def list_plant_journal(
     with _connect(db_path) as conn:
         rows = conn.execute(
             """
-            SELECT id, plant_id, occurred_at, note, source, tags_json, created_at, snapshot_json
+            SELECT id, plant_id, occurred_at, note, source, tags_json, created_at, snapshot_json,
+                   action, fields_json
             FROM plant_journal WHERE plant_id=?
             ORDER BY occurred_at DESC, id DESC
             LIMIT ? OFFSET ?
@@ -214,7 +215,8 @@ def update_plant_entry(
     with _connect(db_path) as conn:
         row = conn.execute(
             """
-            SELECT id, plant_id, occurred_at, note, source, tags_json, created_at, snapshot_json
+            SELECT id, plant_id, occurred_at, note, source, tags_json, created_at, snapshot_json,
+                   action, fields_json
             FROM plant_journal WHERE id=? AND plant_id=?
             """,
             (eid, pid),
@@ -245,7 +247,8 @@ def update_plant_entry(
         conn.commit()
         updated = conn.execute(
             """
-            SELECT id, plant_id, occurred_at, note, source, tags_json, created_at, snapshot_json
+            SELECT id, plant_id, occurred_at, note, source, tags_json, created_at, snapshot_json,
+                   action, fields_json
             FROM plant_journal WHERE id=? AND plant_id=?
             """,
             (eid, pid),

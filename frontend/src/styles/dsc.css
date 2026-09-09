@@ -6021,3 +6021,104 @@ button.dsc-metric:focus-visible { outline: 2px solid var(--dsc-teal); outline-of
 @media (prefers-reduced-motion: reduce) {
   .dsc-skeleton-bar { animation: none; background: var(--dsc-gray-2); }
 }
+
+/* ------------------------------------------------- grow-journal entry composer (S6) */
+/* Action picker, the selected action's declared fields, and a photo attachment. Laid out
+   to stay usable at 390 px: the action row scrolls sideways rather than wrapping into a
+   wall of buttons, and the fields grid collapses to one column. */
+.dsc-composer { display: flex; flex-direction: column; gap: 8px; }
+
+.dsc-composer-actions {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+.dsc-composer-action {
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--dsc-gray-3);
+  background: var(--dsc-gray-1);
+  color: var(--dsc-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.dsc-composer-action:hover { color: var(--dsc-white); border-color: var(--dsc-teal-dim); }
+.dsc-composer-action.is-active {
+  color: var(--dsc-black);
+  background: var(--dsc-teal);
+  border-color: var(--dsc-teal);
+}
+
+.dsc-composer-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+.dsc-composer-field { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--dsc-muted); }
+.dsc-composer-field input,
+.dsc-composer-field select {
+  background: var(--dsc-gray-1);
+  border: 1px solid var(--dsc-gray-3);
+  border-radius: 4px;
+  color: var(--dsc-white);
+  padding: 5px 7px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The real <input type="file"> stays in the accessibility tree — reachable by keyboard and
+   announced by screen readers — while the visible control is its <label>. display:none
+   would remove it from both. */
+.dsc-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.dsc-composer-photo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px dashed var(--dsc-gray-4);
+  color: var(--dsc-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+.dsc-composer-photo:hover { color: var(--dsc-white); border-color: var(--dsc-teal); }
+.dsc-visually-hidden:focus-visible + .dsc-composer-photo { outline: 2px solid var(--dsc-teal); outline-offset: 2px; }
+
+.dsc-linkish {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--dsc-muted);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.dsc-linkish:hover { color: var(--dsc-white); }
+
+/* Typed entries lead with what happened; the note (if any) sits under it. */
+.dsc-journal-summary { font-weight: 600; color: var(--dsc-white); margin-bottom: 2px; }
+
+.dsc-journal-media { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.dsc-journal-media img {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--dsc-gray-3);
+  display: block;
+}

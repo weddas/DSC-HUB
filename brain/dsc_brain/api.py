@@ -332,6 +332,10 @@ class JournalEntryBody(BaseModel):
     note: str = ""
     occurred_at: float | None = None
     tags: list[str] | None = None
+    # Pass S6. Absent means "note", which is what every pre-S6 client sends and what every
+    # pre-S6 row already reads back as — so an older phone bundle keeps working unchanged.
+    action: str = "note"
+    fields: dict[str, Any] | None = None
 
 
 class JournalPatchBody(BaseModel):
@@ -2463,9 +2467,20 @@ def journal_plant_get(
 ) -> dict[str, Any]:
     from .plant_journal import count_plant_journal, list_plant_journal
 
+    entries = list_plant_journal(plant_id, limit=limit, offset=offset)
+    # One media query for the whole page, not one per row (Pass S6).
+    try:
+        from .journal_media import list_media
+
+        by_entry = list_media("plant", [int(e["id"]) for e in entries if e.get("id")])
+        for entry in entries:
+            entry["media"] = by_entry.get(int(entry.get("id") or 0), [])
+    except Exception:  # noqa: BLE001 — the journal must render even if media is unavailable
+        for entry in entries:
+            entry.setdefault("media", [])
     return {
         "plant_id": plant_id,
-        "entries": list_plant_journal(plant_id, limit=limit, offset=offset),
+        "entries": entries,
         "total": count_plant_journal(plant_id),
         "limit": limit,
         "offset": offset,
@@ -2483,6 +2498,8 @@ def journal_plant_post(plant_id: str, body: JournalEntryBody) -> dict[str, Any]:
             body.note,
             source="operator",
             tags=body.tags,
+            action=body.action,
+            fields=body.fields,
         )
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc

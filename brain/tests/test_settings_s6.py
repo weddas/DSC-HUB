@@ -206,3 +206,26 @@ def test_pruning_a_journal_takes_its_photos_with_it(temp_db: Path, monkeypatch: 
 
     assert read_media(saved["id"]) is None, "the media row outlived its entry"
     assert not path.exists(), "the file was orphaned on disk"
+
+
+def test_action_and_fields_survive_a_read_back(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Regression: the write stored action/fields and returned them, but every read used an
+    explicit column list that did not SELECT them — so a watering read back as a plain
+    "note" the moment the page reloaded. Asserting on add_plant_entry's return value alone
+    could never catch that; this reads through the list path the API actually serves.
+    """
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from dsc_brain.plant_journal import add_plant_entry, list_plant_journal
+
+    add_plant_entry(
+        "plant-readback", None, "", action="feed",
+        fields={"amount_l": 3.0, "ec": 1.8, "mix": "CalMag + base"}, fleet={},
+    )
+
+    rows = list_plant_journal("plant-readback", limit=10, offset=0)
+    assert rows, "the entry did not come back at all"
+    row = rows[0]
+    assert row["action"] == "feed", f"action was lost on read: {row.get('action')!r}"
+    assert row["fields"]["amount_l"] == 3.0
+    assert row["fields"]["mix"] == "CalMag + base"
+    assert row["summary"].startswith("Feed · 3 L")

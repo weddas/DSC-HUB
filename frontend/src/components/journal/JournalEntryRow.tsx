@@ -1,4 +1,5 @@
 import { StatusChip } from "../ui";
+import { formatMediaBytes, journalMediaSrc } from "../../lib/journalMediaApi";
 import type { JournalEntry, JournalScope } from "../../types/journal";
 import {
   entryHasHighlightTag,
@@ -114,7 +115,28 @@ export function JournalEntryRow({
           ))}
         {highlighted ? <StatusChip label="highlight" tone="ok" /> : null}
       </div>
-      <div>{row.note || "—"}</div>
+      {/* Pass S6. The brain renders the summary ("Water · 2 L · pH 6.2") so the SPA and the
+          action catalogue cannot disagree about how an entry reads. Pre-S6 rows have no
+          action and fall through to the note alone, exactly as before. */}
+      {row.summary && row.action && row.action !== "note" ? (
+        <div className="dsc-journal-summary">{row.summary}</div>
+      ) : null}
+      <div>{row.note || (row.summary && row.action !== "note" ? "" : "—")}</div>
+      {row.media?.length ? (
+        <div className="dsc-journal-media">
+          {row.media.map((m) => (
+            <a
+              key={`${row.id}-media-${m.id}`}
+              href={journalMediaSrc(m.id)}
+              target="_blank"
+              rel="noreferrer"
+              title={`${m.caption || "Photo"} · ${formatMediaBytes(m.bytes)} — opens full size`}
+            >
+              <img src={journalMediaSrc(m.id)} alt={m.caption || "Journal photo"} loading="lazy" />
+            </a>
+          ))}
+        </div>
+      ) : null}
       {snapRows.length || snapGaps ? (
         <div className="dsc-chip-row dsc-journal-snapshot-chips" style={{ marginTop: 6 }}>
           {snapRows.map(([key, val]) => {

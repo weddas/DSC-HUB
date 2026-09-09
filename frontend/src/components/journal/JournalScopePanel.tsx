@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { Button, Card, StatusChip } from "../ui";
+import { EntryComposer } from "./EntryComposer";
 
 import { useJournalScope } from "../../hooks/useJournalScope";
 
@@ -234,7 +235,7 @@ export function JournalScopePanel({
 
 
 
-  const { entries, total, loading, error, save, update, remove } = useJournalScope(scope, {
+  const { entries, total, loading, error, save, update, remove, reload } = useJournalScope(scope, {
 
     limit: pageSize,
 
@@ -320,13 +321,11 @@ export function JournalScopePanel({
 
 
 
-  const [note, setNote] = useState("");
 
   const [when, setWhen] = useState(() => toLocalInputValue(Date.now() / 1000));
 
-  const [busy, setBusy] = useState(false);
+  const [busy] = useState(false);
 
-  const [saveErr, setSaveErr] = useState<string | null>(null);
 
   const [hideSystem, setHideSystem] = useState(false);
 
@@ -395,41 +394,6 @@ export function JournalScopePanel({
 
 
 
-  const onSave = async () => {
-
-    if (!note.trim() || !enabled) return;
-
-    setBusy(true);
-
-    setSaveErr(null);
-
-    try {
-
-      await save({
-
-        note: note.trim(),
-
-        occurred_at: scope.kind === "plant" ? fromLocalInputValue(when) : undefined,
-
-        tags: copy.defaultTags,
-
-      });
-
-      setNote("");
-
-      resetPagination();
-
-    } catch (e) {
-
-      setSaveErr(e instanceof Error ? e.message : "Save failed");
-
-    } finally {
-
-      setBusy(false);
-
-    }
-
-  };
 
 
 
@@ -488,69 +452,38 @@ export function JournalScopePanel({
 
 
         {showCompose ? (
-
           <>
-
             {scope.kind === "plant" ? (
-
               <label className="dsc-seat-editors">
-
                 When
-
                 <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
-
               </label>
-
             ) : null}
-
-            <label className="dsc-seat-editors" style={{ marginTop: scope.kind === "plant" ? 8 : 0 }}>
-
-              {copy.composeLabel}
-
-              <textarea
-                rows={2}
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                onKeyDown={(e) => {
-                  // Enter (or ⌘/Ctrl+Enter) submits; Shift+Enter keeps its newline.
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    if (note.trim() && !busy) void onSave();
-                  }
-                }}
-                placeholder={
-                  scope.kind === "plant"
-                    ? "What you saw (observation, not a diagnosis) — Enter to save, Shift+Enter for a new line"
-                    : `${copy.composeLabel} observation — Enter to save`
-                }
-              />
-
-            </label>
-
-            <div className="dsc-chip-row" style={{ marginTop: 8 }}>
-
-              <Button teal disabled={!note.trim()} busy={busy} onClick={() => void onSave()}>
-
-                {copy.saveLabel}
-
-              </Button>
-
-              {!note.trim() && !busy ? (
-
-                <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
-
-                  Add text to enable Save
-
-                </span>
-
-              ) : null}
-
-              {saveErr ? <StatusChip label={saveErr} tone="bad" /> : null}
-
-            </div>
-
+            {/* Pass S6: the note-only box became a typed composer — action, its declared
+                fields, and a photo. Note stays the default action, so the plain-note flow
+                is unchanged for anyone who just wants to write a line. */}
+            <EntryComposer
+              scopeKind={scope.kind}
+              scopeId={scope.id}
+              enabled={enabled}
+              busy={busy}
+              composeLabel={copy.composeLabel}
+              saveLabel={copy.saveLabel}
+              defaultTags={copy.defaultTags}
+              occurredAt={scope.kind === "plant" ? fromLocalInputValue(when) : undefined}
+              placeholder={
+                scope.kind === "plant"
+                  ? "What you saw (observation, not a diagnosis) — Enter to save, Shift+Enter for a new line"
+                  : `${copy.composeLabel} observation — Enter to save`
+              }
+              onSave={async (body) => {
+                const entry = await save(body);
+                resetPagination();
+                return entry?.id ?? null;
+              }}
+              onComplete={() => void reload()}
+            />
           </>
-
         ) : null}
 
 
