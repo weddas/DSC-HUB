@@ -330,8 +330,15 @@ def search_strains(q: str, limit: int = 20, offset: int = 0) -> list[dict]:
         return len(norms) >= limit
 
     if not needle:
+        # Order by the NORMALISED name, not the raw one. Raw ordering sorts on the leading
+        # punctuation, so an empty-query browse of ~195k strains opened with every
+        # quote-prefixed entry: '"Afternoon Brunch" ...', '"O" Lubricant', '"VPD" for
+        # drying', '"Z" 90u | Whipped Live Rosin', '# 38' (verified live 2026-09-10).
+        # name_norm already strips it — '"O" Lubricant' -> 'strain_o_lubricant' — so those
+        # rows fall under their real first letter instead of crowding the front page.
+        # _hydrate() walks name_norms in order, so this ordering survives hydration.
         for r in c.execute(
-            "SELECT name_norm FROM strain_canonical ORDER BY curated DESC, name LIMIT ? OFFSET ?",
+            "SELECT name_norm FROM strain_canonical ORDER BY curated DESC, name_norm LIMIT ? OFFSET ?",
             (limit, offset),
         ):
             add(r["name_norm"], "curated")
