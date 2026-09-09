@@ -37,7 +37,7 @@ import { fmtDurationMs } from "../lib/formatDuration";
 import { getProbeStations, post_irrigation_shot, set_root_steering_override, type ProbeStation } from "../lib/fleetApi";
 
 export function LiveRootPage() {
-  const { state, entity, tick, num } = useEntityBus();
+  const { state, entity, num } = useEntityBus();
   const fleet = useFleet();
   const inspector = useInspector();
   const navigate = useNavigate();
@@ -90,24 +90,32 @@ export function LiveRootPage() {
 
   useEffect(() => {
     let cancelled = false;
-    getProbeStations()
-      .then((list) => {
-        if (cancelled) return;
-        setProbeStations(
-          list.filter((st) => {
-            const m = /^pot(\d+)$/i.exec(st.seat_id);
-            return m != null && (KIT_PROBE_NUMBERS as readonly number[]).includes(Number(m[1]));
-          }),
-        );
-      })
-      .catch(() => {
-        if (!cancelled) setProbeStations([]);
-      });
+    const load = () => {
+      getProbeStations()
+        .then((list) => {
+          if (cancelled) return;
+          setProbeStations(
+            list.filter((st) => {
+              const m = /^pot(\d+)$/i.exec(st.seat_id);
+              return m != null && (KIT_PROBE_NUMBERS as readonly number[]).includes(Number(m[1]));
+            }),
+          );
+        })
+        .catch(() => {
+          if (!cancelled) setProbeStations([]);
+        });
+    };
+    load();
+    // Probe stations only change when the operator edits them in Settings; a 30 s poll
+    // picks that up without opening the Soil test. This used to key on the fleet `tick`,
+    // which bumps every ~2 s, so Root refetched /settings/probe-stations on every fleet
+    // update — a needless request storm (the flood class that once wedged the brain).
+    const id = window.setInterval(load, 30_000);
     return () => {
       cancelled = true;
+      window.clearInterval(id);
     };
-    // tick: Settings dock patches must reach Root without opening Soil test
-  }, [soilWizardOpen, tick]);
+  }, [soilWizardOpen]);
 
   const openProbe = (n: number) => {
     const next = new URLSearchParams(params);
