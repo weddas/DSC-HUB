@@ -10,6 +10,7 @@ from typing import Any
 
 from .paths import DEFAULT_DB
 from .space_model import ensure_kit_spaces, init_space_tables, list_spaces
+from .db import open_db, schema_once
 
 KIT_ROOM_ID = "grow_room"
 KIT_ROOM = {
@@ -22,15 +23,14 @@ KIT_ROOM_SPACES = ("4x8", "2x4")
 
 def _connect(db_path: Path | None = None) -> sqlite3.Connection:
     path = db_path or DEFAULT_DB
-    path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(path))
-    conn.row_factory = sqlite3.Row
-    return conn
+    return open_db(path)
 
 
 def init_room_tables(db_path: Path | None = None) -> None:
     init_space_tables(db_path)
     with _connect(db_path) as conn:
+        if not schema_once(conn, "room_model"):
+            return
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS room (

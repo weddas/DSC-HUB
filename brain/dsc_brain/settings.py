@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from .paths import DEFAULT_DB, _default_brain
+from .db import ensure_schema, open_db
 
 SETTINGS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS settings (
@@ -117,10 +118,8 @@ def connect(db_path: Path | None = None) -> sqlite3.Connection:
         path = base / "dsc_ops.sqlite3"
     else:
         path = db_path
-    path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(path)
-    conn.row_factory = sqlite3.Row
-    conn.executescript(SETTINGS_SCHEMA)
+    conn = open_db(path)
+    ensure_schema(conn, "settings", SETTINGS_SCHEMA)
     return conn
 
 

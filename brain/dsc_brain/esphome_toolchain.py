@@ -34,6 +34,7 @@ from .fleet_state import get_fleet_state
 from .network_apply import eth_carrier_up
 from .paths import BRAIN_DATA, REPO_ROOT
 from .settings import connect, get_setting, list_inventory, set_setting
+from .db import ensure_schema
 
 # Last QA-validated ESPHome; kept in lock-step with the firmware `min_version:`
 # pin in firmware/v4/dsc-*-common.yaml + dsc-hub-v4_0.yaml.
@@ -663,7 +664,7 @@ def status(*, force_latest: bool = False) -> dict[str, Any]:
 # Self-update job
 # --------------------------------------------------------------------------- #
 def _ensure_jobs(conn) -> None:
-    conn.executescript(TOOLCHAIN_JOB_SCHEMA)
+    ensure_schema(conn, "esphome_toolchain_jobs", TOOLCHAIN_JOB_SCHEMA)
 
 
 def _update_job_row(job_id: str, st: str, detail: str, db_path: Path | None = None) -> None:

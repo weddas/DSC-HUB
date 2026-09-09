@@ -19,18 +19,18 @@ from .paths import DEFAULT_DB
 from .room_model import ensure_kit_rooms, spaces_for_room
 from .space_journal import count_space_journal, list_space_journal
 from .space_occupants import occupant_plant_ids_for_space
+from .db import open_db, schema_once
 
 
 def _connect(db_path: Path | None = None) -> sqlite3.Connection:
     path = db_path or DEFAULT_DB
-    path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(path))
-    conn.row_factory = sqlite3.Row
-    return conn
+    return open_db(path)
 
 
 def init_room_journal_tables(db_path: Path | None = None) -> None:
     with _connect(db_path) as conn:
+        if not schema_once(conn, "room_journal"):
+            return
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS room_journal (

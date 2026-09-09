@@ -16,6 +16,7 @@ from .paths import DEFAULT_DB
 from .plant_probe import parse_slot_plant_id
 from .settings import list_history, list_inventory, list_roster
 from .stage_model import tent_id
+from .db import open_db
 
 
 class JournalForbiddenError(Exception):
@@ -395,9 +396,7 @@ def backfill_journal_snapshots(
         raise ValueError(f"unsupported scope kind: {scope_kind}")
     table, id_col = table_info
     path = db_path or DEFAULT_DB
-    path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(path))
-    conn.row_factory = sqlite3.Row
+    conn = open_db(path)
     ensure_journal_snapshot_column(conn, table)
 
     params: list[Any] = ["operator"]

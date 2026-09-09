@@ -12,6 +12,7 @@ from typing import Any
 
 from .paths import REPO_ROOT
 from .settings import connect
+from .db import ensure_schema
 
 try:
     from serial.tools import list_ports as _serial_list_ports
@@ -163,7 +164,7 @@ def list_serial_ports() -> list[dict[str, Any]]:
 
 
 def _ensure(conn) -> None:
-    conn.executescript(JOB_SCHEMA)
+    ensure_schema(conn, "usb_flash", JOB_SCHEMA)
 
 
 def _update(job_id: str, status: str, detail: str, db_path: Path | None = None) -> None:

@@ -38,6 +38,7 @@ from urllib.parse import urlsplit, urlunsplit
 
 from .paths import DEFAULT_DB
 from .settings import get_setting, set_setting
+from .db import open_db, schema_once
 
 SOURCE_KINDS: tuple[str, ...] = ("usb", "snapshot", "mjpeg", "rtsp", "motioneye")
 
@@ -91,14 +92,13 @@ def _connect(db_path: Path | None = None) -> sqlite3.Connection:
     if db_path is None:
         base = Path(os.environ.get("DSC_DATA", str(DEFAULT_DB.parent)))
         db_path = base / "dsc_ops.sqlite3"
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(db_path))
-    conn.row_factory = sqlite3.Row
-    return conn
+    return open_db(db_path)
 
 
 def init_camera_tables(db_path: Path | None = None) -> None:
     with _connect(db_path) as conn:
+        if not schema_once(conn, "cameras"):
+            return
         conn.executescript(
             """
             CREATE TABLE IF NOT EXISTS camera (

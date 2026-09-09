@@ -27,6 +27,7 @@ from typing import Any
 
 from .paths import DEFAULT_DB
 from .settings import connect, get_setting, set_setting
+from .db import ensure_schema
 
 _logger = logging.getLogger(__name__)
 
@@ -62,7 +63,7 @@ FLEET_HISTORY_ROW_BYTES = 48
 
 
 def _archive_ensure(conn) -> None:
-    conn.executescript(ARCHIVE_SCHEMA)
+    ensure_schema(conn, "journal_archive", ARCHIVE_SCHEMA)
 
 
 # ---- retention ---------------------------------------------------------------------------

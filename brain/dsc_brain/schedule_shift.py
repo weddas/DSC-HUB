@@ -12,6 +12,7 @@ from .energy_model import parse_hhmm_to_min
 from .paths import DEFAULT_DB
 from .plant_journal import add_plant_entry
 from .space_journal import add_space_entry
+from .db import open_db, schema_once
 
 SetLightsOnFn = Callable[[str, str], None]
 
@@ -24,14 +25,13 @@ POLICY_STEP_MIN = {
 
 def _connect(db_path: Path | None = None) -> sqlite3.Connection:
     path = db_path or DEFAULT_DB
-    path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(path))
-    conn.row_factory = sqlite3.Row
-    return conn
+    return open_db(path)
 
 
 def init_shift_tables(db_path: Path | None = None) -> None:
     with _connect(db_path) as conn:
+        if not schema_once(conn, "schedule_shift"):
+            return
         conn.executescript(
             """
             CREATE TABLE IF NOT EXISTS schedule_shift_plan (

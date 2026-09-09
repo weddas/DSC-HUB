@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .paths import DEFAULT_DB
+from .db import open_db, schema_once
 
 KIT_SPACES: tuple[dict[str, Any], ...] = (
     {
@@ -52,14 +53,13 @@ KIT_DEVICE_DEFAULTS: tuple[dict[str, Any], ...] = (
 
 def _connect(db_path: Path | None = None) -> sqlite3.Connection:
     path = db_path or DEFAULT_DB
-    path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(path))
-    conn.row_factory = sqlite3.Row
-    return conn
+    return open_db(path)
 
 
 def init_space_tables(db_path: Path | None = None) -> None:
     with _connect(db_path) as conn:
+        if not schema_once(conn, "space_model"):
+            return
         conn.executescript(
             """
             CREATE TABLE IF NOT EXISTS space (

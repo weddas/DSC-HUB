@@ -14,6 +14,7 @@ from typing import Any
 from .esphome_toolchain import build_backend, dashboard_api, esphome_bin, project_dir, run_env
 from .paths import DEFAULT_DB, EXPECTED_FIRMWARE
 from .settings import connect, list_inventory
+from .db import ensure_schema
 
 JOB_SCHEMA = """
 CREATE TABLE IF NOT EXISTS esphome_jobs (
@@ -53,7 +54,7 @@ _worker_wake = threading.Event()
 
 
 def _ensure_jobs(conn) -> None:
-    conn.executescript(JOB_SCHEMA)
+    ensure_schema(conn, "esphome_jobs", JOB_SCHEMA)
 
 
 def _inventory_host(seat_id: str) -> str | None:

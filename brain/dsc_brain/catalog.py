@@ -13,6 +13,7 @@ except ImportError as exc:  # pragma: no cover
     raise SystemExit("PyYAML required: pip install pyyaml") from exc
 
 from .paths import DATA_DIR, DEFAULT_DB
+from .db import ensure_schema, open_db
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (
@@ -54,10 +55,8 @@ CREATE TABLE IF NOT EXISTS search_docs (
 
 def connect(db_path: Path | None = None) -> sqlite3.Connection:
     path = db_path or DEFAULT_DB
-    path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(path)
-    conn.row_factory = sqlite3.Row
-    conn.executescript(SCHEMA)
+    conn = open_db(path)
+    ensure_schema(conn, "catalog", SCHEMA)
     return conn
 
 

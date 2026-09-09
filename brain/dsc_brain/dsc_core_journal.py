@@ -18,18 +18,18 @@ from .journal_snapshot import (
 from .paths import DEFAULT_DB
 from .room_journal import count_room_journal, list_room_journal
 from .room_model import ensure_kit_rooms, list_rooms
+from .db import open_db, schema_once
 
 
 def _connect(db_path: Path | None = None) -> sqlite3.Connection:
     path = db_path or DEFAULT_DB
-    path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(path))
-    conn.row_factory = sqlite3.Row
-    return conn
+    return open_db(path)
 
 
 def init_core_journal_tables(db_path: Path | None = None) -> None:
     with _connect(db_path) as conn:
+        if not schema_once(conn, "dsc_core_journal"):
+            return
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS dsc_core_journal (

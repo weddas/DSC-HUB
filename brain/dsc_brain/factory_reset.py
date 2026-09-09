@@ -82,8 +82,10 @@ def factory_reset(confirm_text: str, *, restart: bool = True) -> dict[str, Any]:
         finally:
             conn.close()
 
+    from .db import reset_schema_cache
     from .settings import init_settings_db
 
+    reset_schema_cache()  # the tables are gone; every module's DDL must run again
     init_settings_db(db)
 
     from .settings_journal import journal_setting_change

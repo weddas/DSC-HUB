@@ -14,6 +14,7 @@ import json
 from typing import Any
 
 from .settings import connect
+from .db import ensure_schema
 
 STAGE_RAIL_SCHEMA = """
 CREATE TABLE IF NOT EXISTS stage_rail (
@@ -70,7 +71,7 @@ BRAIN_STAGE_SWITCH = "switch.dsc_hub_brain_stage_targets"
 
 
 def _ensure(conn) -> None:
-    conn.executescript(STAGE_RAIL_SCHEMA)
+    ensure_schema(conn, "stage_rail", STAGE_RAIL_SCHEMA)
     have = {r["stage"] for r in conn.execute("SELECT stage FROM stage_rail")}
     for i, row in enumerate(DEFAULT_STAGE_RAIL):
         if row["stage"] in have:

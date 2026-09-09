@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .paths import DEFAULT_DB
+from .db import open_db, schema_once
 
 DEFAULT_OUTLIER_DAYS = 2
 DEFAULT_NORM_DAYS = 5
@@ -16,14 +17,13 @@ DEFAULT_NORM_DAYS = 5
 
 def _connect(db_path: Path | None = None) -> sqlite3.Connection:
     path = db_path or DEFAULT_DB
-    path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(path))
-    conn.row_factory = sqlite3.Row
-    return conn
+    return open_db(path)
 
 
 def init_learning_tables(db_path: Path | None = None) -> None:
     with _connect(db_path) as conn:
+        if not schema_once(conn, "energy_learning"):
+            return
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS energy_learning_sample (

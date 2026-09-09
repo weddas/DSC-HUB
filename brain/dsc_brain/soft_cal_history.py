@@ -9,18 +9,18 @@ from pathlib import Path
 from typing import Any
 
 from .paths import DEFAULT_DB
+from .db import open_db, schema_once
 
 
 def _connect(db_path: Path | None = None) -> sqlite3.Connection:
     path = db_path or DEFAULT_DB
-    path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(path))
-    conn.row_factory = sqlite3.Row
-    return conn
+    return open_db(path)
 
 
 def init_soft_cal_history(db_path: Path | None = None) -> None:
     with _connect(db_path) as conn:
+        if not schema_once(conn, "soft_cal_history"):
+            return
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS soft_cal_sessions (
