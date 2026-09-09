@@ -679,6 +679,45 @@ export async function save_calibration(
   return resp.json();
 }
 
+/** One duct's calibration state, as the brain itself judges it. */
+export type FanCalTarget = {
+  device_id: string;
+  cal_prefix: string;
+  label: string;
+  calibrated: boolean;
+  /** Which store the points came from, or null when there are none. */
+  source: "device_calibration" | "compose_helpers" | null;
+  last_calibrated_at: number | null;
+  steps: Array<{ step_pct: string; measured_value: number; unit: string; created_at: number | null }>;
+  /** The unit the capture was stored under. The curve is consumed as CFM. */
+  stored_unit: string;
+  nameplate_cfm: number;
+  measured_top: number;
+  pct_of_nameplate: number | null;
+  /** False when the curve gate rejected it and the fan is on its nameplate instead. */
+  in_use: boolean;
+  basis: string;
+  why_not: string;
+};
+
+export async function fan_calibration_summary(): Promise<{ targets: FanCalTarget[] }> {
+  const resp = await fetch("/settings/calibration");
+  if (!resp.ok) throw new Error("calibration summary failed");
+  return resp.json();
+}
+
+export async function clear_calibration(
+  deviceId: string,
+  calType = "fan_cfm",
+): Promise<{ steps_removed: number; helpers_cleared: number }> {
+  const resp = await fetch(
+    `/settings/calibration/${encodeURIComponent(deviceId)}?cal_type=${encodeURIComponent(calType)}`,
+    { method: "DELETE" },
+  );
+  if (!resp.ok) throw new Error("clear calibration failed");
+  return resp.json();
+}
+
 // ---- Tuya (SmartLife Wi-Fi) local lane — plan-tuya-local § 2.5 ---------------
 
 export type TuyaLink = "live" | "stale" | "offline" | "key_changed";

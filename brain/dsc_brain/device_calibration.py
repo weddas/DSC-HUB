@@ -116,3 +116,42 @@ def list_calibrations(
     ).fetchall()
     conn.close()
     return [_row_to_dict(r) for r in rows]
+
+
+def clear_calibration(
+    device_id: str,
+    cal_type: str | None = None,
+    db_path: Path | None = None,
+) -> int:
+    """Forget a device's stored calibration. Returns how many steps were removed.
+
+    Deleting is the honest way to undo a bad capture: the curve gate can only *demote* a
+    calibration to a nameplate proxy, it cannot make the operator's screen stop claiming a
+    calibration exists. Clearing puts the fan back on its nameplate with no asterisk.
+    """
+    conn = connect(db_path)
+    if cal_type:
+        if cal_type not in CAL_TYPES:
+            conn.close()
+            raise ValueError(f"unsupported cal_type {cal_type}")
+        cur = conn.execute(
+            "DELETE FROM device_calibration WHERE device_id=? AND cal_type=?",
+            (device_id, cal_type),
+        )
+    else:
+        cur = conn.execute("DELETE FROM device_calibration WHERE device_id=?", (device_id,))
+    removed = int(cur.rowcount or 0)
+    conn.commit()
+    conn.close()
+    return removed
+
+
+def last_calibrated_at(
+    device_id: str,
+    cal_type: str = "fan_cfm",
+    db_path: Path | None = None,
+) -> float | None:
+    """Newest step timestamp for a device, or None when it has never been calibrated."""
+    rows = get_calibration(device_id, cal_type, db_path)
+    stamps = [r["created_at"] for r in rows if r.get("created_at")]
+    return max(stamps) if stamps else None

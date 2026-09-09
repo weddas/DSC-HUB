@@ -4379,6 +4379,20 @@ input[type="checkbox"]:disabled {
 
 .dsc-chip--ok { background: color-mix(in srgb, var(--dsc-neon) 6%, transparent); box-shadow: none; }
 
+/* A measured calibration point. Chip-shaped, but never uppercased: the unit is part of
+   the value, and "M/S" is not a unit. */
+.dsc-cal-point {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: var(--dsc-radius-sm);
+  border: 1px solid var(--dsc-gray-3);
+  background: transparent;
+  font-family: var(--dsc-mono);
+  font-size: 11px;
+  color: var(--dsc-gray-5);
+}
+
 .dsc-btn {
   border-radius: 6px;
 }

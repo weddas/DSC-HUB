@@ -13,7 +13,7 @@ from .compose_ops import _strain_is_auto, update_pot_recipe
 from .compose_store import all_helpers, get_helper, get_roster_slots
 from .dash_computed import emit_dash_entities
 from .decision_loop import decision_tick
-from .device_calibration import get_calibration
+from .device_calibration import get_calibration, last_calibrated_at
 from .event_log import record_grow_log
 from .global_modifiers import scale_fan_demand_pct, scale_light_brightness_pct
 from .hub_failover import emit_override_entity, evaluate_failover, get_override
@@ -260,6 +260,103 @@ def _cfm_from_pct_memoized(
         return round(y0, 1), "curve", "measured_curve"
     val = y0 + (y1 - y0) * (pct - x0) / (x1 - x0)
     return round(val, 1), "curve", "measured_curve"
+
+
+# The four ducts, in the order the Calibrate desk shows them.
+FAN_CAL_TARGETS: list[tuple[str, str]] = [
+    ("dsc_cal_cfm_out", "OUT exhaust"),
+    ("dsc_cal_cfm_recirc", "RECIRC"),
+    ("dsc_cal_cfm_intake_main", "Intake 4x8"),
+    ("dsc_cal_cfm_intake_clone", "Intake 2x4"),
+]
+
+_PROXY_REASON_TEXT: dict[str, str] = {
+    "capacity_proxy_nameplate": "No calibration stored — using the fan's rated capacity.",
+    "capacity_proxy_nameplate_flat_calibration": (
+        "Every duty step measured the same value, so the curve is a flat line and cannot "
+        "describe a fan. Using the rated capacity instead."
+    ),
+    "capacity_proxy_nameplate_calibration_implausible_vs_nameplate": (
+        "The measured points are an order of magnitude away from the fan's rating — almost "
+        "always a unit mix-up (m/s stored where CFM was expected). Using the rated capacity."
+    ),
+    "capacity_proxy_nameplate_calibration_not_monotonic": (
+        "Airflow falls as the fan speeds up, which no fan does. Using the rated capacity."
+    ),
+}
+
+
+def fan_calibration_summary() -> list[dict[str, Any]]:
+    """Per-duct: is there a calibration, when, what was measured, and is it actually used?
+
+    The last question is the one the Calibrate desk could not answer. A stored calibration
+    that the curve gate rejects is invisible: the fan silently falls back to its nameplate
+    and the screen still says "calibrated". Every field here is read through the same
+    helpers the live computation uses, so the desk cannot disagree with the airflow numbers.
+    """
+    helpers = all_helpers()
+    memo: dict[str, list[tuple[float, float]]] = {}
+    plate_for = {prefix: plate_id for plate_id, prefix in _CAL_PREFIX_PLATE.items()}
+    out: list[dict[str, Any]] = []
+
+    for prefix, label in FAN_CAL_TARGETS:
+        device_id = CAL_PREFIX_DEVICE.get(prefix, prefix)
+        plate_id = plate_for.get(prefix, "")
+        nameplate = float(helpers.get(plate_id, 0) or 0)
+
+        rows = get_calibration(device_id, "fan_cfm")
+        source = "device_calibration" if rows else None
+        steps: list[dict[str, Any]] = []
+        units: set[str] = set()
+        if rows:
+            for row in rows:
+                steps.append(
+                    {
+                        "step_pct": row["step_key"],
+                        "measured_value": row["measured_value"],
+                        "unit": row["unit"] or "",
+                        "created_at": row["created_at"],
+                    }
+                )
+                if row["unit"]:
+                    units.add(row["unit"])
+        else:
+            # Older captures live only in the compose helpers; they carry no timestamp.
+            for step in (25, 50, 75, 100):
+                val = float(helpers.get(f"input_number.{prefix}_{step}", 0) or 0)
+                if val > 0:
+                    steps.append(
+                        {"step_pct": str(step), "measured_value": val, "unit": "", "created_at": None}
+                    )
+            if steps:
+                source = "compose_helpers"
+
+        points = _cal_points_memoized(prefix, helpers, memo)
+        in_use = _curve_points_usable(points, nameplate)
+        reason_key = "" if in_use else _proxy_reason(points, nameplate)
+        measured_top = max((p[1] for p in points if p[1] > 0), default=0.0)
+
+        out.append(
+            {
+                "device_id": device_id,
+                "cal_prefix": prefix,
+                "label": label,
+                "calibrated": bool(steps),
+                "source": source,
+                "last_calibrated_at": last_calibrated_at(device_id, "fan_cfm"),
+                "steps": steps,
+                # The unit the capture was stored under. The curve is consumed as CFM, so
+                # anything else here is the bug, not a preference.
+                "stored_unit": sorted(units)[0] if len(units) == 1 else ("mixed" if units else ""),
+                "nameplate_cfm": nameplate,
+                "measured_top": round(measured_top, 2),
+                "pct_of_nameplate": round(100.0 * measured_top / nameplate, 1) if nameplate > 0 else None,
+                "in_use": in_use,
+                "basis": "measured_curve" if in_use else _proxy_reason(points, nameplate),
+                "why_not": _PROXY_REASON_TEXT.get(reason_key, "") if reason_key else "",
+            }
+        )
+    return out
 
 
 def _capacity_honesty(

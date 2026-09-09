@@ -70,7 +70,7 @@ from .settings import (
     upsert_roster,
 )
 from .want import resolve_want
-from .device_calibration import get_calibration, set_calibration_step
+from .device_calibration import clear_calibration, get_calibration, set_calibration_step
 from .global_modifiers import get_global_modifiers, set_global_modifiers
 from .soil_tests import (
     cancel_soil_test,
@@ -2013,6 +2013,56 @@ def soft_cal_session_record(body: dict[str, Any]) -> dict[str, Any]:
     if probe_n < 1 or probe_n > 4 or not phase:
         raise HTTPException(status_code=400, detail="probe_n 1-4 and phase required")
     return record_soft_cal_session(probe_n, phase, payload)
+
+
+@app.get("/settings/calibration")
+def settings_calibration_summary() -> dict[str, Any]:
+    """Per-duct calibration state for the Calibrate desk.
+
+    Answers the three questions the desk could not: has this duct been calibrated, when and
+    with what, and is that calibration actually driving the airflow numbers. The last one
+    matters because a rejected calibration is silent — the fan falls back to its nameplate
+    and nothing on screen said so.
+    """
+    from .computed_ops import fan_calibration_summary
+
+    return {"targets": fan_calibration_summary()}
+
+
+@app.delete("/settings/calibration/{device_id}")
+def settings_calibration_delete(
+    device_id: str,
+    cal_type: str | None = Query(None),
+) -> dict[str, Any]:
+    """Forget a duct's calibration and put the fan back on its nameplate.
+
+    Both stores have to go. `_cal_points_from_storage` prefers device_calibration rows and
+    falls back to the compose helpers, so clearing only the table would resurrect an older
+    helper-era capture instead of clearing anything.
+    """
+    if _demo_mode():
+        _demo_forbidden()
+    try:
+        removed = clear_calibration(device_id, cal_type)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    from .compose_store import get_helper, set_helper
+
+    helpers_cleared = 0
+    for step in (25, 50, 75, 100):
+        key = f"input_number.{device_id}_{step}"
+        if float(get_helper(key, 0) or 0) > 0:
+            set_helper(key, 0)
+            helpers_cleared += 1
+
+    return {
+        "device_id": device_id,
+        "cal_type": cal_type,
+        "steps_removed": removed,
+        "helpers_cleared": helpers_cleared,
+        "calibrations": get_calibration(device_id, cal_type),
+    }
 
 
 @app.get("/settings/calibration/{device_id}")

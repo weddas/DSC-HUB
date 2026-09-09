@@ -6,6 +6,7 @@ import { TargetNumber } from "../components/TentTargets";
 import { SoftCalWizard } from "../components/SoftCalWizard";
 import { SoilTestWizard } from "../components/SoilTestWizard";
 import { CalOutcomeStrip } from "../components/CalOutcomeStrip";
+import { FanCalibrationRecord } from "../components/FanCalibrationRecord";
 import { save_calibration } from "../lib/fleetApi";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleet } from "../hooks/useFleet";
@@ -34,6 +35,10 @@ type CalTab = "fan" | "light" | "tank" | "soil";
 
 function FanCalibrateWizard() {
   const { state, num } = useEntityBus();
+  // Bumped when a session finishes, to remount the record card onto the run that just
+  // happened — the wizard's own "saved" message says nothing about whether the curve
+  // survived the plausibility gate.
+  const [recordNonce, setRecordNonce] = useState(0);
   const { callService } = useFleetActions();
   const [phase, setPhase] = useState<WizardPhase>("pick");
   const [targetIdx, setTargetIdx] = useState(0);
@@ -115,6 +120,7 @@ function FanCalibrateWizard() {
       if (next >= STEP_PCTS.length) {
         await callService("script", "turn_on", { entity_id: "script.dsc_cal_finish" });
         setPhase("done");
+        setRecordNonce((n) => n + 1);
         setStatus(`Curve points saved for ${target.label}. Status: ${curveStatus}`);
       } else {
         setStepIdx(next);
@@ -137,6 +143,7 @@ function FanCalibrateWizard() {
       if (next >= STEP_PCTS.length) {
         await callService("script", "turn_on", { entity_id: "script.dsc_cal_finish" });
         setPhase("done");
+        setRecordNonce((n) => n + 1);
         setStatus("Session finished (skipped remaining).");
       } else {
         setStepIdx(next);
@@ -270,7 +277,10 @@ function FanCalibrateWizard() {
       {phase === "done" ? (
         <Card className="dsc-glass" title="3 · Done" icon="ok">
           <p className="dsc-honesty">{status || "Session complete."}</p>
-          <p className="dsc-muted">Curve status: {curveStatus}. The Climate page uses this curve for its airflow numbers.</p>
+          <p className="dsc-muted">
+            Curve status: {curveStatus}. Check <strong>Calibration on record</strong> below to see whether
+            this curve passed the plausibility check and is driving the airflow numbers.
+          </p>
           <div className="dsc-row-actions">
             <Button variant="primary" onClick={resetWizard}>
               Calibrate another duct
@@ -280,6 +290,8 @@ function FanCalibrateWizard() {
       ) : null}
 
       {status && phase !== "done" ? <p className="dsc-honesty">{status}</p> : null}
+
+      <FanCalibrationRecord key={recordNonce} />
     </>
   );
 }
