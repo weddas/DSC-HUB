@@ -2,7 +2,7 @@
 
 **Tip SoT:** `94ff4d0`. Second honesty batch: flatline stuck detection, soil-test quality that penalises impossible readings, capacity totals that inherit component honesty, held ineffective latches, container-readable NTP, one-clock SPA ages, and smaller API honesty fixes.
 
-Companion climate ingest (reject-not-clamp) remains tip `17aa6bd` — see [PLAUSIBILITY.md](PLAUSIBILITY.md) on docs PR #220 until merged.
+Companion climate ingest (reject-not-clamp) remains tip `17aa6bd` — see [PLAUSIBILITY.md](https://github.com/weddas/DSC-HUB/blob/cursor/engineering-documentation-d4fb/docs/brain/PLAUSIBILITY.md) (docs PR #220) until merged.
 
 ## Intent
 
