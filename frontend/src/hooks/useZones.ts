@@ -83,6 +83,8 @@ export interface ZoneModel {
   roleSince: number | null;
   stage: string | null;
   stageShort: string | null;
+  /** Hub grow_stage select vs the plants' expected stage, when the brain says they disagree. */
+  stageConflict: { hub: string; plant: string; phaseMismatch: boolean } | null;
   phase: PhaseKey | null;
   day: number | null;
   cultivar: string | null;
@@ -382,6 +384,13 @@ export function useZones(): { main: ZoneModel; clone: ZoneModel; room: ZoneModel
         roleSince: meta?.role_since ?? null,
         stage: role === "grow" ? stage : role === "dry" ? "Dry Mode" : null,
         stageShort: role === "grow" ? (stageRail?.short ?? stage) : role.toUpperCase(),
+        stageConflict: (() => {
+          if (tent !== "main" || role !== "grow") return null;
+          const e = entity("binary_sensor.dsc_stage_disagreement");
+          const a = (e?.attributes ?? {}) as { hub_stage?: string; plant_stage?: string; stages_differ?: boolean };
+          if (!a.stages_differ || !a.hub_stage || !a.plant_stage) return null;
+          return { hub: a.hub_stage, plant: a.plant_stage, phaseMismatch: e?.state === "on" };
+        })(),
         phase:
           role === "grow"
             ? (phaseFromStage(stage) ?? (tent === "clone" ? "veg" : null))
@@ -429,6 +438,7 @@ export function useZones(): { main: ZoneModel; clone: ZoneModel; room: ZoneModel
       roleSince: null,
       stage: null,
       stageShort: null,
+      stageConflict: null,
       phase: null,
       day: null,
       cultivar: null,

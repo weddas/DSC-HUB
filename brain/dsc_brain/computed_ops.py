@@ -18,6 +18,7 @@ from .event_log import record_grow_log
 from .global_modifiers import scale_fan_demand_pct, scale_light_brightness_pct
 from .hub_failover import emit_override_entity, evaluate_failover, get_override
 from .light_loop import build_light_loop, emit_light_loop
+from .light_loop import _FLOWER_STAGES, _VEG_STAGES
 from .runtime_history import HistoryMemo, RuntimeMemo, midnight_ts
 from .settings import list_roster
 from .stage_model import expected_stage, stage_family, stage_rank, tent_id
@@ -276,6 +277,37 @@ def _held_flag(eid: str, raw: bool, *, on_after_s: float, off_after_s: float, no
     else:
         st["since"] = None
     return bool(st["on"])
+
+
+def _stage_phase(stage: str) -> str | None:
+    st = (stage or "").strip()
+    if not st or st in ("—", "unknown"):
+        return None
+    if st in _VEG_STAGES:
+        return "veg"
+    if st in _FLOWER_STAGES:
+        return "flower"
+    return "other"
+
+
+def _stage_disagreement(hub_stage: str, plant_stage: str) -> tuple[bool, dict[str, Any]]:
+    """Two stage vocabularies coexist with no reconciliation: the hub's grow_stage select
+    (drives its ladders) and the plants' expected stage (drives the VPD band). Overview
+    showed one, Climate the other. ON only when they land in different PHASES (veg vs
+    flower) — Early Flowering vs Flowering is the same phase and only worth a label."""
+    hp, pp = _stage_phase(hub_stage), _stage_phase(plant_stage)
+    differ = bool(hub_stage and plant_stage and hub_stage.strip() != plant_stage.strip())
+    on = bool(hp and pp and hp != pp)
+    return on, {
+        "hub_stage": hub_stage or None,
+        "plant_stage": plant_stage or None,
+        "hub_phase": hp,
+        "plant_phase": pp,
+        "stages_differ": differ,
+        "note": "hub select and plant expected stage are in different phases — the VPD band follows the plants, the hub ladders follow the select"
+        if on
+        else ("same phase, different label" if differ else ""),
+    }
 
 
 def _states_with_controls(
@@ -563,11 +595,13 @@ def _build_cold_computed_states(
             strain_raw = str(helpers.get("input_text.dsc_build_strain", "")).strip()
             strain_id = strain_raw.replace(" ", "_").lower()[:64]
             _set_entity(states, "sensor.dsc_build_days_since_sprout", max(0, build_days))
-            _set_entity(
-                states,
-                "sensor.dsc_build_expected_stage",
-                expected_stage(max(0, build_days), auto=_strain_is_auto(strain_id)),
-            )
+            plant_stage = expected_stage(max(0, build_days), auto=_strain_is_auto(strain_id))
+            _set_entity(states, "sensor.dsc_build_expected_stage", plant_stage)
+            hub_stage = ""
+            if fleet.hub:
+                hub_stage = str(((fleet.hub.values.get("controls") or {}).get("select.dsc_hub_grow_stage") or {}).get("state") or "")
+            on, attrs = _stage_disagreement(hub_stage, plant_stage)
+            _set_entity(states, "binary_sensor.dsc_stage_disagreement", on, attributes=attrs)
         except ValueError:
             pass
 
@@ -776,8 +810,20 @@ def _emit_probe_want_bands(states: dict[str, dict[str, Any]], pot_n: int, bands:
             lo, hi = float(band[0]), float(band[1])
         except (TypeError, ValueError):
             continue
-        _set_entity(states, f"sensor.dsc_probe{pot_n}_{slug}_min", lo)
-        _set_entity(states, f"sensor.dsc_probe{pot_n}_{slug}_max", hi)
+        attrs: dict[str, Any] | None = None
+        if key == "ec_us":
+            # STAGE_DEFAULTS / catalog EC bands are nutrient-solution (feed) values. The pot
+            # probe reads BULK substrate EC, which runs several times below pore/feed EC, so
+            # the band is unreachable by construction and EC always read "too low".
+            attrs = {
+                "unit_of_measurement": "µS/cm",
+                "basis": "feed_solution",
+                "probe_basis": "bulk_substrate",
+                "comparable": False,
+                "note": "feed-solution target; the probe measures bulk substrate EC (typically several × lower) — not directly comparable",
+            }
+        _set_entity(states, f"sensor.dsc_probe{pot_n}_{slug}_min", lo, attributes=attrs)
+        _set_entity(states, f"sensor.dsc_probe{pot_n}_{slug}_max", hi, attributes=attrs)
 
 
 def _opt_got(values: dict[str, Any], *keys: str) -> float | None:

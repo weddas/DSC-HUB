@@ -112,6 +112,17 @@ export function ZoneCard({
             title={nonGrow ? `Role ${zone.role}, set in Settings > Zones` : "Growth phase from the stage preset"}
           />
         ) : null}
+        {zone.stageConflict ? (
+          <StatusTag
+            label={`STAGE · HUB ${zone.stageConflict.hub.toUpperCase()} · PLANTS ${zone.stageConflict.plant.toUpperCase()}`}
+            tone={zone.stageConflict.phaseMismatch ? "warn" : "muted"}
+            title={
+              zone.stageConflict.phaseMismatch
+                ? "The hub's grow-stage select and the plants' expected stage are in different phases. The VPD band follows the plants; the hub's appliance ladders follow the select."
+                : "Same phase, different label: the hub select and the plants' expected stage disagree on the name only."
+            }
+          />
+        ) : null}
         {nonGrow && zone.lamp?.on ? (
           <StatusTag
             label="LAMP ON · ROLE NOT ENFORCED"

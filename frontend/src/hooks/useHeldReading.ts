@@ -85,12 +85,16 @@ export function useHeldReading(entityId: string): HeldReading {
   const held = holds.current[entityId];
 
   useEffect(() => {
+    // Only re-render when the held snapshot changes. Every consumer of seven held readings
+    // used to bump state on every bus tick whether or not anything moved.
     if (liveOk && Number.isFinite(raw) && !suspiciousZero) {
-      holds.current[entityId] = { value: raw, at: Date.now() };
-      bump((n) => n + 1);
+      const prev = holds.current[entityId];
+      if (!prev || prev.value !== raw) {
+        holds.current[entityId] = { value: raw, at: Date.now() };
+        bump((n) => n + 1);
+      }
       return;
     }
-    bump((n) => n + 1);
     void tick;
     void entity;
   }, [entityId, liveOk, raw, suspiciousZero, tick, entity]);

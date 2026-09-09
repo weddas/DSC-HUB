@@ -353,3 +353,48 @@ export function resolveKitPpfdUrl(
   }
   return null;
 }
+
+
+/**
+ * CannaLib's strain hydrate is `strain_tree_v1`: {evidence:{chemistry,grow,lineage,…}, branches}.
+ * The detail pane's curated fields (breeder, THC, flowering, height) live one layer down in
+ * that evidence, not at the top level the search item has — so every hydrated strain rendered
+ * as em-dashes. Fill the curated fields from the evidence when the item lacks them.
+ */
+export function hydrateCuratedFields(
+  item: CatalogItem | null,
+  detail: Record<string, unknown> | null,
+): CatalogItem | null {
+  if (!item || !detail || detail.schema !== "strain_tree_v1") return item;
+  const ev = (detail.evidence ?? {}) as {
+    chemistry?: { thc_span?: number[] | null };
+    grow?: { height_cm_span?: number[] | null; flowering_days_span?: number[] | null };
+  };
+  const out = { ...item } as CatalogItem & Record<string, unknown>;
+  const span = (v: unknown): number[] | null =>
+    Array.isArray(v) && v.length >= 2 && v.every((x) => Number.isFinite(Number(x))) ? [Number(v[0]), Number(v[1])] : null;
+  const thc = span(ev.chemistry?.thc_span);
+  if (thc && out.thc_range == null) out.thc_range = thc;
+  const fl = span(ev.grow?.flowering_days_span);
+  if (fl && out.flowering_days_min == null) {
+    out.flowering_days_min = fl[0];
+    out.flowering_days_max = fl[1];
+  }
+  const h = span(ev.grow?.height_cm_span);
+  if (h && out.height_cm == null) out.height_cm = h;
+  if (!out.breeder) {
+    const branches = (detail.branches ?? {}) as Record<
+      string,
+      { subtypes?: { self?: boolean; breeders?: { breeder?: string }[] }[] }
+    >;
+    for (const br of Object.values(branches)) {
+      const me = br.subtypes?.find((st) => st.self) ?? br.subtypes?.[0];
+      const b = me?.breeders?.find((x) => x.breeder)?.breeder;
+      if (b) {
+        out.breeder = b;
+        break;
+      }
+    }
+  }
+  return out as CatalogItem;
+}

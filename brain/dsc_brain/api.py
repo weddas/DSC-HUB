@@ -2277,8 +2277,38 @@ async def light_detail_proxy(light_id: str) -> dict[str, Any]:
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(502, f"CannaLib light detail failed: {exc}") from exc
     if not detail:
-        raise HTTPException(404, "light not in the CannaLib lights catalog")
+        # The name search that offered this id is served from the on-Pi name corpus
+        # (catalog.py `lights`, name/brand only); the by-id route reads CannaLib's lights
+        # STORE (transcribed PPFD maps / spectra). A fixture can be in the first and not the
+        # second — every SF1000 lookup 404'd with a message that read as a bad id.
+        known = _local_light_name(light_id)
+        if known:
+            raise HTTPException(
+                404,
+                {
+                    "kind": "not_transcribed",
+                    "light_id": light_id,
+                    "name": known,
+                    "detail": f"{known} is a known fixture but has no transcribed PPFD/spectrum record in the CannaLib lights store yet — nothing to draw.",
+                },
+            )
+        raise HTTPException(404, {"kind": "unknown_light", "light_id": light_id, "detail": "light not in the CannaLib lights catalog"})
     return detail
+
+
+def _local_light_name(light_id: str) -> str | None:
+    """Name from the on-Pi name corpus, or None."""
+    try:
+        from .catalog import connect as catalog_connect
+
+        conn = catalog_connect()
+        try:
+            row = conn.execute("SELECT name FROM lights WHERE id = ?", (str(light_id),)).fetchone()
+        finally:
+            conn.close()
+        return str(row["name"]) if row else None
+    except Exception:  # noqa: BLE001
+        return None
 
 
 @app.get("/v1/media/assets/{asset_id}")

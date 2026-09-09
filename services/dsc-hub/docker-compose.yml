@@ -56,6 +56,11 @@ services:
       - ${DSC_DATA:-/var/lib/dsc-hub}/ops:/data
       - ${DSC_DATA:-/var/lib/dsc-hub}/firmware:/firmware:ro
       - ${DSC_DATA:-/var/lib/dsc-hub}/cannalib:/cannalib:ro
+      # The baked kit binaries the USB-flash wizard offers. usb_flash.firmware_dir() looks
+      # here first; without this mount the brain fell back to an empty in-image path and
+      # every job failed "Missing firmware binary". Read-only; /dev/serial is deliberately
+      # NOT passed through — the SkyConnect coordinator lives on the same bus.
+      - ${DSC_KIT_FIRMWARE_DIR:-/opt/dsc-hub/firmware}:/opt/dsc-hub/firmware:ro
     depends_on:
       - mosquitto
     networks:

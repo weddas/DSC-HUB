@@ -489,6 +489,7 @@ export function PlantProbePanel({
                 />
               </div>
               {hasWant && !genericStrain ? (
+                <>
                 <GotWantBars
                   rows={[
                     {
@@ -515,6 +516,13 @@ export function PlantProbePanel({
                     },
                   ]}
                 />
+                {hasWantEc ? (
+                  <p className="dsc-honesty" style={{ margin: "6px 0 0", fontSize: "var(--dsc-fs-sm)" }}>
+                    EC band is a feed-solution target; this probe reads bulk substrate EC, which runs several × lower — "too
+                    low" here is the basis mismatch, not necessarily under-feeding.
+                  </p>
+                ) : null}
+                </>
               ) : (
                 <p className="dsc-honesty" style={{ margin: "8px 0 0" }}>
                   <StatusChip label="No target bands" tone="warn" />{" "}

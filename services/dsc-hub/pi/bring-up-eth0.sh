@@ -92,6 +92,33 @@ nameserver 1.1.1.1
   rm -f /tmp/dsc-resolv.conf
 fi
 
+# dhcpcd was soliciting leases on docker's veth* interfaces: every brain restart created a
+# new veth, dhcpcd gave it an IPv4LL address and a 169.254/16 route, and the eth0 default
+# route went with it (LAN unreachable while the brain kept running). Deny them.
+if ! grep -q '^denyinterfaces veth\*' /etc/dhcpcd.conf 2>/dev/null; then
+  printf '
+# DSC-HUB: never manage container interfaces (bring-up-eth0.sh).
+denyinterfaces veth* docker0 br-*
+' > /tmp/dsc-dhcpcd-deny.conf
+  run_sudo bash -c "cat /tmp/dsc-dhcpcd-deny.conf >> /etc/dhcpcd.conf"
+  rm -f /tmp/dsc-dhcpcd-deny.conf
+fi
+
+# Time: the Pi ran 7 minutes slow with NTPSynchronized=no because timesyncd's default pool
+# needed DNS that dhcpcd had emptied. Numeric servers cannot be broken by a resolver, and the
+# hub's SNTP + every photoperiod window depend on this clock. (Cloudflare + Google NTP.)
+if [ ! -f /etc/systemd/timesyncd.conf.d/dsc-hub.conf ]; then
+  run_sudo mkdir -p /etc/systemd/timesyncd.conf.d
+  printf '# DSC-HUB: numeric NTP so a dead resolver cannot stop time sync (bring-up-eth0.sh).
+[Time]
+NTP=162.159.200.1 162.159.200.123 216.239.35.0 216.239.35.4
+FallbackNTP=time.cloudflare.com time.google.com
+' > /tmp/dsc-timesyncd.conf
+  run_sudo install -m 0644 /tmp/dsc-timesyncd.conf /etc/systemd/timesyncd.conf.d/dsc-hub.conf
+  rm -f /tmp/dsc-timesyncd.conf
+  run_sudo systemctl restart systemd-timesyncd 2>/dev/null || true
+fi
+
 # Docker: prefer IPv4 DNS (AP-only Pi had broken IPv6 resolver). Only meaningful
 # now that eth0 actually has an uplink.
 if [ ! -f /etc/docker/daemon.json ] || ! grep -q '"dns"' /etc/docker/daemon.json 2>/dev/null; then

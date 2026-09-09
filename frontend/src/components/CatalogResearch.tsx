@@ -6,7 +6,7 @@ import { CatalogPicker } from "./CatalogPicker";
 import { Button, StatusTag } from "./ui";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
-import { catalogMediaBase, fetchStrainDetail, hasLocalPpfdMap, loadPpfdManifest, resolveKitPpfdUrl, searchCatalog, type CatalogItem, type CatalogKind } from "../lib/catalog";
+import { catalogMediaBase, fetchStrainDetail, hasLocalPpfdMap, hydrateCuratedFields, loadPpfdManifest, resolveKitPpfdUrl, searchCatalog, type CatalogItem, type CatalogKind } from "../lib/catalog";
 import { applyCatalogPick, applyLightPick } from "../lib/composePlantLogic";
 
 const DOMAINS: { id: CatalogKind; label: string }[] = [
@@ -354,7 +354,7 @@ export function CatalogResearch() {
                   {fields.map((f) => (
                     <div key={f.key}>
                       <dt>{f.label}</dt>
-                      <dd>{fieldValue(selected, f.key)}</dd>
+                      <dd>{fieldValue(hydrateCuratedFields(selected, hydrate) ?? selected, f.key)}</dd>
                     </div>
                   ))}
                   {kind === "strain" && lineageText ? (
