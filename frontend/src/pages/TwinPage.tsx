@@ -8,9 +8,10 @@ import { useInspector } from "../components/InspectorHost";
 import { useTwinState } from "../hooks/useTwinState";
 import { useZoneFocus } from "../hooks/useZoneFocus";
 import { DEFAULT_LAYERS, type TwinLayers, type TwinPick } from "../twin/context";
-import { CAMERA_PRESETS, type CameraPreset } from "../twin/CameraRig";
+// Three-free: importing the scene modules here would put three.js in the boot bundle.
+import { CAMERA_PRESETS, TWIN_STYLES, type CameraPreset, type TwinStyle } from "../twin/presets";
 import type { FrameReport } from "../twin/FrameLoop";
-import { FAN_DEFS, type TwinApplianceId, type TwinOverrides } from "../lib/twinState";
+import { FAN_DEFS, type TwinApplianceId, type TwinBinding, type TwinOverrides } from "../lib/twinState";
 
 const LAYER_DEFS: ReadonlyArray<{ id: keyof TwinLayers; label: string; hint: string }> = [
   { id: "air", label: "Air", hint: "Duct routes and streaks — count by duty, speed by learned CFM" },
@@ -20,7 +21,24 @@ const LAYER_DEFS: ReadonlyArray<{ id: keyof TwinLayers; label: string; hint: str
   { id: "plants", label: "Plants", hint: "Every roster plant in place — pot to vessel, canopy to stage" },
   { id: "devices", label: "Devices", hint: "Fans, appliances, sensors and the hub at their anchors" },
   { id: "labels", label: "Labels", hint: "Zone readouts, plant tags, hover names" },
+  { id: "bindings", label: "Bindings", hint: "Mark every instance nothing live is driving — unbound, no data or missing" },
 ];
+
+const STATUS_LABEL: Record<TwinBinding["status"], string> = {
+  live: "LIVE",
+  simulated: "SIMULATED",
+  held: "HELD",
+  "no-data": "NO DATA",
+  missing: "MISSING",
+  unbound: "UNBOUND",
+};
+
+/** Left-rail tone for a binding row — the same vocabulary as the roster list. */
+function statusTone(s: TwinBinding["status"]): string {
+  return s === "live" ? "ok" : s === "simulated" || s === "held" ? "warn" : s === "missing" ? "critical" : "muted";
+}
+
+const GROUP_LABEL: Record<TwinBinding["group"], string> = { main: "4×8", clone: "2×4", room: "Room", plants: "Plants" };
 
 const WHATIF_APPLIANCES: ReadonlyArray<{ id: TwinApplianceId; label: string }> = [
   { id: "heater", label: "Heater" },
@@ -48,6 +66,7 @@ export function TwinPage() {
     setPreset(focus === "clone" ? "clone" : focus === "main" ? "main" : "room");
   }, [focus]);
   const [cinematic, setCinematic] = useState(false);
+  const [style, setStyle] = useState<TwinStyle>("wire");
   const [overrides, setOverrides] = useState<TwinOverrides | null>(null);
   const [perf, setPerf] = useState<FrameReport | null>(null);
   const [gate, setGate] = useState<TwinGate | null>(null);
@@ -68,6 +87,14 @@ export function TwinPage() {
 
   const fpsTone = perf?.fps == null ? "muted" : perf.fps >= 28 ? "ok" : perf.fps >= 20 ? "warn" : "bad";
   const placed = state.plants.filter((p) => p.zone !== "unassigned").length;
+  const bindSummary = state.bindingSummary;
+  // Worst first: a named entity the brain never published is a fault; unbound scenery is not.
+  const ORDER: Record<TwinBinding["status"], number> = { missing: 0, "no-data": 1, held: 2, simulated: 3, unbound: 4, live: 5 };
+  const bindingRows = useMemo(
+    () => Object.values(state.bindings).sort((a, b) => ORDER[a.status] - ORDER[b.status] || a.group.localeCompare(b.group) || a.label.localeCompare(b.label)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [state.bindings],
+  );
 
   return (
     <div className="dsc-page dsc-page--twin">
@@ -84,6 +111,12 @@ export function TwinPage() {
           <StatusTag icon="controller-hub" label={state.hubOnline ? "HUB ONLINE" : "HUB OFFLINE"} tone={state.hubOnline ? "ok" : "bad"} live={state.hubOnline} />
           <StatusTag icon="cannabis-leaf" label={`${state.plants.length} ON ROSTER · ${placed} PLACED`} tone="muted" />
           {state.simulated ? <StatusTag icon="alert-triangle" label={`SIMULATED · ${overrideCount} OVERRIDE${overrideCount === 1 ? "" : "S"} · NOT WRITTEN`} tone="warn" live /> : null}
+          <StatusTag
+            icon="smart-outlet"
+            label={`${bindSummary.live + bindSummary.simulated + bindSummary.held}/${bindSummary.total} BOUND${bindSummary.missing ? ` · ${bindSummary.missing} MISSING` : ""}`}
+            tone={bindSummary.missing ? "bad" : bindSummary.noData ? "warn" : "ok"}
+            dashed={bindSummary.missing > 0}
+          />
           <StatusTag icon="twin-3d" label={perf?.fps != null ? `${Math.round(perf.fps)} FPS · CAP 30` : gate && !gate.ok ? `STILL · ${gate.why.toUpperCase()}` : "FPS —"} tone={gate && !gate.ok ? "muted" : fpsTone} live={perf?.fps != null} />
         </div>
       </header>
@@ -108,11 +141,19 @@ export function TwinPage() {
             Cinematic
           </button>
         </div>
+        <div className="dsc-twin-toolgroup" role="group" aria-label="Look">
+          <span className="dsc-legend">LOOK</span>
+          {TWIN_STYLES.map((s) => (
+            <button key={s.id} type="button" className={`dsc-seg${style === s.id ? " is-active" : ""}`} onClick={() => setStyle(s.id)} title={s.hint} aria-pressed={style === s.id}>
+              {s.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="dsc-twin-page-grid">
         <Panel legendIcon="twin-3d" legend={`ROOM · 4×8 · 2×4 · ${state.simulated ? "SIMULATED" : "LIVE"}`} tone={state.simulated ? "warn" : "teal"} live={state.simulated} className="dsc-twin-stage-panel">
-          <TwinStagePanel state={state} layers={layers} preset={preset} cinematic={cinematic} height="min(68vh, 760px)" force={force} onPerf={onPerf} onPick={onPick} onGate={setGate} />
+          <TwinStagePanel state={state} layers={layers} style={style} preset={preset} cinematic={cinematic} height="min(68vh, 760px)" force={force} onPerf={onPerf} onPick={onPick} onGate={setGate} />
           <div className="dsc-twin-legend" aria-label="Colour key">
             <span><i style={{ background: "var(--dsc-blue)" }} /> intake 4×8</span>
             <span><i style={{ background: "var(--dsc-neon)" }} /> intake 2×4</span>
@@ -209,6 +250,41 @@ export function TwinPage() {
                 No plants on the roster. Commit one from Compose and it appears on its pot here.
               </p>
             )}
+          </Panel>
+
+          <Panel
+            legendIcon="alert-triangle"
+            legend={`BINDINGS · ${bindSummary.live + bindSummary.simulated + bindSummary.held}/${bindSummary.total} LIVE`}
+            tone={bindSummary.missing ? "bad" : bindSummary.noData ? "warn" : "muted"}
+            className="dsc-twin-roster"
+          >
+            <p className="dsc-twin-whatif-note">
+              What the scene is actually drawing from. Anything not <b>live</b> is greyed out in the twin and says so on hover — nothing here is inferred,
+              averaged or borrowed from a neighbouring sensor.
+            </p>
+            <div className="dsc-tagrow" style={{ marginBottom: 10 }}>
+              <StatusTag label={`${bindSummary.live} LIVE`} tone={bindSummary.live ? "ok" : "muted"} />
+              {bindSummary.held ? <StatusTag label={`${bindSummary.held} HELD`} tone="warn" /> : null}
+              {bindSummary.simulated ? <StatusTag label={`${bindSummary.simulated} SIMULATED`} tone="warn" live /> : null}
+              {bindSummary.noData ? <StatusTag label={`${bindSummary.noData} NO DATA`} tone="warn" dashed /> : null}
+              {bindSummary.missing ? <StatusTag label={`${bindSummary.missing} MISSING`} tone="bad" dashed /> : null}
+              <StatusTag label={`${bindSummary.unbound} UNBOUND`} tone="muted" dashed />
+            </div>
+            <ul className="dsc-twin-roster-list">
+              {bindingRows.map((b) => (
+                <li key={b.id} className={`is-${statusTone(b.status)}`}>
+                  <b>
+                    {b.label} <span style={{ opacity: 0.75 }}>· {GROUP_LABEL[b.group]}</span>
+                  </b>
+                  <span>
+                    {STATUS_LABEL[b.status]}
+                    {b.value ? ` · ${b.value}` : ""}
+                    {b.note ? ` · ${b.note}` : ""}
+                  </span>
+                  <small>{b.entityId ? `${b.entityId} → ${b.drives}` : `nothing drives it${b.drives && b.drives !== "—" ? ` · would drive ${b.drives}` : ""}`}</small>
+                </li>
+              ))}
+            </ul>
           </Panel>
 
           <Panel legendIcon="gauge-dial" legend="COST · THIS DEVICE" tone="muted">

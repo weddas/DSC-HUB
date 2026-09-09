@@ -124,8 +124,13 @@ export interface TwinState {
   hubOnline: boolean;
   /** The wall control-panel seat (CYD) is online. */
   panelOnline: boolean;
+  /** The panel seat exists in the fleet at all (false → the scene draws it unbound). */
+  panelKnown: boolean;
   /** True when any field carries an operator what-if override. */
   simulated: boolean;
+  /** Scene instance id → what drives it, and whether anything actually does. */
+  bindings: TwinBindingIndex;
+  bindingSummary: TwinBindingSummary;
   updatedAt: number;
 }
 
@@ -349,4 +354,276 @@ export function applyOverrides(base: TwinState, o: TwinOverrides | null | undefi
 export function fanPeriodSec(pct: number): number | null {
   if (!Number.isFinite(pct) || pct <= 0) return null;
   return 2.2 - Math.min(100, pct) / 100 * 1.9;
+}
+
+/* ------------------------------------------------------------------ honest bindings ----
+ * Every instance the scene draws declares what drives it. Nothing in the twin may move,
+ * glow or take a colour that is not a live reading: an instance whose entity is absent,
+ * unavailable or simply does not exist yet is drawn in the dead look and says so. The
+ * declaration lives here (pure, testable) and the scene looks itself up by instance id,
+ * so a model placed without a declaration shows up as unbound instead of quietly faking.
+ */
+
+export type TwinBindStatus =
+  /** A live reading is driving it right now. */
+  | "live"
+  /** A what-if override is driving it — never written to a device. */
+  | "simulated"
+  /** The last reading is being held (the brain stopped publishing but the value stands). */
+  | "held"
+  /** The entity exists but has no usable value (unavailable / unknown / out of service). */
+  | "no-data"
+  /** The entity is named here but the brain has never published it. */
+  | "missing"
+  /** Nothing drives this instance — it is scenery, and is drawn as scenery. */
+  | "unbound";
+
+export interface TwinBinding {
+  /** Scene instance id — the `Placed` id. */
+  id: string;
+  label: string;
+  group: TwinZoneId | "plants";
+  /** What the reading moves in the scene ("blade spin", "emitter glow", …). */
+  drives: string;
+  entityId: string | null;
+  status: TwinBindStatus;
+  /** The reading as text when there is one — the audit row quotes it, never invents it. */
+  value: string | null;
+  note: string;
+}
+
+export type TwinBindingIndex = Record<string, TwinBinding>;
+
+export interface TwinBindingSummary {
+  total: number;
+  live: number;
+  simulated: number;
+  held: number;
+  noData: number;
+  missing: number;
+  unbound: number;
+}
+
+/** True when the status means "this instance has a number behind it". */
+export function bindingIsLive(s: TwinBindStatus): boolean {
+  return s === "live" || s === "simulated" || s === "held";
+}
+
+export type TwinNodeSource =
+  | { kind: "zone"; zone: TwinZoneId; reading?: "temp" | "rh" | "vpd" }
+  | { kind: "fan"; fan: TwinFan["id"] }
+  | { kind: "lamp"; zone: TwinZoneId }
+  | { kind: "appliance"; app: TwinApplianceId }
+  | { kind: "entity"; entityId: string }
+  | { kind: "fleet"; seat: "hub" | "panel" }
+  | { kind: "roster" }
+  | { kind: "none"; why: string };
+
+export interface TwinNodeDecl {
+  id: string;
+  label: string;
+  group: TwinZoneId | "plants";
+  drives: string;
+  source: TwinNodeSource;
+}
+
+/**
+ * Every fixed instance `RigScene` places, and what drives it. Roster instances (vessels,
+ * plants, probe stakes) are generated per plant in `buildBindings`.
+ */
+export const SCENE_NODES: readonly TwinNodeDecl[] = [
+  { id: "room", label: "Grow room shell", group: "room", drives: "trim tint by room tone", source: { kind: "zone", zone: "room" } },
+  { id: "tent4x8", label: "4×8 tent", group: "main", drives: "trim tint + error pulse by zone tone", source: { kind: "zone", zone: "main" } },
+  { id: "tent2x4", label: "2×4 tent", group: "clone", drives: "trim tint + error pulse by zone tone", source: { kind: "zone", zone: "clone" } },
+
+  { id: "lamp4x8", label: "4×8 lamp", group: "main", drives: "emitter glow + light cone", source: { kind: "lamp", zone: "main" } },
+  { id: "fanExRoom", label: "Exhaust → room", group: "main", drives: "blade spin + streak count", source: { kind: "fan", fan: "exhaust_room" } },
+  { id: "fanExOut", label: "Exhaust → outside", group: "main", drives: "blade spin + streak count", source: { kind: "fan", fan: "exhaust_outside" } },
+  { id: "fanIntakeMain", label: "Intake 4×8", group: "main", drives: "blade spin + streak count", source: { kind: "fan", fan: "intake_main" } },
+  { id: "filterOut", label: "Carbon filter 4″", group: "main", drives: "—", source: { kind: "none", why: "no sensor on the filter; drawn as kit, never coloured" } },
+  { id: "ventPassive", label: "4×8 passive vent", group: "main", drives: "—", source: { kind: "none", why: "a passive mesh port — nothing reports it" } },
+  { id: "puck4x8", label: "4×8 T/RH puck", group: "main", drives: "status LED", source: { kind: "zone", zone: "main" } },
+  { id: "cam4x8", label: "4×8 camera", group: "main", drives: "—", source: { kind: "none", why: "no camera entity on the brain yet (settings plan § cameras)" } },
+  { id: "heater", label: "Heater", group: "main", drives: "element glow + fan spin + shimmer", source: { kind: "appliance", app: "heater" } },
+  { id: "humidifier", label: "Humidifier", group: "main", drives: "mist plume", source: { kind: "appliance", app: "humidifier" } },
+
+  { id: "lamp2x4", label: "2×4 lamp", group: "clone", drives: "emitter glow + light cone", source: { kind: "lamp", zone: "clone" } },
+  { id: "mat2x4", label: "Heat mat", group: "clone", drives: "element glow + shimmer", source: { kind: "appliance", app: "heatmat" } },
+  { id: "fanIntake2x4", label: "Intake 2×4", group: "clone", drives: "blade spin + streak count", source: { kind: "fan", fan: "intake_2x4" } },
+  { id: "ventPassive2x4", label: "2×4 passive vent", group: "clone", drives: "—", source: { kind: "none", why: "a passive mesh port — nothing reports it" } },
+  { id: "cloneHum", label: "Clone humidifier", group: "clone", drives: "mist plume", source: { kind: "appliance", app: "clone_humidifier" } },
+  { id: "mister", label: "Mister", group: "clone", drives: "mist plume", source: { kind: "appliance", app: "mister" } },
+  { id: "domeTray", label: "Clone dome tray", group: "clone", drives: "sprouts shown / hidden", source: { kind: "roster" } },
+  { id: "puck2x4", label: "2×4 T/RH puck", group: "clone", drives: "status LED", source: { kind: "zone", zone: "clone" } },
+  { id: "cam2x4", label: "2×4 camera", group: "clone", drives: "—", source: { kind: "none", why: "no camera entity on the brain yet (settings plan § cameras)" } },
+
+  { id: "dehum", label: "Dehumidifier", group: "room", drives: "fan spin + status LED", source: { kind: "appliance", app: "dehumidifier" } },
+  { id: "ac", label: "Portable AC", group: "room", drives: "fan spin + status LED", source: { kind: "appliance", app: "ac" } },
+  { id: "tank", label: "Reservoir 60 L", group: "room", drives: "—", source: { kind: "none", why: "no level or temperature sensor in the tank" } },
+  { id: "brain", label: "Brain (Pi)", group: "room", drives: "power / activity / Zigbee LEDs", source: { kind: "fleet", seat: "hub" } },
+  { id: "panel", label: "Wall panel (CYD)", group: "room", drives: "screen + status LED", source: { kind: "fleet", seat: "panel" } },
+  { id: "hub", label: "Hub (CYD)", group: "room", drives: "screen + link LEDs", source: { kind: "fleet", seat: "hub" } },
+];
+
+/** What the scene may ask about an entity — supplied by `useTwinState` from the entity bus. */
+export interface TwinEntityProbe {
+  /** The brain has published this entity at some point. */
+  known: (entityId: string) => boolean;
+  /** It has a usable value right now. */
+  available: (entityId: string) => boolean;
+  /** Its state as text, for the audit row. */
+  text: (entityId: string) => string | null;
+}
+
+function readingOf(z: TwinZone, which: "temp" | "rh" | "vpd"): ZoneReading {
+  return which === "rh" ? z.rh : which === "vpd" ? z.vpd : z.temp;
+}
+
+function fmtReading(r: ZoneReading): string | null {
+  if (!r.available) return null;
+  const d = r.unit === "kPa" ? 2 : r.unit === "%" ? 0 : 1;
+  return `${r.value.toFixed(d)} ${r.unit}`.trim();
+}
+
+function entityStatus(entityId: string, probe: TwinEntityProbe): { status: TwinBindStatus; value: string | null } {
+  if (probe.available(entityId)) return { status: "live", value: probe.text(entityId) };
+  if (probe.known(entityId)) return { status: "no-data", value: null };
+  return { status: "missing", value: null };
+}
+
+function bindingFor(decl: TwinNodeDecl, state: TwinState, probe: TwinEntityProbe): TwinBinding {
+  const base = { id: decl.id, label: decl.label, group: decl.group, drives: decl.drives };
+  const s = decl.source;
+  switch (s.kind) {
+    case "zone": {
+      const r = readingOf(state.zones[s.zone], s.reading ?? "temp");
+      const value = fmtReading(r);
+      const status: TwinBindStatus = r.available ? (r.stale ? "held" : "live") : probe.known(r.entityId) ? "no-data" : "missing";
+      return { ...base, entityId: r.entityId, status, value, note: r.derived ? `derived: ${r.derived}` : "" };
+    }
+    case "fan": {
+      const f = state.fans.find((x) => x.id === s.fan);
+      if (!f) return { ...base, entityId: null, status: "unbound", value: null, note: "no fan of this id in the plant" };
+      const value = Number.isFinite(f.pct) ? `${Math.round(f.pct)} %` : null;
+      if (f.simulated) return { ...base, entityId: f.pctEntity, status: "simulated", value, note: "what-if override — not written" };
+      if (f.live) return { ...base, entityId: f.pctEntity, status: "live", value, note: Number.isFinite(f.cfm) ? `${Math.round(f.cfm)} CFM from ${f.cfmEntity}` : "no CFM reading" };
+      return { ...base, entityId: f.pctEntity, status: probe.known(f.pctEntity) ? "no-data" : "missing", value: null, note: "not reporting a duty" };
+    }
+    case "lamp": {
+      const l = state.lamps.find((x) => x.zone === s.zone);
+      if (!l) return { ...base, entityId: null, status: "unbound", value: null, note: "no lamp entity for this zone" };
+      const value = l.brightnessPct != null ? `${Math.round(l.brightnessPct)} %` : l.on ? "on" : "off";
+      if (l.simulated) return { ...base, entityId: l.entityId, status: "simulated", value, note: "what-if override — not written" };
+      if (l.available) return { ...base, entityId: l.entityId, status: "live", value, note: "" };
+      return { ...base, entityId: l.entityId, status: probe.known(l.entityId) ? "no-data" : "missing", value: null, note: "driver not reporting" };
+    }
+    case "appliance": {
+      const a = state.appliances.find((x) => x.id === s.app);
+      if (!a) return { ...base, entityId: null, status: "unbound", value: null, note: "this appliance is not in the kit" };
+      if (a.simulated) return { ...base, entityId: a.entityId ?? null, status: "simulated", value: a.state, note: "what-if override — not written" };
+      if (a.state === "on" || a.state === "off") return { ...base, entityId: a.entityId ?? null, status: "live", value: a.state, note: "" };
+      return { ...base, entityId: a.entityId ?? null, status: "no-data", value: null, note: a.state === "oos" ? "out of service" : "offline" };
+    }
+    case "entity": {
+      const r = entityStatus(s.entityId, probe);
+      return { ...base, entityId: s.entityId, status: r.status, value: r.value, note: "" };
+    }
+    case "fleet": {
+      if (s.seat === "panel") {
+        if (!state.panelKnown) return { ...base, entityId: null, status: "unbound", value: null, note: "no panel seat in the fleet" };
+        return { ...base, entityId: "fleet.panel", status: "live", value: state.panelOnline ? "online" : "offline", note: "" };
+      }
+      return { ...base, entityId: "fleet.hub", status: "live", value: state.hubOnline ? "online" : "offline", note: "" };
+    }
+    case "roster": {
+      const n = state.plants.length;
+      return { ...base, entityId: null, status: n ? "live" : "no-data", value: n ? `${n} on roster` : null, note: "driven by the roster, not an entity" };
+    }
+    case "none":
+    default:
+      return { ...base, entityId: null, status: "unbound", value: null, note: s.why };
+  }
+}
+
+/** Instance ids for a roster plant — the vessel, the plant on it, and its probe stake. */
+export function plantInstanceIds(p: TwinPlant): { vessel: string; plant: string; probe: string | null } {
+  const vessel = `plant-${p.slot}`;
+  return { vessel, plant: `${vessel}-plant`, probe: p.pot != null ? `probe-${p.pot}` : null };
+}
+
+function plantBindings(state: TwinState, probe: TwinEntityProbe): TwinBinding[] {
+  const out: TwinBinding[] = [];
+  for (const p of state.plants) {
+    const ids = plantInstanceIds(p);
+    const moistureId = p.pot != null ? `sensor.dsc_probe${p.pot}_got_moisture` : null;
+    const stageId = p.pot != null ? `select.dsc_probe${p.pot}_growth_stage` : null;
+    const zoneLabel = p.zone === "main" ? "4×8" : p.zone === "clone" ? "2×4" : "unassigned";
+
+    if (!moistureId) {
+      out.push({ id: ids.vessel, label: `${p.name} · vessel`, group: "plants", drives: "soil tint", entityId: null, status: "unbound", value: null, note: "no pot assigned — drawn on the waiting bench" });
+    } else if (p.probeOos) {
+      out.push({ id: ids.vessel, label: `${p.name} · vessel`, group: "plants", drives: "soil tint by probe moisture", entityId: moistureId, status: "no-data", value: null, note: `probe ${p.pot} out of service` });
+    } else {
+      const r = entityStatus(moistureId, probe);
+      out.push({ id: ids.vessel, label: `${p.name} · vessel`, group: "plants", drives: "soil tint by probe moisture", entityId: moistureId, status: r.status, value: Number.isFinite(p.moisture) ? `${Math.round(p.moisture)} %` : r.value, note: `${p.vessel.label} · ${zoneLabel}` });
+    }
+
+    if (p.stageSlug) {
+      // The stage the plant is *drawn* at comes from the probe's select when there is one
+      // and from the roster's expected stage otherwise — say which, rather than greying a
+      // plant whose stage is perfectly well known.
+      const hasStage = p.stage !== "" && p.stage !== "—";
+      const fromSelect = !!stageId && probe.available(stageId);
+      const day = p.day != null ? `day ${p.day}` : "no sprout date";
+      out.push({
+        id: ids.plant,
+        label: `${p.name} · plant`,
+        group: "plants",
+        drives: "stage model + canopy scale + leaf tint",
+        entityId: fromSelect ? stageId : null,
+        status: hasStage ? "live" : "no-data",
+        value: hasStage ? p.stage : null,
+        note: hasStage && !fromSelect ? `${day} · stage from the roster, not a probe select` : day,
+      });
+    }
+
+    if (ids.probe && moistureId) {
+      out.push({
+        id: ids.probe,
+        label: `Probe ${p.pot}`,
+        group: "plants",
+        drives: "stake LED by moisture tone",
+        entityId: moistureId,
+        status: p.probeOos ? "no-data" : entityStatus(moistureId, probe).status,
+        value: Number.isFinite(p.moisture) ? `${Math.round(p.moisture)} %` : null,
+        note: p.probeOos ? "out of service" : "",
+      });
+    }
+  }
+  return out;
+}
+
+export function summariseBindings(index: TwinBindingIndex): TwinBindingSummary {
+  const s: TwinBindingSummary = { total: 0, live: 0, simulated: 0, held: 0, noData: 0, missing: 0, unbound: 0 };
+  for (const b of Object.values(index)) {
+    s.total += 1;
+    if (b.status === "live") s.live += 1;
+    else if (b.status === "simulated") s.simulated += 1;
+    else if (b.status === "held") s.held += 1;
+    else if (b.status === "no-data") s.noData += 1;
+    else if (b.status === "missing") s.missing += 1;
+    else s.unbound += 1;
+  }
+  return s;
+}
+
+/**
+ * Resolve every scene instance against the fleet. Pure — the probe is the only door to
+ * live data, so this is the whole honesty contract in one function.
+ */
+export function withBindings(state: TwinState, probe: TwinEntityProbe): TwinState {
+  const index: TwinBindingIndex = {};
+  for (const d of SCENE_NODES) index[d.id] = bindingFor(d, state, probe);
+  for (const b of plantBindings(state, probe)) index[b.id] = b;
+  return { ...state, bindings: index, bindingSummary: summariseBindings(index) };
 }

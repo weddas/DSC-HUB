@@ -8,6 +8,7 @@ import { RigScene } from "./RigScene";
 import { clearAnchors } from "./anchors";
 import type { TwinModel } from "./manifest";
 import type { TwinPalette } from "./wire";
+import type { TwinStyle } from "./presets";
 import type { TwinState } from "../lib/twinState";
 
 export interface TwinStageProps {
@@ -15,6 +16,8 @@ export interface TwinStageProps {
   state: TwinState;
   palette: TwinPalette;
   layers: TwinLayers;
+  /** Wire · x-ray · solid. */
+  style?: TwinStyle;
   preset: CameraPreset;
   cinematic: boolean;
   /** In view and tab visible — the loop stops when false. */
@@ -42,13 +45,13 @@ function HoverLabel({ hover }: { hover: TwinHover | null }) {
  * wash, driven by `TwinState`. Loaded as part of the lazy `twin-three` chunk; the wrapper
  * (`components/TwinStagePanel.tsx`) gates it for phones, reduced motion and visibility.
  */
-function TwinStageImpl({ models, state, palette, layers, preset, cinematic, active, calm = false, onPerf, onPick }: TwinStageProps) {
+function TwinStageImpl({ models, state, palette, layers, style = "wire", preset, cinematic, active, calm = false, onPerf, onPick }: TwinStageProps) {
   const [hover, setHover] = useState<TwinHover | null>(null);
   const modelMap = useMemo(() => Object.fromEntries(models.map((m) => [m.slug, m])), [models]);
   useEffect(() => () => clearAnchors(), []);
   const ctx = useMemo(
-    () => ({ palette, models: modelMap, state, layers, hover, setHover, onPick, calm }),
-    [palette, modelMap, state, layers, hover, onPick, calm],
+    () => ({ palette, models: modelMap, state, layers, style, hover, setHover, onPick, calm }),
+    [palette, modelMap, state, layers, style, hover, onPick, calm],
   );
   const onFrame = useCallback((p: FrameReport) => onPerf?.(p), [onPerf]);
   return (

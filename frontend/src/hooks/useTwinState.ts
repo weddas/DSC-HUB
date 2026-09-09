@@ -9,9 +9,11 @@ import {
   FAN_DEFS,
   applyOverrides,
   plantsFromRoster,
+  withBindings,
   zoneFromModel,
   type TwinAppliance,
   type TwinApplianceId,
+  type TwinEntityProbe,
   type TwinFan,
   type TwinLamp,
   type TwinOverrides,
@@ -114,12 +116,29 @@ export function useTwinState(overrides?: TwinOverrides | null): TwinState {
       cascadeEntity: cascade.entityId,
       hubOnline: fleet.hub.online,
       panelOnline: !!fleet.panel?.online,
+      panelKnown: !!fleet.panel,
       simulated: false,
+      bindings: {},
+      bindingSummary: { total: 0, live: 0, simulated: 0, held: 0, noData: 0, missing: 0, unbound: 0 },
       updatedAt: fleet.updated_at,
     };
   }, [tick, zones, fleet, state, num, entity, available]);
 
-  const next = useMemo(() => applyOverrides(base, overrides), [base, overrides]);
+  // The honesty contract: every scene instance resolved against the fleet *after* the
+  // what-if overrides, so an overridden node reads SIMULATED and an absent one reads
+  // UNBOUND / NO DATA rather than borrowing a neighbour's number.
+  const probe = useMemo<TwinEntityProbe>(
+    () => ({
+      known: (id: string) => entity(id) != null,
+      available,
+      text: (id: string) => {
+        const raw = state(id, "");
+        return raw && raw !== "—" ? raw : null;
+      },
+    }),
+    [entity, available, state],
+  );
+  const next = useMemo(() => withBindings(applyOverrides(base, overrides), probe), [base, overrides, probe]);
   // Hand the stage the same object while nothing it draws has changed: the bus ticks far
   // more often than a reading moves, and every new object re-renders the whole scene.
   const stable = useRef<{ key: string; value: TwinState } | null>(null);

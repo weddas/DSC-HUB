@@ -2,7 +2,9 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { loadManifest, type TwinModel } from "../twin/manifest";
 import type { TwinPalette } from "../twin/wire";
 import type { TwinLayers, TwinPick } from "../twin/context";
-import type { CameraPreset } from "../twin/CameraRig";
+// Types only, and from the three-free `presets` module: nothing on this page may pull a
+// scene module (and with it three.js) into the main bundle.
+import type { CameraPreset, TwinStyle } from "../twin/presets";
 import type { FrameReport } from "../twin/FrameLoop";
 import type { TwinState } from "../lib/twinState";
 
@@ -50,6 +52,7 @@ export function twinGate(): TwinGate {
 export function TwinStagePanel({
   state,
   layers,
+  style = "wire",
   preset,
   cinematic,
   height = 520,
@@ -60,6 +63,7 @@ export function TwinStagePanel({
 }: {
   state: TwinState;
   layers: TwinLayers;
+  style?: TwinStyle;
   preset: CameraPreset;
   cinematic: boolean;
   height?: number | string;
@@ -159,7 +163,7 @@ export function TwinStagePanel({
             </div>
           }
         >
-          <TwinStage models={models} state={state} palette={palette} layers={layers} preset={preset} cinematic={cinematic} active={active} calm={calm} onPerf={onPerf} onPick={onPick} />
+          <TwinStage models={models} state={state} palette={palette} layers={layers} style={style} preset={preset} cinematic={cinematic} active={active} calm={calm} onPerf={onPerf} onPick={onPick} />
         </Suspense>
       ) : (
         <div className="dsc-twin-fallback">
