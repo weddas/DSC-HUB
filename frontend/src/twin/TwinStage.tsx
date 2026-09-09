@@ -6,6 +6,7 @@ import { CameraRig, type CameraPreset } from "./CameraRig";
 import { FrameLoop, type FrameReport } from "./FrameLoop";
 import { RigScene } from "./RigScene";
 import { clearAnchors } from "./anchors";
+import { loadPlacements } from "./placements";
 import type { TwinModel } from "./manifest";
 import type { TwinPalette } from "./wire";
 import type { TwinStyle } from "./presets";
@@ -49,6 +50,11 @@ function TwinStageImpl({ models, state, palette, layers, style = "wire", preset,
   const [hover, setHover] = useState<TwinHover | null>(null);
   const modelMap = useMemo(() => Object.fromEntries(models.map((m) => [m.slug, m])), [models]);
   useEffect(() => () => clearAnchors(), []);
+  // Where the operator has moved things (plan-spatial-layout S4). Fetched once per mount;
+  // an empty or failed load leaves every instance at the scene's own literal.
+  useEffect(() => {
+    void loadPlacements();
+  }, []);
   const ctx = useMemo(
     () => ({ palette, models: modelMap, state, layers, style, hover, setHover, onPick, calm }),
     [palette, modelMap, state, layers, style, hover, onPick, calm],

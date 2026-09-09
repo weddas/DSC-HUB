@@ -13,7 +13,8 @@
     "test:smoke": "npx --yes tsx src/lib/seatApi.smoke.ts",
     "test:compose": "npx --yes tsx src/lib/composePlantLogic.smoke.ts",
     "test:growlog": "npx --yes tsx src/lib/growLogFilter.smoke.ts",
-    "test:catchup": "npx --yes tsx src/lib/lightCatchup.smoke.ts"
+    "test:catchup": "npx --yes tsx src/lib/lightCatchup.smoke.ts",
+    "test:placements": "npx --yes tsx src/twin/placements.smoke.ts"
   },
   "dependencies": {
     "@fontsource/fira-mono": "^5.3.0",

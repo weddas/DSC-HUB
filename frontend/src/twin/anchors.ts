@@ -106,3 +106,19 @@ export function clearAnchors(): void {
   sets.clear();
   emit();
 }
+
+// DEV only: the twin is hard to inspect from outside — the scene draws on a frame loop and
+// the registry is module-scope — so expose where everything actually ended up. This is how
+// a placement override is confirmed to have moved something without reading pixels.
+if (import.meta.env.DEV && typeof window !== "undefined") {
+  (window as unknown as Record<string, unknown>).__dscAnchors = () =>
+    Object.fromEntries(
+      [...sets.entries()].map(([id, set]) => [
+        id,
+        {
+          origin: new THREE.Vector3().setFromMatrixPosition(set.matrix).toArray().map((n) => +n.toFixed(4)),
+          anchors: [...set.pos.keys()],
+        },
+      ]),
+    );
+}

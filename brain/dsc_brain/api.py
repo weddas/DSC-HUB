@@ -2898,6 +2898,59 @@ def spaces_device_delete(space_id: str, device_id: str) -> dict[str, Any]:
     return {"space_id": space_id, "device_id": device_id, "removed": True}
 
 
+class PlacementBody(BaseModel):
+    """Where an instance stands — the same shape the twin's `Placed` already consumes."""
+
+    at: dict[str, Any]
+    rotation: list[float] | None = None
+    self_anchor: Any | None = Field(default=None, alias="self")
+    scale: Any | None = None
+    space_id: str = ""
+
+    model_config = {"populate_by_name": True}
+
+
+@app.get("/placements")
+def placements_get() -> dict[str, Any]:
+    """Every placement override, keyed by instance id.
+
+    Only overrides: an instance with no row renders where the scene puts it, so a fresh rig
+    returns {} and looks exactly as it always has.
+    """
+    from .placement_model import list_placements
+
+    return {"placements": list_placements()}
+
+
+@app.put("/placements/{instance_id}")
+def placements_put(instance_id: str, body: PlacementBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .placement_model import set_placement
+
+    placement: dict[str, Any] = {"at": body.at}
+    if body.rotation is not None:
+        placement["rotation"] = body.rotation
+    if body.self_anchor is not None:
+        placement["self"] = body.self_anchor
+    if body.scale is not None:
+        placement["scale"] = body.scale
+    try:
+        return set_placement(instance_id, placement, space_id=body.space_id)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.delete("/placements/{instance_id}")
+def placements_delete(instance_id: str) -> dict[str, Any]:
+    """Drop an override so the instance goes back to where the scene puts it."""
+    if _demo_mode():
+        _demo_forbidden()
+    from .placement_model import clear_placement
+
+    return {"instance_id": instance_id, "removed": clear_placement(instance_id)}
+
+
 @app.get("/spaces/device-tiers")
 def spaces_device_tiers() -> dict[str, Any]:
     """The vocabulary the device editor offers, so the desk cannot invent a tier."""
@@ -3367,7 +3420,7 @@ _API_FIRST_SEGMENTS = frozenset(
     {
         "admin", "ai", "api", "cameras", "catalogs", "control", "decision", "energy",
         "fleet", "grow-log", "health", "history", "journal", "journals", "learning",
-        "reminders", "rooms",
+        "placements", "reminders", "rooms",
         "roster", "settings", "setup", "soft-cal", "soil-tests", "spaces", "system", "v1",
         "want", "ws", "zones",
     }

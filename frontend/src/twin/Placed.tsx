@@ -4,6 +4,7 @@ import { Html, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { getAnchor, registerAnchors, unregisterAnchors, useAnchorSet } from "./anchors";
 import { useTwin, type TwinPick } from "./context";
+import { resolvePlacement, usePlacementOverride } from "./placements";
 import { applyStyle, disposeWire, toWire, type WireBuild, type WirePart } from "./wire";
 import { bindingIsLive, fanPeriodSec, type TwinBinding } from "../lib/twinState";
 
@@ -95,7 +96,19 @@ function toneColor(t: EmissiveTone | undefined, palette: ReturnType<typeof useTw
  * Children render only once this instance has settled, so `<Placed at={{parent: id}}>`
  * inside it always finds its anchor.
  */
-export function Placed({ id, slug, bindingId, at, rotation, self, scale, bind, pick, tweak, visible = true, children }: PlacedProps) {
+export function Placed({ id, slug, bindingId, at: atProp, rotation: rotationProp, self: selfProp, scale: scaleProp, bind, pick, tweak, visible = true, children }: PlacedProps) {
+  // plan-spatial-layout S4: where a thing stands is data. The props below are the scene's
+  // own literals — they stay the default, and an operator's move overrides them. Doing the
+  // lookup here rather than at 36 call sites keeps the parent/child nesting the JSX tree
+  // already expresses, and means every placement in the rig is movable for one change.
+  const override = usePlacementOverride(id);
+  const { at, rotation, self, scale } = resolvePlacement(override, {
+    at: atProp,
+    rotation: rotationProp,
+    self: selfProp,
+    scale: scaleProp,
+  });
+
   const ctx = useTwin();
   const model = ctx.models[slug];
   if (!model) {
