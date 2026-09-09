@@ -4,8 +4,16 @@ import { Button } from "../ui";
 import { SettingRow, Stated, Toggle } from "./SettingRow";
 import { useHubTunables } from "../../hooks/useHubTunables";
 import { useSaveState } from "../../hooks/useGlobalModifiers";
-import { useFleetEntity } from "../../hooks/useFleetEntity";
-import { useFleetActions } from "../../hooks/useFleetActions";
+import { paths } from "../../lib/paths";
+import {
+  defaultLabelOf,
+  helpersOf,
+  patchHelperTunable,
+  resetHelperTunable,
+  resetHubTunable,
+  type HelperTunable,
+  type HubTunableWithDefault,
+} from "./tunableDefaultsApi";
 import type { HubTunable } from "../../lib/hubTunablesApi";
 
 /**
@@ -13,6 +21,13 @@ import type { HubTunable } from "../../lib/hubTunablesApi";
  * brain's *desired* value; the row shows the hub's echo and the sync state:
  * SYNCED · PENDING · HELD (hub offline, queued) · HUB DIFFERS (adopt / push) · FAILED.
  * Rows whose change moves an appliance or the lamp at once (`actuates`) confirm first.
+ *
+ * The row also carries what the plan asks of every setting: the owner (scope badge), the
+ * firmware's own power-on value as the stated default, and a one-click reset back to it.
+ * A reset is an ordinary desired write — same validation, same push, same sync state — so
+ * an actuating row confirms before a reset just as it does before an edit. When the brain
+ * states no default for a row (unknown, or one the running firmware would reject), the row
+ * shows no default chip and no reset rather than inventing one.
  */
 
 function ago(ts: number | null | undefined): string {
@@ -39,6 +54,13 @@ function fmt(v: string | null | undefined, unit?: string): string {
   return unit ? `${v} ${unit}` : v;
 }
 
+/** Where a hub row takes effect, when the caller has nothing more specific to say. */
+const SECTION_CONSUMERS: Record<string, { label: string; href: string }[]> = {
+  climate: [{ label: "Climate", href: `#${paths.climate()}` }],
+  light: [{ label: "Light", href: `#${paths.light()}` }],
+  root: [{ label: "Root", href: `#${paths.root()}` }],
+};
+
 export function HubTunableRow({
   entityId,
   label,
@@ -54,11 +76,11 @@ export function HubTunableRow({
   forceShow?: boolean;
   consumers?: { label: string; href: string }[];
 }) {
-  const { byId, data, set, adopt, push } = useHubTunables();
-  const row = byId[entityId];
+  const { byId, data, set, adopt, push, refresh } = useHubTunables();
+  const row = byId[entityId] as HubTunableWithDefault | undefined;
   const save = useSaveState();
   const [draft, setDraft] = useState<string>("");
-  const [confirm, setConfirm] = useState<string | number | boolean | null>(null);
+  const [confirm, setConfirm] = useState<{ value: string | number | boolean } | { reset: true } | null>(null);
   const [acting, setActing] = useState<"adopt" | "push" | null>(null);
 
   const desired = row?.desired ?? "";
@@ -68,11 +90,31 @@ export function HubTunableRow({
 
   const write = (value: string | number | boolean) => {
     if (row.actuates) {
-      setConfirm(value);
+      setConfirm({ value });
       return;
     }
     void save.run(() => set(entityId, value));
   };
+
+  const doReset = () =>
+    void save.run(async () => {
+      await resetHubTunable(entityId);
+      await refresh();
+    });
+
+  const resetDefault = () => {
+    if (row.actuates) {
+      setConfirm({ reset: true });
+      return;
+    }
+    doReset();
+  };
+
+  const defaultLabel = defaultLabelOf(row);
+  // `is_default` is null when there is nothing to compare against; SettingRow only offers
+  // the reset when it is explicitly false, so an unknown never renders a misleading action.
+  const isDefault = defaultLabel == null ? undefined : (row.is_default ?? undefined);
+  const confirmValue = confirm && "value" in confirm ? confirm.value : confirm ? (row.default ?? "") : "";
 
   const disabled = row.state === "missing" || !row.present;
   let control: ReactNode;
@@ -193,12 +235,15 @@ export function HubTunableRow({
         label={label ?? row.label}
         description={desc}
         scope="hub"
+        defaultLabel={defaultLabel}
+        isDefault={isDefault}
+        onReset={defaultLabel != null && !disabled ? resetDefault : undefined}
         changedAt={sourceText(row)}
         state={state}
         stateText={stateText}
         advanced={advanced}
         forceShow={forceShow}
-        consumers={consumers}
+        consumers={consumers ?? SECTION_CONSUMERS[row.section]}
         control={
           <>
             {control}
@@ -213,19 +258,21 @@ export function HubTunableRow({
           setDraft(desired);
         }}
         onConfirm={() => {
-          const v = confirm;
+          const c = confirm;
           setConfirm(null);
-          if (v != null) void save.run(() => set(entityId, v));
+          if (c == null) return;
+          if ("reset" in c) doReset();
+          else void save.run(() => set(entityId, c.value));
         }}
-        title={`Change ${row.label} on the hub`}
-        confirmLabel="Write to hub"
+        title={confirm && "reset" in confirm ? `Reset ${row.label} to the firmware default` : `Change ${row.label} on the hub`}
+        confirmLabel={confirm && "reset" in confirm ? "Reset on hub" : "Write to hub"}
         help={null}
       >
         <p>
           The hub acts on this at once — an appliance or the lamp can move.{" "}
           {row.hub != null ? (
             <>
-              Hub now: <b>{fmt(row.hub, row.unit)}</b> → <b>{fmt(String(confirm ?? ""), row.unit)}</b>.
+              Hub now: <b>{fmt(row.hub, row.unit)}</b> → <b>{fmt(String(confirmValue), row.unit)}</b>.
             </>
           ) : null}
         </p>
@@ -257,55 +304,64 @@ export function HubTunableRows({
 }
 
 /**
- * A brain-held panel helper (`input_number.*`, tier N) as a SettingRow — the trust thresholds
- * the panel firmware once owned now live in the brain's helper store and reach the SPA as
- * computed states; unset helpers fall back to the brain's own default.
+ * A brain-held helper (`input_number.*`, tier N) as a SettingRow.
+ *
+ * These are the sensor-trust thresholds the panel firmware once owned. They used to be
+ * edited by calling the entity-service proxy with `input_number.set_value` — an
+ * entity-inspector write with no range check, no stated default and no journal line. They
+ * are settings, so they now take the same brain-owned path as a hub tunable: the brain's
+ * registry states the range and the default (the very fallback its consumer uses when the
+ * helper is unset), validates the write and journals it. The rows ride the hub-tunables
+ * snapshot, so there is one poll for the whole surface.
  */
-export function HelperNumberRow({
-  entityId,
-  label,
-  description,
-  fallback,
-  unit,
-  step = 0.1,
-  min,
-  max,
+export function HelperTunableRow({
+  row,
+  onSaved,
   advanced,
   forceShow,
   consumers,
 }: {
-  entityId: string;
-  label: string;
-  description?: ReactNode;
-  fallback: number;
-  unit?: string;
-  step?: number;
-  min?: number;
-  max?: number;
+  row: HelperTunable;
+  onSaved: () => void;
   advanced?: boolean;
   forceShow?: boolean;
   consumers?: { label: string; href: string }[];
 }) {
-  const { state, available } = useFleetEntity(entityId);
-  const { callService } = useFleetActions();
   const save = useSaveState();
-  const live = available && Number.isFinite(Number(state)) ? Number(state) : fallback;
-  const [draft, setDraft] = useState(String(live));
-  useEffect(() => setDraft(String(live)), [live]);
+  const [draft, setDraft] = useState(String(row.value));
+  useEffect(() => setDraft(String(row.value)), [row.value]);
   const commit = () => {
     const n = Number(draft);
-    if (!Number.isFinite(n) || n === live) return;
-    void save.run(() => callService("input_number", "set_value", { entity_id: entityId, value: n }));
+    if (!Number.isFinite(n) || n === row.value) return;
+    void save.run(async () => {
+      await patchHelperTunable(row.entity_id, n);
+      onSaved();
+    });
   };
   return (
     <SettingRow
-      id={`helper-${entityId.split(".")[1]}`}
-      label={label}
-      description={description}
+      id={`helper-${row.entity_id.split(".")[1]}`}
+      label={row.label}
+      description={
+        <>
+          {row.description}
+          {row.stored ? null : (
+            <>
+              {" "}
+              <Stated>unset — the brain's own value is what runs</Stated>
+            </>
+          )}
+        </>
+      }
       scope="brain"
-      defaultLabel={unit ? `${fallback} ${unit}` : String(fallback)}
-      isDefault={live === fallback}
-      onReset={() => void save.run(() => callService("input_number", "set_value", { entity_id: entityId, value: fallback }))}
+      defaultLabel={row.unit ? `${row.default} ${row.unit}` : String(row.default)}
+      isDefault={row.is_default}
+      onReset={() =>
+        void save.run(async () => {
+          await resetHelperTunable(row.entity_id);
+          onSaved();
+        })
+      }
       state={save.state}
       stateText={save.text}
       advanced={advanced}
@@ -315,20 +371,48 @@ export function HelperNumberRow({
         <>
           <input
             type="number"
-            step={step}
-            min={min}
-            max={max}
+            step={row.step}
+            min={row.min}
+            max={row.max}
             value={draft}
-            aria-label={label}
+            aria-label={row.label}
+            aria-invalid={save.state === "failed" ? true : undefined}
             onChange={(e) => setDraft(e.target.value)}
             onBlur={commit}
             onKeyDown={(e) => {
               if (e.key === "Enter") (e.target as HTMLInputElement).blur();
             }}
           />
-          {unit ? <span className="dsc-setting-value">{unit}</span> : null}
+          {row.unit ? <span className="dsc-setting-value">{row.unit}</span> : null}
         </>
       }
     />
+  );
+}
+
+/** Every brain-held helper in one Settings group, in the brain's own order. */
+export function HelperTunableRows({ group }: { group: string }) {
+  const { data, state, refresh } = useHubTunables();
+  const helpers = helpersOf(data);
+  if (helpers == null && state === "loading") return null;
+  if (helpers == null) {
+    return (
+      <SettingRow
+        id={`helper-group-${group}`}
+        label="Thresholds"
+        scope="brain"
+        description="This brain predates brain-owned thresholds — hotpatch it to edit them here instead of through the entity inspector."
+        control={<Stated>not served by this brain</Stated>}
+      />
+    );
+  }
+  return (
+    <>
+      {helpers
+        .filter((h) => h.group === group)
+        .map((h) => (
+          <HelperTunableRow key={h.entity_id} row={h} onSaved={() => void refresh()} />
+        ))}
+    </>
   );
 }

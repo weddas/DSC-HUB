@@ -3051,3 +3051,57 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+# ---------------------------------------------------------------------------------------
+# Settings › defaults and resets for brain-owned tunables (settings restructure, pass S6).
+#
+# Appended after the SPA catch-all on purpose. `@app.get("/{full_path:path}")` above would
+# shadow any GET route added below it, so nothing here is a GET: the read side rides the
+# existing `GET /settings/hub-tunables` payload (`rows[].default` / `.is_default`, and the
+# new `helpers` list). Writes are PATCH/POST, which the GET-only catch-all never matches.
+# ---------------------------------------------------------------------------------------
+
+
+class HelperTunablePatch(BaseModel):
+    entity_id: str
+    value: float
+
+
+@app.post("/settings/hub-tunables/{entity_id}/reset")
+async def settings_hub_tunables_reset(entity_id: str) -> dict[str, Any]:
+    """Put the firmware's own power-on value back, through the normal push path."""
+    if _demo_mode():
+        _demo_forbidden()
+    from .hub_tunables import push_now, reset_to_default
+
+    try:
+        reset_to_default(entity_id)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return {"row": await push_now(entity_id)}
+
+
+@app.patch("/settings/helper-tunables")
+def settings_helper_tunables_patch(body: HelperTunablePatch) -> dict[str, Any]:
+    """Brain-held sensor-trust thresholds — validated, journalled, never a raw entity write."""
+    if _demo_mode():
+        _demo_forbidden()
+    from .hub_tunables import set_helper_tunable
+
+    try:
+        return {"row": set_helper_tunable(body.entity_id, body.value)}
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.post("/settings/helper-tunables/{entity_id}/reset")
+def settings_helper_tunables_reset(entity_id: str) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    from .hub_tunables import reset_helper_tunable
+
+    try:
+        return {"row": reset_helper_tunable(entity_id)}
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc

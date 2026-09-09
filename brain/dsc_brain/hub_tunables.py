@@ -57,61 +57,73 @@ ECHO_GRACE_SEC = 20.0
 # firmware/v4/dsc-hub-v4_0.yaml so validation works before the hub has reported attrs.
 # `actuates` marks rows whose change can move an appliance or the light at once — the
 # SPA confirms those. `section`/`group` place the row in Settings.
+#
+# `default` is the *firmware's own* power-on value, transcribed from the ESPHome source
+# (an entity's `initial_value`, or the `globals:` entry its lambda publishes from —
+# firmware/v4/dsc-hub-v4_0.yaml, and dsc-hub-fleet-heal.yaml for the band/mister rows).
+# It is never invented here: a row with no known firmware default carries no `default`,
+# and Settings then shows no "default …" chip and no reset for it. When the running
+# firmware reports a range or an option list the transcribed default no longer fits, the
+# default is dropped for that row rather than shown as something the device would reject
+# (see `_default_for`). Flashing new firmware can change these; they are a display and
+# reset affordance, never a value the brain pushes on its own.
 TUNABLES: list[dict[str, Any]] = [
     # --- Climate › targets (4×8) ---------------------------------------------------
-    {"entity_id": "number.dsc_hub_target_temp", "kind": "number", "label": "4×8 target temperature", "section": "climate", "group": "targets_main", "min": 15, "max": 32, "step": 0.5, "unit": "°C"},
-    {"entity_id": "number.dsc_hub_target_temp_min", "kind": "number", "label": "4×8 temp band low", "section": "climate", "group": "targets_main", "min": 15, "max": 32, "step": 0.5, "unit": "°C"},
-    {"entity_id": "number.dsc_hub_target_temp_max", "kind": "number", "label": "4×8 temp band high", "section": "climate", "group": "targets_main", "min": 17, "max": 40, "step": 0.5, "unit": "°C"},
-    {"entity_id": "number.dsc_hub_rh_target_min", "kind": "number", "label": "4×8 RH minimum", "section": "climate", "group": "targets_main", "min": 20, "max": 90, "step": 1, "unit": "%"},
-    {"entity_id": "number.dsc_hub_rh_target_max", "kind": "number", "label": "4×8 RH maximum", "section": "climate", "group": "targets_main", "min": 20, "max": 95, "step": 1, "unit": "%"},
-    {"entity_id": "number.dsc_hub_vpd_target_min", "kind": "number", "label": "4×8 VPD minimum", "section": "climate", "group": "targets_main", "min": 0.4, "max": 1.6, "step": 0.1, "unit": "kPa"},
-    {"entity_id": "number.dsc_hub_vpd_target_max", "kind": "number", "label": "4×8 VPD maximum", "section": "climate", "group": "targets_main", "min": 0.4, "max": 1.8, "step": 0.1, "unit": "kPa"},
+    {"entity_id": "number.dsc_hub_target_temp", "kind": "number", "label": "4×8 target temperature", "section": "climate", "group": "targets_main", "min": 15, "max": 32, "step": 0.5, "unit": "°C", "default": 25},
+    {"entity_id": "number.dsc_hub_target_temp_min", "kind": "number", "label": "4×8 temp band low", "section": "climate", "group": "targets_main", "min": 15, "max": 32, "step": 0.5, "unit": "°C", "default": 25},
+    {"entity_id": "number.dsc_hub_target_temp_max", "kind": "number", "label": "4×8 temp band high", "section": "climate", "group": "targets_main", "min": 17, "max": 40, "step": 0.5, "unit": "°C", "default": 28},
+    {"entity_id": "number.dsc_hub_rh_target_min", "kind": "number", "label": "4×8 RH minimum", "section": "climate", "group": "targets_main", "min": 20, "max": 90, "step": 1, "unit": "%", "default": 70},
+    {"entity_id": "number.dsc_hub_rh_target_max", "kind": "number", "label": "4×8 RH maximum", "section": "climate", "group": "targets_main", "min": 20, "max": 95, "step": 1, "unit": "%", "default": 80},
+    {"entity_id": "number.dsc_hub_vpd_target_min", "kind": "number", "label": "4×8 VPD minimum", "section": "climate", "group": "targets_main", "min": 0.4, "max": 1.6, "step": 0.1, "unit": "kPa", "default": 0.4},
+    {"entity_id": "number.dsc_hub_vpd_target_max", "kind": "number", "label": "4×8 VPD maximum", "section": "climate", "group": "targets_main", "min": 0.4, "max": 1.8, "step": 0.1, "unit": "kPa", "default": 0.8},
     # --- Climate › targets (2×4) ---------------------------------------------------
-    {"entity_id": "number.dsc_hub_clone_target_temp", "kind": "number", "label": "2×4 target temperature", "section": "climate", "group": "targets_clone", "min": 15, "max": 32, "step": 0.5, "unit": "°C"},
-    {"entity_id": "number.dsc_hub_clone_target_temp_min", "kind": "number", "label": "2×4 temp band low", "section": "climate", "group": "targets_clone", "min": 15, "max": 32, "step": 0.5, "unit": "°C"},
-    {"entity_id": "number.dsc_hub_clone_target_temp_max", "kind": "number", "label": "2×4 temp band high", "section": "climate", "group": "targets_clone", "min": 17, "max": 40, "step": 0.5, "unit": "°C"},
-    {"entity_id": "number.dsc_hub_clone_rh_min", "kind": "number", "label": "2×4 RH minimum", "section": "climate", "group": "targets_clone", "min": 20, "max": 90, "step": 1, "unit": "%"},
-    {"entity_id": "number.dsc_hub_clone_rh_max", "kind": "number", "label": "2×4 RH maximum", "section": "climate", "group": "targets_clone", "min": 20, "max": 95, "step": 1, "unit": "%"},
-    {"entity_id": "number.dsc_hub_clone_vpd_min", "kind": "number", "label": "2×4 VPD minimum", "section": "climate", "group": "targets_clone", "min": 0.2, "max": 1.6, "step": 0.1, "unit": "kPa"},
-    {"entity_id": "number.dsc_hub_clone_vpd_max", "kind": "number", "label": "2×4 VPD maximum", "section": "climate", "group": "targets_clone", "min": 0.2, "max": 1.8, "step": 0.1, "unit": "kPa"},
+    {"entity_id": "number.dsc_hub_clone_target_temp", "kind": "number", "label": "2×4 target temperature", "section": "climate", "group": "targets_clone", "min": 15, "max": 32, "step": 0.5, "unit": "°C", "default": 24},
+    {"entity_id": "number.dsc_hub_clone_target_temp_min", "kind": "number", "label": "2×4 temp band low", "section": "climate", "group": "targets_clone", "min": 15, "max": 32, "step": 0.5, "unit": "°C", "default": 24},
+    {"entity_id": "number.dsc_hub_clone_target_temp_max", "kind": "number", "label": "2×4 temp band high", "section": "climate", "group": "targets_clone", "min": 17, "max": 40, "step": 0.5, "unit": "°C", "default": 27},
+    {"entity_id": "number.dsc_hub_clone_rh_min", "kind": "number", "label": "2×4 RH minimum", "section": "climate", "group": "targets_clone", "min": 20, "max": 90, "step": 1, "unit": "%", "default": 70},
+    {"entity_id": "number.dsc_hub_clone_rh_max", "kind": "number", "label": "2×4 RH maximum", "section": "climate", "group": "targets_clone", "min": 20, "max": 95, "step": 1, "unit": "%", "default": 80},
+    {"entity_id": "number.dsc_hub_clone_vpd_min", "kind": "number", "label": "2×4 VPD minimum", "section": "climate", "group": "targets_clone", "min": 0.2, "max": 1.6, "step": 0.1, "unit": "kPa", "default": 0.4},
+    {"entity_id": "number.dsc_hub_clone_vpd_max", "kind": "number", "label": "2×4 VPD maximum", "section": "climate", "group": "targets_clone", "min": 0.2, "max": 1.8, "step": 0.1, "unit": "kPa", "default": 0.8},
     # --- Climate › control ---------------------------------------------------------
-    {"entity_id": "number.dsc_hub_vpd_band_target_hours", "kind": "number", "label": "VPD in-band target", "section": "climate", "group": "control", "min": 0, "max": 24, "step": 0.5, "unit": "h", "description": "Hours per day the hub aims to keep VPD inside the band before it counts the day as missed."},
-    {"entity_id": "select.dsc_hub_control_strategy", "kind": "select", "label": "Control strategy", "section": "climate", "group": "control", "actuates": True, "description": "Which reading the climate ladder chases first."},
-    {"entity_id": "select.dsc_hub_priority_tent", "kind": "select", "label": "Priority tent", "section": "climate", "group": "control", "actuates": True, "description": "Which tent wins when the room lung cannot satisfy both."},
-    {"entity_id": "switch.dsc_hub_humidifier_intake_routing", "kind": "switch", "label": "Humidifier intake routing", "section": "climate", "group": "control", "actuates": True, "description": "Route humidifier output through the intake path instead of the tent directly."},
+    {"entity_id": "number.dsc_hub_vpd_band_target_hours", "kind": "number", "label": "VPD in-band target", "section": "climate", "group": "control", "min": 0, "max": 24, "step": 0.5, "unit": "h", "default": 18, "description": "Hours per day the hub aims to keep VPD inside the band before it counts the day as missed."},
+    {"entity_id": "select.dsc_hub_control_strategy", "kind": "select", "label": "Control strategy", "section": "climate", "group": "control", "actuates": True, "options": ["VPD", "Temperature", "Humidity"], "default": "VPD", "description": "Which reading the climate ladder chases first."},
+    {"entity_id": "select.dsc_hub_priority_tent", "kind": "select", "label": "Priority tent", "section": "climate", "group": "control", "actuates": True, "options": ["4x8 Main", "2x4 Clone"], "default": "4x8 Main", "description": "Which tent wins when the room lung cannot satisfy both."},
+    {"entity_id": "switch.dsc_hub_humidifier_intake_routing", "kind": "switch", "label": "Humidifier intake routing", "section": "climate", "group": "control", "actuates": True, "default": "on", "description": "Route humidifier output through the intake path instead of the tent directly."},
     # --- Climate › advanced (hysteresis, min-off, ladder, de-strat) -----------------
-    {"entity_id": "number.dsc_hub_clone_hum_hysteresis", "kind": "number", "label": "2×4 humidifier hysteresis", "section": "climate", "group": "advanced", "min": 2, "max": 15, "step": 0.5, "unit": "%", "description": "How far RH may overshoot before the clone humidifier releases."},
-    {"entity_id": "number.dsc_hub_humidifier_min_off_time", "kind": "number", "label": "Humidifier min off-time", "section": "climate", "group": "advanced", "min": 0, "max": 900, "step": 30, "unit": "s", "description": "Rest the humidifier must take between runs."},
-    {"entity_id": "number.dsc_hub_clone_hum_min_off_time", "kind": "number", "label": "2×4 humidifier min off-time", "section": "climate", "group": "advanced", "min": 0, "max": 900, "step": 30, "unit": "s"},
-    {"entity_id": "number.dsc_hub_heater_min_off_time", "kind": "number", "label": "Heater min off-time", "section": "climate", "group": "advanced", "min": 0, "max": 900, "step": 30, "unit": "s", "description": "Element protection: the heater may not restart sooner than this."},
-    {"entity_id": "number.dsc_hub_ladder_wait_dehum", "kind": "number", "label": "Ladder wait · dehumidifier", "section": "climate", "group": "advanced", "min": 60, "max": 600, "step": 10, "unit": "s", "description": "How long fans get to fix RH before the dehumidifier is asked."},
-    {"entity_id": "number.dsc_hub_ladder_wait_hum", "kind": "number", "label": "Ladder wait · humidifier", "section": "climate", "group": "advanced", "min": 60, "max": 600, "step": 10, "unit": "s"},
-    {"entity_id": "number.dsc_hub_ladder_wait_heat", "kind": "number", "label": "Ladder wait · heater", "section": "climate", "group": "advanced", "min": 60, "max": 600, "step": 10, "unit": "s"},
-    {"entity_id": "number.dsc_hub_ladder_wait_ac", "kind": "number", "label": "Ladder wait · AC", "section": "climate", "group": "advanced", "min": 60, "max": 600, "step": 10, "unit": "s", "oos": "F-001 AC relay on hold"},
-    {"entity_id": "switch.dsc_hub_recirc_de_strat_pulse", "kind": "switch", "label": "De-stratification pulse", "section": "climate", "group": "advanced", "actuates": True, "description": "Periodic recirculation burst to mix the room air column."},
-    {"entity_id": "number.dsc_hub_de_strat_pulse_period", "kind": "number", "label": "De-strat pulse period", "section": "climate", "group": "advanced", "min": 30, "max": 1800, "step": 30, "unit": "s"},
-    {"entity_id": "number.dsc_hub_de_strat_pulse_length", "kind": "number", "label": "De-strat pulse length", "section": "climate", "group": "advanced", "min": 5, "max": 120, "step": 5, "unit": "s"},
-    {"entity_id": "number.dsc_hub_de_strat_pulse_level", "kind": "number", "label": "De-strat pulse level", "section": "climate", "group": "advanced", "min": 25, "max": 100, "step": 5, "unit": "%"},
-    {"entity_id": "number.dsc_hub_mister_target_hours", "kind": "number", "label": "Mister target hours", "section": "climate", "group": "mister", "min": 0, "max": 24, "step": 0.5, "unit": "h", "oos": "F-002 clone mister on hold"},
-    {"entity_id": "number.dsc_hub_mister_min_off_hours", "kind": "number", "label": "Mister min off-hours", "section": "climate", "group": "mister", "min": 0, "max": 24, "step": 0.5, "unit": "h", "oos": "F-002 clone mister on hold"},
+    {"entity_id": "number.dsc_hub_clone_hum_hysteresis", "kind": "number", "label": "2×4 humidifier hysteresis", "section": "climate", "group": "advanced", "min": 2, "max": 15, "step": 0.5, "unit": "%", "default": 6, "description": "How far RH may overshoot before the clone humidifier releases."},
+    {"entity_id": "number.dsc_hub_humidifier_min_off_time", "kind": "number", "label": "Humidifier min off-time", "section": "climate", "group": "advanced", "min": 0, "max": 900, "step": 30, "unit": "s", "default": 120, "description": "Rest the humidifier must take between runs."},
+    {"entity_id": "number.dsc_hub_clone_hum_min_off_time", "kind": "number", "label": "2×4 humidifier min off-time", "section": "climate", "group": "advanced", "min": 0, "max": 900, "step": 30, "unit": "s", "default": 180},
+    {"entity_id": "number.dsc_hub_heater_min_off_time", "kind": "number", "label": "Heater min off-time", "section": "climate", "group": "advanced", "min": 0, "max": 900, "step": 30, "unit": "s", "default": 60, "description": "Element protection: the heater may not restart sooner than this."},
+    {"entity_id": "number.dsc_hub_ladder_wait_dehum", "kind": "number", "label": "Ladder wait · dehumidifier", "section": "climate", "group": "advanced", "min": 60, "max": 600, "step": 10, "unit": "s", "default": 300, "description": "How long fans get to fix RH before the dehumidifier is asked."},
+    {"entity_id": "number.dsc_hub_ladder_wait_hum", "kind": "number", "label": "Ladder wait · humidifier", "section": "climate", "group": "advanced", "min": 60, "max": 600, "step": 10, "unit": "s", "default": 120},
+    {"entity_id": "number.dsc_hub_ladder_wait_heat", "kind": "number", "label": "Ladder wait · heater", "section": "climate", "group": "advanced", "min": 60, "max": 600, "step": 10, "unit": "s", "default": 300},
+    {"entity_id": "number.dsc_hub_ladder_wait_ac", "kind": "number", "label": "Ladder wait · AC", "section": "climate", "group": "advanced", "min": 60, "max": 600, "step": 10, "unit": "s", "default": 300, "oos": "F-001 AC relay on hold"},
+    {"entity_id": "switch.dsc_hub_recirc_de_strat_pulse", "kind": "switch", "label": "De-stratification pulse", "section": "climate", "group": "advanced", "actuates": True, "default": "on", "description": "Periodic recirculation burst to mix the room air column."},
+    {"entity_id": "number.dsc_hub_de_strat_pulse_period", "kind": "number", "label": "De-strat pulse period", "section": "climate", "group": "advanced", "min": 30, "max": 1800, "step": 30, "unit": "s", "default": 180},
+    {"entity_id": "number.dsc_hub_de_strat_pulse_length", "kind": "number", "label": "De-strat pulse length", "section": "climate", "group": "advanced", "min": 5, "max": 120, "step": 5, "unit": "s", "default": 15},
+    {"entity_id": "number.dsc_hub_de_strat_pulse_level", "kind": "number", "label": "De-strat pulse level", "section": "climate", "group": "advanced", "min": 25, "max": 100, "step": 5, "unit": "%", "default": 55},
+    # Mister ranges are the fleet-heal firmware's own (0–12 h target, 1–12 h min-off);
+    # they are narrower than the other hour rows and must not be widened here.
+    {"entity_id": "number.dsc_hub_mister_target_hours", "kind": "number", "label": "Mister target hours", "section": "climate", "group": "mister", "min": 0, "max": 12, "step": 0.5, "unit": "h", "default": 0, "oos": "F-002 clone mister on hold"},
+    {"entity_id": "number.dsc_hub_mister_min_off_hours", "kind": "number", "label": "Mister min off-hours", "section": "climate", "group": "mister", "min": 1, "max": 12, "step": 0.5, "unit": "h", "default": 4, "oos": "F-002 clone mister on hold"},
     # --- Light -----------------------------------------------------------------------
-    {"entity_id": "number.dsc_hub_clone_light_hours", "kind": "number", "label": "2×4 photoperiod hours", "section": "light", "group": "schedule", "min": 0, "max": 24, "step": 1, "unit": "h", "actuates": True},
-    {"entity_id": "number.dsc_hub_min_dark_hours", "kind": "number", "label": "Minimum dark hours", "section": "light", "group": "schedule", "min": 2, "max": 12, "step": 0.5, "unit": "h", "description": "Guards the 2×4 dark-violation alert: the clone tent must get at least this much dark."},
-    {"entity_id": "number.dsc_hub_sunrise_duration", "kind": "number", "label": "Sunrise ramp", "section": "light", "group": "schedule", "min": 0, "max": 120, "step": 5, "unit": "min"},
-    {"entity_id": "number.dsc_hub_sunset_duration", "kind": "number", "label": "Sunset ramp", "section": "light", "group": "schedule", "min": 0, "max": 120, "step": 5, "unit": "min"},
-    {"entity_id": "switch.dsc_hub_auto_photoperiod", "kind": "switch", "label": "Automatic photoperiod", "section": "light", "group": "schedule", "actuates": True, "description": "The hub drives the lamp from the schedule. Off leaves the lamp where it is."},
-    {"entity_id": "number.dsc_hub_sf1000_target_brightness", "kind": "number", "label": "SF1000 target brightness", "section": "light", "group": "fixtures", "min": 0, "max": 100, "step": 5, "unit": "%", "actuates": True},
-    {"entity_id": "number.dsc_hub_sf1000_ramp_floor", "kind": "number", "label": "SF1000 ramp floor", "section": "light", "group": "fixtures", "min": 0, "max": 50, "step": 1, "unit": "%", "description": "Lowest brightness the sunrise/sunset ramp passes through."},
-    {"entity_id": "switch.dsc_hub_brain_stage_targets", "kind": "switch", "label": "Brain owns stage presets", "section": "climate", "group": "presets", "description": "When on and the brain is connected, the hub's stage change defers to the brain's preset table below. Off, or with no brain, the hub applies its baked table."},
+    {"entity_id": "number.dsc_hub_clone_light_hours", "kind": "number", "label": "2×4 photoperiod hours", "section": "light", "group": "schedule", "min": 0, "max": 24, "step": 1, "unit": "h", "default": 18, "actuates": True},
+    {"entity_id": "number.dsc_hub_min_dark_hours", "kind": "number", "label": "Minimum dark hours", "section": "light", "group": "schedule", "min": 2, "max": 12, "step": 0.5, "unit": "h", "default": 4, "description": "Guards the 2×4 dark-violation alert: the clone tent must get at least this much dark."},
+    {"entity_id": "number.dsc_hub_sunrise_duration", "kind": "number", "label": "Sunrise ramp", "section": "light", "group": "schedule", "min": 0, "max": 120, "step": 5, "unit": "min", "default": 30},
+    {"entity_id": "number.dsc_hub_sunset_duration", "kind": "number", "label": "Sunset ramp", "section": "light", "group": "schedule", "min": 0, "max": 120, "step": 5, "unit": "min", "default": 30},
+    {"entity_id": "switch.dsc_hub_auto_photoperiod", "kind": "switch", "label": "Automatic photoperiod", "section": "light", "group": "schedule", "actuates": True, "default": "on", "description": "The hub drives the lamp from the schedule. Off leaves the lamp where it is."},
+    {"entity_id": "number.dsc_hub_sf1000_target_brightness", "kind": "number", "label": "SF1000 target brightness", "section": "light", "group": "fixtures", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 75, "actuates": True},
+    {"entity_id": "number.dsc_hub_sf1000_ramp_floor", "kind": "number", "label": "SF1000 ramp floor", "section": "light", "group": "fixtures", "min": 0, "max": 50, "step": 1, "unit": "%", "default": 32, "description": "Lowest brightness the sunrise/sunset ramp passes through."},
+    {"entity_id": "switch.dsc_hub_brain_stage_targets", "kind": "switch", "label": "Brain owns stage presets", "section": "climate", "group": "presets", "default": "off", "description": "When on and the brain is connected, the hub's stage change defers to the brain's preset table below. Off, or with no brain, the hub applies its baked table."},
     # --- Root ------------------------------------------------------------------------
-    {"entity_id": "number.dsc_hub_mat_root_zone_low", "kind": "number", "label": "Heat-mat root-zone low", "section": "root", "group": "heatmat", "min": 12, "max": 26, "step": 0.5, "unit": "°C", "description": "Below this the mat is called for."},
-    {"entity_id": "number.dsc_hub_mat_root_zone_high", "kind": "number", "label": "Heat-mat root-zone high", "section": "root", "group": "heatmat", "min": 14, "max": 28, "step": 0.5, "unit": "°C", "description": "Above this the mat releases."},
-    {"entity_id": "number.dsc_hub_mat_min_off_time", "kind": "number", "label": "Heat-mat min off-time", "section": "root", "group": "heatmat", "min": 0, "max": 1800, "step": 60, "unit": "s"},
-    {"entity_id": "number.dsc_hub_ladder_wait_mat", "kind": "number", "label": "Ladder wait · heat mat", "section": "root", "group": "heatmat", "min": 30, "max": 300, "step": 5, "unit": "s"},
-    {"entity_id": "switch.dsc_hub_mat_vote_pot_1", "kind": "switch", "label": "Probe 1 may call for the mat", "section": "root", "group": "heatmat", "actuates": True},
-    {"entity_id": "switch.dsc_hub_mat_vote_pot_2", "kind": "switch", "label": "Probe 2 may call for the mat", "section": "root", "group": "heatmat", "actuates": True},
+    {"entity_id": "number.dsc_hub_mat_root_zone_low", "kind": "number", "label": "Heat-mat root-zone low", "section": "root", "group": "heatmat", "min": 12, "max": 26, "step": 0.5, "unit": "°C", "default": 20, "description": "Below this the mat is called for."},
+    {"entity_id": "number.dsc_hub_mat_root_zone_high", "kind": "number", "label": "Heat-mat root-zone high", "section": "root", "group": "heatmat", "min": 14, "max": 28, "step": 0.5, "unit": "°C", "default": 24, "description": "Above this the mat releases."},
+    {"entity_id": "number.dsc_hub_mat_min_off_time", "kind": "number", "label": "Heat-mat min off-time", "section": "root", "group": "heatmat", "min": 0, "max": 1800, "step": 60, "unit": "s", "default": 300},
+    {"entity_id": "number.dsc_hub_ladder_wait_mat", "kind": "number", "label": "Ladder wait · heat mat", "section": "root", "group": "heatmat", "min": 30, "max": 300, "step": 5, "unit": "s", "default": 60},
+    {"entity_id": "switch.dsc_hub_mat_vote_pot_1", "kind": "switch", "label": "Probe 1 may call for the mat", "section": "root", "group": "heatmat", "actuates": True, "default": "on"},
+    {"entity_id": "switch.dsc_hub_mat_vote_pot_2", "kind": "switch", "label": "Probe 2 may call for the mat", "section": "root", "group": "heatmat", "actuates": True, "default": "on"},
     # --- Network ---------------------------------------------------------------------
-    {"entity_id": "switch.dsc_hub_lock_wifi_ap", "kind": "switch", "label": "Lock Wi-Fi AP", "section": "network", "group": "hub", "description": "Pin the hub to its preferred access point (BSSID) instead of roaming."},
+    {"entity_id": "switch.dsc_hub_lock_wifi_ap", "kind": "switch", "label": "Lock Wi-Fi AP", "section": "network", "group": "hub", "default": "on", "description": "Pin the hub to its preferred access point (BSSID) instead of roaming."},
 ]
 
 BRAIN_STAGE_SWITCH_ID = "switch.dsc_hub_brain_stage_targets"
@@ -189,12 +201,31 @@ def metadata(entity_id: str, controls: dict[str, dict[str, Any]] | None = None) 
         meta["unit"] = str(ctrl.get("unit_of_measurement", spec.get("unit", "")))
     elif meta["kind"] == "select":
         meta["options"] = list(ctrl.get("options") or spec.get("options") or [])
+    meta["default"] = _default_for(spec, meta)
     return meta
+
+
+def _default_for(spec: dict[str, Any], meta: dict[str, Any]) -> str | None:
+    """The firmware's power-on value in stored string form, or None.
+
+    Dropped rather than shown when the running firmware's own range or option list
+    rejects it — a reset the device would refuse is worse than no reset at all.
+    """
+    raw = spec.get("default")
+    if raw is None:
+        return None
+    try:
+        return _coerce_with_meta(meta, raw)
+    except ValueError:
+        return None
 
 
 def coerce(entity_id: str, value: Any, controls: dict[str, dict[str, Any]] | None = None) -> str:
     """Validate + normalise a desired value to its stored string form."""
-    meta = metadata(entity_id, controls)
+    return _coerce_with_meta(metadata(entity_id, controls), value)
+
+
+def _coerce_with_meta(meta: dict[str, Any], value: Any) -> str:
     kind = meta["kind"]
     if kind == "number":
         try:
@@ -337,10 +368,12 @@ def list_tunables(db_path=None, fleet: Any = None) -> dict[str, Any]:
         # poll gap, and telling the operator to reflash for a dropped frame is wrong.
         if not present and online and controls:
             state = "missing"
+        desired = row["desired"] if row else None
+        default = meta.get("default")
         out.append(
             {
                 **meta,
-                "desired": row["desired"] if row else None,
+                "desired": desired,
                 "hub": echo,
                 "state": state,
                 "source": row["source"] if row else None,
@@ -348,6 +381,9 @@ def list_tunables(db_path=None, fleet: Any = None) -> dict[str, Any]:
                 "pushed_at": row["pushed_at"] if row else None,
                 "last_error": row["last_error"] if row else "",
                 "present": present,
+                # None when the firmware default is unknown — "is it default?" has no
+                # answer then, and the SPA shows neither the chip nor a reset.
+                "is_default": None if default is None or desired is None else _same(desired, default, meta["kind"]),
             }
         )
     return {
@@ -355,6 +391,9 @@ def list_tunables(db_path=None, fleet: Any = None) -> dict[str, Any]:
         "blocked": _takeover_or_override(f, controls) if online else False,
         "brain_owns_stage": brain_owns_stage_targets(controls),
         "rows": out,
+        # Brain-held helper tunables ride the same snapshot (see below): one poll, one
+        # hook, and no second GET route to add behind the SPA catch-all.
+        "helpers": list_helper_tunables(),
     }
 
 
@@ -413,6 +452,21 @@ def adopt(entity_id: str, db_path=None) -> dict[str, Any]:
     meta = metadata(entity_id, controls)
     _journal(f"Hub setting {meta['label']}: adopted the hub's {echo} (was {prev['desired'] if prev else '—'})")
     return _row_view(entity_id, db_path)
+
+
+def reset_to_default(entity_id: str, db_path=None) -> dict[str, Any]:
+    """Put the firmware's own power-on value back as the desired value.
+
+    Exactly the same write path as any other Settings edit (validate → store → push):
+    a reset is not a special case that bypasses the sync state.
+    """
+    if entity_id not in TUNABLE_BY_ID:
+        raise ValueError(f"{entity_id} is not a hub tunable")
+    meta = metadata(entity_id, hub_controls())
+    default = meta.get("default")
+    if default is None:
+        raise ValueError(f"no firmware default is recorded for {meta['label']}")
+    return set_desired(entity_id, default, source="default", db_path=db_path)
 
 
 def mark_for_push(entity_id: str, db_path=None) -> dict[str, Any]:
@@ -580,6 +634,145 @@ async def apply_stage_targets(stage: str, *, db_path=None, push: bool = True) ->
             except Exception as exc:  # noqa: BLE001
                 _logger.debug("stage preset push %s failed: %s", eid, exc)
     return {"stage": stage, "written": written}
+
+
+# ---- brain-held helper tunables (tier N) -------------------------------------------------
+#
+# The sensor-trust thresholds the panel firmware once owned now live in the brain's helper
+# store (`compose_store`, one JSON blob in `settings`). Before this pass the SPA edited them
+# by calling the entity-service proxy with `input_number.set_value` — an entity-inspector
+# write: no validation, no default, no reset, no journal entry. They are settings, so they
+# get the same brain-owned treatment as a hub tunable: a registry with the owning module's
+# own fallback as the stated default, a validated write, and a journal line.
+#
+# `default` MUST stay equal to the fallback its consumer passes to `_helper_float` in
+# sensor_trust.py — that fallback is what actually runs when the helper is unset, so a
+# different number here would be a lie on the row. `test_helper_tunable_defaults_match_
+# sensor_trust` pins them together.
+# TODO: single-source these once sensor_trust.py can be edited in the same pass; it is
+# owned by another lane today, so the registry mirrors it and a test guards the mirror.
+HELPER_TUNABLES: list[dict[str, Any]] = [
+    {
+        "entity_id": "input_number.dsc_dht_delta_t_c",
+        "label": "DHT disagreement · temperature",
+        "description": "Tent and room sensors further apart than this raise the climate-sensor-fault alert.",
+        "section": "sensors", "group": "trust",
+        "default": 4.0, "min": 0.5, "max": 15.0, "step": 0.5, "unit": "°C",
+    },
+    {
+        "entity_id": "input_number.dsc_dht_delta_rh",
+        "label": "DHT disagreement · humidity",
+        "description": "The same check on relative humidity.",
+        "section": "sensors", "group": "trust",
+        "default": 15.0, "min": 2.0, "max": 40.0, "step": 1.0, "unit": "%",
+    },
+    {
+        "entity_id": "input_number.dsc_trust_mad_ph",
+        "label": "Peer drift · pH",
+        "description": "A probe this far from the median of its peers is distrusted.",
+        "section": "sensors", "group": "trust",
+        "default": 0.6, "min": 0.1, "max": 3.0, "step": 0.1, "unit": "pH",
+    },
+    {
+        "entity_id": "input_number.dsc_trust_mad_ec",
+        "label": "Peer drift · EC",
+        "description": "The same median check on conductivity.",
+        "section": "sensors", "group": "trust",
+        "default": 250.0, "min": 20.0, "max": 2000.0, "step": 10.0, "unit": "µS/cm",
+    },
+    {
+        "entity_id": "input_number.dsc_trust_mad_moisture",
+        "label": "Peer drift · moisture",
+        "description": "The same median check on substrate moisture.",
+        "section": "sensors", "group": "trust",
+        "default": 12.0, "min": 2.0, "max": 50.0, "step": 1.0, "unit": "%",
+    },
+]
+
+HELPER_TUNABLE_BY_ID: dict[str, dict[str, Any]] = {h["entity_id"]: h for h in HELPER_TUNABLES}
+
+
+def _helper_value(spec: dict[str, Any]) -> tuple[float, bool]:
+    """(live value, is it set?) — an unset helper reads as its consumer's own fallback."""
+    from .compose_store import get_helper
+
+    raw = get_helper(spec["entity_id"], None)
+    if raw is None or raw == "":
+        return float(spec["default"]), False
+    try:
+        return float(raw), True
+    except (TypeError, ValueError):
+        return float(spec["default"]), False
+
+
+def coerce_helper(entity_id: str, value: Any) -> float:
+    """Validate a helper tunable against its registry range. Raises ValueError."""
+    spec = HELPER_TUNABLE_BY_ID.get(entity_id)
+    if spec is None:
+        raise ValueError(f"{entity_id} is not a settings helper")
+    try:
+        v = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{spec['label']} must be a number") from exc
+    if not math.isfinite(v):
+        raise ValueError(f"{spec['label']} must be finite")
+    lo, hi = float(spec["min"]), float(spec["max"])
+    if v < lo or v > hi:
+        raise ValueError(f"{spec['label']} must be within {lo:g}–{hi:g} {spec.get('unit', '')}".rstrip())
+    return round(v, 6)
+
+
+def list_helper_tunables() -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for spec in HELPER_TUNABLES:
+        value, isset = _helper_value(spec)
+        out.append(
+            {
+                "entity_id": spec["entity_id"],
+                "label": spec["label"],
+                "description": spec.get("description", ""),
+                "section": spec["section"],
+                "group": spec["group"],
+                "unit": spec.get("unit", ""),
+                "min": float(spec["min"]),
+                "max": float(spec["max"]),
+                "step": float(spec["step"]),
+                "default": float(spec["default"]),
+                "value": value,
+                "is_default": abs(value - float(spec["default"])) < 1e-9,
+                # False means nothing is stored and the consumer's fallback is what runs.
+                "stored": isset,
+            }
+        )
+    return out
+
+
+def _helper_row(entity_id: str) -> dict[str, Any]:
+    for row in list_helper_tunables():
+        if row["entity_id"] == entity_id:
+            return row
+    raise ValueError(f"{entity_id} is not a settings helper")
+
+
+def set_helper_tunable(entity_id: str, value: Any, *, source: str = "operator") -> dict[str, Any]:
+    from .compose_store import set_helper
+
+    spec = HELPER_TUNABLE_BY_ID.get(entity_id)
+    if spec is None:
+        raise ValueError(f"{entity_id} is not a settings helper")
+    before, _ = _helper_value(spec)
+    coerced = coerce_helper(entity_id, value)
+    set_helper(entity_id, coerced)
+    unit = f" {spec['unit']}" if spec.get("unit") else ""
+    _journal(f"Sensor trust {spec['label']}: {before:g}{unit} → {coerced:g}{unit} ({source})")
+    return _helper_row(entity_id)
+
+
+def reset_helper_tunable(entity_id: str) -> dict[str, Any]:
+    spec = HELPER_TUNABLE_BY_ID.get(entity_id)
+    if spec is None:
+        raise ValueError(f"{entity_id} is not a settings helper")
+    return set_helper_tunable(entity_id, spec["default"], source="default")
 
 
 def reset_for_tests() -> None:

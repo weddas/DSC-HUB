@@ -102,8 +102,8 @@ export const SETTINGS_INDEX: SettingsIndexEntry[] = [
   { section: "sensors", anchor: "offset-main", label: "4×8 sensor offsets", keywords: ["offset", "calibration", "4x8"] },
   { section: "sensors", anchor: "offset-clone", label: "2×4 sensor offsets", keywords: ["offset", "calibration", "2x4"] },
   { section: "sensors", anchor: "sensor-clamps", label: "Sensor clamps", keywords: ["clamp", "bounds", "advanced"] },
-  { section: "sensors", anchor: "helper-dsc_dht_delta_t_c", label: "DHT disagreement thresholds", keywords: ["dht", "disagree", "fault", "trust", "delta"] },
-  { section: "sensors", anchor: "helper-dsc_trust_mad_ph", label: "Peer drift thresholds (pH, EC, moisture)", keywords: ["mad", "median", "drift", "trust", "probe"] },
+  { section: "sensors", anchor: "helper-dsc_dht_delta_t_c", label: "DHT disagreement thresholds", keywords: ["dht", "disagree", "fault", "trust", "delta", "threshold", "default", "reset"] },
+  { section: "sensors", anchor: "helper-dsc_trust_mad_ph", label: "Peer drift thresholds (pH, EC, moisture)", keywords: ["mad", "median", "drift", "trust", "probe", "threshold", "default", "reset"] },
   { section: "sensors", anchor: "stale-control", label: "Control-side stale horizon", keywords: ["stale", "appliance driver", "45 s"] },
   // Automation
   { section: "automation", anchor: "automation", label: "Automation rules", keywords: ["rule", "trigger", "debounce", "release", "window", "relay", "setpoint"] },
