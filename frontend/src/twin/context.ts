@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 import type * as THREE from "three";
 import type { TwinModel } from "./manifest";
-import type { TwinPalette } from "./wire";
+import type { TwinPalette, TwinStyle } from "./wire";
 import type { TwinState } from "../lib/twinState";
 import type { InspectorKind } from "../components/EntityInspector";
 
@@ -14,9 +14,11 @@ export interface TwinLayers {
   plants: boolean;
   devices: boolean;
   labels: boolean;
+  /** Call out every instance nothing live is driving, in the scene itself. */
+  bindings: boolean;
 }
 
-export const DEFAULT_LAYERS: TwinLayers = { air: true, heat: true, humidity: true, light: true, plants: true, devices: true, labels: true };
+export const DEFAULT_LAYERS: TwinLayers = { air: true, heat: true, humidity: true, light: true, plants: true, devices: true, labels: true, bindings: true };
 
 /** What a hovered part tells the shared label: where it is, what it is, which entity it binds. */
 export interface TwinHover {
@@ -39,6 +41,8 @@ export interface TwinContextValue {
   models: Record<string, TwinModel>;
   state: TwinState;
   layers: TwinLayers;
+  /** Wire · x-ray · solid — how the shells are drawn. */
+  style: TwinStyle;
   hover: TwinHover | null;
   setHover: (h: TwinHover | null) => void;
   onPick?: (p: TwinPick) => void;

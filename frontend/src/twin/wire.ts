@@ -1,5 +1,8 @@
 import * as THREE from "three";
 import type { MaterialRole, TwinModel } from "./manifest";
+import type { TwinStyle } from "./presets";
+
+export type { TwinStyle };
 
 /** Palette handed in from CSS tokens — the scene never hard-codes a colour. */
 export interface TwinPalette {
@@ -44,12 +47,49 @@ export interface WireBuild {
   bounds: THREE.Box3;
 }
 
-export function roleStyle(role: MaterialRole, palette: TwinPalette): { color: string; fill: number; edge: number } {
+export function roleStyle(role: MaterialRole, palette: TwinPalette, style: TwinStyle = "wire"): { color: string; fill: number; edge: number } {
   const color = role === "accent" || role === "emissive" ? palette.accent : role === "glass" ? palette.teal : palette.dim;
   const fill =
     role === "glass" ? 0.14 : role === "emissive" ? 0.35 : role === "accent" ? 0.16 : role === "wire" ? 0 : role === "shell" ? 0.05 : 0.08;
   const edge = role === "emissive" ? 1 : role === "accent" ? 0.9 : role === "glass" ? 0.7 : role === "wire" ? 0.45 : role === "shell" ? 0.28 : 0.55;
+  if (style === "xray") {
+    // Emissive parts keep a trace of fill so a lit lamp still reads as a body, not a cage.
+    return { color, fill: role === "emissive" ? fill * 0.5 : 0, edge: Math.min(1, edge * 1.15 + 0.1) };
+  }
+  if (style === "solid") {
+    const solidFill =
+      role === "emissive" ? 0.85 : role === "accent" ? 0.7 : role === "glass" ? 0.3 : role === "wire" ? 0.12 : role === "shell" ? 0.6 : 0.5;
+    return { color, fill: solidFill, edge: Math.max(0.25, edge * 0.55) };
+  }
   return { color, fill, edge };
+}
+
+/**
+ * Re-style an already-built model in place: the rest colours and opacities move, the
+ * geometry and the edge lines do not. `Placed` calls this at the top of its static
+ * binding pass, so a style flip costs a material update, not a rebuild.
+ */
+export function applyStyle(build: WireBuild, palette: TwinPalette, style: TwinStyle): void {
+  const solid = style === "solid";
+  for (const p of build.parts.values()) {
+    const st = roleStyle(p.role, palette, style);
+    p.restFill = st.fill;
+    p.restEdge = st.edge;
+    p.restColor.set(st.color);
+    p.fill.depthWrite = solid;
+    const side = solid ? THREE.FrontSide : THREE.DoubleSide;
+    if (p.fill.side !== side) {
+      p.fill.side = side;
+      p.fill.needsUpdate = true;
+    }
+    // X-ray: edges ignore depth so nothing in the rig can hide behind a shell.
+    const depthTest = style !== "xray";
+    if (p.edgeMat.depthTest !== depthTest) {
+      p.edgeMat.depthTest = depthTest;
+      p.edgeMat.needsUpdate = true;
+    }
+    p.edges.renderOrder = style === "xray" ? 2 : 0;
+  }
 }
 
 /**
@@ -60,7 +100,7 @@ export function roleStyle(role: MaterialRole, palette: TwinPalette): { color: st
  * `fit`: hand-authored rows (no build metadata) are normalised to `dims_cm` standing on
  * y = 0; built rows are already in metres with their authored origin and are left alone.
  */
-export function toWire(scene: THREE.Group, model: TwinModel, palette: TwinPalette, opts: { fit?: boolean } = {}): WireBuild {
+export function toWire(scene: THREE.Group, model: TwinModel, palette: TwinPalette, opts: { fit?: boolean; style?: TwinStyle } = {}): WireBuild {
   const root = scene.clone(true);
   const meshes: THREE.Mesh[] = [];
   root.traverse((o) => {
@@ -74,19 +114,21 @@ export function toWire(scene: THREE.Group, model: TwinModel, palette: TwinPalett
     const src = Array.isArray(m.material) ? m.material[0] : m.material;
     const materialName = src?.name ?? "";
     const role = model.materials[materialName] ?? "shell";
-    const st = roleStyle(role, palette);
+    const style = opts.style ?? "wire";
+    const st = roleStyle(role, palette, style);
     const fill = new THREE.MeshBasicMaterial({
       color: st.color,
       transparent: true,
       opacity: st.fill,
-      depthWrite: false,
-      side: THREE.DoubleSide,
+      depthWrite: style === "solid",
+      side: style === "solid" ? THREE.FrontSide : THREE.DoubleSide,
       visible: st.fill > 0,
     });
     m.material = fill;
-    const edgeMat = new THREE.LineBasicMaterial({ color: st.color, transparent: true, opacity: st.edge });
+    const edgeMat = new THREE.LineBasicMaterial({ color: st.color, transparent: true, opacity: st.edge, depthTest: style !== "xray" });
     const edges = new THREE.LineSegments(new THREE.EdgesGeometry(g, 25), edgeMat);
     edges.name = `${m.name}__edges`;
+    edges.renderOrder = style === "xray" ? 2 : 0;
     edges.raycast = () => undefined;
     m.add(edges);
     parts.set(m.name, { mesh: m, fill, edges, edgeMat, role, materialName, restFill: st.fill, restEdge: st.edge, restColor: new THREE.Color(st.color) });

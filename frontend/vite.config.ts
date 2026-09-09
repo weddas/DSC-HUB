@@ -21,6 +21,9 @@ function spaBuildId(): string {
   return `${sha} · ${new Date().toISOString().slice(0, 16).replace("T", " ")}`;
 }
 
+/** The twin's source directory, posix-normalised — see the `manualChunks` comment. */
+const twinSrcDir = `${path.resolve(__dirname, "src/twin").replace(/\\/g, "/")}/`;
+
 /** Standalone Pi SPA — served by brain on :8787 */
 export default defineConfig(({ mode }) => {
   // DSC_BRAIN_ORIGIN — the brain the dev server proxies to (default: the Pi).
@@ -97,7 +100,30 @@ export default defineConfig(({ mode }) => {
           if (id.includes("node_modules/react") || id.includes("node_modules/scheduler")) return "vendor-react";
           if (id.includes("/pages/TuneFleetPages")) return "tune-fleet";
           if (id.includes("/pages/CalibratePage")) return "calibrate";
-          if (id.includes("/twin/") || id.includes("node_modules/three")) return "twin-three";
+          // The 3D twin. Three rules, in this order, and the order matters:
+          //  1. `twin-shared` — the twin modules that import NO three.js (the manifest, the
+          //     React context, the camera/style preset lists). The pages and the stage host
+          //     import these at boot, so they must not sit in a chunk that owns three.js.
+          //  2. `twin-three` — every other src/twin module: the scene itself, loaded only
+          //     through the lazy import in components/TwinStagePanel.tsx.
+          //  3. three.js and @react-three join it, so drei/fiber can never end up in a
+          //     chunk that twin-three both imports and is imported by (a cycle would make
+          //     the SPA boot in the wrong order — it broke the Pi once, 2026-09-07).
+          // Matched against the resolved src/twin directory, not the substring "/twin/":
+          // a checkout or worktree whose own path contains "twin" would otherwise sweep the
+          // entire app into this chunk (and, being the entry, back into index).
+          const p = id.replace(/\\/g, "/");
+          // Ten-line shared helpers used by both the app and the scene: `@babel/runtime`
+          // (drei) and Vite's own `__vitePreload`. Left unassigned they land in twin-three
+          // and the entry then statically imports the whole renderer for a helper. They
+          // import nothing themselves, so they are safe beside React.
+          if (p.includes("node_modules/@babel/runtime") || p.includes("vite/preload-helper")) return "vendor-react";
+          // `lib/twinState.ts` is the twin's view-model: pure, three-free, and read by the
+          // page and the hook at boot. Left unassigned, rollup folds it into twin-three and
+          // the entry then *statically* imports the whole renderer.
+          if (p.endsWith("/src/lib/twinState.ts")) return "twin-shared";
+          if (p.startsWith(twinSrcDir)) return /\/(manifest|context|presets)\.tsx?$/.test(p) ? "twin-shared" : "twin-three";
+          if (p.includes("node_modules/three") || p.includes("node_modules/@react-three")) return "twin-three";
         },
       },
     },

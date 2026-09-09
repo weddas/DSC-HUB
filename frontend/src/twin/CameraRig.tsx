@@ -4,16 +4,11 @@ import { OrbitControls } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
 import { getAnchorSet, useAnchorVersion } from "./anchors";
+import type { CameraPreset } from "./presets";
 
-export type CameraPreset = "room" | "main" | "clone" | "canopy" | "root";
-
-export const CAMERA_PRESETS: ReadonlyArray<{ id: CameraPreset; label: string }> = [
-  { id: "room", label: "Room" },
-  { id: "main", label: "4×8" },
-  { id: "clone", label: "2×4" },
-  { id: "canopy", label: "Canopy" },
-  { id: "root", label: "Root" },
-];
+// The preset list itself lives in `./presets` (three-free) so the page toolbar can name
+// the presets without importing this module — and with it, three.js — at boot.
+export type { CameraPreset };
 
 function presetPose(p: CameraPreset): { pos: THREE.Vector3; target: THREE.Vector3 } {
   const t4 = getAnchorSet("tent4x8");

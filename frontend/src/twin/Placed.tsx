@@ -1,11 +1,11 @@
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
+import { Html, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { getAnchor, registerAnchors, unregisterAnchors, useAnchorSet } from "./anchors";
 import { useTwin, type TwinPick } from "./context";
-import { disposeWire, toWire, type WireBuild, type WirePart } from "./wire";
-import { fanPeriodSec } from "../lib/twinState";
+import { applyStyle, disposeWire, toWire, type WireBuild, type WirePart } from "./wire";
+import { bindingIsLive, fanPeriodSec, type TwinBinding } from "../lib/twinState";
 
 export type Vec3 = [number, number, number];
 
@@ -32,6 +32,12 @@ export interface Binding {
 export interface PlacedProps {
   id: string;
   slug: string;
+  /**
+   * Which binding declaration answers for this instance. Defaults to `id`; set it when
+   * one declaration covers several placed pieces (a filter riding on its fan). An
+   * instance with no declaration at all is drawn — and reported — as unbound.
+   */
+  bindingId?: string;
   at: PlaceAt;
   /** Euler rotation of the instance (radians). */
   rotation?: Vec3;
@@ -45,6 +51,9 @@ export interface PlacedProps {
   visible?: boolean;
   children?: ReactNode;
 }
+
+/** DEV only: an undeclared instance is worth saying once, not once per frame. */
+const warnedUndeclared = new Set<string>();
 
 function matches(name: string, pat: string | RegExp): boolean {
   return typeof pat === "string" ? name === pat : pat.test(name);
@@ -86,27 +95,65 @@ function toneColor(t: EmissiveTone | undefined, palette: ReturnType<typeof useTw
  * Children render only once this instance has settled, so `<Placed at={{parent: id}}>`
  * inside it always finds its anchor.
  */
-export function Placed({ id, slug, at, rotation, self, scale, bind, pick, tweak, visible = true, children }: PlacedProps) {
+export function Placed({ id, slug, bindingId, at, rotation, self, scale, bind, pick, tweak, visible = true, children }: PlacedProps) {
   const ctx = useTwin();
   const model = ctx.models[slug];
   if (!model) {
-    if (import.meta.env.DEV) console.warn(`[twin] no model "${slug}" in the manifest`);
-    return null;
+    // Honest degradation: an unbuilt model leaves a labelled marker where it would stand,
+    // never a silent hole and never a stand-in that could be mistaken for the real thing.
+    if (import.meta.env.DEV) console.warn(`[twin] no model "${slug}" in the manifest — drawing a "model pending" marker`);
+    return <PendingModel id={id} slug={slug} at={at} visible={visible} />;
   }
   // Own boundary: a model still downloading must never hide its siblings (a Suspense
   // reveal re-runs every layout effect under the boundary — see anchors.ts `emit`).
   return (
     <Suspense fallback={null}>
-      <Loaded id={id} model={model} at={at} rotation={rotation} self={self} scale={scale} bind={bind} pick={pick} tweak={tweak} visible={visible}>
+      <Loaded id={id} model={model} bindingId={bindingId} at={at} rotation={rotation} self={self} scale={scale} bind={bind} pick={pick} tweak={tweak} visible={visible}>
         {children}
       </Loaded>
     </Suspense>
   );
 }
 
+/** Where a model the library has not built yet would stand: a dim cage plus its slug. */
+function PendingModel({ id, slug, at, visible }: { id: string; slug: string; at: PlaceAt; visible: boolean }) {
+  const { palette, layers } = useTwin();
+  const parentId = "parent" in at ? at.parent : null;
+  const parentSet = useAnchorSet(parentId);
+  const atKey = keyOf(at);
+  const pos = useMemo<THREE.Vector3 | null>(() => {
+    if ("position" in at) return new THREE.Vector3(...at.position);
+    if (!parentSet) return null;
+    const a = at.anchor === "" ? new THREE.Vector3().setFromMatrixPosition(parentSet.matrix) : getAnchor(at.parent, at.anchor);
+    if (!a) return null;
+    const t = a.clone();
+    if (at.offset) t.add(new THREE.Vector3(...at.offset));
+    return t;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [atKey, parentSet]);
+  if (!pos || !visible) return null;
+  return (
+    <group name={`${id}__pending`} position={[pos.x, pos.y + 0.09, pos.z]}>
+      <mesh raycast={() => undefined}>
+        <boxGeometry args={[0.18, 0.18, 0.18]} />
+        <meshBasicMaterial color={palette.dim} wireframe transparent opacity={0.5} />
+      </mesh>
+      {layers.labels || layers.bindings ? (
+        <Html position={[0, 0.14, 0]} center zIndexRange={[20, 0]} style={{ pointerEvents: "none" }}>
+          <div className="dsc-twin-plant-label is-muted">
+            <b>MODEL PENDING</b>
+            <span>{slug}</span>
+          </div>
+        </Html>
+      ) : null}
+    </group>
+  );
+}
+
 function Loaded({
   id,
   model,
+  bindingId,
   at,
   rotation,
   self,
@@ -120,12 +167,25 @@ function Loaded({
   const ctx = useTwin();
   const gltf = useGLTF(model.file);
   const build = useMemo(() => {
-    const b = toWire(gltf.scene, model, ctx.palette);
+    const b = toWire(gltf.scene, model, ctx.palette, { style: ctx.style });
     tweak?.(b);
     return b;
-    // palette changes rebuild; tweak is assumed stable per instance
+    // palette changes rebuild; a style change is re-applied in place (applyStyle) and
+    // tweak is assumed stable per instance
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gltf, model, ctx.palette]);
+
+  // What drives this instance — and whether anything does. An instance the declaration
+  // list does not know is treated as unbound: the scene never colours or moves a part on
+  // a value it cannot name.
+  const binding: TwinBinding | undefined = ctx.state.bindings[bindingId ?? id];
+  if (import.meta.env.DEV && !binding && !warnedUndeclared.has(id)) {
+    warnedUndeclared.add(id);
+    console.warn(`[twin] instance "${id}" (${model.slug}) has no binding declaration in SCENE_NODES — drawn unbound`);
+  }
+  const live = binding ? bindingIsLive(binding.status) : false;
+  // "Dead" = nothing live behind it: out of service, no reading, or nothing declared.
+  const dead = !!bind?.offline || !live;
   useEffect(() => () => disposeWire(build), [build]);
 
   const parentId = "parent" in at ? at.parent : null;
@@ -185,6 +245,8 @@ function Loaded({
   useEffect(() => {
     void restoreTick;
     const P = ctx.palette;
+    // Style first: it sets the rest colours and opacities every binding then works from.
+    applyStyle(build, P, ctx.style);
     for (const p of build.parts.values()) {
       p.fill.color.copy(p.restColor);
       p.edgeMat.color.copy(p.restColor);
@@ -193,15 +255,21 @@ function Loaded({
       p.edgeMat.opacity = p.restEdge;
       p.mesh.visible = true;
     }
-    if (bind?.offline) {
+    if (dead) {
+      // Two flavours of dead, both grey — an out-of-service device is faded almost out,
+      // while unbound scenery (a carbon filter, a passive vent) keeps its silhouette so
+      // the rig still reads as the rig. Neither may carry a live colour.
+      const faded = !!bind?.offline || binding?.status === "no-data" || binding?.status === "missing";
       for (const p of build.parts.values()) {
         p.fill.color.set(P.dim);
         p.edgeMat.color.set(P.dim);
-        p.fill.opacity = Math.min(p.restFill, 0.03);
-        p.edgeMat.opacity = Math.min(p.restEdge, 0.22);
+        p.fill.opacity = faded ? Math.min(p.restFill, 0.03) : Math.min(p.restFill, 0.06);
+        p.fill.visible = p.fill.opacity > 0;
+        p.edgeMat.opacity = faded ? Math.min(p.restEdge, 0.22) : Math.min(p.restEdge, 0.4);
       }
     }
     for (const t of bind?.tint ?? []) {
+      if (dead) break; // a tone is a reading; there is none
       const c = toneColor(t.tone, P);
       const targets = t.node ? partsFor(build, t.node) : [...build.parts.values()].filter((p) => p.materialName === t.material);
       for (const p of targets) {
@@ -212,8 +280,11 @@ function Loaded({
     for (const e of bind?.emissive ?? []) {
       const c = toneColor(e.tone, P);
       const lvl = Math.max(0, Math.min(1, e.level ?? 1));
+      // A glow is a claim that something is running. Without a live binding there is no
+      // such claim to make, so every emitter stays dark.
+      const on = e.on && !dead;
       for (const p of partsFor(build, e.node)) {
-        if (e.on) {
+        if (on) {
           p.fill.color.set(c);
           p.edgeMat.color.set(c);
           p.fill.opacity = 0.3 + 0.55 * lvl;
@@ -227,22 +298,23 @@ function Loaded({
         }
       }
     }
-    for (const s of bind?.show ?? []) for (const p of partsFor(build, s.node)) p.mesh.visible = s.visible;
+    for (const s of bind?.show ?? []) for (const p of partsFor(build, s.node)) p.mesh.visible = dead ? false : s.visible;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [build, bindKey, ctx.palette, restoreTick]);
+  }, [build, bindKey, ctx.palette, ctx.style, dead, binding?.status, restoreTick]);
 
-  // Per-frame bindings: spin, error pulse, hover lift.
+  // Per-frame bindings: spin, error pulse, hover lift. Motion is a reading too: an
+  // instance with nothing live behind it stands still.
   const spinTargets = useMemo(
-    () => (bind?.spin ?? []).flatMap((s) => partsFor(build, s.node).map((p) => ({ obj: p.mesh, period: fanPeriodSec(s.pct) }))),
+    () => (dead ? [] : (bind?.spin ?? []).flatMap((s) => partsFor(build, s.node).map((p) => ({ obj: p.mesh, period: fanPeriodSec(s.pct) })))),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [build, bindKey],
+    [build, bindKey, dead],
   );
   const hovered = useRef(false);
   const lastPulse = useRef(0);
   useFrame((_, dt) => {
     const d = Math.min(dt, 0.1);
     if (!ctx.calm) for (const t of spinTargets) if (t.period) t.obj.rotateY((Math.PI * 2 * d) / t.period);
-    if (bind?.errorPulse) {
+    if (bind?.errorPulse && !dead) {
       lastPulse.current += d;
       const k = 0.5 + 0.5 * Math.sin((lastPulse.current / 2.4) * Math.PI * 2);
       for (const p of build.parts.values()) {
@@ -266,7 +338,11 @@ function Loaded({
       const set = build.bounds;
       const top = new THREE.Vector3((set.min.x + set.max.x) / 2, set.max.y, (set.min.z + set.max.z) / 2);
       root.localToWorld(top);
-      ctx.setHover({ id, label: pick?.label ?? model.slug, sub: pick?.entityId, entityId: pick?.entityId, pos: top });
+      // The hover always says where the number came from — or that there is none.
+      const sub = binding
+        ? `${STATUS_WORD[binding.status]}${binding.entityId ? ` · ${binding.entityId}` : ""}${binding.value ? ` · ${binding.value}` : ""}`
+        : `UNBOUND · no declaration · ${model.slug}`;
+      ctx.setHover({ id, label: pick?.label ?? binding?.label ?? model.slug, sub, entityId: pick?.entityId, pos: top });
     }
     document.body.style.cursor = pick ? "pointer" : "default";
   };
@@ -288,7 +364,43 @@ function Loaded({
   return (
     <>
       <primitive object={root} visible={visible} onPointerOver={over} onPointerOut={out} onClick={click} />
+      {settled && visible ? <BindingChip instance={id} binding={binding} slug={model.slug} /> : null}
       {settled ? children : null}
     </>
+  );
+}
+
+const STATUS_WORD: Record<TwinBinding["status"], string> = {
+  live: "LIVE",
+  simulated: "SIMULATED",
+  held: "HELD",
+  "no-data": "NO DATA",
+  missing: "MISSING",
+  unbound: "UNBOUND",
+};
+
+/**
+ * The visible half of the honesty contract: a chip over any instance the scene is drawing
+ * without a live value behind it. `LAYERS · Bindings` turns it off; the greyed-out look
+ * and the hover text stay either way.
+ */
+function BindingChip({ instance, binding, slug }: { instance: string; binding: TwinBinding | undefined; slug: string }) {
+  const { layers } = useTwin();
+  const set = useAnchorSet(instance);
+  if (!layers.bindings || !set) return null;
+  if (binding && bindingIsLive(binding.status)) return null;
+  const status = binding?.status ?? "unbound";
+  const detail = binding ? binding.note || binding.entityId || "nothing reports it" : `no declaration · ${slug}`;
+  const c = new THREE.Vector3();
+  set.bounds.getCenter(c);
+  return (
+    <Html position={[c.x, set.bounds.max.y + 0.06, c.z]} center zIndexRange={[10, 0]} style={{ pointerEvents: "none" }}>
+      <div className="dsc-twin-plant-label is-muted">
+        <b>{STATUS_WORD[status]}</b>
+        <span>
+          {binding?.label ?? instance} · {detail}
+        </span>
+      </div>
+    </Html>
   );
 }

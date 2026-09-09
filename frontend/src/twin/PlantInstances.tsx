@@ -48,10 +48,20 @@ function PlantLabel({ plant, vesselId, plantId }: { plant: TwinPlant; vesselId: 
   );
 }
 
-/** Where a plant stands: its probe anchor in the 4×8 or the 2×4, or the waiting bench along the room's open front. */
+/**
+ * Where a plant stands: its probe anchor in the 4×8 or the 2×4, or the waiting bench along
+ * the room's open front. The 2×4 (120 × 60 × 210) carries only two probe anchors, so a
+ * third clone and beyond stand on the mat between them rather than piling onto probe_1 —
+ * spaced along the tent's 1.2 m width, which is where they would really go.
+ */
 export function plantPlace(p: TwinPlant, index: number, cloneIndex: number): PlaceAt {
   if (p.zone === "main" && p.pot != null && p.pot >= 1 && p.pot <= 4) return { parent: "tent4x8", anchor: `probe_${p.pot}` };
-  if (p.zone === "clone") return { parent: "tent2x4", anchor: cloneIndex % 2 === 0 ? "probe_1" : "probe_2" };
+  if (p.zone === "clone") {
+    if (cloneIndex < 2) return { parent: "tent2x4", anchor: cloneIndex === 0 ? "probe_1" : "probe_2" };
+    // −0.36 … +0.36 m across the mat, two rows deep once more than four are in the tent.
+    const n = cloneIndex - 2;
+    return { parent: "tent2x4", anchor: "mat_spot", offset: [-0.36 + (n % 4) * 0.24, 0.002, n >= 4 ? -0.14 : 0.1] };
+  }
   return { position: [-1.5 + (index % 5) * 0.4, 0, 1.05] };
 }
 
