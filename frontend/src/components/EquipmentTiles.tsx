@@ -4,6 +4,7 @@ import { useHistory } from "../hooks/useHistory";
 import type { ZoneModel } from "../hooks/useZones";
 import { resolveCfm } from "../lib/cfmProvenance";
 import { slopePerHour } from "../lib/derived/climate";
+import { derivedNote, fmtDerived, isResolved, type DerivedValue } from "../lib/derived/types";
 import { inventoryInService } from "../lib/fleetModel";
 import { FanGlyph } from "./DutyBars";
 import { Icon } from "./ui";
@@ -25,6 +26,12 @@ interface Tile {
   kind: "binary" | "numeric";
   glyph?: "fan" | "heat";
   fanPct?: number;
+  /**
+   * The derived value this tile's sub-line leans on. Rendered in the tooltip with its
+   * provenance so the operator can see the number was computed, from what, and on
+   * what assumption — or why there is no number at all.
+   */
+  derived?: DerivedValue;
 }
 
 /** Three wavy strokes rising off the mat — only while the mat is on. */
@@ -45,6 +52,15 @@ export function HeatLines({ on, size = 22 }: { on: boolean; size?: number }) {
       ))}
     </svg>
   );
+}
+
+/**
+ * The tile sub-line is a single ellipsised row, so it gets the first clause of the
+ * reason — the missing input itself. The full note, assumption and "possible with"
+ * live in the tooltip, which has room for them.
+ */
+function shortWhy(d: DerivedValue): string {
+  return (d.unavailable ?? "unavailable").split(" — ")[0];
 }
 
 function minutesToTarget(value: number, target: number, slope: number | null): string | null {
@@ -91,17 +107,18 @@ export function EquipmentTiles({
       state: !l.available ? "offline" : l.on ? "on" : "idle",
       stateLabel: !l.available ? "—" : l.on ? "ON" : "OFF",
       big: l.on ? (l.brightnessPct != null ? `${l.brightnessPct} %` : "ON") : "OFF",
+      // The light tile's sub-line IS a derived value (DLI = PPFD × photoperiod), so it
+      // shows the provenance or the missing input rather than a bare number.
       sub:
         l.kind === "window"
           ? "schedule window — no lamp is bound to the 4×8"
-          : l.ppfd != null
-            ? `${Math.round(l.ppfd)} PPFD from calibration${zone.lightHours != null ? ` · ${zone.lightHours} h rail` : ""}`
-            : zone.lightHours != null
-              ? `${zone.lightHours} h rail`
-              : "no rail",
+          : isResolved(zone.derived.dli)
+            ? `DLI ${fmtDerived(zone.derived.dli)} · ${zone.derived.dli.provenance}`
+            : `no DLI — ${shortWhy(zone.derived.dli)}`,
       tone: l.on ? "lamp" : "muted",
       entityId: l.entityId,
       kind: "binary",
+      derived: l.kind === "window" ? undefined : zone.derived.dli,
     });
   }
 
@@ -109,6 +126,11 @@ export function EquipmentTiles({
     const dehumOffline = !available("switch.dsc_de_humidifier_main_relay");
     const dehumOn = on("switch.dsc_hub_dehumidifier_demand");
     const eta = rhMax != null ? minutesToTarget(zone.rh.value, rhMax, rhSlope) : null;
+    // What the dehumidifier actually has to pull, in water rather than in RH points.
+    // RH alone does not say how much moisture is in the air: 60 % at 18 °C and 60 % at
+    // 28 °C are different jobs. Brain-side counterpart: derived_metrics.moisture_load.
+    const load = zone.derived.moistureLoad;
+    const loadText = isResolved(load) && load.value > 0 ? ` · ${fmtDerived(load)} g/m³ to remove` : "";
     tiles.push({
       id: "dehum",
       name: "Dehumidifier",
@@ -119,14 +141,15 @@ export function EquipmentTiles({
         ? "relay not reporting"
         : dehumOn
           ? rhMax != null && zone.rh.available
-            ? `pulling ${zone.rh.value.toFixed(0)} → ${Math.round(rhMax)}${eta ? ` · ${eta}` : rhSlope != null && rhSlope >= 0 ? " · not falling yet" : ""}`
+            ? `pulling ${zone.rh.value.toFixed(0)} → ${Math.round(rhMax)}${eta ? ` · ${eta}` : rhSlope != null && rhSlope >= 0 ? " · not falling yet" : ""}${loadText}`
             : "demand on"
           : rhMax != null
-            ? `arms above ${Math.round(rhMax)} %`
+            ? `arms above ${Math.round(rhMax)} %${loadText}`
             : "no RH rail",
       tone: dehumOffline ? "bad" : dehumOn ? "ok" : "muted",
       entityId: "switch.dsc_hub_dehumidifier_demand",
       kind: "binary",
+      derived: load,
     });
     const humOn = on("switch.dsc_hub_humidifier_demand");
     const humEta = rhMin != null ? minutesToTarget(zone.rh.value, rhMin, rhSlope) : null;
@@ -146,6 +169,7 @@ export function EquipmentTiles({
       tone: humOn ? "ok" : "muted",
       entityId: "switch.dsc_hub_humidifier_demand",
       kind: "binary",
+      derived: zone.derived.absoluteHumidity,
     });
     const heatOn = on("switch.dsc_hub_heater_demand");
     const heatEta = tMin != null ? minutesToTarget(zone.temp.value, tMin, tSlope) : null;
@@ -230,6 +254,8 @@ export function EquipmentTiles({
       tone: chumOos ? "muted" : chumOn ? "ok" : "muted",
       entityId: "switch.dsc_hub_clone_humidifier_demand",
       kind: "binary",
+      // Pushing RH up in a clone dome is the one place condensation actually bites.
+      derived: zone.derived.condensationMargin,
     });
     const misterIn = inventoryInService(fleet, "mister");
     tiles.push({
@@ -298,6 +324,17 @@ export function EquipmentTiles({
               <TipRow k={t.name} v={t.stateLabel} tone={t.state === "oos" || t.state === "offline" ? "muted" : t.state === "on" ? "ok" : undefined} />
               <TipRow k={t.kind === "numeric" ? "duty" : "pull"} v={t.big} />
               <TipRow k="why" v={t.sub} tone="muted" />
+              {t.derived ? (
+                <TipRow
+                  k={t.derived.label.toLowerCase()}
+                  v={
+                    isResolved(t.derived)
+                      ? `${fmtDerived(t.derived)}${t.derived.unit ? ` ${t.derived.unit}` : ""} · ${derivedNote(t.derived)}`
+                      : derivedNote(t.derived)
+                  }
+                  tone="muted"
+                />
+              ) : null}
               <TipRow k={t.state === "oos" ? "out of service" : "entity"} v={t.entityId} tone="muted" />
             </>
           }

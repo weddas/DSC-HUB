@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useHistory } from "../hooks/useHistory";
 import type { ZoneModel } from "../hooks/useZones";
-import { fmtFractionOfHours, inBandFraction } from "../lib/derived/climate";
+import { fmtFractionOfHours, inBandMetric } from "../lib/derived";
+import { derivedTitle, fmtDerived, isResolved, type DerivedValue } from "../lib/derived/types";
 import { paths } from "../lib/paths";
 import type { ZoneTone } from "../lib/zoneTone";
 import type { PanelTone } from "./Panel";
@@ -10,9 +11,24 @@ import { Triad } from "./Triad";
 import { StatusTag } from "./ui";
 import { UpdatedStamp } from "./UpdatedStamp";
 import { applianceIcon } from "../lib/deviceIcons";
+import type { IconName } from "../iconSvg";
 import type { BandChartKind } from "./BandChartHost";
 import { CameraSlot } from "./CameraSlot";
 import { BRAIN_ZONE_ID } from "../hooks/useZoneMeta";
+
+/**
+ * A derived value as a tag: the number with its provenance in the title when it
+ * resolved, a dashed slot naming the missing input (and the sensor that would fill
+ * it) when it did not. Never a bare dash with no explanation.
+ */
+function DerivedTag({ d, icon }: { d: DerivedValue; icon: IconName }) {
+  const ok = isResolved(d);
+  const sign = ok && d.key === "vpd_deficit" && d.value > 0 ? "+" : "";
+  const label = ok
+    ? `${d.label.toUpperCase()} ${sign}${fmtDerived(d)}${d.unit ? ` ${d.unit}` : ""}${d.assumption ? " *" : ""}`
+    : `${d.label.toUpperCase()} —`;
+  return <StatusTag icon={icon} label={label} tone="muted" dashed={!ok} title={derivedTitle(d)} />;
+}
 
 export function panelToneFor(tone: ZoneTone): PanelTone {
   switch (tone) {
@@ -85,9 +101,9 @@ export function ZoneCard({
   const legendBits = [zone.label];
   if (zone.stageShort) legendBits.push(zone.stageShort.toUpperCase());
   if (zone.day != null) legendBits.push(`DAY ${zone.day}`);
-  const { points } = useHistory(zone.vpd.entityId, 24, 96);
-  const inBand = inBandFraction(points, zone.vpd.band);
-  const inBandText = inBand != null ? `VPD IN BAND ${fmtFractionOfHours(inBand, 24)} · 24H` : null;
+  const { points, tracked } = useHistory(zone.vpd.entityId, 24, 96);
+  const inBandD = inBandMetric(points, zone.vpd.band, 24, tracked, "VPD in band");
+  const inBandText = isResolved(inBandD) ? `VPD IN BAND ${fmtFractionOfHours(inBandD.value, 24)} · 24H` : null;
   const lamp = lampTag(zone);
   const want = wantText(zone);
   const tent = zone.id === "clone" ? "clone" : "main";
@@ -101,7 +117,7 @@ export function ZoneCard({
       legend={legendBits.join(" · ")}
       legendRight={
         <>
-          {inBandText ? <span>{inBandText}</span> : null}
+          <span title={derivedTitle(inBandD)}>{inBandText ?? "VPD IN BAND —"}</span>
           <UpdatedStamp />
         </>
       }
@@ -150,6 +166,13 @@ export function ZoneCard({
             }
           />
         ) : null}
+        {/* Derived layer — computed, never measured. `*` marks a value resting on a
+            stated assumption; a dashed tag is an honest gap, not a zero. */}
+        <DerivedTag d={zone.derived.vpdDeficit} icon="target-goal" />
+        <DerivedTag d={zone.derived.dewPoint} icon="dew-point" />
+        <DerivedTag d={zone.derived.condensationMargin} icon="water-drop" />
+        <DerivedTag d={zone.derived.dli} icon="dli" />
+        <DerivedTag d={zone.derived.co2} icon="co2-sensor" />
         {zone.appliances.map((a) => (
           <StatusTag
             key={a.id}

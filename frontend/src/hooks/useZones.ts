@@ -15,6 +15,7 @@ import { inventoryInService } from "../lib/fleetModel";
 import { dliFromPpfdHours, readCalibratedPpfd } from "../lib/dliEstimate";
 import { buildCloneLightDesk } from "../lib/lightViewModel";
 import { leafVpdKpa, vpdKpa } from "../lib/derived/climate";
+import { zoneDerived, type ZoneDerived } from "../lib/derived/metrics";
 import { useBrainNumber } from "./useBrainSettings";
 import { defaultBandMargin, zoneTone, type ToneBand, type ZoneTone } from "../lib/zoneTone";
 import type { PhaseKey } from "../components/Panel";
@@ -95,6 +96,12 @@ export interface ZoneModel {
   vpd: ZoneReading;
   /** Leaf VPD estimate (air VPD with the default leaf offset) — derived. */
   leafVpd: number | null;
+  /**
+   * The derived-metrics layer for this zone: dew point, absolute humidity, DLI,
+   * VPD-vs-band and the device-only slots, each carrying its provenance or the
+   * reason it is unavailable. Never contains a fabricated number.
+   */
+  derived: ZoneDerived;
   lamp: ZoneLamp | null;
   appliances: ZoneAppliance[];
   probes: ZoneProbe[];
@@ -378,6 +385,27 @@ export function useZones(): { main: ZoneModel; clone: ZoneModel; room: ZoneModel
 
       const roleDay =
         meta?.role_since != null ? Math.max(1, Math.floor((Date.now() / 1000 - meta.role_since) / 86400) + 1) : null;
+      // Derived layer: same inputs the readings above used, so a held/stale reading
+      // produces a held/stale derivation and a missing one produces an honest hole.
+      const derived = zoneDerived({
+        tempC: tempR.available ? t.value : null,
+        rhPct: rhR.available ? rh.value : null,
+        // No IR leaf sensor is bound anywhere in this kit yet — leaf VPD stays assumed.
+        leafTempC: null,
+        leafOffsetC: -leafOffsetC,
+        vpd: vpdR.available ? vpd.value : null,
+        vpdBand: vpdR.band,
+        rhBand: rhR.band,
+        tempBand: tempR.band,
+        ppfd: lamp?.ppfd ?? null,
+        ppfdSource: lamp?.ppfdSource ?? null,
+        dimPct: lamp?.brightnessPct ?? null,
+        photoperiodHours: lightHours,
+        // No CO₂, surface-temperature probe or modelled tent volume in this kit.
+        co2Ppm: null,
+        surfaceTempC: null,
+        volumeM3: null,
+      });
       return {
         id: tent,
         label: tent === "main" ? "4×8" : "2×4",
@@ -408,6 +436,7 @@ export function useZones(): { main: ZoneModel; clone: ZoneModel; room: ZoneModel
         rh: rhR,
         vpd: vpdR,
         leafVpd: Number.isFinite(leaf) ? leaf : null,
+        derived,
         lamp,
         appliances,
         probes: zoneProbes,
@@ -450,6 +479,21 @@ export function useZones(): { main: ZoneModel; clone: ZoneModel; room: ZoneModel
       rh: roomRhR,
       vpd: roomVpdR,
       leafVpd: null,
+      // The lung has no plants, no lamp and no rail: most of the layer is honestly
+      // unavailable here, and the ones that are not (dew point, absolute humidity)
+      // are exactly the ones that matter for condensation in the room.
+      derived: zoneDerived({
+        tempC: roomTempR.available ? roomT.value : null,
+        rhPct: roomRhR.available ? roomRh.value : null,
+        leafTempC: null,
+        vpd: roomVpdR.available ? roomVpdR.value : null,
+        ppfd: null,
+        ppfdSource: null,
+        photoperiodHours: null,
+        co2Ppm: null,
+        surfaceTempC: null,
+        volumeM3: null,
+      }),
       lamp: null,
       appliances: [],
       probes: [],
