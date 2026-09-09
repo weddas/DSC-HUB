@@ -209,6 +209,12 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
     dryPct,
   ]);
 
+  // The drawer title must reflect the SELECTED range, not the hardcoded "— 24h" the title
+  // map used to carry (which stayed "24h" even after picking 48h/Cycle/Photo). Strip any
+  // trailing "— Nh" and append the live range label.
+  const rangeLabel = CYCLE_TIMESPAN_EXTRAS.find((e) => e.hours === hours)?.label ?? `${hours}h`;
+  const drawerTitle = target ? `${(target.title ?? "History").replace(/\s*[—-]\s*\d+\s*h$/i, "")} · ${rangeLabel}` : "History";
+
   const thin = model ? model.series.every((s) => s.series.length < 2) : true;
   const lastSync = model
     ? Math.max(
@@ -221,7 +227,7 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
     : undefined;
 
   return (
-    <SlideDrawer open={!!target} onClose={onClose} title={target?.title ?? "History"}>
+    <SlideDrawer open={!!target} onClose={onClose} title={drawerTitle}>
       <div className="dsc-chip-row" style={{ marginBottom: 12 }}>
         <TimespanControl hours={hours} setHours={setHours} extras={CYCLE_TIMESPAN_EXTRAS} />
         {thin ? <StatusChip label="Thin recorder" tone="warn" /> : null}
@@ -239,7 +245,7 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
         />
       ) : null}
       <p className="dsc-muted" style={{ marginTop: 10, fontSize: "var(--dsc-fs-sm)" }}>
-        Multi-zone history — same series as HA Home gauge popups.
+        Multi-zone history — the same series the desk gauges read.
       </p>
     </SlideDrawer>
   );

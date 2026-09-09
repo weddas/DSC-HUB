@@ -26,6 +26,7 @@ export function TimespanControl({
         <button
           key={h}
           type="button"
+          aria-pressed={hours === h}
           className={`dsc-chip${hours === h ? " dsc-chip--ok" : ""}`}
           onClick={() => setHours(h)}
         >
@@ -36,6 +37,7 @@ export function TimespanControl({
         <button
           key={ex.label}
           type="button"
+          aria-pressed={hours === ex.hours}
           className={`dsc-chip${hours === ex.hours ? " dsc-chip--ok" : ""}`}
           onClick={() => setHours(ex.hours)}
         >
