@@ -3872,6 +3872,29 @@ input[type="checkbox"]:disabled {
 /* In a busy button the dashes ride the button's own text colour (currentColor
    on the <i> background handles it) and the flex gap spaces them from the label. */
 
+/* Keyboard users land here first; it stays off-canvas until focused. */
+.dsc-skip-link {
+  position: absolute;
+  left: -999px;
+  top: 8px;
+  z-index: 1000;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--dsc-teal);
+  color: #000;
+  font-weight: 600;
+  text-decoration: none;
+}
+.dsc-skip-link:focus,
+.dsc-skip-link:focus-visible {
+  left: 8px;
+  outline: solid 2px #fff;
+  outline-offset: 2px;
+}
+/* The <main> landmark must not change the shell's layout — the routes still flow as before. */
+.dsc-main { display: contents; }
+.dsc-main:focus { outline: none; }
+
 .dsc-sr-only {
   position: absolute;
   width: 1px;

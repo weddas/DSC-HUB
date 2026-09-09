@@ -58,6 +58,9 @@ export function AlertNotifier() {
   const navigate = useNavigate();
   const seen = useRef<Set<string> | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  // Screen readers only announce changes inside a live region that was already in the DOM,
+  // so this text node is always rendered (visually hidden) and rewritten on each new alert.
+  const [announce, setAnnounce] = useState("");
 
   useEffect(() => {
     // Wait for the fleet store to carry at least one alert entity; baselining on an
@@ -75,15 +78,19 @@ export function AlertNotifier() {
     const now = Date.now();
     const newToasts: Toast[] = [];
     let playTone: "bad" | "warn" | null = null;
+    const spoken: string[] = [];
     for (const id of fresh) {
       if (!alerts.isEnabled(id) || isSnoozed(id)) continue;
       const sev = alerts.severityOf(id);
       const tone: "bad" | "warn" = sev === "critical" ? "bad" : "warn";
-      if (prefs.alertToast) newToasts.push({ id, title: playbookFor(id, "alert").title, tone, at: now });
+      const title = playbookFor(id, "alert").title;
+      spoken.push(sev === "critical" ? `Critical: ${title}` : title);
+      if (prefs.alertToast) newToasts.push({ id, title, tone, at: now });
       const soundOk = prefs.alertSound === "all" || (prefs.alertSound === "critical" && sev === "critical");
       if (soundOk && (!quiet || id === FAILSAFE_ID)) playTone = tone === "bad" ? "bad" : (playTone ?? "warn");
     }
     if (newToasts.length) setToasts((t) => [...newToasts, ...t].slice(0, 4));
+    if (spoken.length) setAnnounce(`New alert${spoken.length > 1 ? "s" : ""}: ${spoken.join("; ")}`);
     if (playTone) beep(playTone);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tick]);
@@ -94,10 +101,14 @@ export function AlertNotifier() {
     return () => window.clearTimeout(t);
   }, [toasts]);
 
-  if (!toasts.length) return null;
   return (
-    <div className="dsc-toasts" role="region" aria-label="New alerts">
-      {toasts.map((t) => (
+    <>
+      <div className="dsc-sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {announce}
+      </div>
+      {toasts.length ? (
+        <div className="dsc-toasts" role="region" aria-label="New alerts">
+          {toasts.map((t) => (
         <div key={`${t.id}-${t.at}`} className={`dsc-toast dsc-toast--${t.tone}`} role={t.tone === "bad" ? "alert" : "status"}>
           <Icon name="bell" size={14} />
           <span className="dsc-toast-title">{t.title}</span>
@@ -114,6 +125,8 @@ export function AlertNotifier() {
           </button>
         </div>
       ))}
-    </div>
+        </div>
+      ) : null}
+    </>
   );
 }

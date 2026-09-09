@@ -288,6 +288,9 @@ function Shell({ surfaceVersion = "8.1.0" }: { surfaceVersion?: string }) {
 
   return (
     <div className={`dsc-shell${desk ? ` dsc-shell--${desk.id}` : ""}`}>
+      <a className="dsc-skip-link" href="#main">
+        Skip to content
+      </a>
       <header className="dsc-topbar">
         <NavLink className="dsc-brand" to={paths.overview()} aria-label="DSC-HUB overview">
           <Icon name="brand" size={28} color="var(--dsc-teal)" />
@@ -325,6 +328,7 @@ function Shell({ surfaceVersion = "8.1.0" }: { surfaceVersion?: string }) {
 
       <ProbeOverlayHost />
 
+      <main id="main" className="dsc-main" tabIndex={-1}>
       <ErrorBoundary>
         <Suspense fallback={<RouteFallback />}>
           <Routes>
@@ -368,6 +372,7 @@ function Shell({ surfaceVersion = "8.1.0" }: { surfaceVersion?: string }) {
           </Routes>
         </Suspense>
       </ErrorBoundary>
+      </main>
 
       <BottomBar />
     </div>
