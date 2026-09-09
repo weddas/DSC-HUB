@@ -1781,7 +1781,11 @@ switch:
     name: "Light Catchup Cancel"
     id: light_catchup_cancel_switch
     icon: "mdi:timer-off-outline"
-    optimistic: true
+    # NOT optimistic, on purpose. This is a momentary button: it springs back to off so the
+    # operator can press it again next cycle. An optimistic template switch publishes the
+    # commanded state AFTER running turn_on_action, which would clobber the publish_state(false)
+    # below and leave the toggle latched permanently ON — reading as "cancellation is engaged"
+    # when in fact it is a one-shot that already fired. We own the published state instead.
     turn_on_action:
       - lambda: |-
           int dur = id(clone_active) ? id(clone_light_hours) : 0;
