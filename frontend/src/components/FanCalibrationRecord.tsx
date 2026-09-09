@@ -32,32 +32,53 @@ export function useFanCalSummary() {
  * square of the error, silently. These helpers existed in the UI for a long time but had
  * never held a value on any host, so nothing could have converted even if it had tried.
  */
+/**
+ * Common inline-duct sizes. The trade sells duct by inches; the operator measures in mm.
+ * Both are shown because a grower knows their run as "6 inch" and their tape measure does not.
+ */
+export const COMMON_DUCT_MM = [100, 125, 150, 200, 250, 300] as const;
+
+const INCH_LABEL: Record<number, string> = {
+  100: '4"',
+  125: '5"',
+  150: '6"',
+  200: '8"',
+  250: '10"',
+  300: '12"',
+};
+
 export function DuctSizeField({ target, onSaved }: { target: FanCalTarget; onSaved: () => void }) {
-  const [draft, setDraft] = useState(String(target.duct_cm || ""));
+  // mm is the operator's unit. The helper behind this is still cm (that is what the m/s to
+  // CFM conversion reads), so mm is the UI unit and cm is the wire unit, converted here.
+  const storedMm = target.duct_cm ? Math.round(target.duct_cm * 10) : 0;
+  const [draft, setDraft] = useState(storedMm ? String(storedMm) : "");
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
 
   // The wizard reuses one instance of this field across duct selections, so switching from
-  // a 6" duct to a 4" one left 15.24 sitting in the box — one click from writing it onto
+  // a 6" duct to a 4" one left 152 sitting in the box — one click from writing it onto
   // the 4" intake and silently doubling every reading. Reset the draft when the target
   // changes (adjusting state during render, rather than an effect that paints stale first).
   const [seenPrefix, setSeenPrefix] = useState(target.cal_prefix);
   if (seenPrefix !== target.cal_prefix) {
     setSeenPrefix(target.cal_prefix);
-    setDraft(String(target.duct_cm || ""));
+    setDraft(storedMm ? String(storedMm) : "");
     setNote("");
   }
 
-  const save = async () => {
-    const cm = Number(draft);
-    if (!Number.isFinite(cm) || cm <= 0 || cm > 60) {
-      setNote("Enter a duct diameter in cm (e.g. 10.16 for 4\", 15.24 for 6\").");
+  const save = async (mmValue: number) => {
+    if (!Number.isFinite(mmValue) || mmValue < 40 || mmValue > 600) {
+      setNote("Enter a duct diameter in mm — 40 to 600 (100 mm is 4\", 150 mm is 6\").");
       return;
     }
     setBusy(true);
     try {
-      await call_service("input_number", "set_value", { entity_id: target.duct_entity, value: cm });
-      setNote("Saved.");
+      await call_service("input_number", "set_value", {
+        entity_id: target.duct_entity,
+        value: Number((mmValue / 10).toFixed(2)),
+      });
+      setDraft(String(mmValue));
+      setNote(`Saved ${mmValue} mm.`);
       onSaved();
     } catch (exc) {
       setNote(exc instanceof Error ? exc.message : "Could not save duct size");
@@ -68,23 +89,46 @@ export function DuctSizeField({ target, onSaved }: { target: FanCalTarget; onSav
 
   return (
     <div>
+      <p className="dsc-kpi-sub" style={{ margin: "0 0 6px" }}>
+        {target.label} duct — pick a common size or enter your own.
+      </p>
+      <div className="dsc-chip-row" style={{ gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+        {COMMON_DUCT_MM.map((mm) => (
+          <button
+            key={mm}
+            type="button"
+            className={`dsc-chip${storedMm === mm ? " dsc-chip--ok" : ""}`}
+            disabled={busy}
+            onClick={() => void save(mm)}
+          >
+            {INCH_LABEL[mm]} · {mm} mm
+          </button>
+        ))}
+      </div>
       <label>
-        {target.label} duct diameter (cm)
+        Custom diameter (mm)
         <input
           type="number"
-          step="0.01"
-          min="0"
-          max="60"
+          step="1"
+          min="40"
+          max="600"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
+          placeholder="e.g. 160"
         />
       </label>
       <div className="dsc-row-actions" style={{ marginTop: 6 }}>
-        <Button variant="secondary" disabled={busy} onClick={() => void save()}>
+        <Button variant="secondary" disabled={busy} onClick={() => void save(Number(draft))}>
           Save duct size
         </Button>
       </div>
       {note ? <p className="dsc-kpi-sub">{note}</p> : null}
+      {/* Measure the inside of the duct. Trade sizes name the nominal bore, but a reducer or
+          an insulated sleeve can leave the actual airway smaller than the label. */}
+      <p className="dsc-kpi-sub" style={{ margin: "4px 0 0" }}>
+        Use the internal diameter of the duct the anemometer sits in — a reducer or a liner
+        makes the real airway smaller than the size printed on the sleeve.
+      </p>
     </div>
   );
 }
@@ -139,7 +183,7 @@ function TargetRow({ target, onCleared }: { target: FanCalTarget; onCleared: () 
         <strong>{target.label}</strong>
         <StatusChip label={chip} tone={tone} />
         <span className="dsc-muted" style={{ fontSize: "var(--dsc-fs-sm)" }}>
-          rated {target.nameplate_cfm || "—"} CFM · {target.duct_cm || "—"} cm duct
+          rated {target.nameplate_cfm || "—"} CFM · {target.duct_cm ? `${Math.round(target.duct_cm * 10)} mm` : "—"} duct
         </span>
       </div>
 

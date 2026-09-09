@@ -213,9 +213,8 @@ function FanCalibrateWizard() {
           {ductTarget ? (
             <div style={{ margin: "12px 0" }}>
               <p className="dsc-kpi-sub" style={{ margin: "0 0 6px" }}>
-                Your anemometer reads m/s; airflow is m/s × the duct's cross-section. Check this
-                matches the duct you are about to measure — {ductTarget.duct_cm} cm is{" "}
-                {(ductTarget.duct_cm / 2.54).toFixed(0)}″.
+                Your anemometer reads m/s; airflow is m/s × the duct's cross-section, so this has to
+                match the duct you are about to measure.
               </p>
               <DuctSizeField target={ductTarget} onSaved={() => void reloadCal()} />
             </div>
@@ -248,7 +247,7 @@ function FanCalibrateWizard() {
         <Card className="dsc-glass" title={`2 · Sample ${target.label} @ ${stepPct}%`} icon="gauge">
           <p className="dsc-honesty">
             Set the fan to {stepPct}%. Hold the anemometer at the duct centreline and enter the measured m/s —
-            converted to CFM using the {ductTarget?.duct_cm ?? "—"} cm duct.
+            converted to CFM using the {ductTarget ? Math.round(ductTarget.duct_cm * 10) : "—"} mm duct.
           </p>
           <p className="dsc-kpi-sub" style={{ margin: "4px 0 0" }}>
             Centreline runs faster than the duct average, so a single-point reading is an

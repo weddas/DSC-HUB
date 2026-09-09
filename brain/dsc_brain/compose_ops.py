@@ -52,11 +52,17 @@ CAL_DUCT_CM_HELPER: dict[str, str] = {
 # assertions — the wizard shows the diameter it is about to use and the operator can
 # correct it before sampling. The helpers existed in the UI but had never held a value on
 # any host, which is why nothing could have converted even if it had tried.
+#
+# Nominal METRIC trade sizes (150 / 100 mm), not converted inches (152.4 / 101.6): the desk
+# offers 100/125/150/200/250/300 mm as the common sizes, and a default outside that set left
+# a fresh install with no size highlighted and two vocabularies on one screen. The 1.5 %
+# diameter difference is ~3 % in area — far inside the error of the single centreline reading
+# the curve is built from, so matching the picker is worth more than the false precision.
 CAL_DUCT_CM_DEFAULT: dict[str, float] = {
-    "dsc_cal_cfm_out": 15.24,
-    "dsc_cal_cfm_recirc": 15.24,
-    "dsc_cal_cfm_intake_main": 10.16,
-    "dsc_cal_cfm_intake_clone": 10.16,
+    "dsc_cal_cfm_out": 15.0,
+    "dsc_cal_cfm_recirc": 15.0,
+    "dsc_cal_cfm_intake_main": 10.0,
+    "dsc_cal_cfm_intake_clone": 10.0,
 }
 
 

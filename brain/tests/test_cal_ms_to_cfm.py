@@ -27,19 +27,20 @@ from dsc_brain.compose_store import get_cal_points, get_helper, set_helper
 from dsc_brain.device_calibration import get_calibration
 
 CLONE = "dsc_cal_cfm_intake_clone"
-FOUR_INCH = 10.16
-SIX_INCH = 15.24
+# Nominal metric trade sizes, matching the desk's common-size picker.
+FOUR_INCH = 10.0
+SIX_INCH = 15.0
 
 
 def test_conversion_is_velocity_times_area() -> None:
-    # 5 m/s through a 4" duct: pi*(0.0508)^2 = 0.0081073 m2 -> 0.0405 m3/s -> 85.9 CFM.
+    # 5 m/s through a 100 mm duct: pi*(0.05)^2 = 0.0078540 m2 -> 0.0393 m3/s -> 83.2 CFM.
     area = math.pi * (FOUR_INCH / 200.0) ** 2
     assert ms_to_cfm(5.0, FOUR_INCH) == pytest.approx(5.0 * area * 2118.88, abs=0.05)
-    assert ms_to_cfm(5.0, FOUR_INCH) == 85.9
+    assert ms_to_cfm(5.0, FOUR_INCH) == 83.2
 
 
 def test_conversion_scales_with_area_not_diameter() -> None:
-    # 6" is 1.5x the diameter of 4", so 2.25x the airflow at the same velocity.
+    # 150 mm is 1.5x the diameter of 100 mm, so 2.25x the airflow at the same velocity.
     assert ms_to_cfm(5.0, SIX_INCH) == pytest.approx(2.25 * ms_to_cfm(5.0, FOUR_INCH), rel=0.001)
 
 
@@ -52,7 +53,7 @@ def test_the_live_2x4_readings_become_a_plausible_curve(temp_db) -> None:  # noq
     """The operator's actual numbers were fine; only the units were wrong."""
     readings = [5.0, 7.5, 8.0, 9.0]  # verbatim off the Pi, 2026-09-10
     cfm = [ms_to_cfm(v, FOUR_INCH) for v in readings]
-    assert cfm == [85.9, 128.8, 137.4, 154.6]
+    assert cfm == [83.2, 124.8, 133.1, 149.8]
     # ...and against the 200 CFM nameplate that is 43 %-77 %, inside the plausibility band
     # that had been rejecting the same measurements stored as "9 CFM".
     from dsc_brain.computed_ops import _curve_points_usable
@@ -90,7 +91,7 @@ def test_save_point_stores_the_reading_converted_not_the_models_own_estimate(tem
 
     assert out["reading_ms"] == 9.0
     assert out["duct_cm"] == FOUR_INCH
-    assert out["cfm"] == 154.6
+    assert out["cfm"] == 149.8
     assert out["step_pct"] == 100
 
 
@@ -99,11 +100,11 @@ def test_save_point_writes_both_stores_in_cfm(temp_db) -> None:  # noqa: ANN001
     cal_save_point()
 
     # The compose helper the brain falls back to...
-    assert get_cal_points(CLONE) == {50: 128.8}
+    assert get_cal_points(CLONE) == {50: 124.8}
     # ...and the device_calibration row it prefers. Same number, and CFM this time.
     rows = get_calibration(CLONE, "fan_cfm")
     assert len(rows) == 1
-    assert rows[0]["measured_value"] == 128.8
+    assert rows[0]["measured_value"] == 124.8
     assert rows[0]["unit"] == "CFM"
 
 
