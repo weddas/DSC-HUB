@@ -812,10 +812,19 @@ not a finding.
 Both were stated with more confidence than the evidence carried.
 
 **1. "A blocked ASGI event loop caused by SQLite lock contention."** I reasoned
-from the code — both `connect()` implementations run `executescript(SCHEMA)` with
-no WAL and no `busy_timeout` — to a cause, without ever looking at the server's
-own log. The log shows unbroken `200 OK`. Those SQLite facts are real and are
-still filed, but as a **latent** risk, not as the cause of anything observed.
+from the code — `connect()` runs `executescript(SCHEMA)` with no WAL and no
+`busy_timeout` — to a cause, without ever looking at the server's own log. The
+log shows unbroken `200 OK`. Those SQLite facts are real and are still filed,
+but as a **latent** risk, not as the cause of anything observed.
+
+I also under-scoped them, and a parallel finding in the tracker caught it. I
+wrote "both `connect()` implementations", naming two files. Re-counted with
+exact greps: `executescript` appears at **11 sites across 11 modules** —
+cameras, catalog, esphome_jobs, esphome_toolchain, hub_tunables,
+journal_storage, schedule_shift, settings, space_model, stage_rail, usb_flash —
+each running its own DDL on connect, across **65** `connect()` call sites in 33
+modules. A two-file fix would leave nine modules still taking a write lock on
+every read.
 
 **2. "My browser tab / my curls wedged it."** The operator is on
 **192.168.86.10 — the same IP I was testing from** — and had the dashboard open
