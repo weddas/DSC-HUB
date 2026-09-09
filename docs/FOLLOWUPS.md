@@ -4409,11 +4409,15 @@ All in the working tree, **not committed**. Tracker rows updated in Notion (DSC-
 **Verify:** `cd frontend && npx tsc --noEmit` → exit 0; `npm run build` → ok; `cd brain && python -m pytest -q` → 306 passed (paho flake did not surface).
 
 **red-flag (logged to tracker, not fixed):**
-- `appliance_driver.py:224-231` stale-hub failsafe skips `force`, so an OOS seat's physically-ON relay stays ON when the hub goes dark — **High**.
+- `appliance_driver.py:224-231` stale-hub failsafe skips `force`, so an OOS seat's physically-ON relay stays ON when the hub goes dark — **High**. *(re-check after tip `88a4faa` — driver now uses `force=True` on stale failsafe.)*
 - `control_ops.py:232` operator Sonoff flips bypass `_relay_commanded`; persist until demand changes.
 - `hub_native.py:209-212` `emit_proposal` only logs — brain never writes demand switches; confirm shadow-mode intent vs "brain is control SoT".
 - `fleet_state.py:96` raw view hardcodes `sensor.dsc_active_alert_count = 0`.
-- `call_service_sync` + `api_lock.py` asyncio.Lock/loop-binding hazard under contention (needs repro).
+- ~~`call_service_sync` + `api_lock.py` asyncio.Lock/loop-binding hazard~~ — **closed tip `88a4faa`**: `HostLock` is a cross-loop `threading.Lock` with 30 s bounded wait; see [`docs/brain/CONCURRENCY.md`](brain/CONCURRENCY.md).
+
+## 2026-09-09 — Brain concurrency tip `88a4faa` (docs)
+
+Code on master: HostLock, automation ticker, read-only `/fleet` + shared `/ws/fleet`, concurrent ESPHome ingest, `fleet_state_lock`, snapshot-fed appliance demands. Developer SoT added: `docs/brain/CONCURRENCY.md`. Tracker rows for the six concurrency findings → Fixed & Verified (unit coverage for HostLock + snapshot demands; live soak still operator judgment).
 
 **deferred:** automation ws-loop writes are fire-and-forget (log only, no `last_error`); `oos_seat` unconditional restore; per-condition truth values in rule summary; `SeatSnapshot→DeviceSeatSnapshot` only if brain adopts it; `BandChartKind "pot1".."pot4"`; `seatApi.smoke.ts` filename; Settings `seats` prop offers hub/panel/probe to the OOS picker (tracker Low).
 

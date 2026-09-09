@@ -40,7 +40,9 @@ Notion (canonical Wiki): [Product layers](https://app.notion.com/p/3b52b4cda3708
 - setpoints and modes it writes through `/control/service` (operator-confirmed),
 - Zigbee **tasks** (`zigbee_policies`: appliance OOS + banners),
 - **automation rules** (Sonoff cut-outs, operator-owned hub switches, ESP-clamped setpoints), and
-- the Sonoff **appliance driver**, which mirrors hub demand every 2 s and forces every relay OFF when the hub goes dark (also for out-of-service seats).
+- the Sonoff **appliance driver**, which mirrors hub demand every 2 s from the **ingest snapshot** (`hub.values["controls"]`) and forces every relay OFF when the hub seat goes stale (>45 s; also for out-of-service seats).
+
+**Concurrency (tip `88a4faa`, 2026-09-09).** Device sessions use cross-loop `HostLock` (not `asyncio.Lock`). The automation rule engine ticks every 2 s from lifespan — independent of any browser. `GET /fleet` and `/ws/fleet` are read-only (shared WS snapshot ≤1 s TTL). ESPHome ingest fetches seats concurrently; `FleetState` mutations take `fleet_state_lock()`. Developer SoT: [`docs/brain/CONCURRENCY.md`](brain/CONCURRENCY.md).
 
 **Decision 2026-09-06 — shadow mode stays.** Proposals do not become `*_demand` writes, because:
 
