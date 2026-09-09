@@ -130,8 +130,8 @@ def build_manifest() -> list[dict[str, Any]]:
              unit="%", minimum=-15, maximum=15, step=0.5, consumers=["climate", "overview"]),
         _row("global_modifiers.sensor_clamp", tier="brain", kind="clamp", section="sensors",
              default=mods["sensor_clamp"], label="Sensor clamps",
-             description="Readings outside these bounds are clamped and flagged. Read-only until the "
-                         "patch route accepts clamps (tracker: set_global_modifiers ignores sensor_clamp).",
+             description="Readings outside these bounds are rejected (shown as unavailable) and flagged; "
+                         "a temperature on the sensor's rail is always rejected.",
              consumers=["climate"]),
         # --- firmware / code constants shown for transparency -------------------
         _row("appliance_driver.STALE_SEC", tier="firmware", kind="number", section="sensors", default=45.0,

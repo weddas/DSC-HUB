@@ -267,7 +267,10 @@ class SetupPhaseBody(BaseModel):
 
 
 class SetupCommissionBody(BaseModel):
-    require_hub_online: bool = False
+    # None = let the brain decide from the wizard's own record: the hub is required online
+    # unless its flash was explicitly skipped (not_flashed:hub debt). Every caller used to
+    # pass False, which made the gate dead code.
+    require_hub_online: bool | None = None
 
 
 class SetupDebtBody(BaseModel):
@@ -293,8 +296,10 @@ class CalibrationWriteBody(BaseModel):
 class GlobalModifiersPatch(BaseModel):
     fan_demand_scale: float | None = None
     light_brightness_scale: float | None = None
+    moisture_dry_pct: float | None = None
     temp_offset_c: dict[str, float] | None = None
     rh_offset_pct: dict[str, float] | None = None
+    sensor_clamp: dict[str, dict[str, float]] | None = None
 
 
 class ProbeStationPatch(BaseModel):
@@ -638,9 +643,11 @@ def setup_debt(body: SetupDebtBody) -> dict[str, Any]:
 def setup_commission(body: SetupCommissionBody | None = None) -> dict[str, Any]:
     if _demo_mode():
         _demo_forbidden()
-    req_hub = bool(body.require_hub_online) if body else False
+    from .kit_commission import hub_expected_for_commission
+
+    req_hub = body.require_hub_online if body and body.require_hub_online is not None else hub_expected_for_commission()
     try:
-        return mark_commissioned(require_hub_online=req_hub)
+        return mark_commissioned(require_hub_online=bool(req_hub))
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
 
@@ -1703,7 +1710,12 @@ def settings_global_modifiers_patch(body: GlobalModifiersPatch) -> dict[str, Any
 
     before = get_global_modifiers()
     patch = body.model_dump(exclude_none=True)
-    saved = set_global_modifiers(patch)
+    try:
+        saved = set_global_modifiers(patch)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if "sensor_clamp" in patch:
+        journal_setting_change("Sensor clamps", before.get("sensor_clamp"), saved.get("sensor_clamp"), domain="sensors")
     for key, label in (("fan_demand_scale", "Fan demand scale"), ("light_brightness_scale", "Light brightness scale"), ("moisture_dry_pct", "Probe dry reference line")):
         if key in patch:
             journal_setting_change(label, before.get(key), saved.get(key), domain="brain")
@@ -1993,7 +2005,10 @@ def settings_esphome_devices() -> dict[str, Any]:
 
 @app.get("/settings/usb-flash/ports")
 def settings_usb_flash_ports() -> dict[str, Any]:
-    return {"ports": list_serial_ports()}
+    """`ports` may be flashed; `excluded` are present but never offered (Zigbee coordinator)."""
+    from .usb_flash import flash_targets
+
+    return flash_targets()
 
 
 @app.get("/settings/update")

@@ -2,6 +2,9 @@
 
 export type SetupState = {
   commissioned: boolean;
+  /** Derived by the brain from observable reality (fleet has reported) when the flag never flipped. */
+  commissioned_inferred?: boolean;
+  inferred_reason?: string;
   phase: string;
   debt: string[];
   version?: string;
@@ -30,11 +33,27 @@ export type UsbPort = {
   by_id?: string;
   vid_pid?: string;
   chip_hint?: string;
+  flashable?: boolean;
+  note?: string;
+};
+
+export type UsbRoleStatus = {
+  binary?: string;
+  chip?: string;
+  boot_mode_note?: string;
+  exists?: boolean;
+  size?: number;
+  sha256?: string | null;
+  valid?: boolean;
+  reason?: string;
 };
 
 export type UsbManifest = {
   kit_roles: string[];
-  roles: Record<string, { binary?: string; chip?: string; boot_mode_note?: string }>;
+  roles: Record<string, UsbRoleStatus>;
+  available_roles?: string[];
+  firmware_dir?: string;
+  firmware_dir_exists?: boolean;
 };
 
 async function readJson<T>(resp: Response): Promise<T> {
@@ -73,12 +92,12 @@ export async function postSetupDebt(item: string): Promise<SetupState> {
   );
 }
 
-export async function postSetupCommission(requireHubOnline = false): Promise<SetupState> {
+export async function postSetupCommission(requireHubOnline?: boolean): Promise<SetupState> {
   return readJson(
     await fetch("/setup/commission", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ require_hub_online: requireHubOnline }),
+      body: JSON.stringify(requireHubOnline == null ? {} : { require_hub_online: requireHubOnline }),
     }),
   );
 }

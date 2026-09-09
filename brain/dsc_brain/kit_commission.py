@@ -112,12 +112,39 @@ def _reconcile_flash_debt(debt: list[str], db_path: Path | None) -> list[str]:
     return pruned
 
 
+def _fleet_has_reported() -> tuple[bool, str]:
+    """(True, why) when the fleet has demonstrably run — a kit that predates the wizard has
+    kit_commissioned=false forever, and gating the destructive USB-flash step on that one
+    boolean dropped a live flowering grow into step 2 of the wizard."""
+    try:
+        fleet = get_fleet_state()
+    except Exception:  # noqa: BLE001
+        return False, ""
+    hub = getattr(fleet, "hub", None)
+    if hub is not None and getattr(hub, "last_seen", None):
+        return True, "hub has reported to this brain"
+    seen = [sid for sid, seat in (getattr(fleet, "pots", None) or {}).items() if getattr(seat, "last_seen", None)]
+    if seen:
+        return True, f"fleet seats have reported ({', '.join(sorted(seen))})"
+    return False, ""
+
+
+def hub_expected_for_commission(db_path: Path | None = None) -> bool:
+    """The go-live gate should demand an online hub unless its flash was explicitly skipped."""
+    return "not_flashed:hub" not in _debt_list(db_path)
+
+
 def get_setup_state(db_path: Path | None = None) -> dict[str, Any]:
     commissioned = get_setting(KEY_COMMISSIONED, "false", db_path).lower() == "true"
     phase_raw = get_setting(KEY_PHASE, "welcome", db_path) or "welcome"
     phase: str = phase_raw if phase_raw in VALID_PHASES else "welcome"
+    inferred, why = (False, "") if commissioned else _fleet_has_reported()
     return {
         "commissioned": commissioned,
+        # Derived from observable reality, never written back from a GET: the SPA treats
+        # commissioned OR commissioned_inferred as "do not arm the wizard".
+        "commissioned_inferred": inferred,
+        "inferred_reason": why,
         "phase": phase,
         "debt": _reconcile_flash_debt(_debt_list(db_path), db_path),
         "version": __version__,

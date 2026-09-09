@@ -136,7 +136,7 @@ export function SetupPage() {
     setBusy(true);
     setErr("");
     try {
-      await postSetupCommission(false);
+      await postSetupCommission(); // the brain decides: hub required unless its flash was skipped
       navigate("/overview");
     } catch (e: unknown) {
       setErr(String(e));
@@ -145,10 +145,16 @@ export function SetupPage() {
     }
   }
 
-  if (state?.commissioned) {
+  if (state?.commissioned || state?.commissioned_inferred) {
+    // A live grow whose kit predates the wizard has commissioned=false forever; gating the
+    // destructive USB-flash step on that one boolean dropped a flowering fleet into step 2.
     return (
       <div className="dsc-page">
-        <PageHeader icon="settings" title="Setup" subtitle="Kit already commissioned" />
+        <PageHeader
+          icon="settings"
+          title="Setup"
+          subtitle={state.commissioned ? "Kit already commissioned" : `Kit is live — ${state.inferred_reason || "the fleet has reported"}; the wizard stays parked`}
+        />
         <Button primary onClick={() => navigate("/overview")}>
           Open Overview
         </Button>
@@ -163,7 +169,7 @@ export function SetupPage() {
       <PageHeader
         icon="settings"
         title="Kit Setup"
-        subtitle={`DSC-HUB 8.0 · step ${idx + 1}/${PHASES.length}: ${phase}`}
+        subtitle={`DSC-HUB ${state?.version || "—"} · step ${idx + 1}/${PHASES.length}: ${phase}`}
       />
       {err ? <p className="dsc-honesty" style={{ color: "var(--dsc-danger, #c44)" }}>{err}</p> : null}
 
@@ -198,13 +204,21 @@ export function SetupPage() {
           <label>
             Role{" "}
             <select value={role} onChange={(e) => setRole(e.target.value)}>
-              {(manifest?.kit_roles || ["hub"]).map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
+              {(manifest?.kit_roles || ["hub"]).map((r) => {
+                const st = manifest?.roles?.[r];
+                const ok = st?.valid !== false;
+                return (
+                  <option key={r} value={r} disabled={!ok}>
+                    {r}
+                    {st ? (ok ? ` — ${Math.round((st.size || 0) / 1024)} KB` : ` — ${st.reason || "no image"}`) : ""}
+                  </option>
+                );
+              })}
             </select>
           </label>
+          {manifest && manifest.firmware_dir_exists === false ? (
+            <p className="dsc-honesty">No kit firmware directory on this brain ({manifest.firmware_dir}) — nothing here can be flashed.</p>
+          ) : null}
           <label style={{ display: "block", marginTop: 8 }}>
             Port{" "}
             <select value={port} onChange={(e) => setPort(e.target.value)}>
@@ -224,7 +238,7 @@ export function SetupPage() {
             </pre>
           ) : null}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
-            <Button primary disabled={busy} onClick={() => void onFlash()}>
+            <Button primary disabled={busy || !port || manifest?.roles?.[role]?.valid === false} onClick={() => void onFlash()}>
               Flash
             </Button>
             <Button disabled={busy} onClick={() => void onSkipFlash()}>

@@ -33,15 +33,17 @@ def plausible_vpd_kpa(value: float | None) -> bool:
 
 def finalize_hub_climate(values: dict) -> None:
     """Normalize VPD from live T/RH — hub template can be stomped by number-entity ingest."""
+    # plausible_vpd_kpa was defined with zero callers; an implausible recompute now drops
+    # the value instead of publishing it.
     tent_vpd = compute_vpd_kpa(values.get("temp_c"), values.get("rh_pct"))
     if tent_vpd is not None:
-        values["vpd_kpa"] = tent_vpd
+        values["vpd_kpa"] = tent_vpd if plausible_vpd_kpa(tent_vpd) else None
     clone_vpd = compute_vpd_kpa(values.get("clone_temp_c"), values.get("clone_rh_pct"))
     if clone_vpd is not None:
-        values["clone_vpd_kpa"] = clone_vpd
+        values["clone_vpd_kpa"] = clone_vpd if plausible_vpd_kpa(clone_vpd) else None
     room_vpd = compute_vpd_kpa(values.get("room_temp_c"), values.get("room_rh_pct"))
     if room_vpd is not None:
-        values["room_vpd_kpa"] = room_vpd
+        values["room_vpd_kpa"] = room_vpd if plausible_vpd_kpa(room_vpd) else None
     leaf_offset = values.get("leaf_offset_c")
     if leaf_offset is None:
         try:

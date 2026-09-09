@@ -529,6 +529,7 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
                 values["binaries"] = _hub_binaries_from_states(states, key_to_object, entities)
                 _apply_hub_climate_modifiers(values)
                 finalize_hub_climate(values)
+                _scrub_faulted_climate(values)
                 hub_fw = values.get("firmware_version")
                 if hub_fw:
                     fw = str(hub_fw).strip()
@@ -588,16 +589,58 @@ def _apply_hub_climate_modifiers(values: dict[str, Any]) -> None:
         ("clone_temp_c", "clone_rh_pct", "clone"),
         ("room_temp_c", "room_rh_pct", "room"),
     )
-    clamped = False
+    rejected: list[str] = []
     for t_key, rh_key, zone in pairs:
-        t, rh, c = apply_temp_rh_offsets(values.get(t_key), values.get(rh_key), zone)
-        if t is not None:
+        had_t = values.get(t_key) is not None
+        had_rh = values.get(rh_key) is not None
+        t, rh, bad = apply_temp_rh_offsets(values.get(t_key), values.get(rh_key), zone)
+        # Write the result back even when it is None: a rejected reading must not survive
+        # as the raw railed number it started as.
+        if had_t:
             values[t_key] = t
-        if rh is not None:
+            if t is None:
+                rejected.append(t_key)
+        if had_rh:
             values[rh_key] = rh
-        clamped = clamped or c
-    if clamped:
+            if rh is None:
+                rejected.append(rh_key)
+        if bad and not (had_t or had_rh):
+            rejected.append(zone)
+    if rejected:
         values["sensor_clamp_active"] = True
+        values["implausible"] = rejected
+
+
+# Which climate keys each hub fault binary vouches for.
+_FAULT_MASKS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("binary_sensor.dsc_hub_climate_sensor_fault", ("temp_c", "rh_pct", "vpd_kpa", "leaf_vpd_kpa")),
+    ("binary_sensor.dsc_hub_aux_sensor_fault", ("room_temp_c", "room_rh_pct", "room_vpd_kpa", "clone_temp_c", "clone_rh_pct", "clone_vpd_kpa", "clone_leaf_vpd_kpa")),
+)
+_VPD_FROM: tuple[tuple[str, str, tuple[str, ...]], ...] = (
+    ("temp_c", "rh_pct", ("vpd_kpa", "leaf_vpd_kpa")),
+    ("clone_temp_c", "clone_rh_pct", ("clone_vpd_kpa", "clone_leaf_vpd_kpa")),
+    ("room_temp_c", "room_rh_pct", ("room_vpd_kpa",)),
+)
+
+
+def _scrub_faulted_climate(values: dict[str, Any]) -> None:
+    """After offsets + VPD: honour the hub's own fault flags and never keep a VPD whose
+    inputs are gone. The hub template VPD would otherwise outlive a rejected T/RH."""
+    binaries = values.get("binaries") or {}
+    masked: list[str] = []
+    for eid, keys in _FAULT_MASKS:
+        if bool(binaries.get(eid)):
+            for k in keys:
+                if values.get(k) is not None:
+                    values[k] = None
+                    masked.append(k)
+    for t_key, rh_key, vpd_keys in _VPD_FROM:
+        if values.get(t_key) is None or values.get(rh_key) is None:
+            for k in vpd_keys:
+                if values.get(k) is not None:
+                    values[k] = None
+    if masked:
+        values["climate_fault_masked"] = masked
 
 
 def _hub_sensors_from_states(

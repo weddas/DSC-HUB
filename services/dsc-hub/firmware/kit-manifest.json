@@ -25,12 +25,6 @@
       "offset": "0x0",
       "boot_mode_note": "Hold BOOT if auto-reset fails."
     },
-    "bridge": {
-      "binary": "bridge.bin",
-      "chip": "esp32",
-      "offset": "0x0",
-      "boot_mode_note": "WT32-ETH01 — hold BOOT as needed; flash_mode dio."
-    },
     "heater": {
       "binary": "heater.bin",
       "chip": "esp8266",
