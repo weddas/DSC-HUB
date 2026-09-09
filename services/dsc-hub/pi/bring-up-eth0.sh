@@ -123,6 +123,41 @@ FallbackNTP=time.cloudflare.com time.google.com
   run_sudo systemctl restart systemd-timesyncd 2>/dev/null || true
 fi
 
+# Fleet NTP. The SoftAP subnet (10.42.0.0/24: hub, panel, pots, Sonoffs) has NO NAT to the
+# internet — only the docker subnets are masqueraded — so the hub's SNTP request to
+# pool.ntp.org resolves (dnsmasq) but no reply can ever route back. Its clock stayed
+# "unsynced" and the firmware, correctly, kept both photoperiod windows shut: tents dark
+# from the 17:30 hub reboot until this landed (2026-09-09). The Pi serves NTP itself
+# (chrony; upstream = the same numeric servers) and dsc-hub-ap-run.sh redirects the
+# fleet's port-123 traffic to it. chrony replaces systemd-timesyncd (apt handles the swap).
+# No `local stratum`: while the Pi itself is unsynced it must not hand the fleet a guess.
+if ! command -v chronyd >/dev/null 2>&1; then
+  if getent hosts deb.debian.org >/dev/null 2>&1; then
+    run_sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -q chrony >/dev/null 2>&1 \
+      || echo "chrony install failed — fleet NTP not served until it succeeds"
+  else
+    echo "no resolver for apt — skipping chrony install this pass"
+  fi
+fi
+if command -v chronyd >/dev/null 2>&1 && [ ! -f /etc/chrony/conf.d/dsc-hub.conf ]; then
+  printf '# DSC-HUB: the Pi is the NTP server for its SoftAP fleet (bring-up-eth0.sh).
+server 162.159.200.1 iburst
+server 162.159.200.123 iburst
+server 216.239.35.0 iburst
+server 216.239.35.4 iburst
+pool time.cloudflare.com iburst
+allow 10.42.0.0/24
+' > /tmp/dsc-chrony.conf
+  run_sudo install -m 0644 /tmp/dsc-chrony.conf /etc/chrony/conf.d/dsc-hub.conf
+  rm -f /tmp/dsc-chrony.conf
+  run_sudo systemctl enable --now chrony 2>/dev/null || true
+  run_sudo systemctl restart chrony 2>/dev/null || true
+fi
+if command -v iptables >/dev/null 2>&1 && ip link show wlan0 >/dev/null 2>&1; then
+  run_sudo iptables -t nat -C PREROUTING -i wlan0 -p udp --dport 123 -j REDIRECT --to-ports 123 2>/dev/null \
+    || run_sudo iptables -t nat -A PREROUTING -i wlan0 -p udp --dport 123 -j REDIRECT --to-ports 123 || true
+fi
+
 # Docker: prefer IPv4 DNS (AP-only Pi had broken IPv6 resolver). Only meaningful
 # now that eth0 actually has an uplink.
 if [ ! -f /etc/docker/daemon.json ] || ! grep -q '"dns"' /etc/docker/daemon.json 2>/dev/null; then

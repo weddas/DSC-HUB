@@ -103,6 +103,12 @@ dhcp-option=option:router,${AP_NET}
 dhcp-option=option:dns-server,${AP_NET}
 domain=dsc-brain.local
 address=/dsc-brain.local/${AP_NET}
+# Fleet NTP answers from the Pi (chrony): the SoftAP subnet has no NAT, so ESPHome's default
+# pool.ntp.org servers resolve to the Pi. dsc-hub-ap-run.sh also REDIRECTs udp/123 as belt
+# and braces (2026-09-09: hub clock never synced, photoperiod windows stayed shut).
+address=/pool.ntp.org/${AP_NET}
+address=/time.cloudflare.com/${AP_NET}
+address=/time.google.com/${AP_NET}
 # Static reservations — MACs from Settings inventory after first flash
 dhcp-host=10.42.0.10,dsc-hub
 dhcp-host=10.42.0.11,dsc-control
