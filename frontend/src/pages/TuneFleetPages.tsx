@@ -5,9 +5,7 @@ import { LearningWizard } from "../components/LearningWizard";
 import { TankCutaway } from "../components/TankCutaway";
 import { KitPulse } from "../components/KitPulse";
 import { HubLinkLine } from "../components/HubLinkLine";
-import { CfmTrustLine } from "../components/CfmBadge";
 import { useEntityBus } from "../hooks/useEntityBus";
-import { resolveCfm } from "../lib/cfmProvenance";
 import { buildKitNodesFromFleet, kitInServiceCount, type KitNode } from "../lib/kitInventory";
 import { useFleet } from "../hooks/useFleet";
 import { useInspector } from "../components/InspectorHost";
@@ -50,15 +48,11 @@ export function TuneLearningPage() {
 }
 
 export function FleetOverviewPage() {
-  const { state, available, num } = useEntityBus();
+  const { state, num } = useEntityBus();
   const fleet = useFleet();
   const inspector = useInspector();
   const kit: KitNode[] = buildKitNodesFromFleet(fleet);
   const svc = kitInServiceCount(kit);
-  const out = resolveCfm("sensor.dsc_cfm_exhaust_out_allocated", "sensor.dsc_cfm_exhaust_out", {
-    available,
-    num,
-  });
   const openNode = (node: KitNode) =>
     inspector.open({
       entityId: node.entityId,
@@ -115,7 +109,6 @@ export function FleetOverviewPage() {
             }
             tone={num("sensor.dsc_active_alert_count", 0) === 0 ? "ok" : "bad"}
           />
-          <CfmTrustLine readings={[out]} />
         </div>
 
         <div className="dsc-col-12">
