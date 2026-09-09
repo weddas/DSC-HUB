@@ -284,7 +284,7 @@ Legend for the **Today** column: `UI` shown in Settings now · `desk` editable o
 | Setting | Default | Today | Tier | Proposed home | Notes |
 |---|---|---|---|---|---|
 | Per-zone temp / RH offsets | 0 | `UI` (Brain) | N | Sensors › Offsets | From 3.6. |
-| Sensor clamps (T −5…50 °C, RH 0…100 %) | `global_modifiers.sensor_clamp` | `const` (read by `apply_temp_rh_offsets`, not patchable) | N | Sensors › Offsets › Advanced | `set_global_modifiers` ignores `sensor_clamp`; add it. |
+| Sensor clamps (T −5…**45** °C, RH 0…100 %) | `global_modifiers.sensor_clamp` | `UI`/API (patchable + read back; tip `17aa6bd`) | N | Sensors › Offsets › Advanced | Reject outside bounds (do not clamp-to-rail). See [`docs/brain/PLAUSIBILITY.md`](../brain/PLAUSIBILITY.md). |
 | DHT disagreement thresholds (ΔT 4 °C, ΔRH 15 %) | panel `input_number.dsc_dht_delta_*` | `inspector` | H | Sensors › Trust | |
 | Peer MAD thresholds (pH 0.6, EC 250, moisture 12) | panel `input_number.dsc_trust_mad_*` | `inspector` | H | Sensors › Trust | |
 | Stuck-rate max 0.02 %/h, stuck-on 45 min, MAD-on 20 min, DHT on 15 / off 5 min | `sensor_trust.py` | `const` | F → N | Sensors › Trust › Advanced | Promote to brain KV with defaults; until then read-only with the file named. |

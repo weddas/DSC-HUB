@@ -24,7 +24,8 @@ Notion (canonical Wiki): [Product layers](https://app.notion.com/p/3b52b4cda3708
 | [`SETUP.md`](../SETUP.md) | SoftAP kit unbox (product path) |
 | [`INSTALL.md`](../INSTALL.md) | HA lab bring-up (scaffold) |
 | [`docs/HA-SCAFFOLD.md`](HA-SCAFFOLD.md) | Promote-don't-deepen rules |
-| [`docs/brain/`](brain/) | Specs: decision loop, web UI, Pi appliance path |
+| [`docs/brain/`](brain/) | Specs: decision loop, web UI, Pi appliance path, kit setup, climate plausibility |
+| [`docs/ops/USB-FLASH.md`](ops/USB-FLASH.md) | Baked-binary USB flash guards (vs ESPHome OTA) |
 
 ## Phases
 
