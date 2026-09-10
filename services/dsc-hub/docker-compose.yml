@@ -65,6 +65,12 @@ services:
       - ${DSC_CAMERA_DEVICE:-/dev/null}:/dev/video0
       - ${DSC_CAMERA_DEVICE_2:-/dev/null}:/dev/video1
     volumes:
+      # Removable drives, for Settings › Devices › Cameras › Recording storage. rslave is
+      # the point: the brain outlives every insert, so it must SEE mounts made after it
+      # started. / is shared on this host, so a stick mounted at /media/<label> propagates
+      # in. Read-write because offloading recordings onto the drive is the whole feature;
+      # the host mounts these nosuid,nodev,noexec (see pi/dsc-automount).
+      - /media:/media:rslave
       - ${DSC_DATA:-/var/lib/dsc-hub}/ops:/data
       - ${DSC_DATA:-/var/lib/dsc-hub}/firmware:/firmware:ro
       - ${DSC_DATA:-/var/lib/dsc-hub}/cannalib:/cannalib:ro

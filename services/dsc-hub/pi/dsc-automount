@@ -1,0 +1,82 @@
+#!/bin/bash
+# Mount a freshly-inserted removable filesystem under /media, for the brain to offload to.
+#
+# Invoked per-device by dsc-usb-automount@.service, which udev starts (see
+# 99-dsc-automount.rules). The rule is deliberately broad and ALL the safety lives here,
+# because a rule is a one-line match that is easy to get subtly wrong and impossible to test.
+#
+# THE GUARD THAT MATTERS: this Pi boots from a USB-attached SSD. /dev/sda sits on the USB
+# bus (usb2/2-1, uas driver), and sda1//boot/firmware and sda2 (/) both report
+# ID_FS_USAGE=filesystem. A rule matching "USB block device with a filesystem" therefore
+# matches the running root filesystem. Anything on the same physical disk as / is refused
+# below, and anything already mounted is refused, before a mount is ever attempted.
+#
+# Mounts are transient units created with `systemd-mount --collect`, so they are bound to
+# the device unit: pulling the drive tears the mount down without anything else running.
+set -euo pipefail
+
+DEV="${1:-}"
+LOG="logger -t dsc-automount"
+
+[ -n "$DEV" ] || { $LOG "no device given"; exit 0; }
+[ -b "$DEV" ] || { $LOG "$DEV is not a block device"; exit 0; }
+
+# --- refuse anything on the disk that holds / or /boot ----------------------------------
+disk_of() { lsblk -no PKNAME "$1" 2>/dev/null | head -1; }
+
+CAND_DISK="$(disk_of "$DEV")"
+[ -n "$CAND_DISK" ] || CAND_DISK="$(basename "$DEV")"
+
+for critical in / /boot /boot/firmware; do
+    src="$(findmnt -n -o SOURCE --target "$critical" 2>/dev/null | head -1 || true)"
+    [ -n "$src" ] || continue
+    sys_disk="$(disk_of "$src")"
+    [ -n "$sys_disk" ] || sys_disk="$(basename "$src")"
+    if [ "$CAND_DISK" = "$sys_disk" ]; then
+        $LOG "refusing $DEV: same disk ($CAND_DISK) as $critical — this Pi boots from USB"
+        exit 0
+    fi
+done
+
+# --- refuse anything already mounted ----------------------------------------------------
+if findmnt -n -S "$DEV" >/dev/null 2>&1; then
+    $LOG "skipping $DEV: already mounted"
+    exit 0
+fi
+
+# --- only real filesystems --------------------------------------------------------------
+eval "$(udevadm info -q property --export -n "$DEV" 2>/dev/null | grep -E '^ID_FS_(USAGE|TYPE|LABEL)=' || true)"
+if [ "${ID_FS_USAGE:-}" != "filesystem" ]; then
+    $LOG "skipping $DEV: ID_FS_USAGE=${ID_FS_USAGE:-none}"
+    exit 0
+fi
+
+# --- where it lands ---------------------------------------------------------------------
+# Sanitised: a label is arbitrary text off a stranger's drive and ends up in a path.
+name="$(printf '%s' "${ID_FS_LABEL:-}" | tr -c 'A-Za-z0-9._-' '_' | sed 's/^_*//; s/_*$//')"
+[ -n "$name" ] && [ "$name" != "." ] && [ "$name" != ".." ] || name="$(basename "$DEV")"
+MOUNT="/media/$name"
+n=2
+while mountpoint -q "$MOUNT" 2>/dev/null || { [ -d "$MOUNT" ] && [ -n "$(ls -A "$MOUNT" 2>/dev/null)" ]; }; do
+    MOUNT="/media/${name}-${n}"
+    n=$((n + 1))
+    [ "$n" -gt 20 ] && { $LOG "giving up finding a free mount point for $DEV"; exit 0; }
+done
+
+# --- options ----------------------------------------------------------------------------
+# nosuid,nodev,noexec throughout: this is someone's removable drive, not system storage.
+# FAT and exFAT carry no unix ownership, so it is assigned at mount time; umask 0000 keeps
+# the drive writable by both the brain container (root) and the dsc user over ssh.
+case "${ID_FS_TYPE:-}" in
+    vfat|exfat|msdos) OPTS="rw,nosuid,nodev,noexec,uid=0,gid=0,umask=0000,flush" ;;
+    ntfs|ntfs3)       OPTS="rw,nosuid,nodev,noexec,uid=0,gid=0,umask=0000" ;;
+    *)                OPTS="rw,nosuid,nodev,noexec" ;;
+esac
+
+mkdir -p "$MOUNT"
+if systemd-mount --no-block --collect --options="$OPTS" --type="${ID_FS_TYPE:-auto}" "$DEV" "$MOUNT"; then
+    $LOG "mounted $DEV (${ID_FS_TYPE:-auto}) at $MOUNT"
+else
+    $LOG "failed to mount $DEV at $MOUNT"
+    rmdir "$MOUNT" 2>/dev/null || true
+fi

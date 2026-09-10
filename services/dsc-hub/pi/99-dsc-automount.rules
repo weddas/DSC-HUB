@@ -1,0 +1,13 @@
+# Removable media -> /media, so the brain can offload recordings onto a drive.
+#
+# Deliberately BROAD: every block device with a filesystem, USB or SD card. All of the
+# safety is in /usr/local/sbin/dsc-automount, because a udev rule is a one-line match that
+# cannot be unit-tested, and this Pi boots from a USB-attached SSD whose partitions look
+# exactly like removable media to udev. The script refuses anything sharing a disk with /
+# or /boot/firmware, and anything already mounted.
+ACTION=="add", SUBSYSTEM=="block", KERNEL=="sd*|mmcblk*", ENV{DEVTYPE}=="partition", \
+  ENV{ID_FS_USAGE}=="filesystem", ENV{SYSTEMD_WANTS}+="dsc-usb-automount@%k.service"
+
+# Whole-disk filesystems (a stick formatted without a partition table).
+ACTION=="add", SUBSYSTEM=="block", KERNEL=="sd*", ENV{DEVTYPE}=="disk", \
+  ENV{ID_FS_USAGE}=="filesystem", ENV{SYSTEMD_WANTS}+="dsc-usb-automount@%k.service"

@@ -1,0 +1,14 @@
+# Mount one removable filesystem, started by udev (99-dsc-automount.rules).
+#
+# A systemd unit rather than udev RUN+= : udev kills anything still running when the event
+# finishes, so mounting from a rule is a race. systemd owns the process lifetime here, and
+# the mount itself is a transient unit bound to the device, so unplugging cleans it up.
+[Unit]
+Description=DSC-HUB automount for %I
+BindsTo=%i.device
+After=%i.device
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+ExecStart=/usr/local/sbin/dsc-automount /dev/%I
