@@ -286,8 +286,9 @@ def test_hub_ingest_informational_oids_mapped() -> None:
     stay ingest-only: no control-proxy (ENTITY_TO_OID) rows.
     """
     # switches — hub-side in-service flags, *_auto ladder gates, mat votes
-    assert HUB_SWITCH_OID_TO_ENTITY["pot3_in_service"] == "switch.dsc_hub_pot3_in_service"
-    assert HUB_SWITCH_OID_TO_ENTITY["pot3_in_service_switch"] == "switch.dsc_hub_pot3_in_service"
+    # Representative sample only — pot1, because pot3/pot4 were removed on 2026-09-10.
+    assert HUB_SWITCH_OID_TO_ENTITY["pot1_in_service"] == "switch.dsc_hub_pot1_in_service"
+    assert HUB_SWITCH_OID_TO_ENTITY["pot1_in_service_switch"] == "switch.dsc_hub_pot1_in_service"
     assert HUB_SWITCH_OID_TO_ENTITY["ac_in_service"] == "switch.dsc_hub_ac_in_service"
     assert HUB_SWITCH_OID_TO_ENTITY["heater_auto"] == "switch.dsc_hub_heater_auto"
     assert HUB_SWITCH_OID_TO_ENTITY["growmat_auto_switch"] == "switch.dsc_hub_grow_mat_auto"
@@ -323,7 +324,7 @@ def test_hub_ingest_informational_oids_mapped() -> None:
     # Manual light hold is operator-cleared via control proxy (Pass 5).
     assert HUB_SWITCH_ENTITY_TO_OID["switch.dsc_hub_manual_light_hold"] == "manual_light_hold_switch"
     # ingest-only: informational entities gain no write/control-proxy rows
-    assert "switch.dsc_hub_pot3_in_service" not in HUB_SWITCH_ENTITY_TO_OID
+    assert "switch.dsc_hub_pot1_in_service" not in HUB_SWITCH_ENTITY_TO_OID
     assert "switch.dsc_hub_heater_auto" not in HUB_SWITCH_ENTITY_TO_OID
     # S2 (2026-09-07): hub numbers are brain-owned tunables now -- every number has a
     # write row keyed by its firmware slug so hub_tunables can push desired values.
@@ -348,14 +349,14 @@ def test_hub_ingest_informational_states_flow() -> None:
         5: SimpleNamespace(state="DSC-Brain"),
     }
     key_to_object = {
-        1: "pot3_in_service",
+        1: "pot1_in_service",
         2: "ladder_wait_hum",
         3: "wifi_rssi",
         4: "ota_blocked_bs",
         5: "wifi_ssid",
     }
     controls = _hub_controls_from_states(states, key_to_object, [])
-    assert controls["switch.dsc_hub_pot3_in_service"]["state"] == "on"
+    assert controls["switch.dsc_hub_pot1_in_service"]["state"] == "on"
     assert controls["number.dsc_hub_ladder_wait_hum"]["state"] == "45.0"
     sensors = _hub_sensors_from_states(states, key_to_object)
     assert sensors["wifi_rssi"] == -61.0

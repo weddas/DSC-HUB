@@ -625,8 +625,6 @@ ota:
 #    DSC-HUB    84:1F:E8:16:E6:60   192.168.86.33   dsc-hub.local
 #    DSC-Probe #1  8C:4F:00:27:E0:10   192.168.86.47   dsc_probe1.local
 #    DSC-Probe #2  F0:24:F9:59:C3:14   192.168.86.39   dsc_probe2.local
-#    DSC-Probe #3  A0:A3:B3:90:DA:B0   192.168.86.40   dsc_probe3.local
-#    DSC-Probe #4  EC:E3:34:7B:E7:A8   192.168.86.49   dsc_probe4.local
 #
 #  FLASH-ORDER + PREREQUISITES:
 #   1. Add `espnow_key: "<random string>"` to secrets.yaml on the hub
@@ -662,10 +660,6 @@ packet_transport:
       - name: dsc_probe1
         encryption: ${espnow_key}
       - name: dsc_probe2
-        encryption: ${espnow_key}
-      - name: dsc_probe3
-        encryption: ${espnow_key}
-      - name: dsc_probe4
         encryption: ${espnow_key}
 
 # Time: SNTP only (internet-synced, HA-independent). The photoperiod holds
@@ -792,14 +786,6 @@ globals:
     restore_value: true
     initial_value: 'true'
   - id: mat_vote_2
-    type: bool
-    restore_value: true
-    initial_value: 'true'
-  - id: mat_vote_3
-    type: bool
-    restore_value: true
-    initial_value: 'false'
-  - id: mat_vote_4
     type: bool
     restore_value: true
     initial_value: 'true'
@@ -1189,14 +1175,6 @@ globals:
     type: bool
     restore_value: true
     initial_value: 'true'
-  - id: pot3_in_service
-    type: bool
-    restore_value: true
-    initial_value: 'false'
-  - id: pot4_in_service
-    type: bool
-    restore_value: true
-    initial_value: 'true'
   - id: esc_clone_dry_since         # clone-humidifier ladder timer
     type: uint32_t
     restore_value: false
@@ -1362,27 +1340,11 @@ globals:
     type: uint32_t
     restore_value: false
     initial_value: '0'
-  - id: rz_now_3_at
-    type: uint32_t
-    restore_value: false
-    initial_value: '0'
-  - id: rz_now_4_at
-    type: uint32_t
-    restore_value: false
-    initial_value: '0'
   - id: rz_rx_1_at
     type: uint32_t
     restore_value: false
     initial_value: '0'
   - id: rz_rx_2_at
-    type: uint32_t
-    restore_value: false
-    initial_value: '0'
-  - id: rz_rx_3_at
-    type: uint32_t
-    restore_value: false
-    initial_value: '0'
-  - id: rz_rx_4_at
     type: uint32_t
     restore_value: false
     initial_value: '0'
@@ -1958,26 +1920,6 @@ switch:
       - globals.set: {id: mat_vote_2, value: 'true'}
     turn_off_action:
       - globals.set: {id: mat_vote_2, value: 'false'}
-  - platform: template
-    name: "Mat Vote Pot 3"
-    id: mat_vote_3_switch
-    icon: "mdi:numeric-3-circle"
-    entity_category: config
-    lambda: 'return id(mat_vote_3);'
-    turn_on_action:
-      - globals.set: {id: mat_vote_3, value: 'true'}
-    turn_off_action:
-      - globals.set: {id: mat_vote_3, value: 'false'}
-  - platform: template
-    name: "Mat Vote Pot 4"
-    id: mat_vote_4_switch
-    icon: "mdi:numeric-4-circle"
-    entity_category: config
-    lambda: 'return id(mat_vote_4);'
-    turn_on_action:
-      - globals.set: {id: mat_vote_4, value: 'true'}
-    turn_off_action:
-      - globals.set: {id: mat_vote_4, value: 'false'}
 
 
   # --- In-service gates (HA toggles sync these; Full Auto never overrides off) ---
@@ -2027,28 +1969,6 @@ switch:
       - globals.set: {id: pot2_in_service, value: 'false'}
       - globals.set: {id: mat_vote_2, value: 'false'}
       - lambda: 'id(mat_vote_2_switch).publish_state(false);'
-  - platform: template
-    name: "POT3 In Service"
-    id: pot3_in_service_switch
-    icon: "mdi:flower-outline"
-    lambda: 'return id(pot3_in_service);'
-    turn_on_action:
-      - globals.set: {id: pot3_in_service, value: 'true'}
-    turn_off_action:
-      - globals.set: {id: pot3_in_service, value: 'false'}
-      - globals.set: {id: mat_vote_3, value: 'false'}
-      - lambda: 'id(mat_vote_3_switch).publish_state(false);'
-  - platform: template
-    name: "POT4 In Service"
-    id: pot4_in_service_switch
-    icon: "mdi:flower"
-    lambda: 'return id(pot4_in_service);'
-    turn_on_action:
-      - globals.set: {id: pot4_in_service, value: 'true'}
-    turn_off_action:
-      - globals.set: {id: pot4_in_service, value: 'false'}
-      - globals.set: {id: mat_vote_4, value: 'false'}
-      - lambda: 'id(mat_vote_4_switch).publish_state(false);'
 
   - platform: template
     name: "AC Auto"
@@ -3685,24 +3605,6 @@ sensor:
       - lambda: |-
           id(rz_rx_2_at) = millis();
           if (!isnan(x) && x > 5.0f && x < 45.0f) { id(rz_now_2_at) = millis(); id(last_valid_rootzone_time) = millis(); }
-  - platform: packet_transport
-    provider: dsc_probe3
-    remote_id: soil_temperature
-    id: rz_now_3
-    internal: true
-    on_value:
-      - lambda: |-
-          id(rz_rx_3_at) = millis();
-          if (!isnan(x) && x > 5.0f && x < 45.0f) { id(rz_now_3_at) = millis(); id(last_valid_rootzone_time) = millis(); }
-  - platform: packet_transport
-    provider: dsc_probe4
-    remote_id: soil_temperature
-    id: rz_now_4
-    internal: true
-    on_value:
-      - lambda: |-
-          id(rz_rx_4_at) = millis();
-          if (!isnan(x) && x > 5.0f && x < 45.0f) { id(rz_now_4_at) = millis(); id(last_valid_rootzone_time) = millis(); }
 
 # ==========================================
 # 7. BINARY SENSORS (status + UI buttons)
@@ -3815,18 +3717,6 @@ binary_sensor:
     device_class: connectivity
     entity_category: diagnostic
     lambda: 'return id(rz_rx_2_at) != 0 && (millis() - id(rz_rx_2_at)) < 150000;'
-  - platform: template
-    name: "POT3 ESP-NOW Link"
-    id: pot3_espnow_link
-    device_class: connectivity
-    entity_category: diagnostic
-    lambda: 'return id(rz_rx_3_at) != 0 && (millis() - id(rz_rx_3_at)) < 150000;'
-  - platform: template
-    name: "POT4 ESP-NOW Link"
-    id: pot4_espnow_link
-    device_class: connectivity
-    entity_category: diagnostic
-    lambda: 'return id(rz_rx_4_at) != 0 && (millis() - id(rz_rx_4_at)) < 150000;'
 
 # ==========================================
 # 8. SCRIPTS  (stage engine + climate + photoperiod)
@@ -4480,16 +4370,14 @@ script:
                   bool fresh = now_at != 0 && (nowms - now_at) < 150000;
                   return fresh ? now_v : NAN;
                 };
-                float probes[4] = {
+                // Two probes since 2026-09-10; pot3/pot4 were retired and their
+                // hardware is gone, so there is nothing to receive from them.
+                float probes[2] = {
                   pick(id(rz_now_1).state, id(rz_now_1_at)),
-                  pick(id(rz_now_2).state, id(rz_now_2_at)),
-                  pick(id(rz_now_3).state, id(rz_now_3_at)),
-                  pick(id(rz_now_4).state, id(rz_now_4_at)) };
-                bool vote[4] = {
+                  pick(id(rz_now_2).state, id(rz_now_2_at)) };
+                bool vote[2] = {
                   id(mat_vote_1) && id(pot1_in_service),
-                  id(mat_vote_2) && id(pot2_in_service),
-                  id(mat_vote_3) && id(pot3_in_service),
-                  id(mat_vote_4) && id(pot4_in_service) };
+                  id(mat_vote_2) && id(pot2_in_service) };
                 for (int i = 0; i < 4; i++) {
                   if (!vote[i]) continue;   // operator excluded this pot
                   float p = probes[i];
@@ -5648,9 +5536,7 @@ interval:
             };
             bool have =
               live(id(mat_vote_1) && id(pot1_in_service), id(rz_now_1_at), id(rz_now_1).state) ||
-              live(id(mat_vote_2) && id(pot2_in_service), id(rz_now_2_at), id(rz_now_2).state) ||
-              live(id(mat_vote_3) && id(pot3_in_service), id(rz_now_3_at), id(rz_now_3).state) ||
-              live(id(mat_vote_4) && id(pot4_in_service), id(rz_now_4_at), id(rz_now_4).state);
+              live(id(mat_vote_2) && id(pot2_in_service), id(rz_now_2_at), id(rz_now_2).state);
             if (have) id(last_valid_rootzone_time) = millis();
           }
           bool rz_stale = (millis() - id(last_valid_rootzone_time)) > 300000;

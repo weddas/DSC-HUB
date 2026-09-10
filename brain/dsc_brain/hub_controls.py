@@ -29,8 +29,6 @@ HUB_SWITCH_ENTITY_TO_OID: dict[str, str] = {
     "switch.dsc_hub_lock_wifi_ap": "lock_wifi_ap",
     "switch.dsc_hub_mat_vote_pot_1": "mat_vote_pot_1",
     "switch.dsc_hub_mat_vote_pot_2": "mat_vote_pot_2",
-    "switch.dsc_hub_mat_vote_pot_3": "mat_vote_pot_3",
-    "switch.dsc_hub_mat_vote_pot_4": "mat_vote_pot_4",
     # Brain-owned stage presets gate (firmware v4 + S2): when on and the API is up, the
     # hub's apply_stage defers its numeric writes to the brain's stage_rail table.
     "switch.dsc_hub_brain_stage_targets": "brain_stage_targets",
@@ -80,10 +78,6 @@ HUB_SWITCH_OID_TO_ENTITY: dict[str, str] = {
     "mat_vote_1_switch": "switch.dsc_hub_mat_vote_pot_1",
     "mat_vote_pot_2": "switch.dsc_hub_mat_vote_pot_2",
     "mat_vote_2_switch": "switch.dsc_hub_mat_vote_pot_2",
-    "mat_vote_pot_3": "switch.dsc_hub_mat_vote_pot_3",
-    "mat_vote_3_switch": "switch.dsc_hub_mat_vote_pot_3",
-    "mat_vote_pot_4": "switch.dsc_hub_mat_vote_pot_4",
-    "mat_vote_4_switch": "switch.dsc_hub_mat_vote_pot_4",
     "ac_in_service": "switch.dsc_hub_ac_in_service",
     "ac_in_service_switch": "switch.dsc_hub_ac_in_service",
     "clone_humidifier_in_service": "switch.dsc_hub_clone_humidifier_in_service",
@@ -92,10 +86,6 @@ HUB_SWITCH_OID_TO_ENTITY: dict[str, str] = {
     "pot1_in_service_switch": "switch.dsc_hub_pot1_in_service",
     "pot2_in_service": "switch.dsc_hub_pot2_in_service",
     "pot2_in_service_switch": "switch.dsc_hub_pot2_in_service",
-    "pot3_in_service": "switch.dsc_hub_pot3_in_service",
-    "pot3_in_service_switch": "switch.dsc_hub_pot3_in_service",
-    "pot4_in_service": "switch.dsc_hub_pot4_in_service",
-    "pot4_in_service_switch": "switch.dsc_hub_pot4_in_service",
 }
 
 HUB_NUMBER_ENTITY_TO_OID: dict[str, str] = {
@@ -390,12 +380,6 @@ HUB_BINARY_OID_TO_ENTITY: dict[str, str] = {
     "pot2_espnow_link": "binary_sensor.dsc_hub_pot2_esp_now_link",
     "pot2_esp_now_link": "binary_sensor.dsc_hub_pot2_esp_now_link",
     "pot2_esp-now_link": "binary_sensor.dsc_hub_pot2_esp_now_link",
-    "pot3_espnow_link": "binary_sensor.dsc_hub_pot3_esp_now_link",
-    "pot3_esp_now_link": "binary_sensor.dsc_hub_pot3_esp_now_link",
-    "pot3_esp-now_link": "binary_sensor.dsc_hub_pot3_esp_now_link",
-    "pot4_espnow_link": "binary_sensor.dsc_hub_pot4_esp_now_link",
-    "pot4_esp_now_link": "binary_sensor.dsc_hub_pot4_esp_now_link",
-    "pot4_esp-now_link": "binary_sensor.dsc_hub_pot4_esp_now_link",
     # --- Informational (non-critical) link/heal diagnostics — not in any alert list.
     "ha_link_status": "binary_sensor.dsc_hub_ha_link_status",
     "ha_connected": "binary_sensor.dsc_hub_ha_link_status",
