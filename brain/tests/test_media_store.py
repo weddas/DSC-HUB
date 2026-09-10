@@ -43,28 +43,28 @@ def _run_sync(mode: str, src: Path, dst: Path) -> Transfer:
 
 def test_copy_leaves_the_source_intact(tmp_path: Path) -> None:
     src, dst = tmp_path / "media", tmp_path / "stick"
-    _tree(src, {"camera/4x8 tent/corner/1009261430.jpg": b"a" * 10, "journal/note.jpg": b"b" * 20})
+    _tree(src, {"camera/4x8 tent/corner/260910/1430.jpg": b"a" * 10, "journal/note.jpg": b"b" * 20})
 
     job = _run_sync("copy", src, dst)
 
     assert job.state == "done", job.error
     assert job.files_total == 2 and job.files_done == 2
     assert job.bytes_total == 30
-    assert (dst / "camera/4x8 tent/corner/1009261430.jpg").read_bytes() == b"a" * 10
-    assert (src / "camera/4x8 tent/corner/1009261430.jpg").is_file(), "copy must not remove the source"
+    assert (dst / "camera/4x8 tent/corner/260910/1430.jpg").read_bytes() == b"a" * 10
+    assert (src / "camera/4x8 tent/corner/260910/1430.jpg").is_file(), "copy must not remove the source"
     assert job.deleted == 0
 
 
 def test_move_copies_then_deletes_and_keeps_the_tree(tmp_path: Path) -> None:
     src, dst = tmp_path / "media", tmp_path / "stick"
-    _tree(src, {"camera/4x8 tent/corner/1009261430.jpg": b"a" * 10, "camera/4x8 tent/corner/1009261440.jpg": b"c" * 5})
+    _tree(src, {"camera/4x8 tent/corner/260910/1430.jpg": b"a" * 10, "camera/4x8 tent/corner/260910/1440.jpg": b"c" * 5})
 
     job = _run_sync("move", src, dst)
 
     assert job.state == "done", job.error
     assert job.deleted == 2
-    assert (dst / "camera/4x8 tent/corner/1009261430.jpg").read_bytes() == b"a" * 10
-    assert not (src / "camera/4x8 tent/corner/1009261430.jpg").exists()
+    assert (dst / "camera/4x8 tent/corner/260910/1430.jpg").read_bytes() == b"a" * 10
+    assert not (src / "camera/4x8 tent/corner/260910/1430.jpg").exists()
     # The root survives even though it is now empty — recording continues into it.
     assert src.is_dir()
 

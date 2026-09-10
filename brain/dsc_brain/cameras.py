@@ -84,16 +84,25 @@ class CaptureError(RuntimeError):
 from .paths import media_root  # noqa: E402
 
 
-# The frame filename format the operator asked for: ddmmyyHHMM.
+# Frames are laid out as <zone>/<name>/<yymmdd>/<HHMM>.jpg.
 #
-# NOTE: this does not sort chronologically — 1009261430 (10 Sep) sorts BEFORE 1108261430
-# (11 Aug). The whole point of this tree is browsing the stick on a laptop, which is exactly
-# where that shows. "%y%m%d%H%M" is the same length, equally readable and sorts correctly;
-# switching is this one constant plus FRAME_NAME_RE.
-FRAME_STAMP_FMT = "%d%m%y%H%M"
-FRAME_STAMP_LEN = 10
-# <stamp>.jpg, or <stamp>-2.jpg when two captures land in the same minute.
-FRAME_NAME_RE = re.compile(r"^\d{10}(?:-\d+)?\.jpg$")
+# Year first, deliberately. ddmmyy does not sort chronologically — 100926 (10 Sep) sorts
+# before 110826 (11 Aug) — and browsing the stick in a file manager is exactly where that
+# shows. yymmdd sorts correctly, is the same length and reads just as easily.
+#
+# The day is its own directory so no folder grows without bound: at the default 10-minute
+# interval a flat camera folder gains ~4,400 files a month and ~53,000 a year, which is slow
+# to open anywhere and worse on the FAT32 that most USB sticks are formatted as. A day holds
+# 144.
+#
+# Two-digit years are ambiguous after 2068, where Python's strptime rolls %y back to 1969.
+# Living with it: the alternative is four digits in every path for a problem four decades out.
+FRAME_DAY_FMT = "%y%m%d"
+FRAME_TIME_FMT = "%H%M"
+FRAME_DAY_LEN = 6
+FRAME_TIME_LEN = 4
+# <yymmdd>/<HHMM>.jpg, or <yymmdd>/<HHMM>-2.jpg when two captures land in the same minute.
+FRAME_NAME_RE = re.compile(r"^\d{6}/\d{4}(?:-\d+)?\.jpg$")
 
 # FAT32-illegal characters, because these folders are meant to be read off a USB stick.
 _FAT_ILLEGAL = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
@@ -122,21 +131,29 @@ def safe_dir_segment(text: str, fallback: str = "unnamed") -> str:
     return cleaned
 
 
-def format_frame_stamp(ts: float) -> str:
-    return datetime.fromtimestamp(max(0.0, ts)).strftime(FRAME_STAMP_FMT)
+def format_frame_day(ts: float) -> str:
+    return datetime.fromtimestamp(max(0.0, ts)).strftime(FRAME_DAY_FMT)
+
+
+def format_frame_time(ts: float) -> str:
+    return datetime.fromtimestamp(max(0.0, ts)).strftime(FRAME_TIME_FMT)
 
 
 def parse_frame_stamp(name: str) -> float | None:
-    """The capture time back out of a filename — the only reader of FRAME_STAMP_FMT.
+    """The capture time back out of a ``yymmdd/HHMM.jpg`` name.
 
-    Days are no longer a directory level, so listing, retention and timelapse ranges all
-    derive the date from here instead.
+    The only reader of the two format constants. The day is a directory rather than part of
+    the filename, so this is what listing, retention and timelapse ranges use instead of
+    reading a date off a path they parsed by hand.
     """
-    stem = name.split(".")[0].split("-")[0]
-    if len(stem) != FRAME_STAMP_LEN or not stem.isdigit():
+    day, _, rest = str(name).partition("/")
+    if not rest or len(day) != FRAME_DAY_LEN or not day.isdigit():
+        return None
+    stem = rest.split(".")[0].split("-")[0]
+    if len(stem) != FRAME_TIME_LEN or not stem.isdigit():
         return None
     try:
-        return datetime.strptime(stem, FRAME_STAMP_FMT).timestamp()
+        return datetime.strptime(day + stem, FRAME_DAY_FMT + FRAME_TIME_FMT).timestamp()
     except (ValueError, OverflowError, OSError):
         return None
 
@@ -255,13 +272,22 @@ def password_for(camera_id: str, db_path: Path | None = None) -> str:
 
 
 def _space_label(space_id: str, db_path: Path | None) -> str:
-    """The zone's human name, for the folder. Falls back to the id when there is no row."""
+    """The zone's human name, for the folder.
+
+    A space row has no `label` — the readable name is `size_label` plus `kind`, which is how
+    the SPA renders "4×8 tent". Falls back to the id, which is always present and readable
+    enough ("4x8"), so a missing row costs a nicer folder name and nothing else.
+    """
     try:
         from .space_model import list_spaces
 
         for sp in list_spaces(db_path):
-            if str(sp.get("space_id")) == str(space_id):
-                return str(sp.get("label") or sp.get("name") or space_id)
+            if str(sp.get("space_id")) != str(space_id):
+                continue
+            size = str(sp.get("size_label") or "").strip()
+            kind = str(sp.get("kind") or "").strip()
+            name = " ".join(part for part in (size, kind) if part)
+            return name or str(space_id)
     except Exception:
         pass
     return str(space_id)
@@ -799,14 +825,16 @@ def store_frame(camera_id: str, data: bytes, *, now: float | None = None) -> dic
     """
     ts = time.time() if now is None else now
     root = camera_dir(camera_id)
-    root.mkdir(parents=True, exist_ok=True)
-    stamp = format_frame_stamp(ts)
-    name = f"{stamp}.jpg"
-    path = root / name
+    day = format_frame_day(ts)
+    day_dir = root / day
+    day_dir.mkdir(parents=True, exist_ok=True)
+    stamp = format_frame_time(ts)
+    name = f"{day}/{stamp}.jpg"
+    path = day_dir / f"{stamp}.jpg"
     seq = 2
     while path.exists():
-        name = f"{stamp}-{seq}.jpg"
-        path = root / name
+        name = f"{day}/{stamp}-{seq}.jpg"
+        path = day_dir / f"{stamp}-{seq}.jpg"
         seq += 1
     path.write_bytes(data)
     latest = root / "latest.jpg"
@@ -846,11 +874,18 @@ def _frame_files(camera_id: str) -> list[tuple[float, Path, str]]:
     if not root.is_dir():
         return []
     out: list[tuple[float, Path, str]] = []
-    for f in root.iterdir():
-        if f.is_file() and FRAME_NAME_RE.match(f.name):
-            at = parse_frame_stamp(f.name)
+    for day_dir in root.iterdir():
+        if not day_dir.is_dir() or len(day_dir.name) != FRAME_DAY_LEN or not day_dir.name.isdigit():
+            continue
+        for f in day_dir.iterdir():
+            if not f.is_file():
+                continue
+            rel = f"{day_dir.name}/{f.name}"
+            if not FRAME_NAME_RE.match(rel):
+                continue
+            at = parse_frame_stamp(rel)
             if at is not None:
-                out.append((at, f, f.name))
+                out.append((at, f, rel))
     legacy = root / "frames"
     if legacy.is_dir():
         for day_dir in legacy.iterdir():
@@ -965,6 +1000,16 @@ def prune_frames(camera_id: str, keep_days: int, cap_gb: float, *, now: float | 
                 total -= size
                 freed += size
             idx += 1
+    # Sweep day folders the deletions emptied. Left behind they would accumulate as one
+    # empty directory per retired day, which is what the day level was meant to avoid.
+    root = camera_dir(camera_id)
+    if root.is_dir():
+        for day_dir in root.iterdir():
+            if day_dir.is_dir() and len(day_dir.name) == FRAME_DAY_LEN and day_dir.name.isdigit():
+                try:
+                    day_dir.rmdir()
+                except OSError:
+                    pass  # not empty: still has frames
     return {"deleted_days": sorted(deleted_days), "freed_bytes": freed}
 
 

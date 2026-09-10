@@ -133,10 +133,10 @@ def test_store_list_prune_frames(media: Path) -> None:
     days = list_days("cam")
     assert [d["day"] for d in days] == ["2026-09-01", "2026-09-02", "2026-09-03", "2026-09-04", "2026-09-05"]
     frames = list_frames("cam")
-    # The tree is flat now: zone/name/ddmmyyHHMM.jpg, with the day derived from the name.
-    assert frames[0]["name"] == "0509261000.jpg" and len(frames) == 5
-    assert list_frames("cam", "2026-09-03")[0]["name"] == "0309261000.jpg"
-    assert cameras.frame_path("cam", "0309261000.jpg") is not None
+    # zone/name/yymmdd/HHMM.jpg — day is a folder, and both levels sort chronologically.
+    assert frames[0]["name"] == "260905/1000.jpg" and len(frames) == 5
+    assert list_frames("cam", "2026-09-03")[0]["name"] == "260903/1000.jpg"
+    assert cameras.frame_path("cam", "260903/1000.jpg") is not None
     assert cameras.frame_path("cam", "../../etc/passwd") is None
     assert cameras.frame_path("cam", "../latest.jpg") is None
     st = camera_storage("cam")
@@ -523,3 +523,45 @@ def test_frame_sizes_decode_and_sort(monkeypatch: pytest.MonkeyPatch, tmp_path: 
 
     assert cameras.usb_frame_sizes(str(node)) == [(1920, 1080), (1280, 720), (640, 480)]
     assert cameras.best_usb_frame_size(str(node)) == (1920, 1080)
+
+
+def test_frame_tree_sorts_chronologically_and_bounds_folder_size(media: Path) -> None:
+    """Both reasons the layout is yymmdd/HHMM rather than a flat ddmmyyHHMM.
+
+    Sorting: a file manager orders by name, so a run spanning a month boundary must still
+    come out in date order — ddmmyy put 11 Aug after 10 Sep.
+    Bounding: a day is its own folder, so no directory grows past a day's worth of frames
+    however long the camera runs.
+    """
+    aug = time.mktime(time.strptime("2026-08-11 23:50:00", "%Y-%m-%d %H:%M:%S"))
+    sep = time.mktime(time.strptime("2026-09-10 00:10:00", "%Y-%m-%d %H:%M:%S"))
+    store_frame("cam", fake_jpeg(payload=b"\x00" * 10), now=aug)
+    for i in range(3):
+        store_frame("cam", fake_jpeg(payload=b"\x00" * 10), now=sep + i * 600)
+
+    names = [f["name"] for f in list_frames("cam")]
+    assert names == sorted(names, reverse=True), "newest first, and name order IS date order"
+    assert names[-1].startswith("260811/"), "August sorts before September"
+
+    root = cameras.camera_dir("cam")
+    day_dirs = sorted(d.name for d in root.iterdir() if d.is_dir())
+    assert day_dirs == ["260811", "260910"]
+    assert len(list((root / "260910").iterdir())) == 3, "a day folder holds only that day"
+    # latest.jpg sits beside the day folders, never inside one, so it is never a frame.
+    assert (root / "latest.jpg").is_file()
+    assert all(not (root / d / "latest.jpg").exists() for d in day_dirs)
+
+
+def test_prune_removes_emptied_day_folders(media: Path) -> None:
+    """Retention must not leave one empty directory per retired day behind."""
+    t0 = time.mktime(time.strptime("2026-09-01 10:00:00", "%Y-%m-%d %H:%M:%S"))
+    for i in range(4):
+        store_frame("cam", fake_jpeg(payload=b"\x00" * 10), now=t0 + i * 86400)
+    root = cameras.camera_dir("cam")
+    assert len([d for d in root.iterdir() if d.is_dir()]) == 4
+
+    # keep_days=2 cuts at "older than now - 2 days", so 09-01 goes and three remain.
+    cameras.prune_frames("cam", keep_days=2, cap_gb=0, now=t0 + 3 * 86400)
+    left = sorted(d.name for d in root.iterdir() if d.is_dir())
+    assert left == ["260902", "260903", "260904"], left
+    assert not (root / "260901").exists(), "the emptied day folder must be swept, not left behind"

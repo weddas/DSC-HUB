@@ -35,25 +35,25 @@ covering *all* media; a Move to external is an offload only — recording stays 
 These are worth deciding now; each is a one-line change if caught early and a migration if
 caught late.
 
-### 1. `ddmmyyHHMM` does not sort chronologically
+### 1. `ddmmyyHHMM` did not sort chronologically — RESOLVED
 
 `1009261430` is 10 Sep 2026; `1108261430` is 11 Aug 2026. Sorted by name in any file
-browser, **August lands after September**. The entire point of this tree is browsing the
-stick on a laptop, and that is exactly where the mis-sort shows up.
+browser, **August landed after September**. The entire point of this tree is browsing the
+stick on a laptop, and that is exactly where the mis-sort showed.
 
-`yymmddHHMM` — `2609101430` — sorts correctly, is the same length, and is equally readable
-once you know the shape. **Building `ddmmyyHHMM` as asked**, with the format isolated in one
-constant (`FRAME_STAMP_FMT`) so switching is a single edit.
+**Operator changed it (2026-09-10):** the day is now `yymmdd`, which sorts correctly, is the
+same length, and reads just as easily. Locked in by a test that stores frames either side of
+a month boundary and asserts name order *is* date order.
 
-### 2. A flat folder per camera gets very large
+### 2. A flat folder per camera got very large — RESOLVED
 
 At the default 10-minute interval one camera writes **144 frames/day ≈ 4,400/month**. A year
 is **~53,000 files in one directory**. That is slow to open on any filesystem and genuinely
 bad on **FAT32**, which is what most USB sticks are formatted as.
 
-`zone/name/ddmmyy/HHMM.ext` — one extra level — keeps directories at 144 entries and still
-reads well. **Building the flat version as asked**, with the day level available as a small
-change to `frame_relpath()`.
+**Operator added the day level (2026-09-10):** `zone/name/yymmdd/HHMM.ext`. No directory can
+now exceed a day's frames however long a camera runs. Retention sweeps a day folder once its
+last frame expires, so retired days do not accumulate as empty directories.
 
 ### 3. The tree lives under `media/camera/`, not directly under `media/`
 
@@ -77,17 +77,22 @@ Sanitising targets **FAT32**, because these folders are meant to be read on a st
 DOS names (`CON`, `NUL`, `COM1`…) suffixed, length capped, empty result falls back to the id.
 
 ```
-media/camera/4x8 tent/4x8 corner/1009261430.jpg
+media/camera/4x8 tent/4x8 corner/260910/1430.jpg
+                                 260910/1440.jpg
+                                 260911/0010.jpg
                                  latest.jpg
                                  timelapse/*.mp4
 ```
 
-### Day is derived, not stored
+### Day is a folder again, in a sortable form
 
-Removing the `frames/<YYYY-MM-DD>/` level means `list_days`, `list_frames`, `prune_frames`
-and timelapse range selection can no longer read the day off a directory. They parse it back
-out of the filename instead. One helper, `parse_frame_stamp()`, is the only place that knows
-the format — the same constant as `FRAME_STAMP_FMT`.
+The day survives as a directory level, but as `yymmdd` rather than `YYYY-MM-DD` — shorter on
+a stick and still correctly ordered. `parse_frame_stamp()` is the only reader of the format
+constants, and `list_days`, `list_frames`, `prune_frames` and timelapse range selection all
+go through it rather than parsing paths by hand.
+
+Two-digit years are ambiguous after 2068, where Python's `strptime` rolls `%y` back to 1969.
+Accepted: the alternative is four digits in every path for a problem four decades away.
 
 Collisions (two captures in the same minute — the interval makes this rare, but *Capture
 now* can do it) get a `-2`, `-3` suffix rather than overwriting.
