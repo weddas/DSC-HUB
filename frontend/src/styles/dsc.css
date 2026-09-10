@@ -5889,6 +5889,8 @@ button.dsc-metric:focus-visible { outline: 2px solid var(--dsc-teal); outline-of
 .dsc-cam-form-toggle { grid-template-columns: 130px auto minmax(0, 1fr) !important; }
 .dsc-cam-form-toggle em { font-style: normal; font-size: var(--dsc-fs-sm); }
 .dsc-cam-form-help { margin: -4px 0 0; font-size: var(--dsc-fs-sm); }
+/* A second labelled control inside one <label> (Device + Resolution share a row group). */
+.dsc-cam-subfield { display: block; margin: 10px 0 4px; font-size: var(--dsc-fs-sm); opacity: 0.75; }
 .dsc-cam-preview { border: 1px solid var(--dsc-gray-3); border-radius: var(--dsc-radius-sm); overflow: hidden; background: var(--dsc-gray-1); }
 .dsc-cam-preview img { display: block; width: 100%; height: auto; }
 .dsc-decision-body .dsc-cam-form-toggle { display: flex; gap: 10px; align-items: center; margin: 10px 0; }

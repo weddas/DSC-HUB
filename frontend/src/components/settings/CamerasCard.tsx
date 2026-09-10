@@ -52,6 +52,8 @@ interface Draft {
   cap_gb: number;
   assemble: "off" | "daily" | "weekly";
   fps: number;
+  /** "WxH", or "" for the largest mode the camera reports. */
+  resolution: string;
   enabled: boolean;
 }
 
@@ -72,6 +74,7 @@ const EMPTY_DRAFT: Draft = {
   cap_gb: 2,
   assemble: "off",
   fps: 12,
+  resolution: "",
   enabled: true,
 };
 
@@ -93,12 +96,18 @@ function draftFrom(cam: CameraRecord): Draft {
     cap_gb: cam.cap_gb,
     assemble: cam.extra.assemble ?? "off",
     fps: Number(cam.extra.fps ?? 12),
+    resolution: cam.extra.width && cam.extra.height ? `${cam.extra.width}x${cam.extra.height}` : "",
     enabled: cam.enabled,
   };
 }
 
 function patchFrom(d: Draft): CameraPatch {
   const extra: CameraPatch["extra"] = { auth: d.auth, assemble: d.assemble, fps: d.fps };
+  if (d.source_kind === "usb" && d.resolution) {
+    const [w, h] = d.resolution.split("x");
+    extra.width = Number(w);
+    extra.height = Number(h);
+  }
   if (d.source_kind === "motioneye") {
     extra.camera_no = d.camera_no;
     extra.stream_port = d.stream_port.trim() ? Number(d.stream_port) : undefined;
@@ -159,6 +168,7 @@ export function CamerasCard() {
 
   const cameras = summary?.cameras ?? [];
   const usb = summary?.usb_devices ?? [];
+  const usbSelected = usb.find((d) => (d.by_id || d.device) === editing?.source || d.device === editing?.source);
   const ffmpeg = summary?.ffmpeg ?? false;
   const viewingCam = useMemo(() => cameras.find((c) => c.camera_id === viewing) ?? null, [cameras, viewing]);
 
@@ -420,6 +430,23 @@ export function CamerasCard() {
                 ) : (
                   <input type="text" value={editing.source} placeholder="/dev/video0" onChange={(e) => patchDraft({ source: e.target.value })} />
                 )}
+                {/* Without this the operator has no way to know a 1080p camera is
+                    recording at 640x480: ffmpeg given no format takes the driver default,
+                    which on a UVC webcam is YUYV at its smallest common size. */}
+                <span className="dsc-cam-subfield">Resolution</span>
+                <select value={editing.resolution} onChange={(e) => patchDraft({ resolution: e.target.value })}>
+                  <option value="">
+                    Best available{usbSelected?.best_size ? ` (${usbSelected.best_size})` : ""}
+                  </option>
+                  {(usbSelected?.sizes ?? []).map((sz) => (
+                    <option key={sz} value={sz}>
+                      {sz}
+                    </option>
+                  ))}
+                  {editing.resolution && !(usbSelected?.sizes ?? []).includes(editing.resolution) ? (
+                    <option value={editing.resolution}>{editing.resolution}</option>
+                  ) : null}
+                </select>
               </label>
             ) : editing.source_kind === "motioneye" ? (
               <>

@@ -231,6 +231,14 @@ def validate_source(source_kind: str, source: str, extra: dict[str, Any]) -> str
                 "a USB webcam is a /dev/videoN device on the brain Pi "
                 "(or its stable /dev/v4l/by-id/... path)"
             )
+        # Blank means "largest mode the camera reports", resolved at capture time. Pinning
+        # is for the case where the biggest mode is too slow or the framing is cropped.
+        if extra.get("width") in (None, "") or extra.get("height") in (None, ""):
+            extra.pop("width", None)
+            extra.pop("height", None)
+        else:
+            extra["width"] = _norm_int(extra.get("width"), 1920, 160, 4096, "width")
+            extra["height"] = _norm_int(extra.get("height"), 1080, 120, 4096, "height")
         return src
     if kind == "motioneye":
         if not src:
@@ -616,12 +624,48 @@ def resolve_stream_url(cam: dict[str, Any]) -> str | None:
     return None
 
 
+def _usb_frame(src: str, extra: dict[str, Any], timeout: float, db_path: Path | None) -> bytes:
+    """One frame from a webcam, at the best resolution it offers rather than its default.
+
+    ffmpeg given only `-f v4l2 -i /dev/videoN` takes the driver's default format, which on
+    a UVC camera is pixel format index 0 at its default size — YUYV 640x480 on the Brio
+    500s here, from a sensor that does 1920x1080. For a canopy timelapse that difference is
+    the whole point of the camera, so we ask for the largest MJPG mode unless the operator
+    pinned one.
+
+    If that negotiation fails we retry bare. A camera that only yields its default size is
+    worth far more than no camera at all, and the alternative is a grow log that silently
+    stops recording because a mode was refused.
+    """
+    want: tuple[int, int] | None = None
+    pinned = extra.get("width"), extra.get("height")
+    if all(v not in (None, "") for v in pinned):
+        try:
+            want = (int(pinned[0]), int(pinned[1]))
+        except (TypeError, ValueError):
+            want = None
+    if want is None:
+        want = best_usb_frame_size(src)
+    if want:
+        sized = [
+            "-f", "v4l2",
+            "-input_format", str(extra.get("input_format") or "mjpeg"),
+            "-video_size", f"{want[0]}x{want[1]}",
+            "-i", src,
+        ]
+        try:
+            return _ffmpeg_frame(sized, timeout, db_path)
+        except CaptureError:
+            pass
+    return _ffmpeg_frame(["-f", "v4l2", "-i", src], timeout, db_path)
+
+
 def capture_frame(cam: dict[str, Any], password: str, *, timeout: float = CAPTURE_TIMEOUT_S, db_path: Path | None = None) -> bytes:
     """One JPEG from the camera's source. Raises CaptureError with the reason."""
     kind = cam.get("source_kind")
     src = str(cam.get("source") or "")
     if kind == "usb":
-        return _ffmpeg_frame(["-f", "v4l2", "-i", src], timeout, db_path)
+        return _usb_frame(src, dict(cam.get("extra") or {}), timeout, db_path)
     if kind == "rtsp":
         url = _url_with_credentials(src, str(cam.get("username") or ""), password)
         return _ffmpeg_frame(["-rtsp_transport", "tcp", "-i", url], timeout, db_path)
@@ -934,6 +978,58 @@ def query_v4l2_capability(device: str) -> dict[str, Any] | None:
     }
 
 
+_VIDIOC_ENUM_FRAMESIZES = 0xC02C564A  # _IOWR('V', 74, struct v4l2_frmsizeenum), 44 bytes
+_V4L2_FRMSIZE_TYPE_DISCRETE = 1
+_FOURCC_MJPG = 0x47504A4D  # 'MJPG'
+
+
+def usb_frame_sizes(device: str, fourcc: int = _FOURCC_MJPG) -> list[tuple[int, int]]:
+    """Discrete frame sizes the node offers for one pixel format, largest first.
+
+    Needed because ffmpeg, told nothing, takes the driver's DEFAULT format — which for a
+    UVC webcam is pixel format index 0 at its default size. On the Brio 500 that is YUYV
+    640x480, so a 1080p camera was being logged at 0.3 MP. We ask what it can do instead of
+    accepting what it happens to start with.
+    """
+    try:
+        import fcntl
+    except ImportError:
+        return []
+    try:
+        fd = os.open(device, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0))
+    except OSError:
+        return []
+    import struct
+
+    sizes: list[tuple[int, int]] = []
+    try:
+        for index in range(64):  # UVC devices list well under this; the bound stops a bad driver
+            payload = struct.pack("<III", index, fourcc, 0) + bytes(32)
+            try:
+                raw = fcntl.ioctl(fd, _VIDIOC_ENUM_FRAMESIZES, payload)
+            except OSError:
+                break  # EINVAL marks the end of the list
+            _idx, _fmt, kind, width, height = struct.unpack("<IIIII", raw[:20])
+            if kind != _V4L2_FRMSIZE_TYPE_DISCRETE:
+                break  # stepwise/continuous: no discrete list to walk
+            if width and height:
+                sizes.append((width, height))
+    finally:
+        os.close(fd)
+    return sorted(set(sizes), key=lambda wh: (wh[0] * wh[1], wh), reverse=True)
+
+
+def best_usb_frame_size(device: str) -> tuple[int, int] | None:
+    """The largest MJPG mode, or None to let the driver decide.
+
+    MJPG rather than the absolute largest mode of any format: it is already JPEG, so a
+    still costs one decode instead of a full uncompressed transfer, and on this rig it is
+    the only format that reaches 1080p within USB 2.0's budget.
+    """
+    sizes = usb_frame_sizes(device)
+    return sizes[0] if sizes else None
+
+
 def _by_id_index() -> dict[str, str]:
     """`/dev/v4l/by-id` symlink -> node, so an entry can carry the camera's serial. Host
     only: inside the container the by-id tree is not mapped, and that is fine — it is a
@@ -987,6 +1083,7 @@ def list_usb_video_devices(dev_root: Path | str | None = None) -> list[dict[str,
         if m:
             serial = m.group(1)
         name = cap["card"] or "unnamed"
+        sizes = usb_frame_sizes(str(node))
         entry = {
             "device": str(node),
             "name": name,
@@ -995,6 +1092,10 @@ def list_usb_video_devices(dev_root: Path | str | None = None) -> list[dict[str,
             "by_id": f"/dev/v4l/by-id/{link}" if link else "",
             # What the picker should show. Two Brio 500s are the same word twice without it.
             "label": f"{name} · {serial}" if serial else f"{name} · {cap['bus_info']}",
+            # MJPG modes, largest first, so the drawer can offer a real choice instead of
+            # leaving the operator to discover that a 1080p camera records at 640x480.
+            "sizes": [f"{w}x{h}" for w, h in sizes],
+            "best_size": f"{sizes[0][0]}x{sizes[0][1]}" if sizes else "",
         }
         out.append(entry)
     return out

@@ -439,3 +439,85 @@ def test_query_capability_reads_device_caps_not_capabilities(
     fake.ioctl = _enotty  # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, "fcntl", fake)
     assert cameras.query_v4l2_capability(str(node)) is None
+
+
+# ---------------------------------------------------------------------------------------
+# Capture resolution. ffmpeg told nothing takes the driver's DEFAULT format — pixel format
+# index 0 at its default size, which on these Brio 500s is YUYV 640x480 from a sensor that
+# does 1920x1080. A canopy timelapse at 0.3 MP is most of the camera thrown away.
+# ---------------------------------------------------------------------------------------
+
+
+def test_usb_capture_asks_for_the_largest_mjpg_mode(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[list[str]] = []
+
+    def _fake_ffmpeg(args, timeout, db_path=None):  # type: ignore[no-untyped-def]
+        calls.append(list(args))
+        return b"\xff\xd8\xff\xd9"
+
+    monkeypatch.setattr(cameras, "_ffmpeg_frame", _fake_ffmpeg)
+    monkeypatch.setattr(cameras, "best_usb_frame_size", lambda d: (1920, 1080))
+
+    cameras.capture_frame({"source_kind": "usb", "source": "/dev/video0"}, "")
+    assert calls[0] == [
+        "-f", "v4l2",
+        "-input_format", "mjpeg",
+        "-video_size", "1920x1080",
+        "-i", "/dev/video0",
+    ]
+
+
+def test_usb_capture_honours_a_pinned_size(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[list[str]] = []
+    monkeypatch.setattr(
+        cameras, "_ffmpeg_frame",
+        lambda args, timeout, db_path=None: (calls.append(list(args)), b"\xff\xd8\xff\xd9")[1],
+    )
+    monkeypatch.setattr(cameras, "best_usb_frame_size", lambda d: (1920, 1080))
+    cameras.capture_frame(
+        {"source_kind": "usb", "source": "/dev/video0", "extra": {"width": 1280, "height": 720}}, ""
+    )
+    assert "1280x720" in calls[0]
+
+
+def test_usb_capture_falls_back_when_the_mode_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A camera stuck at its default size still beats a grow log that stops recording."""
+    calls: list[list[str]] = []
+
+    def _fake_ffmpeg(args, timeout, db_path=None):  # type: ignore[no-untyped-def]
+        calls.append(list(args))
+        if "-video_size" in args:
+            raise cameras.CaptureError("Device or resource busy")
+        return b"\xff\xd8\xff\xd9"
+
+    monkeypatch.setattr(cameras, "_ffmpeg_frame", _fake_ffmpeg)
+    monkeypatch.setattr(cameras, "best_usb_frame_size", lambda d: (1920, 1080))
+
+    got = cameras.capture_frame({"source_kind": "usb", "source": "/dev/video0"}, "")
+    assert got == b"\xff\xd8\xff\xd9"
+    assert len(calls) == 2
+    assert calls[1] == ["-f", "v4l2", "-i", "/dev/video0"]
+
+
+def test_frame_sizes_decode_and_sort(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """ENUM_FRAMESIZES walks by index until EINVAL, and the largest mode comes first."""
+    import sys
+    import types
+
+    node = tmp_path / "video0"
+    node.write_bytes(b"")
+    modes = [(640, 480), (1920, 1080), (1280, 720)]
+
+    def _ioctl(fd: int, req: int, buf: bytes) -> bytes:
+        index = struct.unpack("<I", buf[:4])[0]
+        if index >= len(modes):
+            raise OSError(22, "Invalid argument")  # EINVAL ends the list
+        w, h = modes[index]
+        return struct.pack("<IIIII", index, cameras._FOURCC_MJPG, 1, w, h) + bytes(24)
+
+    fake = types.ModuleType("fcntl")
+    fake.ioctl = _ioctl  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "fcntl", fake)
+
+    assert cameras.usb_frame_sizes(str(node)) == [(1920, 1080), (1280, 720), (640, 480)]
+    assert cameras.best_usb_frame_size(str(node)) == (1920, 1080)

@@ -38,6 +38,12 @@ export interface CameraExtra {
   auth?: "basic" | "digest";
   assemble?: "off" | "daily" | "weekly";
   fps?: number;
+  /** Pin the USB capture size. Omitted means "the largest mode the camera reports",
+   * resolved at capture time — ffmpeg left to itself takes the driver default, which on a
+   * 1080p UVC webcam is YUYV 640x480. */
+  width?: number;
+  height?: number;
+  input_format?: string;
   [key: string]: unknown;
 }
 
@@ -92,6 +98,9 @@ export interface CamerasSummary {
     serial?: string;
     by_id?: string;
     label?: string;
+    /** MJPG modes the node reports, largest first. */
+    sizes?: string[];
+    best_size?: string;
   }>;
   media_root: string;
   total_bytes: number;
