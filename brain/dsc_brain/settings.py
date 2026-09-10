@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import datetime
 import json
+import uuid
 import os
 import sqlite3
 import time
@@ -41,6 +43,27 @@ CREATE TABLE IF NOT EXISTS roster (
   recipe_json TEXT NOT NULL DEFAULT '{}',
   updated_at REAL NOT NULL
 );
+-- A plant is not a probe. `roster` made it one: seat_id was the PRIMARY KEY, so a plant
+-- WAS its pot. Move it and it became a different row; swap the probe and the plant's
+-- history went with the hardware; remove the probe and the plant went with it (which is
+-- very nearly what happened when pot3/pot4 were retired on 2026-09-10).
+--
+-- Here the plant owns its identity and the probe is a placement it currently occupies.
+-- `roster` is left in place, untouched, as a one-release rollback copy.
+CREATE TABLE IF NOT EXISTS plant (
+  plant_id TEXT PRIMARY KEY,
+  seat_id TEXT,                              -- probe it sits at now; NULL = unplaced
+  strain_id TEXT,
+  stage TEXT NOT NULL DEFAULT 'veg',
+  recipe_json TEXT NOT NULL DEFAULT '{}',
+  created_at REAL NOT NULL,
+  updated_at REAL NOT NULL,
+  retired_at REAL                            -- NULL = living
+);
+-- One living plant per probe. Retired plants keep their last seat for history, so the
+-- index has to exclude them or a re-plant at the same probe would collide.
+CREATE UNIQUE INDEX IF NOT EXISTS plant_one_per_seat
+  ON plant(seat_id) WHERE seat_id IS NOT NULL AND retired_at IS NULL;
 CREATE TABLE IF NOT EXISTS learning_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   seat_id TEXT NOT NULL,
@@ -160,6 +183,9 @@ def init_settings_db(db_path: Path | None = None) -> None:
     )
     conn.commit()
     conn.close()
+    # Give every existing plant its own identity. Runs after the schema is committed and
+    # is a no-op once `plant` holds anything, so a normal boot costs one COUNT(*).
+    migrate_roster_to_plants(db_path)
 
 
 def get_setting(key: str, default: str = "", db_path: Path | None = None) -> str:
@@ -510,28 +536,175 @@ def record_history_throttled(
     return True
 
 
+def _plant_row(r: Any) -> dict[str, Any]:
+    """The shape every existing reader expects, plus the plant's own id."""
+    item = dict(r)
+    recipe = json.loads(item.pop("recipe_json") or "{}")
+    item["recipe"] = recipe
+    item["tent"] = recipe.get("tent") or "unassigned"
+    item["sprout_date"] = recipe.get("sprout_date") or ""
+    item["growth_stage"] = recipe.get("growth_stage") or item.get("stage")
+    return item
+
+
+def _new_plant_id(seat_id: str, recipe: dict[str, Any], created_at: float) -> str:
+    """A plant's identity. NOT the seat — that is the mistake being undone.
+
+    Same `plant:<uuid>` format `plant_probe.ensure_plant_uuid` already mints for compose
+    roster slots, so the durable record and the slot/helper layer share one id rather than
+    inventing a second identity scheme for the same plant.
+    """
+    return f"plant:{uuid.uuid4()}"
+
+
+def _adopt_slot_plant_uuid(recipe: dict[str, Any]) -> str | None:
+    """Reuse the uuid the compose slot already minted for this plant, if it has one.
+
+    Late import: compose_store reads settings, so it cannot be imported at module scope.
+    """
+    try:
+        from .compose_store import get_roster_slots
+    except Exception:  # noqa: BLE001
+        return None
+    name = str(recipe.get("nickname") or recipe.get("plant_name") or "").strip().lower()
+    strain = str(recipe.get("strain_display") or "").strip().lower()
+    if not name and not strain:
+        return None
+    try:
+        for slot in get_roster_slots():
+            uid = str(slot.get("plant_uuid") or "").strip()
+            if not uid:
+                continue
+            if str(slot.get("nickname") or "").strip().lower() == name or (
+                strain and str(slot.get("strain") or "").strip().lower() == strain
+            ):
+                return uid
+    except Exception:  # noqa: BLE001
+        return None
+    return None
+
+
+def migrate_roster_to_plants(db_path: Path | None = None) -> int:
+    """Give every existing plant its own identity. One-shot; returns rows migrated.
+
+    `roster` is left exactly as it was — this reads from it and writes a copy — so a bad
+    migration can be rolled back by pointing the readers back at it.
+    """
+    conn = connect(db_path)
+    try:
+        already = conn.execute("SELECT COUNT(*) AS n FROM plant").fetchone()["n"]
+        if already:
+            return 0
+        rows = conn.execute(
+            "SELECT seat_id, strain_id, stage, recipe_json, updated_at FROM roster ORDER BY seat_id"
+        ).fetchall()
+        n = 0
+        for r in rows:
+            recipe = json.loads(r["recipe_json"] or "{}")
+            # Sprout date is the plant's real birthday when we have it; the roster row's
+            # updated_at is only when someone last touched the record.
+            created = r["updated_at"]
+            sprout = str(recipe.get("sprout_date") or "").strip()
+            if sprout:
+                try:
+                    created = datetime.datetime.fromisoformat(sprout).timestamp()
+                except ValueError:
+                    pass
+            conn.execute(
+                """
+                INSERT INTO plant(plant_id, seat_id, strain_id, stage, recipe_json,
+                                  created_at, updated_at, retired_at)
+                VALUES(?, ?, ?, ?, ?, ?, ?, NULL)
+                """,
+                (
+                    _adopt_slot_plant_uuid(recipe) or _new_plant_id(r["seat_id"], recipe, created),
+                    r["seat_id"],
+                    r["strain_id"],
+                    r["stage"],
+                    r["recipe_json"],
+                    created,
+                    r["updated_at"],
+                ),
+            )
+            n += 1
+        conn.commit()
+        return n
+    finally:
+        conn.close()
+
+
 def list_roster(db_path: Path | None = None) -> list[dict[str, Any]]:
+    """Living, placed plants keyed by the probe they sit at — the historical shape."""
     conn = connect(db_path)
     rows = conn.execute(
-        "SELECT seat_id, strain_id, stage, recipe_json, updated_at FROM roster ORDER BY seat_id"
+        """
+        SELECT plant_id, seat_id, strain_id, stage, recipe_json, updated_at
+        FROM plant WHERE retired_at IS NULL AND seat_id IS NOT NULL ORDER BY seat_id
+        """
     ).fetchall()
     conn.close()
-    out: list[dict[str, Any]] = []
-    for r in rows:
-        item = dict(r)
-        recipe = json.loads(item.pop("recipe_json") or "{}")
-        item["recipe"] = recipe
-        item["tent"] = recipe.get("tent") or "unassigned"
-        item["sprout_date"] = recipe.get("sprout_date") or ""
-        item["growth_stage"] = recipe.get("growth_stage") or item.get("stage")
-        out.append(item)
-    return out
+    return [_plant_row(r) for r in rows]
+
+
+def list_plants(include_retired: bool = False, db_path: Path | None = None) -> list[dict[str, Any]]:
+    """Every plant, placed or not — what `roster` could never answer."""
+    conn = connect(db_path)
+    where = "" if include_retired else "WHERE retired_at IS NULL"
+    rows = conn.execute(
+        f"""
+        SELECT plant_id, seat_id, strain_id, stage, recipe_json, created_at, updated_at, retired_at
+        FROM plant {where} ORDER BY created_at
+        """
+    ).fetchall()
+    conn.close()
+    return [_plant_row(r) for r in rows]
+
+
+def set_plant_seat(plant_id: str, seat_id: str | None, db_path: Path | None = None) -> dict[str, Any]:
+    """Place a plant at a probe, or take it off one (seat_id=None).
+
+    Storage-level. `plant_probe.move_plant` is the operator-facing move that also carries
+    the helpers and the compose slot; this is what durably records where it ended up.
+
+    The operation `roster` made impossible: there, the seat WAS the plant's identity, so
+    moving it meant deleting one row and inventing another with no shared history.
+    """
+    conn = connect(db_path)
+    try:
+        row = conn.execute("SELECT * FROM plant WHERE plant_id=?", (plant_id,)).fetchone()
+        if not row:
+            raise ValueError(f"no plant {plant_id}")
+        if row["retired_at"] is not None:
+            raise ValueError("that plant is retired")
+        if seat_id:
+            clash = conn.execute(
+                "SELECT plant_id FROM plant WHERE seat_id=? AND retired_at IS NULL AND plant_id<>?",
+                (seat_id, plant_id),
+            ).fetchone()
+            if clash:
+                raise ValueError(f"{seat_id} already holds {clash['plant_id']}")
+        conn.execute(
+            "UPDATE plant SET seat_id=?, updated_at=? WHERE plant_id=?",
+            (seat_id, time.time(), plant_id),
+        )
+        conn.commit()
+        return _plant_row(conn.execute("SELECT plant_id, seat_id, strain_id, stage, recipe_json, updated_at FROM plant WHERE plant_id=?", (plant_id,)).fetchone())
+    finally:
+        conn.close()
 
 
 def upsert_roster(seat_id: str, patch: dict[str, Any], db_path: Path | None = None) -> dict[str, Any]:
+    """Create or update the living plant at a probe.
+
+    Seat-addressed because that is how the desks speak ("the plant in probe 1"), but it
+    resolves to a plant with its own id — so the same plant survives being moved.
+    """
     conn = connect(db_path)
     row = conn.execute(
-        "SELECT seat_id, strain_id, stage, recipe_json, updated_at FROM roster WHERE seat_id=?",
+        """
+        SELECT plant_id, seat_id, strain_id, stage, recipe_json, updated_at
+        FROM plant WHERE seat_id=? AND retired_at IS NULL
+        """,
         (seat_id,),
     ).fetchone()
     now = time.time()
@@ -539,7 +712,7 @@ def upsert_roster(seat_id: str, patch: dict[str, Any], db_path: Path | None = No
         data = dict(row)
         recipe = json.loads(data["recipe_json"] or "{}")
     else:
-        data = {"seat_id": seat_id, "strain_id": None, "stage": "veg", "updated_at": now}
+        data = {"plant_id": None, "seat_id": seat_id, "strain_id": None, "stage": "veg", "updated_at": now}
         recipe = {}
     if "strain_id" in patch:
         data["strain_id"] = patch["strain_id"]
@@ -548,28 +721,46 @@ def upsert_roster(seat_id: str, patch: dict[str, Any], db_path: Path | None = No
     if "recipe" in patch and isinstance(patch["recipe"], dict):
         recipe.update(patch["recipe"])
     data["updated_at"] = now
-    conn.execute(
-        """
-        INSERT INTO roster(seat_id, strain_id, stage, recipe_json, updated_at)
-        VALUES(?, ?, ?, ?, ?)
-        ON CONFLICT(seat_id) DO UPDATE SET
-          strain_id=excluded.strain_id,
-          stage=excluded.stage,
-          recipe_json=excluded.recipe_json,
-          updated_at=excluded.updated_at
-        """,
-        (seat_id, data["strain_id"], data["stage"], json.dumps(recipe), now),
-    )
+    if data.get("plant_id"):
+        conn.execute(
+            """
+            UPDATE plant SET strain_id=?, stage=?, recipe_json=?, updated_at=?
+            WHERE plant_id=?
+            """,
+            (data["strain_id"], data["stage"], json.dumps(recipe), now, data["plant_id"]),
+        )
+    else:
+        data["plant_id"] = _new_plant_id(seat_id, recipe, now)
+        conn.execute(
+            """
+            INSERT INTO plant(plant_id, seat_id, strain_id, stage, recipe_json,
+                              created_at, updated_at, retired_at)
+            VALUES(?, ?, ?, ?, ?, ?, ?, NULL)
+            """,
+            (data["plant_id"], seat_id, data["strain_id"], data["stage"], json.dumps(recipe), now, now),
+        )
     conn.commit()
     conn.close()
     data["recipe"] = recipe
     data.pop("recipe_json", None)
+    data["tent"] = recipe.get("tent") or "unassigned"
+    data["sprout_date"] = recipe.get("sprout_date") or ""
+    data["growth_stage"] = recipe.get("growth_stage") or data.get("stage")
     return data
 
 
 def delete_roster(seat_id: str, db_path: Path | None = None) -> bool:
+    """Retire the plant at a probe. Both callers are retirements, not deletions.
+
+    It used to DELETE the row, so retiring a plant destroyed the only record it had ever
+    existed — the grow log kept the events, but nothing kept the plant. It is now marked
+    retired and unplaced: the probe is free, and the plant is still there to be looked up.
+    """
     conn = connect(db_path)
-    cur = conn.execute("DELETE FROM roster WHERE seat_id=?", (seat_id,))
+    cur = conn.execute(
+        "UPDATE plant SET retired_at=?, seat_id=NULL, updated_at=? WHERE seat_id=? AND retired_at IS NULL",
+        (time.time(), time.time(), seat_id),
+    )
     conn.commit()
     conn.close()
     return cur.rowcount > 0

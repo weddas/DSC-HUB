@@ -2951,6 +2951,19 @@ def placements_delete(instance_id: str) -> dict[str, Any]:
     return {"instance_id": instance_id, "removed": clear_placement(instance_id)}
 
 
+@app.get("/plants")
+def plants_get(include_retired: bool = Query(False)) -> dict[str, Any]:
+    """Every plant, with its own identity and wherever it currently sits.
+
+    `/roster` answers "what is in each probe". This answers "what plants do I have" —
+    including ones that are between probes or retired, which a seat-keyed roster could not
+    represent at all.
+    """
+    from .settings import list_plants
+
+    return {"plants": list_plants(include_retired=include_retired)}
+
+
 @app.get("/spaces/device-tiers")
 def spaces_device_tiers() -> dict[str, Any]:
     """The vocabulary the device editor offers, so the desk cannot invent a tier."""
@@ -3494,7 +3507,7 @@ _API_FIRST_SEGMENTS = frozenset(
     {
         "admin", "ai", "api", "cameras", "catalogs", "control", "decision", "energy",
         "fleet", "grow-log", "health", "history", "journal", "journals", "learning",
-        "placements", "reminders", "rooms",
+        "placements", "plants", "reminders", "rooms",
         "roster", "settings", "setup", "soft-cal", "soil-tests", "spaces", "system", "v1",
         "want", "ws", "zones",
     }
