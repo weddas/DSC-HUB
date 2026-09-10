@@ -16,6 +16,7 @@ from .sensor_trust import emit_sensor_trust
 from .integrations import cannalib_base_url, cannalib_headers
 from .runtime_history import HistoryMemo, RuntimeMemo, cycle_count_since, midnight_ts
 from .settings import record_history
+from .entity_tables import KIT_PROBE_NUMBERS
 
 _CANNALIB_CACHE: dict[str, Any] = {"ts": 0.0, "data": {}}
 _SYDNEY_TZ = ZoneInfo("Australia/Sydney")
@@ -28,12 +29,12 @@ def _midnight_ts() -> float:
 
 def _coldest_root_zone(fleet: Any) -> tuple[float | None, str]:
     votes = 0
-    for n in range(1, 5):
+    for n in KIT_PROBE_NUMBERS:
         if get_helper(f"switch.dsc_hub_mat_vote_pot_{n}", "on") == "on":
             votes += 1
     best_t: float | None = None
     best_pot = "none"
-    for n in range(1, 5):
+    for n in KIT_PROBE_NUMBERS:
         vote_on = get_helper(f"switch.dsc_hub_mat_vote_pot_{n}", "on") == "on"
         if votes > 0 and not vote_on:
             continue
@@ -65,15 +66,19 @@ def _inventory_in_service(inventory: list[dict[str, Any]] | None, seat_id: str, 
     for row in inventory or []:
         if row.get("seat_id") == seat_id:
             return bool(row.get("in_service", default))
-    defaults = {"ac": False, "mister": False, "pot3": False, "pot4": False, "tank": False}
+    defaults = {"ac": False, "mister": False, "tank": False}
     return defaults.get(seat_id, default)
 
 
 def _reduced_kit(inventory: list[dict[str, Any]] | None) -> tuple[bool, dict[str, str]]:
     """Warn only when expected *live kit* capacity is missing — not deliberate OOS seats.
 
-    Kit probes are pot1/pot2. pot3/pot4, AC, clone mister, and tank are planned OOS
-    (retired / on hold) and belong in planned_oos, never in the Capacity offline lead.
+    Kit probes are pot1/pot2. AC, clone mister, and tank are planned OOS (on hold) and
+    belong in planned_oos, never in the Capacity offline lead.
+
+    pot3/pot4 used to be listed here as planned-OOS. They were removed outright on
+    2026-09-10 — the hardware is gone — and a seat that no longer exists must not be
+    reported as "deliberately offline"; that is a status for kit you still own.
     """
     planned: list[str] = []
     offline: list[str] = []
@@ -81,10 +86,6 @@ def _reduced_kit(inventory: list[dict[str, Any]] | None) -> tuple[bool, dict[str
         planned.append("AC")
     if not _inventory_in_service(inventory, "mister", False):
         planned.append("Clone mister")
-    if not _inventory_in_service(inventory, "pot3", False):
-        planned.append("POT3")
-    if not _inventory_in_service(inventory, "pot4", False):
-        planned.append("POT4")
     if not _inventory_in_service(inventory, "tank", False):
         planned.append("Tank")
     for label, key in (
@@ -97,7 +98,7 @@ def _reduced_kit(inventory: list[dict[str, Any]] | None) -> tuple[bool, dict[str
     ):
         if get_helper(key, "off") == "on":
             offline.append(label)
-    for n in (1, 2):  # KIT_PROBE_NUMBERS — pot3/4 are planned OOS above
+    for n in KIT_PROBE_NUMBERS:
         if not _inventory_in_service(inventory, f"pot{n}", True):
             offline.append(f"POT{n}")
     active = len(offline) > 0
@@ -344,7 +345,7 @@ def emit_dash_entities(
     root_fault = _control_state(states, "binary_sensor.dsc_hub_root_zone_sensor_fault") == "on"
     set_entity(states, "binary_sensor.dsc_hub_root_zone_sensor_fault", "on" if root_fault else "off", available=True)
 
-    for n in range(1, 5):
+    for n in KIT_PROBE_NUMBERS:
         eid = f"binary_sensor.dsc_hub_pot{n}_esp_now_link"
         hub_bin = (fleet.hub.values.get("binaries") or {}).get(eid) if fleet.hub else None
         if hub_bin is not None:

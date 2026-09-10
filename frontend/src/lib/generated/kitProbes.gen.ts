@@ -7,7 +7,7 @@
 // not the grow.
 
 /** Full entity universe (Device restore / maps). Not the Live kit. */
-export const ALL_PROBE_NUMBERS = [1, 2, 3, 4] as const;
+export const ALL_PROBE_NUMBERS = [1, 2] as const;
 
 /** Operator kit — Live Root, honesty, Fleet pulse, idle-home defaults. */
 export const KIT_PROBE_NUMBERS = [1, 2] as const;

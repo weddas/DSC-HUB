@@ -37,8 +37,6 @@ SEAT_YAML: dict[str, str] = {
     # 404'd inside the dashboard until this was corrected.
     "pot1": "dsc-pot1.yaml",
     "pot2": "dsc-pot2.yaml",
-    "pot3": "dsc-pot3.yaml",
-    "pot4": "dsc-pot4.yaml",
     "heater": "dsc-heater.yaml",
     "heatmat": "dsc-heatmat.yaml",
     "humidifier": "dsc-humidifier.yaml",

@@ -69,8 +69,6 @@ DEFAULT_INVENTORY: list[dict[str, Any]] = [
     {"seat_id": "control", "role": "panel", "host": "10.42.0.11"},
     {"seat_id": "pot1", "role": "pot", "host": "10.42.0.21"},
     {"seat_id": "pot2", "role": "pot", "host": "10.42.0.22"},
-    {"seat_id": "pot3", "role": "pot", "host": "10.42.0.23", "in_service": False},
-    {"seat_id": "pot4", "role": "pot", "host": "10.42.0.24", "in_service": False},
     {"seat_id": "heater", "role": "sonoff_heater", "host": "10.42.0.50"},
     {"seat_id": "heatmat", "role": "sonoff_heatmat", "host": "10.42.0.51"},
     {"seat_id": "humidifier", "role": "sonoff_humidifier", "host": "10.42.0.54"},
@@ -142,16 +140,15 @@ def init_settings_db(db_path: Path | None = None) -> None:
             """,
             (row["seat_id"], row["role"], in_svc, row.get("host")),
         )
-    if get_setting("pot3_f003_gate", "", db_path) != "applied":
-        conn.execute("UPDATE fleet_inventory SET in_service=0 WHERE seat_id='pot3'")
+    # pot3 and pot4 are gone (2026-09-10) — the hardware no longer exists. The two earlier
+    # gates only forced them out of service, which left them on the Fleet page for ever as
+    # seats that would never come back. This deletes them instead. One-shot, because an
+    # operator may legitimately re-add a third pot later and a re-seeding delete would keep
+    # eating it.
+    if get_setting("pot34_removed_gate", "", db_path) != "applied":
+        conn.execute("DELETE FROM fleet_inventory WHERE seat_id IN ('pot3','pot4')")
         conn.execute(
-            "INSERT INTO settings(key, value) VALUES('pot3_f003_gate', 'applied') "
-            "ON CONFLICT(key) DO UPDATE SET value='applied'"
-        )
-    if get_setting("pot4_retired_gate", "", db_path) != "applied":
-        conn.execute("UPDATE fleet_inventory SET in_service=0 WHERE seat_id='pot4'")
-        conn.execute(
-            "INSERT INTO settings(key, value) VALUES('pot4_retired_gate', 'applied') "
+            "INSERT INTO settings(key, value) VALUES('pot34_removed_gate', 'applied') "
             "ON CONFLICT(key) DO UPDATE SET value='applied'"
         )
     conn.execute("DELETE FROM fleet_inventory WHERE seat_id='bridge'")

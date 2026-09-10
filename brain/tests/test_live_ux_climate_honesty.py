@@ -33,22 +33,24 @@ def _point_db(monkeypatch: pytest.MonkeyPatch, temp_db: Path) -> None:
             pass
 
 
-def test_reduced_kit_pot34_planned_not_offline_lead(
+def test_removed_pots_are_in_neither_kit_list(
     temp_db: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Kit pot3/pot4 are planned OOS — never Capacity offline lead when only planned."""
+    """pot3/pot4 were removed on 2026-09-10 — absent, not "deliberately offline".
+
+    This used to assert they were planned-OOS, which is the status for kit the operator
+    still owns. The seats no longer exist, so they belong in neither list.
+    """
     _point_db(monkeypatch, temp_db)
     from dsc_brain.dash_computed import _reduced_kit
     from dsc_brain.settings import list_inventory
 
     active, attrs = _reduced_kit(list_inventory(temp_db))
-    offline = attrs.get("offline", "")
-    assert "POT4" not in offline
-    assert "POT3" not in offline
-    planned = attrs.get("planned_oos", "")
-    assert "POT3" in planned and "POT4" in planned
+    both = f"{attrs.get('offline', '')} {attrs.get('planned_oos', '')}"
+    assert "POT3" not in both
+    assert "POT4" not in both
     # Default kit inventory keeps pot1/pot2 in service — reduced active only for live capacity gaps.
-    assert active is False or "POT1" not in offline
+    assert active is False or "POT1" not in attrs.get("offline", "")
 
 
 def test_wet_without_bound_recipe_does_not_set_policy_problem(

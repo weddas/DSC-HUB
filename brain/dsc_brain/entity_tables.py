@@ -49,8 +49,6 @@ IN_SERVICE_ENTITIES: dict[str, str] = {
     "mister": "input_boolean.dsc_clone_humidifier_in_service",
     "pot1": "input_boolean.dsc_probe1_in_service",
     "pot2": "input_boolean.dsc_probe2_in_service",
-    "pot3": "input_boolean.dsc_probe3_in_service",
-    "pot4": "input_boolean.dsc_probe4_in_service",
     "tank": "input_boolean.dsc_tank_in_service",
 }
 
@@ -251,7 +249,11 @@ ENTITY_FLEET_MAP: dict[str, EntityFleetRef] = {
 # the generator; per-row key order is preserved into the emitted TypeScript.
 
 # Full entity universe (Device restore / maps). Not the Live kit.
-ALL_PROBE_NUMBERS: tuple[int, ...] = (1, 2, 3, 4)
+# pot3 and pot4 were retired 2026-09-10 — the hardware is gone, so there is no longer a
+# fourth or third probe for a restore to address either. The hub firmware still declares
+# four probe slots; that costs a flash to change and is tracked separately, and nothing on
+# this side reads them any more.
+ALL_PROBE_NUMBERS: tuple[int, ...] = (1, 2)
 
 # Operator kit — Live Root, honesty, Fleet pulse, idle-home defaults.
 # KIT_DEFS' probe rows expand from this, so it has to be generated alongside

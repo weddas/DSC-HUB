@@ -19,7 +19,6 @@ export function inventoryGroup(seatId: string): string {
   const id = seatId.toLowerCase();
   if (id === "hub" || id === "control" || id === "panel") return "Brain & panel";
   if (id === "pot1" || id === "pot2") return "Kit probes";
-  if (id === "pot3" || id === "pot4") return "Advanced restore (Probe 3–4)";
   if (id.startsWith("pot")) return "Probes";
   return "Appliances";
 }

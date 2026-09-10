@@ -9,7 +9,7 @@ import { StatusChip } from "./ui";
 import { MultiLineChart, type ChartTarget, type NamedSeries } from "../viz/charts";
 import { getGlobalModifiers } from "../lib/fleetApi";
 
-export type BandChartKind = "temp" | "rh" | "vpd" | "root" | "pot1" | "pot2" | "pot3" | "pot4";
+export type BandChartKind = "temp" | "rh" | "vpd" | "root" | "pot1" | "pot2";
 
 export type BandChartTarget = {
   kind: BandChartKind;
@@ -77,12 +77,8 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
 
   const probeMoist1 = useEntitySeries("sensor.dsc_probe1_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
   const probeMoist2 = useEntitySeries("sensor.dsc_probe2_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
-  const probeMoist3 = useEntitySeries("sensor.dsc_probe3_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
-  const probeMoist4 = useEntitySeries("sensor.dsc_probe4_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
   const probeTemp1 = useEntitySeries("sensor.dsc_probe1_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
   const probeTemp2 = useEntitySeries("sensor.dsc_probe2_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
-  const probeTemp3 = useEntitySeries("sensor.dsc_probe3_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
-  const probeTemp4 = useEntitySeries("sensor.dsc_probe4_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
 
   const targetTemp = num("number.dsc_hub_target_temp", 25);
   const cloneTargetTemp = num("number.dsc_hub_clone_target_temp", 24);
@@ -156,8 +152,8 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
         };
       default: {
         const n = Number(target.kind.replace("pot", ""));
-        const moist = [probeMoist1, probeMoist2, probeMoist3, probeMoist4][n - 1];
-        const temp = [probeTemp1, probeTemp2, probeTemp3, probeTemp4][n - 1];
+        const moist = [probeMoist1, probeMoist2][n - 1];
+        const temp = [probeTemp1, probeTemp2][n - 1];
         return {
           unit: "%",
           height: 320,
@@ -188,12 +184,8 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
     rootT,
     probeMoist1,
     probeMoist2,
-    probeMoist3,
-    probeMoist4,
     probeTemp1,
     probeTemp2,
-    probeTemp3,
-    probeTemp4,
     targetTemp,
     cloneTargetTemp,
     rhMin,
@@ -279,6 +271,4 @@ export const BAND_CHART_TITLES: Record<BandChartKind, string> = {
   root: "Soil temperature — 24h",
   pot1: "Probe 1 — moisture & soil temp",
   pot2: "Probe 2 — moisture & soil temp",
-  pot3: "Probe 3 — moisture & soil temp",
-  pot4: "Probe 4 — moisture & soil temp",
 };

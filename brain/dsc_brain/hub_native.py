@@ -10,6 +10,7 @@ from .api_lock import host_lock
 from .hub_controls import HUB_SWITCH_OID_TO_ENTITY
 from .native_api import make_api_client
 from .settings import get_setting, list_inventory
+from .entity_tables import KIT_PROBE_NUMBERS
 
 _logger = logging.getLogger(__name__)
 
@@ -100,7 +101,7 @@ async def push_plant_name(pot_n: int, name: str) -> dict[str, Any]:
     Best-effort: returns ``{"ok": False, "detail": ...}`` on any miss, never
     raises. Mirrors the fail-closed shape of :func:`sync_hub_in_service`.
     """
-    if pot_n not in (1, 2, 3, 4):
+    if pot_n not in KIT_PROBE_NUMBERS:
         return {"ok": False, "detail": f"pot out of range: {pot_n}"}
     hub_row = next((r for r in list_inventory() if r.get("role") == "hub"), None)
     if not hub_row or not hub_row.get("in_service"):

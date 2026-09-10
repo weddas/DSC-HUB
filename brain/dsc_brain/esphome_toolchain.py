@@ -1175,7 +1175,7 @@ def rollback_toolchain(*, target: str | None = None, db_path: Path | None = None
 # --------------------------------------------------------------------------- #
 _ROLLOUT_ORDER_TAIL = ("hub",)  # hub flashed LAST
 _CANARY_KEY = "esphome_rollout_canary"
-_CANARY_PREFERENCE = ("pot2", "pot1", "pot3", "pot4")
+_CANARY_PREFERENCE = ("pot2", "pot1")
 
 
 def _canary_state(db_path: Path | None = None) -> dict[str, Any] | None:

@@ -11,8 +11,6 @@ export const IN_SERVICE_ENTITIES: Record<string, string> = {
   mister: "input_boolean.dsc_clone_humidifier_in_service",
   pot1: "input_boolean.dsc_probe1_in_service",
   pot2: "input_boolean.dsc_probe2_in_service",
-  pot3: "input_boolean.dsc_probe3_in_service",
-  pot4: "input_boolean.dsc_probe4_in_service",
   tank: "input_boolean.dsc_tank_in_service",
 };
 

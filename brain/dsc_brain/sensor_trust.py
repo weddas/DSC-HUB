@@ -17,6 +17,7 @@ from typing import Any
 from .compose_store import get_helper
 from .event_log import record_grow_log
 from .settings import last_change_ts, last_reading_ts, list_history
+from .entity_tables import KIT_PROBE_NUMBERS
 
 _STUCK_RATE_MAX = 0.02  # %/h — legacy slope test, kept for the rate sensor only
 _STUCK_ON_SEC = 45 * 60
@@ -277,7 +278,7 @@ def emit_sensor_trust(
     ec_vals: list[float] = []
     moist_vals: list[float] = []
 
-    for n in range(1, 5):
+    for n in KIT_PROBE_NUMBERS:
         if not _pot_in_service(inventory, n):
             set_entity(states, f"binary_sensor.dsc_probe{n}_sensor_stuck", False)
             set_entity(states, f"binary_sensor.dsc_probe{n}_untrusted", False)

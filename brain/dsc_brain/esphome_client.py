@@ -31,6 +31,7 @@ from .native_api import make_api_client
 from .paths import EXPECTED_FIRMWARE, SURFACE_VERSION
 from .settings import list_inventory, record_history, record_history_throttled
 from .zigbee_mqtt import apply_zigbee_cache_to_state
+from .entity_tables import KIT_PROBE_NUMBERS
 
 _logger = logging.getLogger(__name__)
 
@@ -893,7 +894,7 @@ def _finalize_hub_binaries(state: FleetState) -> None:
         return
     now = time.time()
     binaries = dict(state.hub.values.get("binaries") or {})
-    for n in range(1, 5):
+    for n in KIT_PROBE_NUMBERS:
         eid = f"binary_sensor.dsc_hub_pot{n}_esp_now_link"
         if eid in binaries:
             continue
@@ -908,7 +909,7 @@ def _finalize_hub_binaries(state: FleetState) -> None:
     root_eid = "binary_sensor.dsc_hub_root_zone_sensor_fault"
     if root_eid not in binaries:
         any_plausible = False
-        for n in range(1, 5):
+        for n in KIT_PROBE_NUMBERS:
             pot = state.pots.get(f"pot{n}")
             if not pot or not pot.online:
                 continue

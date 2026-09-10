@@ -171,16 +171,6 @@ const ALERTS: Record<string, PlaybookEntry> = {
     what: "Probe 2 soil moisture has not moved for the stuck window.",
     fix: "Probe may be wedged or offline. Exclude from mat vote if untrusted.",
   },
-  "binary_sensor.dsc_probe3_sensor_stuck": {
-    title: "Probe 3 stuck",
-    what: "Probe 3 soil moisture has not moved for the stuck window.",
-    fix: "Probe may be wedged or offline. Exclude from mat vote if untrusted.",
-  },
-  "binary_sensor.dsc_probe4_sensor_stuck": {
-    title: "Probe 4 stuck",
-    what: "Probe 4 soil moisture has not moved for the stuck window.",
-    fix: "Probe may be wedged or offline. Exclude from mat vote if untrusted.",
-  },
   "binary_sensor.dsc_hub_light_catchup_active": {
     title: "Light catch-up",
     what: "The 2×4 is making up missed light hours. The hours gauge shows what was actually delivered.",

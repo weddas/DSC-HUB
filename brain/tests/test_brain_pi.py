@@ -476,9 +476,16 @@ def test_health_endpoint() -> None:
     assert body["expected_firmware"] == "8.1.0.0"
 
 
-def test_pot3_default_out_of_service(temp_db: Path) -> None:
+def test_pot3_and_pot4_are_gone(temp_db: Path) -> None:
+    """Retired 2026-09-10 — the hardware no longer exists.
+
+    They used to seed as in_service=False, which kept them on the Fleet page for ever as
+    seats that were never coming back. A seat you no longer own is absent, not "offline".
+    """
     inv = {r["seat_id"]: r for r in list_inventory(temp_db)}
-    assert inv["pot3"]["in_service"] is False
+    assert "pot3" not in inv
+    assert "pot4" not in inv
+    assert "pot1" in inv and "pot2" in inv
 
 
 def test_network_apply(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -1037,9 +1044,15 @@ def test_fleet_includes_oos_seats(temp_db: Path, monkeypatch: pytest.MonkeyPatch
     resp = client.get("/fleet")
     assert resp.status_code == 200
     body = resp.json()
-    assert "pot3" in body["pots"]
-    assert body["pots"]["pot3"]["online"] is False
-    assert body["pots"]["pot3"]["in_service"] is False
+    # This used to prove an out-of-service seat still appears in /fleet, using pot3 as the
+    # example. pot3/pot4 were removed outright on 2026-09-10, so they must NOT be merged in
+    # any more — a seat you no longer own is absent, not "offline". (With no live device
+    # reporting, `pots` carries only seats merged from inventory, so it is empty here.)
+    assert "pot3" not in body["pots"]
+    assert "pot4" not in body["pots"]
+    assert body["inventory"], "inventory still lists the seats that do exist"
+    assert {"pot1", "pot2"} <= {r["seat_id"] for r in body["inventory"]}
+    assert not {"pot3", "pot4"} & {r["seat_id"] for r in body["inventory"]}
 
 
 def test_apply_clone_tent_skips_offline_hub(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -1119,7 +1132,7 @@ def test_in_service_default_off_without_inventory_row(temp_db: Path) -> None:
     hass = state.to_hass_states(inventory=[])
     assert hass["input_boolean.dsc_ac_in_service"]["state"] == "off"
     assert hass["input_boolean.dsc_probe1_in_service"]["state"] == "off"
-    assert hass["input_boolean.dsc_probe3_in_service"]["state"] == "off"
+    assert "input_boolean.dsc_probe3_in_service" not in hass
 
 
 def test_online_stale_sec_alias() -> None:

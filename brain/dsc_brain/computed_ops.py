@@ -15,6 +15,7 @@ from .compose_store import all_helpers, get_helper, get_roster_slots
 from .dash_computed import emit_dash_entities
 from .decision_loop import decision_tick
 from .device_calibration import get_calibration, last_calibrated_at
+from .entity_tables import KIT_PROBE_NUMBERS
 from .event_log import record_grow_log
 from .global_modifiers import scale_fan_demand_pct, scale_light_brightness_pct
 from .hub_failover import emit_override_entity, evaluate_failover, get_override
@@ -204,8 +205,8 @@ SELECT_OPTIONS: dict[str, list[str]] = {
     "input_select.dsc_build_climate_pot": ["Fleet", "1", "2", "3", "4"],
     "input_select.dsc_build_tent": ["4x8", "2x4"],
     "input_select.dsc_build_vessel": VESSEL_OPTIONS,
-    **{f"input_select.dsc_probe{n}_vessel": VESSEL_OPTIONS for n in range(1, 5)},
-    **{f"input_select.dsc_probe{n}_tent": ["clone", "main", "unassigned"] for n in range(1, 5)},
+    **{f"input_select.dsc_probe{n}_vessel": VESSEL_OPTIONS for n in KIT_PROBE_NUMBERS},
+    **{f"input_select.dsc_probe{n}_tent": ["clone", "main", "unassigned"] for n in KIT_PROBE_NUMBERS},
 }
 
 def _pot_in_service(inventory: list[dict[str, Any]] | None, pot_n: int) -> bool:
@@ -984,7 +985,7 @@ def _build_cold_computed_states(
     _set_entity(states, "sensor.dsc_plant_roster_summary", f"{occupied} occupied", attributes={"slots": slots})
 
     roster_rows = {r["seat_id"]: r for r in list_roster()}
-    for pot_n in range(1, 5):
+    for pot_n in KIT_PROBE_NUMBERS:
         seat_id = f"pot{pot_n}"
         row = roster_rows.get(seat_id, {})
         recipe = row.get("recipe") or {}
@@ -1670,7 +1671,7 @@ def _build_hot_computed_states(
         attributes=hold_attrs,
     )
 
-    any_pot = any(_pot_in_service(inventory, n) for n in range(1, 5))
+    any_pot = any(_pot_in_service(inventory, n) for n in KIT_PROBE_NUMBERS)
     coldest = None
     for pot_id, seat in (fleet.pots or {}).items():
         st = seat.values.get("soil_temp_c")
@@ -1757,8 +1758,6 @@ def _build_hot_computed_states(
             "binary_sensor.dsc_dht_disagreement",
             "binary_sensor.dsc_probe1_sensor_stuck",
             "binary_sensor.dsc_probe2_sensor_stuck",
-            "binary_sensor.dsc_probe3_sensor_stuck",
-            "binary_sensor.dsc_probe4_sensor_stuck",
         )
         if _control_state(dash_view, eid) == "on"
     )
