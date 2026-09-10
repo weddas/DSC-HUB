@@ -388,7 +388,7 @@ export function CamerasCard() {
                 value={editing.source_kind}
                 onChange={(e) => {
                   const kind = e.target.value as CameraSourceKind;
-                  patchDraft({ source_kind: kind, source: kind === "usb" ? usb[0]?.device ?? "/dev/video0" : "" });
+                  patchDraft({ source_kind: kind, source: kind === "usb" ? usb[0]?.by_id || usb[0]?.device || "/dev/video0" : "" });
                   setTestResult(null);
                 }}
               >
@@ -407,11 +407,15 @@ export function CamerasCard() {
                 {usb.length ? (
                   <select value={editing.source} onChange={(e) => patchDraft({ source: e.target.value })}>
                     {usb.map((d) => (
-                      <option key={d.device} value={d.device}>
-                        {d.device} — {d.name || "unnamed"}
+                      // Prefer the by-id path as the VALUE: /dev/videoN is probe-order and
+                      // two identical cameras can swap numbers on a replug, which would
+                      // quietly repoint a tent at the other tent. Label carries the serial
+                      // so the two are tellable apart on screen.
+                      <option key={d.device} value={d.by_id || d.device}>
+                        {d.device} — {d.label || d.name || "unnamed"}
                       </option>
                     ))}
-                    {!usb.some((d) => d.device === editing.source) ? <option value={editing.source}>{editing.source}</option> : null}
+                    {!usb.some((d) => (d.by_id || d.device) === editing.source) ? <option value={editing.source}>{editing.source}</option> : null}
                   </select>
                 ) : (
                   <input type="text" value={editing.source} placeholder="/dev/video0" onChange={(e) => patchDraft({ source: e.target.value })} />

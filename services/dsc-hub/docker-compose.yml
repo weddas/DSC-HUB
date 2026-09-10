@@ -45,13 +45,25 @@ services:
       DSC_ESPHOME_DASHBOARD_API: ${DSC_ESPHOME_DASHBOARD_API:-http://host.docker.internal:6052}
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    # A USB webcam plugged into the brain Pi (Settings › Devices › Cameras, source kind
-    # "USB webcam on the brain"). Set DSC_CAMERA_DEVICE=/dev/video0 in .env when one is
-    # plugged in; the default maps /dev/null so the container still starts without one
-    # (compose refuses a device path that does not exist on the host). IP cameras,
-    # MJPEG streams and motionEye satellite Pis need no device.
+    # USB webcams plugged into the brain Pi (Settings › Devices › Cameras, source kind
+    # "USB webcam on the brain"). Set these in .env to the camera's STABLE
+    # /dev/v4l/by-id/... path, not /dev/videoN: node numbers are handed out in probe order,
+    # so two identical cameras can swap them across a reboot or a replug and quietly
+    # repoint one tent's camera at the other tent.
+    #
+    # The default still maps /dev/null so the container starts with no camera attached
+    # (compose refuses a device path that does not exist on the host). That placeholder
+    # used to be actively misleading — it left a /dev/video0 in the container that the
+    # picker advertised, using the name it read from the HOST's /sys for node 0, and
+    # testing it failed with "Inappropriate ioctl for device". The brain now probes each
+    # node with VIDIOC_QUERYCAP and lists only real USB capture devices, so an unset slot
+    # simply does not appear. IP cameras, MJPEG streams and motionEye Pis need no device.
+    #
+    # Inside the container the numbering is whatever these lines pin it to, which is why
+    # the container-side paths are plain /dev/video0 and /dev/video1.
     devices:
       - ${DSC_CAMERA_DEVICE:-/dev/null}:/dev/video0
+      - ${DSC_CAMERA_DEVICE_2:-/dev/null}:/dev/video1
     volumes:
       - ${DSC_DATA:-/var/lib/dsc-hub}/ops:/data
       - ${DSC_DATA:-/var/lib/dsc-hub}/firmware:/firmware:ro

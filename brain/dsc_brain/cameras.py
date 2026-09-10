@@ -223,8 +223,14 @@ def validate_source(source_kind: str, source: str, extra: dict[str, Any]) -> str
     if kind == "usb":
         if not src:
             src = "/dev/video0"
-        if not src.startswith("/dev/video"):
-            raise ValueError("a USB webcam is a /dev/videoN device on the brain Pi")
+        # by-id is preferred where it exists: /dev/videoN is assigned in probe order and
+        # two identical cameras can swap numbers across a reboot or a replug, which would
+        # silently point a tent's camera at the other tent.
+        if not (src.startswith("/dev/video") or src.startswith("/dev/v4l/by-id/")):
+            raise ValueError(
+                "a USB webcam is a /dev/videoN device on the brain Pi "
+                "(or its stable /dev/v4l/by-id/... path)"
+            )
         return src
     if kind == "motioneye":
         if not src:
@@ -513,6 +519,40 @@ def _http_fetch_frame(url: str, auth: Any, timeout: float) -> bytes:
         raise CaptureError(f"HTTP error: {exc}") from exc
 
 
+def _explain_capture_failure(line: str, input_args: list[str]) -> str:
+    """Turn ffmpeg's bare errno text into something the operator can act on.
+
+    "Inappropriate ioctl for device" is ENOTTY, and it means the thing at that path is not
+    a video-capture device at all. Verbatim it sounds like an ffmpeg bug; it is nearly
+    always one of three fixable situations, so say which ones.
+    """
+    if not line:
+        return "ffmpeg produced no frame"
+    if "Inappropriate ioctl for device" not in line:
+        return line
+    device = ""
+    if "-i" in input_args:
+        idx = input_args.index("-i")
+        if idx + 1 < len(input_args):
+            device = input_args[idx + 1]
+    where = device or "that device"
+    cap = query_v4l2_capability(device) if device else None
+    if cap is None:
+        return (
+            f"{where} is not a video device. Inside the brain container this path is "
+            "whatever compose mapped there — with no camera configured it maps /dev/null. "
+            "Set DSC_CAMERA_DEVICE in the brain .env to the camera's "
+            "/dev/v4l/by-id/... path and recreate the container."
+        )
+    if not cap["is_capture"]:
+        return (
+            f"{where} is a {cap['card'] or 'v4l2'} node, but it carries no video-capture "
+            "capability — v4l2 exposes a metadata node alongside each camera and they look "
+            "alike in a list. Pick the camera's capture node instead."
+        )
+    return line
+
+
 def _ffmpeg_frame(input_args: list[str], timeout: float, db_path: Path | None = None) -> bytes:
     binary = ffmpeg_bin(db_path)
     if not binary:
@@ -542,7 +582,7 @@ def _ffmpeg_frame(input_args: list[str], timeout: float, db_path: Path | None = 
         raise CaptureError(f"ffmpeg could not start: {exc}") from exc
     if proc.returncode != 0 or not is_jpeg(proc.stdout):
         err = (proc.stderr or b"").decode("utf-8", "replace").strip().splitlines()
-        raise CaptureError(err[-1] if err else "ffmpeg produced no frame")
+        raise CaptureError(_explain_capture_failure(err[-1] if err else "", input_args))
     return proc.stdout
 
 
@@ -840,22 +880,123 @@ def test_source(spec: dict[str, Any], password: str, *, db_path: Path | None = N
 # ---------------------------------------------------------------------------------------
 
 
-def list_usb_video_devices() -> list[dict[str, str]]:
-    """`/dev/videoN` nodes with the kernel's name — empty off-Linux. Metadata nodes are
-    listed too (v4l2 exposes one per camera); the operator picks the one that answers."""
-    sys_root = Path("/sys/class/video4linux")
-    out: list[dict[str, str]] = []
-    if not sys_root.is_dir():
+# v4l2 capability probe. We ask each NODE what it is instead of reading the name out of
+# /sys that happens to share its number, because those two can describe different things:
+# the brain runs in a container whose /dev holds only the devices compose mapped in, while
+# /sys is bind-mounted from the host and lists every node the host has. Joining them by
+# number is what produced the picker entry "/dev/video0 — Brio 500" for a /dev/video0 that
+# was really /dev/null — a name borrowed from the host describing a device that could not
+# possibly answer. Whatever QUERYCAP says came from the node ffmpeg will actually open.
+_VIDIOC_QUERYCAP = 0x80685600  # _IOR('V', 0, struct v4l2_capability); the struct is 104 bytes
+_V4L2_CAP_VIDEO_CAPTURE = 0x00000001
+_V4L2_CAP_VIDEO_CAPTURE_MPLANE = 0x00001000
+_V4L2_CAP_DEVICE_CAPS = 0x80000000
+
+
+def query_v4l2_capability(device: str) -> dict[str, Any] | None:
+    """One node's `VIDIOC_QUERYCAP`, or None if it is not a v4l2 device at all.
+
+    The returned ``device_caps`` is the per-NODE capability set. ``capabilities`` is the
+    union across every node of the same physical device, so a UVC webcam reports
+    VIDEO_CAPTURE there even on its metadata node — only ``device_caps`` separates the node
+    that yields frames from the one that answers ffmpeg with ENOTTY. Always read
+    ``device_caps`` (falling back only on pre-3.3 kernels that do not set DEVICE_CAPS).
+    """
+    try:
+        import fcntl  # POSIX only; absent on Windows, where there are no v4l2 nodes anyway
+    except ImportError:
+        return None
+    try:
+        fd = os.open(device, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0))
+    except OSError:
+        return None
+    try:
+        raw = fcntl.ioctl(fd, _VIDIOC_QUERYCAP, b"\0" * 104)
+    except OSError:
+        return None  # ENOTTY: a real file or a placeholder mapping, not a v4l2 node
+    finally:
+        os.close(fd)
+    import struct
+
+    driver, card, bus_info, _version, caps, device_caps = struct.unpack("<16s32s32sIII", raw[:92])
+
+    def _text(b: bytes) -> str:
+        return b.split(b"\0")[0].decode("utf-8", "replace").strip()
+
+    effective = device_caps if caps & _V4L2_CAP_DEVICE_CAPS else caps
+    return {
+        "driver": _text(driver),
+        "card": _text(card),
+        "bus_info": _text(bus_info),
+        "capabilities": caps,
+        "device_caps": effective,
+        "is_capture": bool(effective & (_V4L2_CAP_VIDEO_CAPTURE | _V4L2_CAP_VIDEO_CAPTURE_MPLANE)),
+    }
+
+
+def _by_id_index() -> dict[str, str]:
+    """`/dev/v4l/by-id` symlink -> node, so an entry can carry the camera's serial. Host
+    only: inside the container the by-id tree is not mapped, and that is fine — it is a
+    label, never the thing we probe."""
+    out: dict[str, str] = {}
+    root = Path("/dev/v4l/by-id")
+    if not root.is_dir():
         return out
-    for node in sorted(sys_root.iterdir(), key=lambda p: p.name):
-        dev = Path("/dev") / node.name
-        if not dev.exists():
-            continue
+    for link in root.iterdir():
         try:
-            name = (node / "name").read_text(encoding="utf-8", errors="replace").strip()
+            out.setdefault(str(link.resolve()), link.name)
         except OSError:
-            name = ""
-        out.append({"device": str(dev), "name": name})
+            continue
+    return out
+
+
+def list_usb_video_devices(dev_root: Path | str | None = None) -> list[dict[str, str]]:
+    """The nodes on the brain host that can actually hand ffmpeg a frame.
+
+    Restricted to USB video-capture nodes, which is exactly what the "USB webcam on the
+    brain" source kind means. Three things are deliberately left out, because offering any
+    of them only buys the operator a Test that fails with "Inappropriate ioctl for device":
+
+    * metadata nodes — v4l2 exposes one per camera, adjacent in numbering and identically
+      named, so they are indistinguishable in a picker that reads only the name;
+    * the Pi's own bcm2835 ISP and codec nodes, which are capture-capable but are not
+      cameras;
+    * a placeholder mapping (compose maps /dev/null when no camera is configured).
+
+    Each entry carries ``bus_info``, and ``serial`` when /dev/v4l/by-id can supply one, so
+    two identical cameras are tellable apart — this rig has two Brio 500s.
+    """
+    out: list[dict[str, str]] = []
+    root = Path(dev_root) if dev_root is not None else Path("/dev")
+    if not root.is_dir():
+        return out
+    by_id = _by_id_index()
+    nodes = sorted(
+        (p for p in root.glob("video*") if re.fullmatch(r"video\d+", p.name)),
+        key=lambda p: int(p.name[5:]),
+    )
+    for node in nodes:
+        cap = query_v4l2_capability(str(node))
+        if cap is None or not cap["is_capture"]:
+            continue
+        if not cap["bus_info"].startswith("usb-"):
+            continue  # platform: the Pi's ISP/codec nodes, not a webcam
+        link = by_id.get(str(node), "")
+        serial = ""
+        m = re.match(r"usb-[0-9a-fA-F]{4}_(?:.*?)_([A-Za-z0-9]+)-video-index\d+$", link)
+        if m:
+            serial = m.group(1)
+        name = cap["card"] or "unnamed"
+        entry = {
+            "device": str(node),
+            "name": name,
+            "bus_info": cap["bus_info"],
+            "serial": serial,
+            "by_id": f"/dev/v4l/by-id/{link}" if link else "",
+            # What the picker should show. Two Brio 500s are the same word twice without it.
+            "label": f"{name} · {serial}" if serial else f"{name} · {cap['bus_info']}",
+        }
+        out.append(entry)
     return out
 
 

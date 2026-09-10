@@ -293,3 +293,149 @@ def test_cameras_api(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     assert r.status_code == 200 and r.json()["deleted"] is True
     assert client.get("/cameras/tent-4x8/latest.jpg").status_code == 404
     assert client.get("/cameras").json()["cameras"] == []
+
+
+# ---------------------------------------------------------------------------------------
+# USB discovery — the picker must only offer nodes that can actually deliver a frame.
+#
+# The live rig found this the hard way: the brain container mapped /dev/null onto
+# /dev/video0 (compose's "no camera attached" placeholder), and discovery read the node's
+# NAME out of the host's /sys, which is bind-mounted and numbered independently of the
+# container's /dev. So the picker confidently offered "/dev/video0 — Brio 500" for a
+# /dev/null, and testing it failed with ffmpeg's bare "Inappropriate ioctl for device".
+# ---------------------------------------------------------------------------------------
+
+
+def _fake_cap(card: str, bus_info: str, *, capture: bool) -> dict[str, object]:
+    return {
+        "driver": "uvcvideo",
+        "card": card,
+        "bus_info": bus_info,
+        "capabilities": 0x84A00001,
+        "device_caps": 0x04200001 if capture else 0x04A00000,
+        "is_capture": capture,
+    }
+
+
+def test_usb_discovery_lists_only_usb_capture_nodes(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Metadata nodes, the Pi's own ISP nodes and a /dev/null placeholder are all excluded.
+
+    Mirrors the real rig: two Brio 500s, each with a capture node and a metadata node, plus
+    the bcm2835 ISP nodes the Pi always has. Only video0 and video2 can yield frames.
+    """
+    dev = tmp_path / "dev"
+    dev.mkdir()
+    for n in (0, 1, 2, 3, 14, 99):
+        (dev / f"video{n}").write_bytes(b"")
+    (dev / "videoX").write_bytes(b"")  # not a numbered node; must not be probed
+
+    caps = {
+        str(dev / "video0"): _fake_cap("Brio 500", "usb-xhci-hcd.1-1.2", capture=True),
+        str(dev / "video1"): _fake_cap("Brio 500", "usb-xhci-hcd.1-1.2", capture=False),
+        str(dev / "video2"): _fake_cap("Brio 500", "usb-xhci-hcd.1-1.4", capture=True),
+        str(dev / "video3"): _fake_cap("Brio 500", "usb-xhci-hcd.1-1.4", capture=False),
+        str(dev / "video14"): _fake_cap("bcm2835-isp", "platform:bcm2835-isp", capture=True),
+        str(dev / "video99"): None,  # the /dev/null placeholder: ENOTTY, not a v4l2 node
+    }
+    monkeypatch.setattr(cameras, "query_v4l2_capability", lambda d: caps.get(d))
+    monkeypatch.setattr(
+        cameras,
+        "_by_id_index",
+        lambda: {
+            str(dev / "video0"): "usb-046d_Brio_500_2234LZ50XG38-video-index0",
+            str(dev / "video1"): "usb-046d_Brio_500_2234LZ50XG38-video-index1",
+            str(dev / "video2"): "usb-046d_Brio_500_2234LZ52FKD8-video-index0",
+        },
+    )
+
+    got = cameras.list_usb_video_devices(dev_root=dev)
+    assert [d["device"] for d in got] == [str(dev / "video0"), str(dev / "video2")]
+    # Two identical cameras must be tellable apart, so the serial has to reach the label.
+    assert got[0]["serial"] == "2234LZ50XG38"
+    assert got[1]["serial"] == "2234LZ52FKD8"
+    assert got[0]["label"] != got[1]["label"]
+    assert got[0]["by_id"].endswith("usb-046d_Brio_500_2234LZ50XG38-video-index0")
+
+
+def test_enotty_is_explained_not_parroted(monkeypatch: pytest.MonkeyPatch) -> None:
+    """ffmpeg's bare errno text is useless on its own; the operator gets the actual cause."""
+    monkeypatch.setattr(cameras, "query_v4l2_capability", lambda d: None)
+    msg = cameras._explain_capture_failure(
+        "/dev/video0: Inappropriate ioctl for device", ["-f", "v4l2", "-i", "/dev/video0"]
+    )
+    assert "DSC_CAMERA_DEVICE" in msg and "/dev/video0" in msg
+
+    # A metadata node IS a v4l2 device, so it gets the other explanation.
+    monkeypatch.setattr(
+        cameras,
+        "query_v4l2_capability",
+        lambda d: _fake_cap("Brio 500", "usb-xhci-hcd.1-1.2", capture=False),
+    )
+    msg2 = cameras._explain_capture_failure(
+        "Inappropriate ioctl for device", ["-f", "v4l2", "-i", "/dev/video1"]
+    )
+    assert "metadata" in msg2
+
+    # Anything unrelated is passed through untouched.
+    assert cameras._explain_capture_failure("No such file or directory", ["-i", "/dev/video9"]) == (
+        "No such file or directory"
+    )
+
+
+def test_usb_source_accepts_stable_by_id_path() -> None:
+    by_id = "/dev/v4l/by-id/usb-046d_Brio_500_2234LZ50XG38-video-index0"
+    assert cameras.validate_source("usb", by_id, {}) == by_id
+    with pytest.raises(ValueError):
+        cameras.validate_source("usb", "/etc/passwd", {})
+
+
+def test_query_capability_reads_device_caps_not_capabilities(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The capture node and the metadata node of one webcam are told apart ONLY by device_caps.
+
+    These are the exact numbers the live Brio 500 reports. Both nodes advertise the same
+    `capabilities` word — 0x84a00001, VIDEO_CAPTURE and META_CAPTURE together — because
+    `capabilities` is the union across every node of the physical device. Reading it
+    instead of `device_caps` marks the metadata node as a camera, and picking that node is
+    what makes ffmpeg answer "Inappropriate ioctl for device".
+    """
+    import sys
+    import types
+
+    node = tmp_path / "video0"
+    node.write_bytes(b"")
+
+    def _payload(caps: int, device_caps: int) -> bytes:
+        return struct.pack(
+            "<16s32s32sIII",
+            b"uvcvideo",
+            b"Brio 500",
+            b"usb-xhci-hcd.1-1.2",
+            0,
+            caps,
+            device_caps,
+        ) + b"\0" * 12
+
+    cases = {
+        "capture": (0x84A00001, 0x04200001, True),
+        "metadata": (0x84A00001, 0x04A00000, False),
+    }
+    for label, (caps, dcaps, want_capture) in cases.items():
+        fake = types.ModuleType("fcntl")
+        fake.ioctl = lambda fd, req, buf: _payload(caps, dcaps)  # type: ignore[attr-defined]
+        monkeypatch.setitem(sys.modules, "fcntl", fake)
+        got = cameras.query_v4l2_capability(str(node))
+        assert got is not None, label
+        assert got["card"] == "Brio 500"
+        assert got["is_capture"] is want_capture, f"{label}: device_caps must decide"
+
+    # A node that is not v4l2 at all (the /dev/null placeholder) reports ENOTTY.
+    fake = types.ModuleType("fcntl")
+
+    def _enotty(fd: int, req: int, buf: bytes) -> bytes:
+        raise OSError(25, "Inappropriate ioctl for device")
+
+    fake.ioctl = _enotty  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "fcntl", fake)
+    assert cameras.query_v4l2_capability(str(node)) is None

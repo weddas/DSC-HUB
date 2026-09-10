@@ -81,7 +81,18 @@ export interface CamerasSummary {
   cameras: CameraRecord[];
   source_kinds: Array<{ id: CameraSourceKind; label: string }>;
   ffmpeg: boolean;
-  usb_devices: Array<{ device: string; name: string }>;
+  /** Only nodes that answered VIDIOC_QUERYCAP as a USB video-CAPTURE device. Metadata
+   * nodes, the Pi's own ISP/codec nodes and placeholder mappings are filtered out by the
+   * brain, so anything listed here can actually deliver a frame. `serial` distinguishes
+   * two identical cameras; `by_id` is the stable path that survives a replug. */
+  usb_devices: Array<{
+    device: string;
+    name: string;
+    bus_info?: string;
+    serial?: string;
+    by_id?: string;
+    label?: string;
+  }>;
   media_root: string;
   total_bytes: number;
 }
