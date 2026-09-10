@@ -5891,6 +5891,19 @@ button.dsc-metric:focus-visible { outline: 2px solid var(--dsc-teal); outline-of
 .dsc-cam-form-help { margin: -4px 0 0; font-size: var(--dsc-fs-sm); }
 /* A second labelled control inside one <label> (Device + Resolution share a row group). */
 .dsc-cam-subfield { display: block; margin: 10px 0 4px; font-size: var(--dsc-fs-sm); opacity: 0.75; }
+
+/* Recording storage: save locations and external transfers. */
+.dsc-media-h { margin: 14px 0 6px; font-size: var(--dsc-fs-sm); letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.7; }
+.dsc-media-loc { padding: 8px 0; border-top: 1px solid var(--dsc-line, rgba(255,255,255,0.08)); }
+.dsc-media-loc-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dsc-media-loc-path { font-size: var(--dsc-fs-sm); word-break: break-all; }
+.dsc-media-loc-meta { margin-top: 2px; font-size: var(--dsc-fs-sm); opacity: 0.7; }
+.dsc-media-loc-reason { margin: 4px 0 0; font-size: var(--dsc-fs-sm); color: var(--dsc-warn, #e0a33e); }
+.dsc-media-loc-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.dsc-media-job { margin-top: 12px; padding: 10px; border: 1px solid var(--dsc-line, rgba(255,255,255,0.08)); border-radius: 8px; }
+.dsc-media-job-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.dsc-media-bar { height: 6px; border-radius: 3px; background: rgba(127,127,127,0.25); overflow: hidden; }
+.dsc-media-bar-fill { height: 100%; background: var(--dsc-teal, #3ec8c8); transition: width 0.3s ease; }
 .dsc-cam-preview { border: 1px solid var(--dsc-gray-3); border-radius: var(--dsc-radius-sm); overflow: hidden; background: var(--dsc-gray-1); }
 .dsc-cam-preview img { display: block; width: 100%; height: auto; }
 .dsc-decision-body .dsc-cam-form-toggle { display: flex; gap: 10px; align-items: center; margin: 10px 0; }

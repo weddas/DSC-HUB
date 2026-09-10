@@ -15,6 +15,7 @@ import { ZigbeeCatalogCard } from "../../components/settings/ZigbeeCatalogCard";
 import { TuyaLocalCard } from "../../components/settings/TuyaLocalCard";
 import { KitUpdateCard } from "../../components/settings/KitUpdateCard";
 import { CamerasCard } from "../../components/settings/CamerasCard";
+import { MediaStorageCard } from "../../components/settings/MediaStorageCard";
 import { useSaveState } from "../../hooks/useGlobalModifiers";
 import { manifestDefaultLabel, useSettingsManifest } from "../../hooks/useSettingsManifest";
 import {
@@ -805,6 +806,7 @@ export function DevicesSettingsPage() {
       ) : null}
 
       {tab === "cameras" ? <CamerasCard /> : null}
+      {tab === "cameras" ? <MediaStorageCard /> : null}
 
       {tab === "firmware" ? (
         <>

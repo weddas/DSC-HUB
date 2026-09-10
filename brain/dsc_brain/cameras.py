@@ -64,8 +64,9 @@ CAPTURE_TIMEOUT_S = 20.0
 MOTIONEYE_BASE_STREAM_PORT = 8080  # camera N streams on 8080 + N
 PASSWORD_KEY_PREFIX = "camera_password:"
 CAMERA_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,39}$")
-DAY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-FRAME_NAME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}/\d{6}\.jpg$")
+DAY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")  # still the API's day format
+# Frames written before the zone/name tree: frames/<day>/<HHMMSS>.jpg. Read, never written.
+LEGACY_FRAME_NAME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}/\d{6}\.jpg$")
 TIMELAPSE_NAME_RE = re.compile(r"^[A-Za-z0-9_.-]+\.mp4$")
 
 
@@ -83,8 +84,80 @@ class CaptureError(RuntimeError):
 from .paths import media_root  # noqa: E402
 
 
-def camera_dir(camera_id: str) -> Path:
-    return media_root() / "camera" / camera_id
+# The frame filename format the operator asked for: ddmmyyHHMM.
+#
+# NOTE: this does not sort chronologically — 1009261430 (10 Sep) sorts BEFORE 1108261430
+# (11 Aug). The whole point of this tree is browsing the stick on a laptop, which is exactly
+# where that shows. "%y%m%d%H%M" is the same length, equally readable and sorts correctly;
+# switching is this one constant plus FRAME_NAME_RE.
+FRAME_STAMP_FMT = "%d%m%y%H%M"
+FRAME_STAMP_LEN = 10
+# <stamp>.jpg, or <stamp>-2.jpg when two captures land in the same minute.
+FRAME_NAME_RE = re.compile(r"^\d{10}(?:-\d+)?\.jpg$")
+
+# FAT32-illegal characters, because these folders are meant to be read off a USB stick.
+_FAT_ILLEGAL = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+_DOS_RESERVED = {
+    "CON", "PRN", "AUX", "NUL",
+    *(f"COM{i}" for i in range(1, 10)),
+    *(f"LPT{i}" for i in range(1, 10)),
+}
+_MAX_SEGMENT = 64
+
+
+def safe_dir_segment(text: str, fallback: str = "unnamed") -> str:
+    """One folder name that survives FAT32, a laptop file browser, and a rename.
+
+    Frozen at camera creation, never recomputed: renaming a camera must not orphan or move
+    recordings that are already on disk.
+    """
+    cleaned = _FAT_ILLEGAL.sub("", str(text or "")).strip()
+    # FAT32 cannot represent a name ending in a dot or space; Windows silently drops them.
+    cleaned = cleaned.rstrip(". ")
+    cleaned = re.sub(r"\s+", " ", cleaned)[:_MAX_SEGMENT].rstrip(". ")
+    if not cleaned:
+        return fallback
+    if cleaned.split(".")[0].upper() in _DOS_RESERVED:
+        cleaned = f"{cleaned}_"
+    return cleaned
+
+
+def format_frame_stamp(ts: float) -> str:
+    return datetime.fromtimestamp(max(0.0, ts)).strftime(FRAME_STAMP_FMT)
+
+
+def parse_frame_stamp(name: str) -> float | None:
+    """The capture time back out of a filename — the only reader of FRAME_STAMP_FMT.
+
+    Days are no longer a directory level, so listing, retention and timelapse ranges all
+    derive the date from here instead.
+    """
+    stem = name.split(".")[0].split("-")[0]
+    if len(stem) != FRAME_STAMP_LEN or not stem.isdigit():
+        return None
+    try:
+        return datetime.strptime(stem, FRAME_STAMP_FMT).timestamp()
+    except (ValueError, OverflowError, OSError):
+        return None
+
+
+def camera_tree_segments(cam: dict[str, Any] | None, camera_id: str) -> tuple[str, str] | None:
+    """The frozen (zone, name) folder pair for a camera, or None if it predates the tree."""
+    extra = (cam or {}).get("extra") or {}
+    zone = str(extra.get("zone_dir") or "")
+    name = str(extra.get("name_dir") or "")
+    return (zone, name) if zone and name else None
+
+
+def camera_dir(camera_id: str, db_path: Path | None = None) -> Path:
+    """Where one camera's media lives: ``media/camera/<zone>/<name>/``.
+
+    Falls back to the flat ``media/camera/<id>/`` for rows created before the tree existed,
+    so old recordings stay readable instead of vanishing from the UI.
+    """
+    seg = camera_tree_segments(get_camera(camera_id, db_path), camera_id)
+    base = media_root() / "camera"
+    return base / seg[0] / seg[1] if seg else base / camera_id
 
 
 def _connect(db_path: Path | None = None) -> sqlite3.Connection:
@@ -179,6 +252,19 @@ def get_camera(camera_id: str, db_path: Path | None = None) -> dict[str, Any] | 
 
 def password_for(camera_id: str, db_path: Path | None = None) -> str:
     return get_setting(PASSWORD_KEY_PREFIX + camera_id, "", db_path)
+
+
+def _space_label(space_id: str, db_path: Path | None) -> str:
+    """The zone's human name, for the folder. Falls back to the id when there is no row."""
+    try:
+        from .space_model import list_spaces
+
+        for sp in list_spaces(db_path):
+            if str(sp.get("space_id")) == str(space_id):
+                return str(sp.get("label") or sp.get("name") or space_id)
+    except Exception:
+        pass
+    return str(space_id)
 
 
 def _valid_space_ids(db_path: Path | None) -> set[str]:
@@ -322,6 +408,23 @@ def upsert_camera(
     merged["source_kind"] = str(merged["source_kind"]).strip().lower()
     if not merged["label"]:
         merged["label"] = cid
+
+    # Folder names are frozen the first time a camera is written, and never recomputed.
+    # Renaming a camera afterwards must not move or orphan recordings already on disk, so
+    # the tree keeps the name it was created under. That is the operator's call (2026-09-10)
+    # and it is the only version of this that cannot break history.
+    if not (extra.get("zone_dir") and extra.get("name_dir")):
+        zone_label = _space_label(merged["space_id"], db_path) or merged["space_id"]
+        extra["zone_dir"] = safe_dir_segment(zone_label, merged["space_id"] or "zone")
+        extra["name_dir"] = safe_dir_segment(merged["label"], cid)
+        # Two cameras whose labels sanitise to the same folder would write into each other.
+        taken = {
+            (str((c.get("extra") or {}).get("zone_dir") or ""), str((c.get("extra") or {}).get("name_dir") or ""))
+            for c in list_cameras(db_path)
+            if c["camera_id"] != cid
+        }
+        if (extra["zone_dir"], extra["name_dir"]) in taken:
+            extra["name_dir"] = safe_dir_segment(f"{extra['name_dir']} ({cid})", cid)
     merged["extra"] = extra
 
     with _connect(db_path) as conn:
@@ -687,19 +790,30 @@ def _day_of(ts: float) -> str:
 
 
 def store_frame(camera_id: str, data: bytes, *, now: float | None = None) -> dict[str, Any]:
+    """One frame onto disk as ``<zone>/<name>/ddmmyyHHMM.jpg``.
+
+    The stamp has minute resolution, so two captures in the same minute would collide — the
+    interval makes that rare but *Capture now* can do it. A suffix is appended rather than
+    overwriting: losing a frame the operator deliberately asked for is worse than an odd
+    filename.
+    """
     ts = time.time() if now is None else now
     root = camera_dir(camera_id)
-    day = _day_of(ts)
-    day_dir = root / "frames" / day
-    day_dir.mkdir(parents=True, exist_ok=True)
-    name = datetime.fromtimestamp(ts).strftime("%H%M%S") + ".jpg"
-    path = day_dir / name
+    root.mkdir(parents=True, exist_ok=True)
+    stamp = format_frame_stamp(ts)
+    name = f"{stamp}.jpg"
+    path = root / name
+    seq = 2
+    while path.exists():
+        name = f"{stamp}-{seq}.jpg"
+        path = root / name
+        seq += 1
     path.write_bytes(data)
     latest = root / "latest.jpg"
     tmp = root / "latest.jpg.tmp"
     tmp.write_bytes(data)
     os.replace(tmp, latest)
-    return {"name": f"{day}/{name}", "path": path, "bytes": len(data), "at": ts}
+    return {"name": name, "path": path, "bytes": len(data), "at": ts}
 
 
 def latest_frame_path(camera_id: str) -> Path | None:
@@ -708,49 +822,75 @@ def latest_frame_path(camera_id: str) -> Path | None:
 
 
 def frame_path(camera_id: str, name: str) -> Path | None:
-    if not FRAME_NAME_RE.match(name):
+    root = camera_dir(camera_id)
+    if FRAME_NAME_RE.match(name):
+        p = root / name
+    elif LEGACY_FRAME_NAME_RE.match(name):
+        p = root / "frames" / name
+    else:
         return None
-    p = camera_dir(camera_id) / "frames" / name
     return p if p.is_file() else None
 
 
-def list_days(camera_id: str) -> list[dict[str, Any]]:
-    root = camera_dir(camera_id) / "frames"
+def _frame_files(camera_id: str) -> list[tuple[float, Path, str]]:
+    """Every stored frame as (capture time, path, api name), oldest first.
+
+    Days used to be a directory level; now they are read back out of the filename, so this
+    is the one scan that listing, retention and timelapse ranges all share.
+
+    Frames written before the tree change still live under ``frames/<day>/<HHMMSS>.jpg`` and
+    are included, keyed by the day directory they sit in. A kit that has been recording for
+    months must not watch its history disappear because the layout improved.
+    """
+    root = camera_dir(camera_id)
     if not root.is_dir():
         return []
-    out: list[dict[str, Any]] = []
-    for d in sorted(root.iterdir()):
-        if not d.is_dir() or not DAY_RE.match(d.name):
-            continue
-        files = [f for f in d.iterdir() if f.suffix == ".jpg"]
-        if not files:
-            continue
-        out.append({"day": d.name, "frames": len(files), "bytes": sum(f.stat().st_size for f in files)})
+    out: list[tuple[float, Path, str]] = []
+    for f in root.iterdir():
+        if f.is_file() and FRAME_NAME_RE.match(f.name):
+            at = parse_frame_stamp(f.name)
+            if at is not None:
+                out.append((at, f, f.name))
+    legacy = root / "frames"
+    if legacy.is_dir():
+        for day_dir in legacy.iterdir():
+            if not day_dir.is_dir() or not DAY_RE.match(day_dir.name):
+                continue
+            for f in day_dir.iterdir():
+                if not f.is_file() or f.suffix != ".jpg":
+                    continue
+                try:
+                    at = datetime.strptime(f"{day_dir.name} {f.stem}", "%Y-%m-%d %H%M%S").timestamp()
+                except ValueError:
+                    continue
+                out.append((at, f, f"{day_dir.name}/{f.name}"))
+    out.sort(key=lambda triple: (triple[0], triple[2]))
     return out
 
 
+def list_days(camera_id: str) -> list[dict[str, Any]]:
+    """Days that have frames, grouped from filenames rather than directories.
+
+    The API still speaks YYYY-MM-DD — only the on-disk layout changed — so the SPA's day
+    browser and the timelapse range picker keep working unaltered.
+    """
+    buckets: dict[str, dict[str, Any]] = {}
+    for at, f, _name in _frame_files(camera_id):
+        day = _day_of(at)
+        b = buckets.setdefault(day, {"day": day, "frames": 0, "bytes": 0})
+        b["frames"] += 1
+        b["bytes"] += f.stat().st_size
+    return [buckets[k] for k in sorted(buckets)]
+
+
 def list_frames(camera_id: str, day: str | None = None, *, limit: int = 500) -> list[dict[str, Any]]:
-    root = camera_dir(camera_id) / "frames"
-    if not root.is_dir():
-        return []
-    days = [day] if day else [d["day"] for d in list_days(camera_id)]
     out: list[dict[str, Any]] = []
-    for d in reversed(days):
-        if not DAY_RE.match(d):
+    for at, f, name in reversed(_frame_files(camera_id)):
+        if day and _day_of(at) != day:
             continue
-        day_dir = root / d
-        if not day_dir.is_dir():
-            continue
-        for f in sorted(day_dir.iterdir(), reverse=True):
-            if f.suffix != ".jpg":
-                continue
-            try:
-                at = datetime.strptime(f"{d} {f.stem}", "%Y-%m-%d %H%M%S").timestamp()
-            except ValueError:
-                continue
-            out.append({"name": f"{d}/{f.name}", "at": at, "bytes": f.stat().st_size})
-            if len(out) >= limit:
-                return out
+        out.append({"name": name, "at": at, "bytes": f.stat().st_size})
+        if len(out) >= limit:
+            break
     return out
 
 
@@ -789,28 +929,43 @@ def prune_frames(camera_id: str, keep_days: int, cap_gb: float, *, now: float | 
     """Delete frame days older than keep_days (0 = keep all), then oldest days until the
     frames fit under cap_gb (0 = no cap). `latest.jpg` and timelapses are never touched."""
     ts = time.time() if now is None else now
-    days = list_days(camera_id)
-    deleted_days: list[str] = []
+    files = [(at, f) for at, f, _n in _frame_files(camera_id)]
+    sizes = {f: f.stat().st_size for _at, f in files}
+    deleted_days: set[str] = set()
     freed = 0
-    root = camera_dir(camera_id) / "frames"
+
+    def _drop(at: float, f: Path) -> int:
+        size = sizes.get(f, 0)
+        try:
+            f.unlink()
+        except OSError:
+            return 0
+        deleted_days.add(_day_of(at))
+        return size
+
     if keep_days > 0:
+        # Whole days, as before: a retention window that cut mid-day would leave a partial
+        # day that reads as a gap in the record rather than an expiry.
         cutoff = _day_of(ts - keep_days * 86400)
-        for d in list(days):
-            if d["day"] < cutoff:
-                shutil.rmtree(root / d["day"], ignore_errors=True)
-                deleted_days.append(d["day"])
-                freed += d["bytes"]
-                days.remove(d)
+        remaining: list[tuple[float, Path]] = []
+        for at, f in files:
+            if _day_of(at) < cutoff:
+                freed += _drop(at, f)
+            else:
+                remaining.append((at, f))
+        files = remaining
     if cap_gb > 0:
         cap = cap_gb * 1024**3
-        total = sum(d["bytes"] for d in days)
-        while days and total > cap:
-            d = days.pop(0)
-            shutil.rmtree(root / d["day"], ignore_errors=True)
-            deleted_days.append(d["day"])
-            freed += d["bytes"]
-            total -= d["bytes"]
-    return {"deleted_days": deleted_days, "freed_bytes": freed}
+        total = sum(sizes.get(f, 0) for _at, f in files)
+        idx = 0
+        while idx < len(files) and total > cap:
+            at, f = files[idx]
+            size = sizes.get(f, 0)
+            if _drop(at, f):
+                total -= size
+                freed += size
+            idx += 1
+    return {"deleted_days": sorted(deleted_days), "freed_bytes": freed}
 
 
 # ---------------------------------------------------------------------------------------
@@ -1149,11 +1304,9 @@ def assemble_timelapse(
     binary = ffmpeg_bin(db_path)
     if not binary:
         raise CaptureError("ffmpeg is not installed on the brain host (apt install ffmpeg)")
-    root = camera_dir(camera_id) / "frames"
-    frames: list[Path] = []
-    for d in list_days(camera_id):
-        if day_from <= d["day"] <= day_to:
-            frames.extend(sorted(p for p in (root / d["day"]).iterdir() if p.suffix == ".jpg"))
+    # Chronological by CAPTURE TIME, not by filename: ddmmyyHHMM does not sort into date
+    # order, so sorting names here would shuffle the timelapse into nonsense.
+    frames = [f for at, f, _n in _frame_files(camera_id) if day_from <= _day_of(at) <= day_to]
     if len(frames) < 2:
         raise CaptureError("fewer than two frames in that range")
     fps = max(1, min(60, int(fps)))

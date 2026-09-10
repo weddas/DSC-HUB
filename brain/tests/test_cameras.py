@@ -133,9 +133,11 @@ def test_store_list_prune_frames(media: Path) -> None:
     days = list_days("cam")
     assert [d["day"] for d in days] == ["2026-09-01", "2026-09-02", "2026-09-03", "2026-09-04", "2026-09-05"]
     frames = list_frames("cam")
-    assert frames[0]["name"].startswith("2026-09-05/") and len(frames) == 5
-    assert list_frames("cam", "2026-09-03")[0]["name"] == "2026-09-03/100000.jpg"
-    assert cameras.frame_path("cam", "2026-09-03/100000.jpg") is not None
+    # The tree is flat now: zone/name/ddmmyyHHMM.jpg, with the day derived from the name.
+    assert frames[0]["name"] == "0509261000.jpg" and len(frames) == 5
+    assert list_frames("cam", "2026-09-03")[0]["name"] == "0309261000.jpg"
+    assert cameras.frame_path("cam", "0309261000.jpg") is not None
+    assert cameras.frame_path("cam", "../../etc/passwd") is None
     assert cameras.frame_path("cam", "../latest.jpg") is None
     st = camera_storage("cam")
     assert st["frames"] == 5 and st["bytes"] > 5000

@@ -26,14 +26,31 @@ def default_db() -> Path:
     return Path(os.environ.get("DSC_DATA", str(_default_brain))) / "dsc_ops.sqlite3"
 
 
-def media_root() -> Path:
-    """``DSC_DATA/media`` resolved at CALL time, not import time.
-
-    Media (camera frames, journal photos) lives on disk rather than in SQLite because it
-    dwarfs the journals. Resolved per call so tests can point ``DSC_DATA`` at a scratch dir
-    after this module is imported.
-    """
+def default_media_root() -> Path:
+    """``DSC_DATA/media`` — where media lives unless the operator moved it."""
     return Path(os.environ.get("DSC_DATA", str(_default_brain))) / "media"
+
+
+def media_root() -> Path:
+    """Where media is saved, resolved at CALL time, not import time.
+
+    Media (camera frames, journal photos, timelapses) lives on disk rather than in SQLite
+    because it dwarfs the journals. Resolved per call so tests can point ``DSC_DATA`` at a
+    scratch dir after this module is imported, and so the operator can move the whole lot
+    to another drive without a restart.
+
+    The ``media_root`` setting wins when set. The import of ``settings`` is deferred because
+    ``settings`` imports this module — at module level it would be a cycle. A missing or
+    unreadable settings DB falls back to the default rather than raising: a brain that
+    cannot read a preference must still be able to write a frame.
+    """
+    try:
+        from .settings import get_setting
+
+        configured = (get_setting("media_root", "") or "").strip()
+    except Exception:
+        configured = ""
+    return Path(configured) if configured else default_media_root()
 CANNALIB_ROOT = REPO_ROOT.parent / "CannaLib"
 CANNALIB_DB = CANNALIB_ROOT / "brain" / "data" / "dsc_brain.sqlite3"
 EXPECTED_FIRMWARE = os.environ.get("DSC_EXPECTED_FIRMWARE", "8.1.0.0")

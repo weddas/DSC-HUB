@@ -3066,11 +3066,85 @@ def cameras_frames(camera_id: str, day: str | None = Query(None), limit: int = Q
     return {"frames": list_frames(camera_id, day, limit=limit)}
 
 
-@app.get("/cameras/{camera_id}/frames/{day}/{name}")
-def cameras_frame(camera_id: str, day: str, name: str) -> FileResponse:
+# ---------------------------------------------------------------------------------------
+# media storage — where recordings are saved, and moving them to a drive you can carry away
+#
+# Under /settings because that is what it is. It also keeps "media" out of the SPA-fallback
+# segment list, which would otherwise start swallowing any /media/... URL the UI wants.
+# ---------------------------------------------------------------------------------------
+
+
+class MediaLocationBody(BaseModel):
+    # "" resets to DSC_DATA/media.
+    path: str = ""
+
+
+class MediaTransferBody(BaseModel):
+    dest: str
+    mode: str = "copy"
+
+
+@app.get("/settings/media/locations")
+def media_locations_get() -> dict[str, Any]:
+    from .media_store import list_locations
+
+    return list_locations()
+
+
+@app.put("/settings/media/location")
+def media_location_put(body: MediaLocationBody) -> dict[str, Any]:
+    from .media_store import set_media_root
+
+    try:
+        return set_media_root(body.path)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.post("/settings/media/transfer")
+def media_transfer_post(body: MediaTransferBody) -> dict[str, Any]:
+    from .media_store import start_transfer
+
+    try:
+        return start_transfer(body.dest, body.mode)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.get("/settings/media/transfers")
+def media_transfers_get() -> dict[str, Any]:
+    from .media_store import list_transfers
+
+    return {"transfers": list_transfers()}
+
+
+@app.get("/settings/media/transfer/{job_id}")
+def media_transfer_get(job_id: str) -> dict[str, Any]:
+    from .media_store import get_transfer
+
+    job = get_transfer(job_id)
+    if job is None:
+        raise HTTPException(404, "no such transfer")
+    return job
+
+
+@app.post("/settings/media/transfer/{job_id}/cancel")
+def media_transfer_cancel(job_id: str) -> dict[str, Any]:
+    from .media_store import cancel_transfer
+
+    if not cancel_transfer(job_id):
+        raise HTTPException(409, "that transfer is not running")
+    return {"cancelled": job_id}
+
+
+# `:path` so this serves both the current flat name (ddmmyyHHMM.jpg) and the legacy
+# two-segment name (YYYY-MM-DD/HHMMSS.jpg) still on disk at older kits. frame_path()
+# validates the shape and refuses anything else, so the wildcard cannot escape the folder.
+@app.get("/cameras/{camera_id}/frames/{name:path}")
+def cameras_frame(camera_id: str, name: str) -> FileResponse:
     from .cameras import frame_path
 
-    path = frame_path(camera_id, f"{day}/{name}")
+    path = frame_path(camera_id, name)
     if path is None:
         raise HTTPException(404, "no such frame")
     return FileResponse(path, media_type="image/jpeg", headers={"Cache-Control": "private, max-age=86400"})
