@@ -27,6 +27,7 @@ import {
   test_ollama,
 } from "../../lib/fleetApi";
 import { paths } from "../../lib/paths";
+import { seatLabel } from "../../lib/probeModel";
 
 /** Connectivity-test result as a readable status line + collapsible raw payload. */
 function IntegrationTestResult({ raw }: { raw: string }) {
@@ -371,7 +372,7 @@ export function NetworkSettingsPage() {
               <tbody>
                 {(network.dhcp_map as Array<Record<string, unknown>>).map((row) => (
                   <tr key={String(row.seat_id)}>
-                    <td>{String(row.seat_id)}</td>
+                    <td>{seatLabel(String(row.seat_id))}</td>
                     <td>{String(row.host ?? "—")}</td>
                     <td>{String(row.mac ?? "—")}</td>
                   </tr>

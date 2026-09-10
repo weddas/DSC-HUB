@@ -100,7 +100,9 @@ def _reduced_kit(inventory: list[dict[str, Any]] | None) -> tuple[bool, dict[str
             offline.append(label)
     for n in KIT_PROBE_NUMBERS:
         if not _inventory_in_service(inventory, f"pot{n}", True):
-            offline.append(f"POT{n}")
+            # The operator reads these: the device is a PROBE. "pot" is only ever the
+            # seat id, which stays pot{n} because it keys inventory, yamls and DHCP.
+            offline.append(f"PROBE{n}")
     active = len(offline) > 0
     return active, {
         "planned_oos": ", ".join(planned) if planned else "",

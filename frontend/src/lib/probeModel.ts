@@ -201,6 +201,23 @@ export function probeLabel(n: number): string {
   return `Probe ${n}`;
 }
 
+/**
+ * What to call a seat on screen.
+ *
+ * The seat *id* stays `pot1`/`pot2` — it keys the inventory, the device yamls, the DHCP
+ * reservations and the roster, and renaming an identifier for a wording change is how you
+ * break a fleet. The entities were already `dsc_probe1_*`; only the id and a handful of
+ * labels still said "pot", which read as though the pot and the probe were the same thing.
+ * They are not: the probe is the device, the pot is what it happens to be stuck in.
+ *
+ * Everything the operator reads goes through here, so there is one place to say it.
+ */
+export function seatLabel(seatId: string): string {
+  const m = /^pot(\d+)$/i.exec(String(seatId || "").trim());
+  if (m) return probeLabel(Number(m[1]));
+  return String(seatId ?? "");
+}
+
 /** Probe is shown when inventory in_service is on; off = OOS hole (never fake Got). */
 export function isProbeInService(
   probe: number,

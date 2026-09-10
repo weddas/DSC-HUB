@@ -41,4 +41,5 @@ def test_pot1_oos_is_capacity_offline():
     ]
     active, attrs = _reduced_kit(inv)
     assert active is True
-    assert "POT1" in attrs["offline"]
+    # The operator reads this: the device is a PROBE. The seat id stays pot1.
+    assert "PROBE1" in attrs["offline"]

@@ -11,7 +11,7 @@ import {
   type ProbeStation,
   type SoilTestPoll,
 } from "../lib/fleetApi";
-import { rosterSlots, KIT_PROBE_NUMBERS, probeLabel } from "../lib/probeModel";
+import { KIT_PROBE_NUMBERS, probeLabel, rosterSlots, seatLabel } from "../lib/probeModel";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleet } from "../hooks/useFleet";
 import { ASSIGNED_PROBE_BANNER, probeAssignedPlantId, probeAssignmentDisplay } from "../lib/probeAssignment";
@@ -275,7 +275,7 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
                   className={`dsc-chip${stationId === s.seat_id ? " dsc-chip--ok" : ""}`}
                   onClick={() => setStationId(s.seat_id)}
                 >
-                  {s.seat_id} · {s.tent}
+                  {seatLabel(s.seat_id)} · {s.tent}
                 </button>
               ))}
             </div>

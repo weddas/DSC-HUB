@@ -10,6 +10,7 @@ import {
   start_kit_update,
   type KitUpdateStatus,
 } from "../../lib/fleetApi";
+import { seatLabel } from "../../lib/probeModel";
 
 function fmtWhen(iso: string | null): string {
   if (!iso) return "";
@@ -163,7 +164,7 @@ export function KitUpdateCard() {
                       : ("muted" as const);
                 return (
                   <SettingsRow key={d.seat_id} tone={!d.in_service ? "muted" : undefined}>
-                    <td>{d.seat_id}</td>
+                    <td>{seatLabel(d.seat_id)}</td>
                     <td>{d.running ?? "—"}</td>
                     <td className={`is-tight is-${tone}`}>
                       {!d.in_service

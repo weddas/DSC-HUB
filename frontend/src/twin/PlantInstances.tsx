@@ -6,6 +6,7 @@ import { useAnchor } from "./anchors";
 import { useTwin } from "./context";
 import type { TwinPlant } from "../lib/twinState";
 import type { ZoneTone } from "../lib/zoneTone";
+import { probeLabel } from "../lib/probeModel";
 
 function toneOf(t: ZoneTone): EmissiveTone {
   return t === "critical" ? "bad" : t === "warn" || t === "stale" ? "warn" : t === "muted" ? "dim" : "ok";
@@ -40,7 +41,7 @@ function PlantLabel({ plant, vesselId, plantId }: { plant: TwinPlant; vesselId: 
         <span>
           {stageShort(plant.stage)}
           {plant.day != null ? ` · DAY ${plant.day}` : ""}
-          {plant.pot != null ? ` · POT ${plant.pot}` : " · NO POT"}
+          {plant.pot != null ? ` · ${probeLabel(plant.pot).toUpperCase()}` : " · NO PROBE"}
           {Number.isFinite(plant.moisture) ? ` · ${Math.round(plant.moisture)} %` : ""}
         </span>
       </div>

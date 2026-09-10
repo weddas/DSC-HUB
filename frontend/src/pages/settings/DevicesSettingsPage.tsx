@@ -48,7 +48,7 @@ import {
   type ZigbeeRole,
 } from "../../lib/fleetApi";
 import { parseFleetSnapshot, type FleetSnapshot, type InventoryRow } from "../../lib/fleetModel";
-import { probeLabel } from "../../lib/probeModel";
+import { probeLabel, seatLabel } from "../../lib/probeModel";
 import { formatStamp } from "../../lib/units";
 import { paths } from "../../lib/paths";
 
@@ -552,7 +552,7 @@ export function DevicesSettingsPage() {
                       return (
                         <tr key={st.seat_id}>
                           <td>
-                            {st.seat_id} <StatusChip label={st.online ? "ONLINE" : "OFFLINE"} tone={st.online ? "ok" : "bad"} />
+                            {seatLabel(st.seat_id)} <StatusChip label={st.online ? "ONLINE" : "OFFLINE"} tone={st.online ? "ok" : "bad"} />
                           </td>
                           <td>{st.reading_mode}</td>
                           <td>
@@ -1007,7 +1007,7 @@ export function DevicesSettingsPage() {
                 <tbody>
                   {esphome.map((row) => (
                     <tr key={String(row.seat_id)}>
-                      <td>{String(row.seat_id)}</td>
+                      <td>{seatLabel(String(row.seat_id))}</td>
                       <td>{String(row.yaml ?? "—")}</td>
                       <td>{String(row.expected_firmware ?? "—")}</td>
                       <td>{row.online ? String(row.last_firmware ?? "online") : "offline"}</td>
@@ -1202,7 +1202,7 @@ export function DevicesSettingsPage() {
                     const when = Number(j.updated_at);
                     return (
                       <SettingsRow key={String(j.job_id ?? i)}>
-                        <td>{String(j.seat_id ?? "—")}</td>
+                        <td>{j.seat_id ? seatLabel(String(j.seat_id)) : "—"}</td>
                         <td>{String(j.action ?? "—")}</td>
                         <td className={tone ? `is-${tone}` : undefined}>{status}</td>
                         <td className="is-numeric">{Number.isFinite(when) ? formatStamp(when * 1000) : "—"}</td>

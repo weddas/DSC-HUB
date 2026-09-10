@@ -50,7 +50,7 @@ def test_removed_pots_are_in_neither_kit_list(
     assert "POT3" not in both
     assert "POT4" not in both
     # Default kit inventory keeps pot1/pot2 in service — reduced active only for live capacity gaps.
-    assert active is False or "POT1" not in attrs.get("offline", "")
+    assert active is False or "PROBE1" not in attrs.get("offline", "")
 
 
 def test_wet_without_bound_recipe_does_not_set_policy_problem(
