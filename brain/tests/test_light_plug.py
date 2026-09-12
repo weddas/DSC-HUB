@@ -6,6 +6,7 @@ these tests are about the decision, not the transport.
 
 from __future__ import annotations
 
+import datetime
 import time
 from typing import Any
 
@@ -194,3 +195,123 @@ def test_lamp_roles_are_in_the_shared_role_catalogue() -> None:
     for role in light_plug.LAMP_ROLES:
         assert role in by_id, f"{role} must exist for a plug to bind to it"
         assert by_id[role]["kind"] == "plug", "lamp roles bind to plug-class devices"
+
+
+# ----------------------------------------------------------------- the task: plateau
+
+
+def _controls(lights_on="15:00:00", rise=30.0, fall=30.0):
+    return {
+        "time.dsc_hub_lights_on_time": {"state": lights_on},
+        "number.dsc_hub_sunrise_duration": {"state": rise},
+        "number.dsc_hub_sunset_duration": {"state": fall},
+    }
+
+
+def _at(hhmm: str) -> float:
+    h, m = (int(x) for x in hhmm.split(":"))
+    return datetime.datetime.now().replace(hour=h, minute=m, second=0, microsecond=0).timestamp()
+
+
+# 12 h window: debt + delivered = target, which is how the driver recovers the length.
+def _values(delivered_h: float, window_h: float = 12.0):
+    return {"light_delivered_hours": delivered_h, "light_debt_hours": window_h - delivered_h}
+
+
+@pytest.mark.parametrize(
+    ("clock", "delivered", "on", "why"),
+    [
+        ("15:05", 0.08, False, "sunrise ramp"),      # 5 min in — dimmer owns the ramp
+        ("15:29", 0.48, False, "sunrise ramp"),      # still ramping
+        ("15:31", 0.52, True, "plateau"),            # ramp done — lamp joins
+        ("20:00", 5.0, True, "plateau"),             # mid-window
+        ("02:29", 11.48, True, "plateau"),           # 02:30 is the sunset edge — still plateau
+        ("02:35", 11.58, False, "sunset ramp"),      # sunset started — lamp drops out
+    ],
+)
+def test_plateau_keeps_the_ramp_shoulders_for_the_dimmable_fixture(clock, delivered, on, why):
+    got, reason = light_plug.plateau_ok(_values(delivered), _controls(), _at(clock))
+    assert got is on, f"{clock}: {reason}"
+    assert why in reason
+
+
+def test_plateau_falls_back_to_full_window_when_geometry_is_unknown():
+    ok, reason = light_plug.plateau_ok({}, _controls(), _at("15:05"))
+    assert ok is True and "unknown" in reason, "never withhold light over a missing number"
+
+
+def test_full_mode_is_on_for_the_whole_window(lane):
+    light_plug.tick_lamp_plugs(make_fleet(window=True))
+    assert lane["writes"] == [(DEVICE, True)], "default task-less behaviour is unchanged"
+
+
+# ----------------------------------------------------------------- the task: countdown
+
+
+@pytest.fixture
+def dps(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, int, object]]:
+    """Record raw datapoint writes and give the plug a countdown datapoint."""
+    writes: list[tuple[str, int, object]] = []
+    import dsc_brain.tuya_local as tuya_local
+
+    monkeypatch.setattr(tuya_local, "set_tuya_dp", lambda d, i, v: writes.append((d, i, v)) or {"ok": True})
+    monkeypatch.setattr(light_plug, "_countdown_index", lambda _d: 2)
+    return writes
+
+
+def _params(**kw):
+    base = {"window_mode": "full", "countdown_backup": "off", "countdown_margin_min": 15}
+    base.update(kw)
+    return base
+
+
+def test_countdown_is_not_armed_unless_the_task_enables_it(lane, dps, monkeypatch):
+    monkeypatch.setattr(light_plug, "task_params", lambda _d: _params())
+    light_plug.tick_lamp_plugs(make_fleet(window=True))
+    assert dps == [], "opt-in only"
+
+
+def test_countdown_is_pushed_past_lights_off(lane, dps, monkeypatch):
+    monkeypatch.setattr(light_plug, "task_params", lambda _d: _params(countdown_backup="on"))
+    now = _at("20:00")
+    fleet = make_fleet(window=True, now=now)
+    fleet.hub.values["controls"].update(_controls())
+    fleet.hub.values.update(_values(5.0))
+    light_plug.tick_lamp_plugs(fleet, now=now)
+    assert len(dps) == 1
+    _dev, index, seconds = dps[0]
+    # 5 h into a 12 h window = 7 h left, plus a 15 min margin.
+    assert index == 2
+    assert seconds == pytest.approx((7 * 60 + 15) * 60, abs=120)
+
+
+def test_countdown_is_disarmed_when_the_lamp_should_be_off(lane, dps, monkeypatch):
+    monkeypatch.setattr(light_plug, "task_params", lambda _d: _params(countdown_backup="on"))
+    now = _at("20:00")
+    fleet = make_fleet(window=True, now=now)
+    fleet.hub.values["controls"].update(_controls())
+    fleet.hub.values.update(_values(5.0))
+    light_plug.tick_lamp_plugs(fleet, now=now)
+    dps.clear()
+    light_plug.tick_lamp_plugs(make_fleet(window=False, now=now + 1), now=now + 1)
+    assert dps == [(DEVICE, 2, 0)], "a stale deadline must not cut a later window short"
+
+
+def test_countdown_is_not_rewritten_every_tick(lane, dps, monkeypatch):
+    monkeypatch.setattr(light_plug, "task_params", lambda _d: _params(countdown_backup="on"))
+    now = _at("20:00")
+    fleet = make_fleet(window=True, now=now)
+    fleet.hub.values["controls"].update(_controls())
+    fleet.hub.values.update(_values(5.0))
+    for i in range(5):
+        light_plug.tick_lamp_plugs(fleet, now=now + i * 2)
+    assert len(dps) == 1
+
+
+def test_recipe_is_invisible_to_the_sensor_evaluator():
+    """The safety cut-outs must not try to run a time-triggered task."""
+    from dsc_brain.zigbee_policies import get_recipe_catalog
+
+    recipe = next(r for r in get_recipe_catalog() if r["id"] == light_plug.LAMP_RECIPE_ID)
+    assert recipe.get("when") is None, "evaluate_device_policies bails on `not recipe.get('when')`"
+    assert recipe.get("trigger") == "photoperiod"

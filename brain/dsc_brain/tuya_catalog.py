@@ -29,7 +29,7 @@ TUYA_DEVICE_TYPES: list[dict[str, Any]] = [
             {"key": "energy", "unit": "kWh", "kind": "number"},
         ],
         # Tuya's standard single-gang metering plug profile.
-        "dps_map": {"state": 1, "energy": 17, "current": 18, "power": 19, "voltage": 20},
+        "dps_map": {"state": 1, "countdown": 2, "energy": 17, "current": 18, "power": 19, "voltage": 20},
         "scales": {"power": 0.1, "voltage": 0.1, "current": 0.001, "energy": 0.01},
         "suggested_roles": ["plug_light_4x8", "plug_light_2x4", "plug_pump", "plug_dosing", "plug_backup_dehum", "plug_fan_aux"],
         "can_trigger": True,
@@ -41,7 +41,7 @@ TUYA_DEVICE_TYPES: list[dict[str, Any]] = [
         "label": "Relay / switch",
         "capability_class": "plug",
         "datapoints": [{"key": "state", "unit": "", "kind": "bool"}],
-        "dps_map": {"state": 1},
+        "dps_map": {"state": 1, "countdown": 2},
         "scales": {},
         "suggested_roles": ["plug_light_4x8", "plug_light_2x4", "plug_fan_aux", "plug_pump"],
         "can_trigger": True,

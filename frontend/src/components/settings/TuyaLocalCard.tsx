@@ -27,7 +27,7 @@ import {
 } from "../../lib/fleetApi";
 import type { FleetSnapshot } from "../../lib/fleetModel";
 import { TASK_PARAM_IDS } from "./settingsConstants";
-import { taskParamDefaults } from "./settingsHelpers";
+import { taskHasParams, taskParamDefaults } from "./settingsHelpers";
 
 /**
  * Settings › Devices › Tuya (local) — SmartLife Wi-Fi devices over the LAN protocol
@@ -431,6 +431,15 @@ export function TuyaLocalCard({ fleet, onSaved }: { fleet: FleetSnapshot | null;
           <p>
             Tuya firmware accepts one local connection at a time: while the brain holds it the SmartLife app falls back
             to the cloud (or stops working for that device once you block its internet access — which is the goal).
+          </p>
+          <p>
+            <b>So disable the device in every other local platform before you bind it here</b> — Home Assistant
+            (LocalTuya / tuya-local), Homebridge, Node-RED, tuya-mqtt, another tinytuya. Disabling the <i>device</i> is
+            what matters, not switching off the automations that use it: the integration holds the socket either way. A
+            device another controller owns does not report a conflict, it probes as dead — <code>Err 901</code>, or{" "}
+            <code>Err 914</code> on 3.4/3.5, while port 6668 still accepts a connection. If you see that, check what else
+            has the device before you touch its key: re-pairing rotates the local key and wipes the device's schedules,
+            and it will not fix a conflict.
           </p>
         </HelpTip>
       </div>
@@ -940,8 +949,12 @@ function ZigbeeBindRowWithLine({
         onRename={onRename}
         onBindingChange={(id, patch) => {
           onBindingChange(id, patch);
-          if (TASK_PARAM_IDS.has(patch.recipe_id) && policy.recipe_id !== patch.recipe_id) {
-            onPolicyChange(id, { recipe_id: patch.recipe_id, params: taskParamDefaults(patch.recipe_id, recipes.find((r) => r.id === patch.recipe_id)) });
+          const picked = recipes.find((r) => r.id === patch.recipe_id);
+          if (
+            (TASK_PARAM_IDS.has(patch.recipe_id) || taskHasParams(picked)) &&
+            policy.recipe_id !== patch.recipe_id
+          ) {
+            onPolicyChange(id, { recipe_id: patch.recipe_id, params: taskParamDefaults(patch.recipe_id, picked) });
           }
         }}
         onPolicyChange={onPolicyChange}

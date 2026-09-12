@@ -5,7 +5,7 @@ import {
   type ZigbeeRecipe,
 } from "../../lib/fleetApi";
 import type { FleetSnapshot, SeatSnapshot } from "../../lib/fleetModel";
-import { FLOOD_TASK_ID } from "./settingsConstants";
+import { FLOOD_TASK_ID, TANK_TASK_ID } from "./settingsConstants";
 
 export function pickSettings(settings: Record<string, string>, keys: readonly string[]): Record<string, string> {
   const out: Record<string, string> = {};
@@ -60,19 +60,29 @@ export function taskParamDefaults(
       banner_tone: String(defaults.banner_tone ?? "critical"),
     };
   }
-  return {
-    seat_id: String(defaults.seat_id ?? "dehumidifier"),
-    problem_when: String(defaults.problem_when ?? "active"),
-    force_relay: String(defaults.force_relay ?? "off"),
-    banner: String(
-      defaults.banner ??
-        zigbeeBannerTemplate(
-          String(defaults.seat_id ?? "dehumidifier"),
-          String(defaults.problem_when ?? "active"),
-        ),
-    ),
-    banner_tone: String(defaults.banner_tone ?? "critical"),
-  };
+  if (recipeId === TANK_TASK_ID) {
+    return {
+      seat_id: String(defaults.seat_id ?? "dehumidifier"),
+      problem_when: String(defaults.problem_when ?? "active"),
+      force_relay: String(defaults.force_relay ?? "off"),
+      banner: String(
+        defaults.banner ??
+          zigbeeBannerTemplate(
+            String(defaults.seat_id ?? "dehumidifier"),
+            String(defaults.problem_when ?? "active"),
+          ),
+      ),
+      banner_tone: String(defaults.banner_tone ?? "critical"),
+    };
+  }
+  // Any other curated task: its own defaults, verbatim. This used to fall through to the
+  // tank defaults, which handed every new task a seat_id and a banner it has no use for.
+  return { ...defaults };
+}
+
+/** True when this task exposes operator-editable params (rendered from `param_schema`). */
+export function taskHasParams(recipe: ZigbeeRecipe | undefined): boolean {
+  return Object.keys(recipe?.param_schema ?? {}).length > 0;
 }
 
 export function resolveSeat(fleet: FleetSnapshot, seatId: string): SeatSnapshot | null {

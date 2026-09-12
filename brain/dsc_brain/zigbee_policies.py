@@ -71,6 +71,40 @@ RECIPE_CATALOG: list[dict[str, Any]] = [
         },
         "description": "When floor sensor hits problem polarity: critical banner + grow-log only. No appliance OOS. Clear on opposite edge.",
     },
+    # ---- Time-triggered family (trigger: "photoperiod") -------------------------------
+    # Every recipe above fires from the bound device's OWN payload, which is why
+    # evaluate_device_policies bails on `not recipe.get("when")`. This one has no `when`:
+    # its trigger is the hub's photoperiod window, so the sensor evaluator ignores it by
+    # construction and `light_plug.tick_lamp_plugs` runs it on the automation tick instead.
+    # Keep `when` None for anything in this family, or the sensor path will try to run it.
+    {
+        "id": "lamp_follow_photoperiod",
+        "label": "Follow photoperiod",
+        "when": None,
+        "clear_when": None,
+        "trigger": "photoperiod",
+        "default_params": {
+            "window_mode": "full",
+            "countdown_backup": "off",
+            "countdown_margin_min": 15,
+        },
+        "device_classes": ["plug"],
+        "suggested_roles": ["plug_light_4x8", "plug_light_2x4"],
+        "param_schema": {
+            "window_mode": {"type": "enum", "values": ["full", "plateau"]},
+            "countdown_backup": {"type": "enum", "values": ["off", "on"]},
+            "countdown_margin_min": {"type": "int", "min": 5, "max": 120},
+        },
+        "description": (
+            "Switch a lamp plug from the hub's own photoperiod window. "
+            "window_mode 'full' holds the lamp on for the whole window; 'plateau' brings it on "
+            "when the sunrise ramp finishes and drops it when the sunset ramp starts, so a "
+            "switched fixture does not step on a dimmable one's ramp. "
+            "countdown_backup arms the plug's own auto-off timer as a dead-man's switch: the "
+            "brain keeps pushing it past lights-off, so if the brain stops the plug turns itself "
+            "off instead of stranding the lamp on through the dark period."
+        ),
+    },
 ]
 
 _BASE_RECIPE_IDS = frozenset(str(r["id"]) for r in RECIPE_CATALOG)

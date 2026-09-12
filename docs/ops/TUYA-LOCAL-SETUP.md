@@ -15,6 +15,35 @@ This is the operator guide. The design is in
 | Failsafe | Same as any Zigbee plug. | **Keeps its last state if the brain stops.** Use it for pumps, dosing and aux fans (`plug_*` roles), and for a tent lamp with the backstop described below — not for the heater / humidifier / dehumidifier / heat mat, which stay on the hub-driven relays. |
 | Local connections | n/a | **One at a time.** While the brain holds the socket the SmartLife app goes through the cloud, or stops working for that device once you block its internet — which is the point. |
 
+### One local controller per device — disable it everywhere else first
+
+**A Tuya device accepts exactly one local connection at a time.** If anything else on your
+network already holds a device locally — Home Assistant (LocalTuya, `tuya-local`, or the Tuya
+integration in local mode), Homebridge, Node-RED, `tuya-mqtt`, another DSC-HUB, or a second
+copy of `tinytuya` — the brain cannot have it, and the failure does not look like a conflict.
+It looks like a dead device:
+
+* `Err 901` "Unable to Connect" on protocol 3.1–3.3
+* `Err 914` "Check device key or version" on 3.4 / 3.5
+* but a plain TCP connection to port **6668** succeeds
+
+That last line is the tell. If the port is open and the handshake still fails, the socket is
+almost certainly owned by something else. **Do not start rotating keys or re-pairing the
+device** — that changes the local key and wipes the device's schedules, and it will not fix a
+conflict.
+
+So before you bind a device here, **disable or remove it from every other local platform**, not
+just stop the automations that use it — the integration keeps the socket open whether or not
+anything is driving the device. In Home Assistant that is the device's **Disable device** (use
+Disable, not Remove: it is reversible, and it frees the socket just the same). Then probe from
+this card; it should answer immediately.
+
+Leaving it enabled in two places is not a half-working setup, it is a race — whichever
+controller connects first wins, and the other one silently loses the device.
+
+The SmartLife *app* is the one exception and needs no action: it falls back to the cloud while
+something holds the local socket.
+
 ### Lamp plugs — read this before you bind one
 
 A tent whose light is **not** on a hub output (the 4x8 today: `run_photoperiod` is a clock only and

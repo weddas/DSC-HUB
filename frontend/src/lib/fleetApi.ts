@@ -471,8 +471,11 @@ export const ZIGBEE_CUSTOM_ROLE_KINDS = [
 ] as const;
 
 export type ZigbeeParamSchemaField = {
+  /** "enum" (pick from `values`), "int" (number, honouring min/max) or "string". */
   type: string;
   values?: string[];
+  min?: number;
+  max?: number;
 };
 
 export type ZigbeeRecipe = {

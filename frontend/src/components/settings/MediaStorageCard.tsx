@@ -38,7 +38,7 @@ function LocationRow({
     <div className="dsc-media-loc">
       <div className="dsc-media-loc-head">
         <code className="dsc-media-loc-path">{loc.path}</code>
-        {loc.is_current ? <StatusChip label="SAVING HERE" tone="teal" /> : null}
+        {loc.is_current ? <StatusChip label="SAVING HERE" tone="ok" /> : null}
         {loc.removable ? <StatusChip label="REMOVABLE" tone="muted" /> : null}
         {!loc.writable ? <StatusChip label="UNAVAILABLE" tone="warn" title={loc.reason} /> : null}
       </div>
@@ -74,7 +74,7 @@ function TransferProgress({ job, onCancel }: { job: MediaTransfer; onCancel: () 
         <code>{job.dest}</code>
         <StatusChip
           label={job.state.toUpperCase()}
-          tone={job.state === "done" ? "teal" : job.state === "failed" ? "warn" : "muted"}
+          tone={job.state === "done" ? "ok" : job.state === "failed" ? "warn" : "muted"}
         />
       </div>
       {job.state === "running" ? (

@@ -29,6 +29,7 @@ hub's ramp engine (`run_clone_photoperiod`) still owns the 2x4's dimmable SF1000
 
 from __future__ import annotations
 
+import datetime
 import logging
 import time
 from typing import Any
@@ -47,8 +48,16 @@ LAMP_ROLES: dict[str, tuple[str, str]] = {
     "plug_light_2x4": ("binary_sensor.dsc_hub_2x4_window_open", "2×4"),
 }
 
+# The recipe this module is the runtime for. It carries no `when`, so the sensor-edge
+# evaluator in zigbee_policies skips it by construction — see the note on the catalog entry.
+LAMP_RECIPE_ID = "lamp_follow_photoperiod"
+
 # A hub snapshot older than this is not a window reading, it is a memory.
 HUB_STALE_S = 90.0
+
+# How often the countdown dead-man's switch is pushed forward. Well inside any sane margin.
+COUNTDOWN_REFRESH_S = 120.0
+COUNTDOWN_DP_KEY = "countdown"
 
 # How long a disagreement between intent and the plug's reported state is tolerated
 # before re-asserting. Long enough that a slow Tuya push does not cause a write storm.
@@ -58,6 +67,8 @@ REASSERT_S = 300.0
 _commanded: dict[str, dict[str, Any]] = {}
 # role → last reason string, for status() and for not re-logging the same hold
 _reason: dict[str, str] = {}
+# role → {"at": float, "seconds": int} — last countdown push
+_countdown: dict[str, dict[str, Any]] = {}
 
 
 def _hub_values(fleet: FleetState) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
@@ -79,7 +90,99 @@ def _switch_on(controls: dict[str, Any], entity_id: str) -> bool | None:
     return None
 
 
-def desired_state(role: str, fleet: FleetState, *, now: float | None = None) -> tuple[bool | None, str]:
+def task_params(device_id: str) -> dict[str, Any]:
+    """This lamp's "Follow photoperiod" task params, defaults filled in.
+
+    No task (or a different one) means the plain behaviour: whole window, no countdown —
+    so a lamp bound before the task existed keeps doing exactly what it did.
+    """
+    from .zigbee_policies import get_recipe_catalog, load_zigbee_policies
+
+    recipe = next((r for r in get_recipe_catalog() if str(r.get("id")) == LAMP_RECIPE_ID), None)
+    params: dict[str, Any] = dict((recipe or {}).get("default_params") or {})
+    try:
+        pol = (load_zigbee_policies() or {}).get(str(device_id)) or {}
+    except Exception:  # noqa: BLE001
+        pol = {}
+    if str(pol.get("recipe_id") or "") == LAMP_RECIPE_ID and pol.get("enabled", True):
+        params.update(dict(pol.get("params") or {}))
+    return params
+
+
+def _number(controls: dict[str, Any], entity_id: str) -> float | None:
+    ctrl = controls.get(entity_id)
+    if not isinstance(ctrl, dict):
+        return None
+    try:
+        return float(ctrl.get("state"))
+    except (TypeError, ValueError):
+        return None
+
+
+def _minutes_since_lights_on(controls: dict[str, Any], now: float) -> float | None:
+    """Minutes elapsed in the current window, wrapping midnight. None when unknown."""
+    ctrl = controls.get("time.dsc_hub_lights_on_time")
+    if not isinstance(ctrl, dict):
+        return None
+    raw = str(ctrl.get("state") or "").strip()
+    parts = raw.split(":")
+    if len(parts) < 2:
+        return None
+    try:
+        on_m = int(parts[0]) * 60 + int(parts[1])
+    except ValueError:
+        return None
+    lt = datetime.datetime.fromtimestamp(now)
+    cur_m = lt.hour * 60 + lt.minute + lt.second / 60.0
+    return (cur_m - on_m) % 1440.0
+
+
+def _window_minutes(values: dict[str, Any]) -> float | None:
+    """Effective window length. The hub publishes no main-window duration number, but
+    `light_debt_hours` is target-minus-delivered and `light_delivered_hours` is delivered,
+    so their sum is the effective target *including* any carried-over debt. During catch-up
+    debt clamps to 0 and the sum understates — harmless here, since plateau only narrows a
+    window that is already open."""
+    try:
+        debt = float(values.get("light_debt_hours"))
+        delivered = float(values.get("light_delivered_hours"))
+    except (TypeError, ValueError):
+        return None
+    total = (debt + delivered) * 60.0
+    return total if total > 0 else None
+
+
+def plateau_ok(values: dict[str, Any], controls: dict[str, Any], now: float) -> tuple[bool, str]:
+    """Inside the flat part of the window — after sunrise finishes, before sunset starts.
+
+    A switched fixture joining at full output during a 30 min ramp steps on whatever dimmable
+    fixture is doing the ramp, so 'plateau' keeps the shoulders for the dimmer alone. Unknown
+    geometry falls back to True: never withhold light because a number was missing.
+    """
+    since = _minutes_since_lights_on(controls, now)
+    window = _window_minutes(values)
+    if since is None or window is None:
+        return True, "plateau geometry unknown — treating as full window"
+    rise = _number(controls, "number.dsc_hub_sunrise_duration") or 0.0
+    fall = _number(controls, "number.dsc_hub_sunset_duration") or 0.0
+    if rise + fall > window and (rise + fall) > 0:
+        k = window / (rise + fall)  # same scaling the firmware ramp engine uses
+        rise *= k
+        fall *= k
+    if since < rise:
+        return False, f"sunrise ramp — lamp joins in {rise - since:.0f} min"
+    if since > window - fall:
+        return False, "sunset ramp — lamp has dropped out"
+    return True, "following the hub window (plateau)"
+
+
+def desired_state(
+    role: str,
+    fleet: FleetState,
+    *,
+    params: dict[str, Any] | None = None,
+    now: float | None = None,
+) -> tuple[bool | None, str]:
     """(want_on, reason). ``None`` means *hold* — we do not know, so we do not command."""
     now = time.time() if now is None else now
     window_key, _label = LAMP_ROLES[role]
@@ -113,7 +216,13 @@ def desired_state(role: str, fleet: FleetState, *, now: float | None = None) -> 
     window = binaries.get(window_key)
     if window is None:
         return None, f"hub does not report {window_key} — holding"
-    return bool(window), "following the hub window"
+    if not window:
+        return False, "outside the hub window"
+
+    if str((params or {}).get("window_mode") or "full") == "plateau":
+        ok, why = plateau_ok(_values, controls, now)
+        return ok, why
+    return True, "following the hub window"
 
 
 def _plug_reports(row: dict[str, Any]) -> bool | None:
@@ -132,6 +241,81 @@ def _plug_reports(row: dict[str, Any]) -> bool | None:
         if low in ("off", "false", "0"):
             return False
     return None
+
+
+def _countdown_index(device_id: str) -> int | None:
+    """The plug's own auto-off timer datapoint, or None when this model has none."""
+    from .tuya_local import load_tuya_devices
+
+    try:
+        row = (load_tuya_devices() or {}).get(str(device_id)) or {}
+    except Exception:  # noqa: BLE001
+        return None
+    idx = (row.get("dps_map") or {}).get(COUNTDOWN_DP_KEY)
+    try:
+        return int(idx) if idx is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _refresh_countdown(
+    role: str,
+    device_id: str,
+    row: dict[str, Any],
+    params: dict[str, Any],
+    want: bool | None,
+    fleet: FleetState,
+    now: float,
+) -> None:
+    """Keep the plug's own auto-off timer pushed out past lights-off.
+
+    This is the dead-man's switch. While the brain is alive it keeps moving the deadline, so
+    the timer never fires; if the brain stops — hang, crash, power cut, a router reboot that
+    cuts the path to the plug — the countdown expires and the plug turns ITSELF off rather
+    than stranding the lamp on through the dark period. Nothing cloud-side is involved.
+
+    Deliberately disarms (writes 0) whenever the lamp should be off or the task is switched
+    off, so a stale timer can never cut a later window short.
+    """
+    from .tuya_local import set_tuya_dp
+
+    enabled = str(params.get("countdown_backup") or "off") == "on"
+    index = _countdown_index(device_id)
+    armed = _countdown.get(role)
+
+    if not enabled or index is None:
+        if armed and index is not None:
+            set_tuya_dp(device_id, index, 0)
+            _countdown.pop(role, None)
+        return
+
+    if want is not True:
+        # Lamp should be off (or we are holding). Clear any deadline we set.
+        if armed:
+            set_tuya_dp(device_id, index, 0)
+            _countdown.pop(role, None)
+        return
+
+    if armed and (now - float(armed.get("at") or 0)) < COUNTDOWN_REFRESH_S:
+        return
+
+    values, _binaries, controls = _hub_values(fleet)
+    since = _minutes_since_lights_on(controls, now)
+    window = _window_minutes(values)
+    if since is None or window is None:
+        _logger.debug("lamp %s: countdown not armed — window geometry unknown", role)
+        return
+    try:
+        margin = float(params.get("countdown_margin_min") or 15)
+    except (TypeError, ValueError):
+        margin = 15.0
+    seconds = int(max(0.0, window - since + margin) * 60)
+    seconds = max(60, min(86400, seconds))
+    result = set_tuya_dp(device_id, index, seconds)
+    if result.get("ok", True) and not result.get("error"):
+        _countdown[role] = {"at": now, "seconds": seconds}
+    else:
+        _logger.warning("lamp %s: countdown refresh failed: %s", role, result.get("error"))
 
 
 def tick_lamp_plugs(fleet: FleetState | None = None, *, now: float | None = None) -> dict[str, Any]:
@@ -159,8 +343,10 @@ def tick_lamp_plugs(fleet: FleetState | None = None, *, now: float | None = None
         if not device_id:
             continue
 
-        want, reason = desired_state(role, fleet, now=now)
+        params = task_params(device_id)
+        want, reason = desired_state(role, fleet, params=params, now=now)
         _reason[role] = reason
+        _refresh_countdown(role, device_id, row, params, want, fleet, now)
         if want is None:
             held.append({"role": role, "device_id": device_id, "reason": reason})
             continue
@@ -217,7 +403,8 @@ def status() -> dict[str, Any]:
         if not row:
             out.append({"role": role, "label": label, "bound": False})
             continue
-        want, reason = desired_state(role, fleet)
+        params = task_params(str(row.get("device_id") or ""))
+        want, reason = desired_state(role, fleet, params=params)
         out.append(
             {
                 "role": role,
@@ -232,10 +419,16 @@ def status() -> dict[str, Any]:
                 "reason": reason,
                 "plug_reports": _plug_reports(row),
                 "commanded": (_commanded.get(role) or {}).get("want"),
+                "window_mode": str(params.get("window_mode") or "full"),
+                "countdown_backup": str(params.get("countdown_backup") or "off"),
+                "countdown_margin_min": params.get("countdown_margin_min"),
+                "countdown_armed_s": (_countdown.get(role) or {}).get("seconds"),
                 # A plug holds its last state when the brain stops, so the lamp can be
                 # stranded ON through a dark period. The plug's own OFF-only schedule is
                 # the only thing that covers that, and we cannot see it from here.
-                "needs_vendor_off_backstop": True,
+                # A plug holds its last state when the brain stops. The countdown task is
+                # the local answer; until it is armed, nothing covers that.
+                "needs_vendor_off_backstop": str(params.get("countdown_backup") or "off") != "on",
             }
         )
     return {"lamps": out, "hub_stale_after_s": HUB_STALE_S, "reassert_after_s": REASSERT_S}
@@ -245,3 +438,4 @@ def reset_state() -> None:
     """Drop remembered intent — tests, and after a binding change."""
     _commanded.clear()
     _reason.clear()
+    _countdown.clear()

@@ -40,18 +40,25 @@ export function zigbeeOptionLists(opts: {
   return { roles, recipes };
 }
 
-/** Next task params after editing one field; keeps the banner template in step unless the operator wrote their own. */
+/** Next task params after editing one field; keeps the banner template in step unless the operator wrote their own.
+ *
+ * Only the two banner tasks get that templating. Everything else is a plain merge: this used
+ * to fall through to the tank branch, which both stamped `seat_id` / `banner` / `banner_tone`
+ * onto tasks that have no use for them AND silently dropped any field the old patch type did
+ * not name — so a generic task's own params could never be edited at all.
+ */
 export function nextTaskParams(
   recipeId: string,
   params: Record<string, unknown>,
-  patch: Partial<{ seat_id: string; problem_when: string; banner: string }>,
+  patch: Record<string, unknown>,
 ): Record<string, unknown> {
   const isFlood = recipeId === FLOOD_TASK_ID;
+  if (!isFlood && recipeId !== TANK_TASK_ID) return { ...params, ...patch };
   const seatId = String(params.seat_id ?? "dehumidifier");
   const problemWhen = String(params.problem_when ?? "active");
   const banner = String(params.banner ?? "");
-  const nextPolarity = patch.problem_when ?? problemWhen;
-  let nextBanner = patch.banner ?? banner;
+  const nextPolarity = patch.problem_when != null ? String(patch.problem_when) : problemWhen;
+  let nextBanner = patch.banner != null ? String(patch.banner) : banner;
   if (isFlood) {
     if (patch.problem_when != null) {
       const prevTemplate = zigbeeFloodBannerTemplate(problemWhen);
@@ -60,7 +67,7 @@ export function nextTaskParams(
     }
     return { ...params, problem_when: nextPolarity, banner: nextBanner, banner_tone: params.banner_tone ?? "critical" };
   }
-  const nextSeat = patch.seat_id ?? seatId;
+  const nextSeat = patch.seat_id != null ? String(patch.seat_id) : seatId;
   if (patch.seat_id != null || patch.problem_when != null) {
     const prevTemplate = zigbeeBannerTemplate(seatId, problemWhen);
     const nextTemplate = zigbeeBannerTemplate(nextSeat, nextPolarity);
