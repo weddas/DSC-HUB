@@ -12,8 +12,28 @@ This is the operator guide. The design is in
 | | Tuya **Zigbee** device (paired through a Tuya hub) | Tuya **Wi-Fi** device (paired straight to your Wi-Fi) |
 |---|---|---|
 | How DSC-HUB reaches it | Pair it to the Pi's Zigbee coordinator instead (Settings › Devices › Zigbee › Permit join). No keys, no cloud. | This guide. |
-| Failsafe | Same as any Zigbee plug. | **Keeps its last state if the brain stops.** Use it for pumps, dosing and aux fans (`plug_*` roles), not for the heater / humidifier / dehumidifier / heat mat, which stay on the hub-driven relays. |
+| Failsafe | Same as any Zigbee plug. | **Keeps its last state if the brain stops.** Use it for pumps, dosing and aux fans (`plug_*` roles), and for a tent lamp with the backstop described below — not for the heater / humidifier / dehumidifier / heat mat, which stay on the hub-driven relays. |
 | Local connections | n/a | **One at a time.** While the brain holds the socket the SmartLife app goes through the cloud, or stops working for that device once you block its internet — which is the point. |
+
+### Lamp plugs — read this before you bind one
+
+A tent whose light is **not** on a hub output (the 4x8 today: `run_photoperiod` is a clock only and
+the GPIO5 twin output has no PWM module wired) can run its lamp from a plug. Bind it to
+**Lamp plug · 4x8** or **Lamp plug · 2x4** and the brain follows the hub's own photoperiod window,
+so the tent keeps the hub's clock instead of the plug vendor's schedule.
+
+Two constraints come with that:
+
+* **On/off only.** No sunrise or sunset ramp. The hub's ramp engine still owns the 2x4's dimmable
+  SF1000.
+* **Leave an off-only schedule on the plug.** A plug holds its last state when the brain stops, so a
+  brain outage between lights-on and lights-off would strand the lamp **on** through the dark period.
+  In the SmartLife app, set a schedule that only ever turns the plug **off**, a few minutes after your
+  lights-off time. Do **not** leave an *on* schedule there — an off-only backstop cannot fight the
+  brain, an on schedule can.
+
+`GET /settings/lamp-plugs` reports what is bound, what the hub window currently wants, and why the
+driver is holding if it is.
 
 Supported device types today: **smart plug** (single gang, optional power metering), **relay / switch**,
 **water quality tester** (pH · TDS · EC · salinity · SG · ORP · CF · water temperature). Other kinds are

@@ -42,6 +42,14 @@ ZIGBEE_ROLE_CATALOG: list[dict[str, Any]] = [
     {"id": "plug_dosing", "label": "Dosing plug", "consume": True, "kind": "plug"},
     {"id": "plug_backup_dehum", "label": "Backup dehumidifier", "consume": True, "kind": "plug"},
     {"id": "plug_fan_aux", "label": "Aux fan plug", "consume": True, "kind": "plug"},
+    # Lamp plugs. A tent whose light is not on a hub output (the 4x8 today: GPIO5 has
+    # no PWM module and run_photoperiod drives nothing) runs its lamp from here —
+    # light_plug.tick_lamp_plugs mirrors the hub's own window binary onto the plug, so
+    # the tent keeps the hub's clock instead of the plug vendor's schedule. On/off
+    # only: no ramp, and no failsafe if the brain stops, so the plug should keep an
+    # OFF-only schedule of its own as the backstop.
+    {"id": "plug_light_4x8", "label": "Lamp plug · 4×8", "consume": True, "kind": "plug"},
+    {"id": "plug_light_2x4", "label": "Lamp plug · 2×4", "consume": True, "kind": "plug"},
     {"id": "meter_wall", "label": "Power meter", "consume": True, "kind": "meter"},
     {"id": "button_override", "label": "Override button", "consume": True, "kind": "button"},
     {"id": "co2_tent", "label": "CO₂", "consume": True, "kind": "gas"},
