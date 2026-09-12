@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { DecisionLayer } from "../DecisionLayer";
 import { SlideDrawer } from "../chrome";
 import { Button, StatusTag } from "../ui";
@@ -11,9 +11,13 @@ import {
   captureCamera,
   formatAgo,
   formatBytes,
+  framedSize,
+  getCameraControls,
   putCamera,
   slugCameraId,
   testCameraSource,
+  type CameraControl,
+  type CameraExtra,
   type CameraPatch,
   type CameraRecord,
   type CameraSourceKind,
@@ -54,8 +58,27 @@ interface Draft {
   fps: number;
   /** "WxH", or "" for the largest mode the camera reports. */
   resolution: string;
+  /** Framing. Baked into the stored frame by the brain, not applied in the browser. */
+  flip_h: boolean;
+  flip_v: boolean;
+  rotate: number;
+  zoom: number;
+  zoom_x: number;
+  zoom_y: number;
+  warmup_frames: number;
+  /** Only the controls the operator actually touched; the rest are left where the camera
+   * has them, which is a different thing from setting them to their defaults. */
+  controls: Record<string, number>;
   enabled: boolean;
 }
+
+const CONTROL_GROUPS: Array<{ id: CameraControl["group"]; label: string; note?: string }> = [
+  { id: "exposure", label: "Exposure", note: "A camera left on auto re-meters every capture, and a month of frames pulses. Manual is what a timelapse wants." },
+  { id: "focus", label: "Focus", note: "Continuous AF hunts on a canopy moving under a fan. Focus once with it on, then switch it off to lock the lens." },
+  { id: "colour", label: "Colour" },
+  { id: "image", label: "Image" },
+  { id: "framing", label: "Camera pan · tilt · zoom", note: "The camera's own optics, applied before the frame reaches the brain — unlike the digital zoom above, which is a crop." },
+];
 
 const EMPTY_DRAFT: Draft = {
   camera_id: "",
@@ -75,6 +98,14 @@ const EMPTY_DRAFT: Draft = {
   assemble: "off",
   fps: 12,
   resolution: "",
+  flip_h: false,
+  flip_v: false,
+  rotate: 0,
+  zoom: 1,
+  zoom_x: 50,
+  zoom_y: 50,
+  warmup_frames: 0,
+  controls: {},
   enabled: true,
 };
 
@@ -97,12 +128,37 @@ function draftFrom(cam: CameraRecord): Draft {
     assemble: cam.extra.assemble ?? "off",
     fps: Number(cam.extra.fps ?? 12),
     resolution: cam.extra.width && cam.extra.height ? `${cam.extra.width}x${cam.extra.height}` : "",
+    flip_h: Boolean(cam.extra.flip_h),
+    flip_v: Boolean(cam.extra.flip_v),
+    rotate: Number(cam.extra.rotate ?? 0),
+    zoom: Number(cam.extra.zoom ?? 1),
+    zoom_x: Number(cam.extra.zoom_x ?? 50),
+    zoom_y: Number(cam.extra.zoom_y ?? 50),
+    warmup_frames: Number(cam.extra.warmup_frames ?? 0),
+    controls: { ...(cam.extra.controls ?? {}) },
     enabled: cam.enabled,
   };
 }
 
+/** The framing keys, shared by Save and by Test — a preview of a framing the saved camera
+ * would not have is worse than no preview. */
+function framingExtra(d: Draft): CameraExtra {
+  return {
+    flip_h: d.flip_h,
+    flip_v: d.flip_v,
+    rotate: d.rotate as CameraExtra["rotate"],
+    zoom: d.zoom,
+    zoom_x: d.zoom_x,
+    zoom_y: d.zoom_y,
+    warmup_frames: d.warmup_frames,
+    // Controls are a USB-only idea; sending an empty map on any other kind clears whatever
+    // a source-kind change left behind. The brain drops the key when the map is empty.
+    controls: d.source_kind === "usb" ? d.controls : {},
+  };
+}
+
 function patchFrom(d: Draft): CameraPatch {
-  const extra: CameraPatch["extra"] = { auth: d.auth, assemble: d.assemble, fps: d.fps };
+  const extra: CameraPatch["extra"] = { auth: d.auth, assemble: d.assemble, fps: d.fps, ...framingExtra(d) };
   if (d.source_kind === "usb" && d.resolution) {
     const [w, h] = d.resolution.split("x");
     extra.width = Number(w);
@@ -137,6 +193,21 @@ const SOURCE_HELP: Record<CameraSourceKind, string> = {
   motioneye: "An old Pi with an old webcam running motionEye. Give its host; the brain reads camera N's motion stream port (8080 + N) as MJPEG. Turn streaming on for the camera in motionEye.",
 };
 
+/** The value a control will have after Save: the operator's if they touched it, otherwise
+ * whatever the camera is holding right now. */
+function controlValue(draft: Draft, control: CameraControl): number | null {
+  const chosen = draft.controls[control.key];
+  return chosen !== undefined ? chosen : control.value;
+}
+
+function gateHint(control: CameraControl, gate: CameraControl | undefined): string {
+  if (!gate || !control.gated_by) return control.help;
+  return `Set ${gate.label.toLowerCase()} to ${
+    gate.options.find((o) => o.value === control.gated_by?.value)?.label ??
+    (control.gated_by.value ? "on" : "off")
+  } first — the camera refuses this while it is not.`;
+}
+
 function statusTag(cam: CameraRecord, now: number): { label: string; tone: "ok" | "warn" | "bad" | "muted"; title: string } {
   const st = cam.status;
   if (!cam.enabled) return { label: "DISABLED", tone: "muted", title: "Not capturing" };
@@ -160,11 +231,34 @@ export function CamerasCard() {
   const [capturingId, setCapturingId] = useState<string | null>(null);
   const [captureNote, setCaptureNote] = useState<Record<string, string>>({});
   const [viewing, setViewing] = useState<string | null>(null);
+  const [controls, setControls] = useState<CameraControl[] | null>(null);
+  const [controlsErr, setControlsErr] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now() / 1000);
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now() / 1000), 15_000);
     return () => window.clearInterval(id);
   }, []);
+
+  // The camera's own knobs are read from the node rather than echoed back from the saved
+  // row: a replug resets a UVC device to its defaults, so the row and the lens can disagree
+  // and the lens is the one telling the truth. Re-read after each Test, which is the moment
+  // the controls were last written.
+  const controlDevice = editing?.source_kind === "usb" ? editing.source : "";
+  useEffect(() => {
+    if (!controlDevice) {
+      setControls(null);
+      setControlsErr(null);
+      return;
+    }
+    let live = true;
+    setControlsErr(null);
+    getCameraControls(controlDevice)
+      .then((list) => live && setControls(list))
+      .catch((e) => live && (setControls([]), setControlsErr(e instanceof Error ? e.message : String(e))));
+    return () => {
+      live = false;
+    };
+  }, [controlDevice, testResult]);
 
   const cameras = summary?.cameras ?? [];
   const usb = summary?.usb_devices ?? [];
@@ -190,6 +284,23 @@ export function CamerasCard() {
   };
 
   const patchDraft = (p: Partial<Draft>) => setEditing((d) => (d ? { ...d, ...p } : d));
+  const setControl = (key: string, value: number) =>
+    setEditing((d) => (d ? { ...d, controls: { ...d.controls, [key]: value } } : d));
+
+  // What the sensor hands over before the framing: the pinned mode, else the largest the
+  // node reports. Only then can the drawer say what a crop actually costs.
+  const sensorSize = editing?.source_kind === "usb" ? editing.resolution || usbSelected?.best_size || "" : "";
+  const zoomedSize = editing ? framedSize(sensorSize, framingExtra(editing)) : "";
+  const framingOn = Boolean(editing && (editing.flip_h || editing.flip_v || editing.rotate || editing.zoom > 1));
+  // Warm-up only earns its seconds while something is still converging.
+  const autoMode = Boolean(
+    editing?.source_kind === "usb" &&
+      (controls ?? []).some(
+        (c) =>
+          (c.key === "focus_automatic_continuous" || c.key === "white_balance_automatic") &&
+          controlValue(editing, c) === 1,
+      ),
+  );
 
   const doTest = async () => {
     if (!editing) return;
@@ -201,7 +312,16 @@ export function CamerasCard() {
         source: editing.source.trim(),
         username: editing.username.trim(),
         password: editing.password,
-        extra: editing.source_kind === "motioneye" ? { camera_no: editing.camera_no, stream_port: editing.stream_port.trim() ? Number(editing.stream_port) : undefined, auth: editing.auth } : { auth: editing.auth },
+        extra: {
+          ...framingExtra(editing),
+          auth: editing.auth,
+          ...(editing.source_kind === "usb" && editing.resolution
+            ? { width: Number(editing.resolution.split("x")[0]), height: Number(editing.resolution.split("x")[1]) }
+            : {}),
+          ...(editing.source_kind === "motioneye"
+            ? { camera_no: editing.camera_no, stream_port: editing.stream_port.trim() ? Number(editing.stream_port) : undefined }
+            : {}),
+        },
         camera_id: isNew ? undefined : editing.camera_id,
       });
       setTestResult(res);
@@ -519,6 +639,171 @@ export function CamerasCard() {
               </div>
             ) : null}
 
+            <h4 className="dsc-cam-h">Framing</h4>
+            <p className="dsc-muted dsc-cam-form-help">
+              Applied by the brain and baked into every stored frame — the frame on disk is the record, so a flip
+              that lived only in the browser would leave the timelapse and the stored pixels disagreeing with what
+              you see here. Changing it re-frames the record from now on: frames already taken keep the old
+              geometry, and a timelapse spanning the change will jump.
+            </p>
+            <label className="dsc-cam-form-toggle">
+              <span>Mirror</span>
+              <Toggle checked={editing.flip_h} onChange={(v) => patchDraft({ flip_h: v })} label="Flip the frame left to right" />
+              <em className="dsc-muted">Left–right. Webcams built for video calls hand out a mirrored frame; a tent needs it the way the plant is.</em>
+            </label>
+            <label className="dsc-cam-form-toggle">
+              <span>Flip vertical</span>
+              <Toggle checked={editing.flip_v} onChange={(v) => patchDraft({ flip_v: v })} label="Flip the frame top to bottom" />
+              <em className="dsc-muted">For a camera hanging upside down off a tent bar.</em>
+            </label>
+            <label>
+              <span>Rotate</span>
+              <select value={editing.rotate} onChange={(e) => patchDraft({ rotate: Number(e.target.value) })}>
+                <option value={0}>None</option>
+                <option value={90}>90° clockwise</option>
+                <option value={180}>180°</option>
+                <option value={270}>90° anticlockwise</option>
+              </select>
+            </label>
+            <label>
+              <span>Digital zoom</span>
+              <span className="dsc-cam-form-inline">
+                <input
+                  type="range"
+                  min={1}
+                  max={8}
+                  step={0.1}
+                  value={editing.zoom}
+                  aria-label="Digital zoom"
+                  onChange={(e) => patchDraft({ zoom: Number(e.target.value) })}
+                />
+                <em className="dsc-muted">
+                  {editing.zoom > 1 ? `${editing.zoom.toFixed(1)}×` : "off"}
+                  {zoomedSize ? ` · stores ${zoomedSize}` : ""}
+                  {editing.zoom > 1 && sensorSize ? ` of ${sensorSize.replace("x", "×")}` : ""}
+                </em>
+              </span>
+            </label>
+            {editing.zoom > 1 ? (
+              <>
+                <p className="dsc-muted dsc-cam-form-help">
+                  A crop, not a lens — those are the only pixels kept, and nothing brings the rest back afterwards.
+                  On a USB webcam, pick the largest resolution above first so the crop has something to spend.
+                </p>
+                <label>
+                  <span>Centre ←→</span>
+                  <span className="dsc-cam-form-inline">
+                    <input type="range" min={0} max={100} step={1} value={editing.zoom_x} aria-label="Crop centre, horizontal" onChange={(e) => patchDraft({ zoom_x: Number(e.target.value) })} />
+                    <em className="dsc-muted">{editing.zoom_x}%</em>
+                  </span>
+                </label>
+                <label>
+                  <span>Centre ↑↓</span>
+                  <span className="dsc-cam-form-inline">
+                    <input type="range" min={0} max={100} step={1} value={editing.zoom_y} aria-label="Crop centre, vertical" onChange={(e) => patchDraft({ zoom_y: Number(e.target.value) })} />
+                    <em className="dsc-muted">{editing.zoom_y}%</em>
+                  </span>
+                </label>
+              </>
+            ) : null}
+            {framingOn && editing.source_kind !== "usb" && editing.source_kind !== "rtsp" && !ffmpeg ? (
+              <p className="dsc-honesty">
+                This source hands the brain a finished JPEG, so a mirror, rotation or zoom needs ffmpeg to re-encode it
+                (<code>apt install ffmpeg</code>). Until it is there these captures will fail rather than quietly store
+                untransformed frames — half a run mirrored is worse than a gap.
+              </p>
+            ) : null}
+            <p className="dsc-muted dsc-cam-form-help">Use <b>Test source</b> above to see the result before you save.</p>
+
+            {editing.source_kind === "usb" ? (
+              <>
+                <h4 className="dsc-cam-h">Camera controls</h4>
+                <p className="dsc-muted dsc-cam-form-help">
+                  The webcam's own knobs, read from the device and written back before every capture — a replug
+                  resets a UVC camera to its defaults, so setting them once is not enough. Only the ones you touch
+                  here are written; the rest are left wherever the camera has them.
+                </p>
+                {controlsErr ? <p className="dsc-honesty">{controlsErr}</p> : null}
+                {controls && controls.length === 0 && !controlsErr ? (
+                  <p className="dsc-muted">
+                    This node reports none of them. That is the usual answer when the brain container has no camera
+                    mapped (<code>DSC_CAMERA_DEVICE</code> in the brain <code>.env</code>) — plug the camera in and
+                    recreate the container, then reopen this drawer.
+                  </p>
+                ) : null}
+                {CONTROL_GROUPS.map((group) => {
+                  const rows = (controls ?? []).filter((c) => c.group === group.id);
+                  if (!rows.length) return null;
+                  return (
+                    <div key={group.id} className="dsc-cam-ctrl-group">
+                      <span className="dsc-cam-subfield">{group.label}</span>
+                      {group.note ? <p className="dsc-muted dsc-cam-form-help">{group.note}</p> : null}
+                      {rows.map((c) => {
+                        const value = controlValue(editing, c);
+                        const gate = c.gated_by ? (controls ?? []).find((g) => g.key === c.gated_by?.key) : undefined;
+                        const gateValue = gate ? controlValue(editing, gate) : null;
+                        const blocked = Boolean(c.gated_by && gate && gateValue !== c.gated_by.value);
+                        const managed = editing.controls[c.key] !== undefined;
+                        const note = blocked ? gateHint(c, gate) : c.help;
+                        return (
+                          <Fragment key={c.key}>
+                          <label className={c.type === "bool" ? "dsc-cam-form-toggle" : undefined}>
+                            <span>{c.label}</span>
+                            {c.type === "bool" ? (
+                              <Toggle
+                                checked={value === 1}
+                                disabled={c.read_only || blocked}
+                                onChange={(v) => setControl(c.key, v ? 1 : 0)}
+                                label={c.label}
+                              />
+                            ) : c.type === "menu" ? (
+                              <select value={value ?? c.default} disabled={c.read_only || blocked} onChange={(e) => setControl(c.key, Number(e.target.value))}>
+                                {c.options.map((o) => (
+                                  <option key={o.value} value={o.value}>
+                                    {o.label}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <span className="dsc-cam-form-inline">
+                                <input
+                                  type="range"
+                                  min={c.min}
+                                  max={c.max}
+                                  step={c.step || 1}
+                                  value={value ?? c.default}
+                                  disabled={c.read_only || blocked}
+                                  aria-label={c.label}
+                                  onChange={(e) => setControl(c.key, Number(e.target.value))}
+                                />
+                                <em className="dsc-muted">
+                                  {value ?? c.default}
+                                  {managed ? "" : " · on the camera"}
+                                </em>
+                              </span>
+                            )}
+                            {c.type === "bool" ? (
+                              <em className="dsc-muted">{note || `${c.driver_name} · default ${c.default}`}</em>
+                            ) : null}
+                          </label>
+                          {c.type !== "bool" && note ? <p className="dsc-muted dsc-cam-form-help">{note}</p> : null}
+                          </Fragment>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+                {Object.keys(editing.controls).length ? (
+                  <div className="dsc-row-actions">
+                    <Button onClick={() => patchDraft({ controls: {} })}>Stop managing these</Button>
+                    <span className="dsc-muted">
+                      Leaves the camera on whatever it currently holds — it does not put the defaults back.
+                    </span>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
+
             <h4 className="dsc-cam-h">Capture</h4>
             <label>
               <span>Interval</span>
@@ -530,6 +815,29 @@ export function CamerasCard() {
                 ))}
               </select>
             </label>
+            {editing.source_kind === "usb" || editing.source_kind === "rtsp" ? (
+              <label>
+                <span>Warm-up frames</span>
+                <span className="dsc-cam-form-inline">
+                  <input
+                    type="number"
+                    min={0}
+                    max={30}
+                    value={editing.warmup_frames}
+                    onChange={(e) => patchDraft({ warmup_frames: Math.max(0, Math.min(30, Number(e.target.value) || 0)) })}
+                  />
+                  <em className="dsc-muted">
+                    read and thrown away before the frame that is kept · 0 = take the first one
+                  </em>
+                </span>
+              </label>
+            ) : null}
+            {editing.warmup_frames === 0 && autoMode ? (
+              <p className="dsc-muted dsc-cam-form-help">
+                Auto exposure and auto focus do not converge on frame 1. This camera is opened cold once an interval
+                and exactly one frame is kept, so with no warm-up that frame is the hunting one — try 3 to 5.
+              </p>
+            ) : null}
             <label className="dsc-cam-form-toggle">
               <span>Lights on only</span>
               <Toggle

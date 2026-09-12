@@ -44,7 +44,46 @@ export interface CameraExtra {
   width?: number;
   height?: number;
   input_format?: string;
+  /** Framing, baked into the stored frame by the brain. The frame on disk is the record —
+   * the timelapse, journal attachments and pixel regions all read it — so a browser-side
+   * flip would leave every one of them disagreeing with what the card shows. Absent = off. */
+  flip_h?: boolean;
+  flip_v?: boolean;
+  rotate?: 0 | 90 | 180 | 270;
+  /** Digital zoom is a crop: 2× on a 1080p camera stores 960×540. `zoom_x`/`zoom_y` are
+   * where the crop window sits, 0–100 % of the travel it has (50 = centred). */
+  zoom?: number;
+  zoom_x?: number;
+  zoom_y?: number;
+  /** Frames read and thrown away before the one that is kept, so auto exposure and auto
+   * focus can converge — they do not on frame 1 of a cold open. */
+  warmup_frames?: number;
+  /** v4l2 control name → value, re-applied before every capture. USB webcams only. */
+  controls?: Record<string, number>;
   [key: string]: unknown;
+}
+
+/** One knob the webcam itself reports, with the camera's own range and its live value. */
+export interface CameraControl {
+  key: string;
+  label: string;
+  group: "exposure" | "focus" | "colour" | "image" | "framing";
+  help: string;
+  /** What the driver calls it, e.g. "Focus, Automatic Continuous". */
+  driver_name: string;
+  type: "int" | "bool" | "menu";
+  min: number;
+  max: number;
+  step: number;
+  default: number;
+  /** Read live off the node — a replug resets a UVC camera, so this can differ from what
+   * was saved. `null` when the control could not be read. */
+  value: number | null;
+  read_only: boolean;
+  inactive: boolean;
+  options: Array<{ value: number; label: string }>;
+  /** This control only takes while `key` is at `value` — e.g. focus needs auto focus off. */
+  gated_by?: { key: string; value: number };
 }
 
 export interface CameraRecord {
@@ -194,6 +233,17 @@ export async function testCameraSource(spec: CameraTestSpec): Promise<CameraTest
   return jsonOrPredates<CameraTestResult>(resp, "camera test failed");
 }
 
+/** The camera's own knobs, straight off the node. Empty for an IP camera, a container
+ * with no device mapped, or a webcam that implements none of them. */
+export async function getCameraControls(device: string): Promise<CameraControl[]> {
+  const q = new URLSearchParams({ device, _: String(Date.now()) });
+  const data = await jsonOrPredates<{ device: string; controls: CameraControl[] }>(
+    await fetch(`/cameras/controls?${q}`),
+    "camera controls failed",
+  );
+  return data.controls;
+}
+
 export async function getCameraDays(cameraId: string): Promise<CameraDay[]> {
   const data = await jsonOrPredates<{ days: CameraDay[] }>(await fetch(`/cameras/${encodeURIComponent(cameraId)}/days?_=${Date.now()}`), "camera days failed");
   return data.days;
@@ -249,6 +299,25 @@ export function formatAgo(ts: number | null | undefined, now = Date.now() / 1000
   if (s < 3600) return `${Math.round(s / 60)} min ago`;
   if (s < 86400) return `${(s / 3600).toFixed(1)} h ago`;
   return `${Math.round(s / 86400)} d ago`;
+}
+
+/** What a "1920x1080" sensor mode becomes once the framing is applied — the same sum the
+ * brain does with ffmpeg expressions, so the drawer can say that 4× zoom on a 1080p camera
+ * stores 480×270 before the operator saves it and finds out. */
+export function framedSize(sensor: string | undefined, extra: CameraExtra): string {
+  const m = /^(\d+)x(\d+)$/.exec((sensor ?? "").trim());
+  if (!m) return "";
+  let w = Number(m[1]);
+  let h = Number(m[2]);
+  const zoom = Number(extra.zoom ?? 1);
+  if (zoom > 1) {
+    // Even on both axes, matching the brain's trunc(…/2)*2: an odd dimension is refused by
+    // the yuv420p encoder the timelapse uses.
+    w = Math.max(2, Math.floor(w / zoom / 2) * 2);
+    h = Math.max(2, Math.floor(h / zoom / 2) * 2);
+  }
+  if (extra.rotate === 90 || extra.rotate === 270) [w, h] = [h, w];
+  return `${w}×${h}`;
 }
 
 /** A camera id from a label: `4×8 corner` → `4x8-corner`. */

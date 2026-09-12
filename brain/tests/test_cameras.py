@@ -453,7 +453,7 @@ def test_query_capability_reads_device_caps_not_capabilities(
 def test_usb_capture_asks_for_the_largest_mjpg_mode(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[list[str]] = []
 
-    def _fake_ffmpeg(args, timeout, db_path=None):  # type: ignore[no-untyped-def]
+    def _fake_ffmpeg(args, timeout, db_path=None, **kw):  # type: ignore[no-untyped-def]
         calls.append(list(args))
         return b"\xff\xd8\xff\xd9"
 
@@ -473,7 +473,7 @@ def test_usb_capture_honours_a_pinned_size(monkeypatch: pytest.MonkeyPatch) -> N
     calls: list[list[str]] = []
     monkeypatch.setattr(
         cameras, "_ffmpeg_frame",
-        lambda args, timeout, db_path=None: (calls.append(list(args)), b"\xff\xd8\xff\xd9")[1],
+        lambda args, timeout, db_path=None, **kw: (calls.append(list(args)), b"\xff\xd8\xff\xd9")[1],
     )
     monkeypatch.setattr(cameras, "best_usb_frame_size", lambda d: (1920, 1080))
     cameras.capture_frame(
@@ -486,7 +486,7 @@ def test_usb_capture_falls_back_when_the_mode_is_refused(monkeypatch: pytest.Mon
     """A camera stuck at its default size still beats a grow log that stops recording."""
     calls: list[list[str]] = []
 
-    def _fake_ffmpeg(args, timeout, db_path=None):  # type: ignore[no-untyped-def]
+    def _fake_ffmpeg(args, timeout, db_path=None, **kw):  # type: ignore[no-untyped-def]
         calls.append(list(args))
         if "-video_size" in args:
             raise cameras.CaptureError("Device or resource busy")
@@ -565,3 +565,226 @@ def test_prune_removes_emptied_day_folders(media: Path) -> None:
     left = sorted(d.name for d in root.iterdir() if d.is_dir())
     assert left == ["260902", "260903", "260904"], left
     assert not (root / "260901").exists(), "the emptied day folder must be swept, not left behind"
+
+
+# ---------------------------------------------------------------------------------------
+# Framing — mirror, flip, rotate, digital zoom.
+#
+# Baked into the stored frame, because the frame on disk is the record: the timelapse, the
+# journal attachment and the pixel regions all read it, and a browser-side flip would leave
+# every one of them disagreeing with what the operator sees.
+# ---------------------------------------------------------------------------------------
+
+
+def test_framing_chain_crops_then_rotates_then_mirrors() -> None:
+    chain = cameras.build_video_filters(
+        {"zoom": 2.0, "zoom_x": 25, "zoom_y": 75, "rotate": 180, "flip_h": True, "flip_v": True}
+    )
+    assert chain[0].startswith("crop="), "the crop has to come first or it crops the rotated frame"
+    assert chain[1:] == ["transpose=1,transpose=1", "hflip", "vflip"]
+    # Every crop term is trunc(.../2)*2: an odd width is refused by the yuv420p encoder the
+    # timelapse uses, and that failure would not surface until the first assembly ran.
+    assert chain[0].count("trunc(") == 4 and chain[0].count(")*2") == 4
+    assert cameras.build_video_filters({}) == []
+    assert cameras.build_video_filters({"rotate": 90}) == ["transpose=1"]
+    assert cameras.build_video_filters({"rotate": 270}) == ["transpose=2"]
+
+
+def test_framing_normalises_and_refuses_nonsense() -> None:
+    extra = {"zoom": "3", "zoom_x": "10", "rotate": "90", "flip_v": 1, "warmup_frames": "4"}
+    cameras.normalise_framing(extra)
+    assert extra == {"zoom": 3.0, "zoom_x": 10.0, "zoom_y": 50.0, "rotate": 90, "flip_v": True, "warmup_frames": 4}
+
+    # No-op values are dropped rather than stored, so `extra` stays a record of what the
+    # operator actually changed.
+    off = {"zoom": 1.0, "zoom_x": 80, "rotate": 0, "flip_h": False, "warmup_frames": 0}
+    cameras.normalise_framing(off)
+    assert off == {}
+
+    for bad, why in (({"rotate": 45}, "quarter turns only"), ({"zoom": 99}, "zoom is bounded")):
+        with pytest.raises(ValueError):
+            cameras.normalise_framing(dict(bad)), why
+
+
+def test_usb_capture_discards_warmup_frames_and_applies_the_framing(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Auto exposure does not converge on frame 1, and this rig keeps exactly one frame."""
+    seen: dict[str, object] = {}
+
+    def _fake_ffmpeg(args, timeout, db_path=None, *, vf=None, stdin=None):  # type: ignore[no-untyped-def]
+        seen["vf"] = vf
+        return fake_jpeg()
+
+    monkeypatch.setattr(cameras, "_ffmpeg_frame", _fake_ffmpeg)
+    monkeypatch.setattr(cameras, "best_usb_frame_size", lambda d: (1920, 1080))
+    monkeypatch.setattr(cameras, "apply_v4l2_controls", lambda dev, ctrls: [])
+
+    cameras.capture_frame(
+        {"source_kind": "usb", "source": "/dev/video0", "extra": {"warmup_frames": 3, "flip_h": True}}, ""
+    )
+    # The discard has to be the first filter: dropping frames before the crop is both the
+    # cheaper order and the only one where "frame 3" means frame 3 of the camera.
+    assert seen["vf"] == ["select=gte(n\\,3)", "hflip"]
+
+
+def test_http_frame_is_byte_exact_until_a_transform_is_set(monkeypatch: pytest.MonkeyPatch) -> None:
+    """An untouched snapshot must not be re-encoded - a JPEG round trip costs quality for nothing."""
+    frame = fake_jpeg(800, 600)
+    monkeypatch.setattr(cameras, "_http_fetch_frame", lambda url, auth, timeout: frame)
+    monkeypatch.setattr(cameras, "_ffmpeg_frame", lambda *a, **k: pytest.fail("re-encoded an untouched frame"))
+    cam = {"source_kind": "snapshot", "source": "http://cam/snap.jpg", "extra": {}}
+    assert cameras.capture_frame(cam, "") is frame
+
+
+def test_http_transform_needs_ffmpeg_and_fails_loudly_without_it(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A gap in the record beats a run half of whose frames are mirrored.
+
+    An HTTP source hands the brain a finished JPEG, so a mirror means a decode/encode through
+    ffmpeg. With no ffmpeg the honest outcome is a failed capture: storing the frame untouched
+    would put two geometries in one timelapse with nothing to tell them apart afterwards.
+    """
+    monkeypatch.setattr(cameras, "_http_fetch_frame", lambda url, auth, timeout: fake_jpeg())
+    cam = {"source_kind": "snapshot", "source": "http://cam/snap.jpg", "extra": {"flip_h": True}}
+
+    monkeypatch.setattr(cameras, "ffmpeg_bin", lambda db_path=None: None)
+    with pytest.raises(CaptureError) as exc:
+        cameras.capture_frame(cam, "")
+    assert "ffmpeg" in str(exc.value)
+
+    piped: dict[str, object] = {}
+
+    def _fake_ffmpeg(args, timeout, db_path=None, *, vf=None, stdin=None):  # type: ignore[no-untyped-def]
+        piped.update(args=list(args), vf=vf, stdin=stdin)
+        return fake_jpeg(640, 480)
+
+    monkeypatch.setattr(cameras, "ffmpeg_bin", lambda db_path=None: "/usr/bin/ffmpeg")
+    monkeypatch.setattr(cameras, "_ffmpeg_frame", _fake_ffmpeg)
+    assert jpeg_size(cameras.capture_frame(cam, "")) == (640, 480)
+    assert piped["args"] == ["-f", "image2pipe", "-i", "pipe:0"] and piped["vf"] == ["hflip"]
+    assert piped["stdin"] == fake_jpeg()
+
+
+# ---------------------------------------------------------------------------------------
+# v4l2 controls — auto focus, auto exposure, and the manual settings underneath them.
+# ---------------------------------------------------------------------------------------
+
+
+def _ctrl_ioctl(monkeypatch: pytest.MonkeyPatch, *, live: int = 3) -> list[tuple[int, int]]:
+    """A fake v4l2 node that answers QUERYCTRL/QUERYMENU/G_CTRL and records every S_CTRL."""
+    import sys
+    import types
+
+    written: list[tuple[int, int]] = []
+    specs = {
+        0x009A0901: (cameras._V4L2_CTRL_TYPE_MENU, b"Auto Exposure", 0, 3, 1, 3),
+        0x009A0902: (cameras._V4L2_CTRL_TYPE_INTEGER, b"Exposure Time, Absolute", 3, 2047, 1, 166),
+        0x009A090C: (cameras._V4L2_CTRL_TYPE_BOOLEAN, b"Focus, Automatic Continuous", 0, 1, 1, 1),
+    }
+    menu = {1: b"Manual Mode", 3: b"Aperture Priority Mode"}
+
+    def _ioctl(fd: int, req: int, buf: bytes) -> bytes:
+        cid = struct.unpack("<I", buf[:4])[0]
+        if req == cameras._VIDIOC_QUERYCTRL:
+            if cid not in specs:
+                raise OSError(22, "Invalid argument")
+            ctype, name, lo, hi, step, default = specs[cid]
+            return struct.pack("<II32siiiiIII", cid, ctype, name, lo, hi, step, default, 0, 0, 0)
+        if req == cameras._VIDIOC_QUERYMENU:
+            idx = struct.unpack("<II", buf[:8])[1]
+            if idx not in menu:
+                raise OSError(22, "Invalid argument")
+            return struct.pack("<II32sI", cid, idx, menu[idx], 0)
+        if req == cameras._VIDIOC_G_CTRL:
+            return struct.pack("<Ii", cid, live)
+        if req == cameras._VIDIOC_S_CTRL:
+            written.append((cid, struct.unpack("<Ii", buf)[1]))
+            return buf
+        raise OSError(25, "Inappropriate ioctl for device")
+
+    fake = types.ModuleType("fcntl")
+    fake.ioctl = _ioctl  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "fcntl", fake)
+    return written
+
+
+def test_controls_are_read_off_the_camera_with_its_own_ranges(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Ranges, steps and menu labels come from the node, never from a table in here.
+
+    "1 = Manual Mode, 3 = Aperture Priority Mode" is UVC's own numbering, and a dropdown
+    showing the bare integers would be unusable. Anything the camera does not implement is
+    absent rather than shown greyed - a cheap webcam reports three of these.
+    """
+    node = tmp_path / "video0"
+    node.write_bytes(b"")
+    _ctrl_ioctl(monkeypatch)
+
+    got = {c["key"]: c for c in cameras.list_v4l2_controls(str(node))}
+    assert set(got) == {"auto_exposure", "exposure_time_absolute", "focus_automatic_continuous"}
+    assert got["auto_exposure"]["type"] == "menu"
+    assert got["auto_exposure"]["options"] == [
+        {"value": 1, "label": "Manual Mode"},
+        {"value": 3, "label": "Aperture Priority Mode"},
+    ]
+    assert got["auto_exposure"]["value"] == 3, "the live value, not the one we last stored"
+    assert (got["exposure_time_absolute"]["min"], got["exposure_time_absolute"]["max"]) == (3, 2047)
+    assert got["exposure_time_absolute"]["gated_by"] == {"key": "auto_exposure", "value": 1}
+    assert got["focus_automatic_continuous"]["type"] == "bool"
+    # A path that is not a v4l2 node at all answers with nothing, rather than half a list.
+    assert cameras.list_v4l2_controls(str(tmp_path / "nope")) == []
+
+
+def test_controls_write_the_auto_switch_before_the_value_it_gates(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A UVC driver refuses exposure_time_absolute while auto exposure still owns the sensor."""
+    node = tmp_path / "video0"
+    node.write_bytes(b"")
+    written = _ctrl_ioctl(monkeypatch)
+
+    res = cameras.apply_v4l2_controls(
+        str(node), {"exposure_time_absolute": 166, "auto_exposure": 1, "unknown_knob": 4}
+    )
+    assert written == [(0x009A0901, 1), (0x009A0902, 166)], "manual mode first, then the time"
+    assert [r["key"] for r in res] == ["auto_exposure", "exposure_time_absolute"]
+    assert all(r["error"] == "" for r in res)
+
+
+def test_a_manual_value_is_skipped_while_its_auto_gate_is_on(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Asked for a focus position without turning auto focus off, the camera is left alone and
+    the operator is told why - rather than an ioctl failing with a bare errno."""
+    node = tmp_path / "video0"
+    node.write_bytes(b"")
+    written = _ctrl_ioctl(monkeypatch, live=1)  # auto focus reads back as on
+
+    res = cameras.apply_v4l2_controls(str(node), {"focus_absolute": 40})
+    assert written == []
+    assert res == [{"key": "focus_absolute", "value": 40, "error": "skipped while auto focus is on"}]
+
+
+def test_controls_normalise_to_known_keys_and_survive_a_round_trip(tmp_path: Path, media: Path) -> None:
+    extra = {"controls": {"auto_exposure": "1", "brightness": 140, "not_a_control": 9, "gain": ""}}
+    cameras.normalise_controls(extra)
+    assert extra == {"controls": {"auto_exposure": 1, "brightness": 140}}
+
+    db = tmp_path / "ops.sqlite3"
+    cam = upsert_camera(
+        "usb-4x8",
+        {
+            "space_id": "4x8",
+            "label": "4x8 canopy",
+            "source_kind": "usb",
+            "source": "/dev/video0",
+            "extra": {"flip_h": True, "zoom": 2, "warmup_frames": 3, "controls": {"auto_exposure": 1}},
+        },
+        db_path=db,
+    )
+    assert cam["extra"]["flip_h"] is True and cam["extra"]["zoom"] == 2.0
+    assert cam["extra"]["zoom_x"] == 50.0 and cam["extra"]["warmup_frames"] == 3
+    assert cam["extra"]["controls"] == {"auto_exposure": 1}
+    assert get_camera("usb-4x8", db)["extra"]["controls"] == {"auto_exposure": 1}
+
+    with pytest.raises(ValueError):
+        upsert_camera("usb-4x8", {"extra": {"rotate": 45}}, db_path=db)

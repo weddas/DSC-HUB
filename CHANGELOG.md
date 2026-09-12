@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- **Cameras — framing and the camera's own controls.** Every camera gains mirror, vertical
+  flip, quarter-turn rotate and a 1–8x digital zoom with a placeable crop window, baked into
+  the stored frame (the frame on disk is the record, so a browser-side flip would leave the
+  timelapse and the pixel regions disagreeing with the card). USB webcams additionally expose
+  their own v4l2 controls — auto/manual exposure with exposure time and gain, auto focus and
+  focus position, auto white balance and temperature, brightness/contrast/saturation/
+  sharpness/backlight compensation, anti-flicker, and the camera's own pan/tilt/zoom — read
+  live off the node and re-written before every capture, since a replug resets a UVC device.
+  Manual values whose auto gate is on are disabled with the reason rather than failing at the
+  ioctl. New **warm-up frames** discards the first N frames of a live capture so auto exposure
+  and auto focus can converge — they do not on frame 1, and this rig keeps exactly one frame.
+  `GET /cameras/controls?device=` reports what a node implements. Framing on an HTTP source
+  needs ffmpeg and fails the capture without it, rather than silently storing half a run
+  untransformed.
+
 ## Hub — **v8.1.0** (2026-09-07)
 
 First full cut of the 8.x line after the `v8.0.0-AlphaPi` alpha (102 commits).
