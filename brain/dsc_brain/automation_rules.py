@@ -1031,6 +1031,14 @@ async def _tick_loop() -> None:
             tick_schedule_shift_plans()
         except Exception as exc:  # noqa: BLE001
             _logger.warning("schedule shift tick failed: %s", exc)
+        try:
+            # A tent whose lamp is on a plug rather than a hub output follows the hub's
+            # window from here, so it keeps the hub's clock instead of the plug vendor's.
+            from .light_plug import tick_lamp_plugs
+
+            tick_lamp_plugs()
+        except Exception as exc:  # noqa: BLE001
+            _logger.warning("lamp plug tick failed: %s", exc)
         await asyncio.sleep(RULE_TICK_S)
 
 

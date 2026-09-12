@@ -1848,6 +1848,18 @@ def settings_tuya_health() -> dict[str, Any]:
     return get_tuya_health()
 
 
+@app.get("/settings/lamp-plugs")
+def settings_lamp_plugs() -> dict[str, Any]:
+    """Tents whose lamp is on a plug: what is bound, what the hub window wants, and why.
+
+    ``needs_vendor_off_backstop`` stays true for every bound lamp — a plug holds its last
+    state if the brain stops, and we cannot see the plug's own schedule from here.
+    """
+    from .light_plug import status as lamp_plug_status
+
+    return lamp_plug_status()
+
+
 @app.post("/settings/tuya/devices/import")
 def settings_tuya_import(body: TuyaImportBody) -> dict[str, Any]:
     if _demo_mode():

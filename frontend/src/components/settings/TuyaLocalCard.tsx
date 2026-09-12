@@ -37,6 +37,10 @@ import { taskParamDefaults } from "./settingsHelpers";
  *
  * Tuya plugs keep their last state if the brain stops — they serve the auxiliary
  * plug roles, never the hub-driven heater / humidifier / dehumidifier / heat-mat path.
+ * The lamp roles (plug_light_4x8 / _2x4) are the one load-bearing exception: a tent
+ * with no hub light output drives its lamp from here, following the hub's window
+ * (brain/dsc_brain/light_plug.py). That path needs an off-only schedule left on the
+ * plug as its failsafe, which is why the help tip spells it out.
  */
 
 type BindDraft = {
@@ -415,6 +419,14 @@ export function TuyaLocalCard({ fleet, onSaved }: { fleet: FleetSnapshot | null;
             A Tuya plug keeps its last state if the brain stops — there is no hub cut-out behind it. Use these for pumps,
             dosing and aux fans (the <b>plug_*</b> roles). The heater, humidifier, dehumidifier and heat mat stay on the
             hub-driven relays, which fail safe.
+          </p>
+          <p>
+            <b>Lamp plugs are the exception worth reading twice.</b> A tent whose light is not on a hub output — the 4×8
+            today — can bind a plug to <b>Lamp plug · 4×8</b> or <b>· 2×4</b>, and the brain then follows the hub's own
+            photoperiod window, so the tent keeps the hub's clock instead of the plug's schedule. It is on/off only: no
+            sunrise or sunset ramp. And because the plug holds its last state, leave an <b>off-only</b> schedule on the
+            plug itself (a few minutes after lights-off) so a brain outage can never strand the lamp on through the dark
+            period. Do not leave an <i>on</i> schedule there — that is the only way the two can fight.
           </p>
           <p>
             Tuya firmware accepts one local connection at a time: while the brain holds it the SmartLife app falls back

@@ -31,7 +31,7 @@ TUYA_DEVICE_TYPES: list[dict[str, Any]] = [
         # Tuya's standard single-gang metering plug profile.
         "dps_map": {"state": 1, "energy": 17, "current": 18, "power": 19, "voltage": 20},
         "scales": {"power": 0.1, "voltage": 0.1, "current": 0.001, "energy": 0.01},
-        "suggested_roles": ["plug_pump", "plug_dosing", "plug_backup_dehum", "plug_fan_aux"],
+        "suggested_roles": ["plug_light_4x8", "plug_light_2x4", "plug_pump", "plug_dosing", "plug_backup_dehum", "plug_fan_aux"],
         "can_trigger": True,
         "can_actuate": True,
         "note": "Single-gang plug; metering DPS are optional and only appear when the unit reports them.",
@@ -43,7 +43,7 @@ TUYA_DEVICE_TYPES: list[dict[str, Any]] = [
         "datapoints": [{"key": "state", "unit": "", "kind": "bool"}],
         "dps_map": {"state": 1},
         "scales": {},
-        "suggested_roles": ["plug_fan_aux", "plug_pump"],
+        "suggested_roles": ["plug_light_4x8", "plug_light_2x4", "plug_fan_aux", "plug_pump"],
         "can_trigger": True,
         "can_actuate": True,
         "note": "In-wall relay or breaker module, no metering.",
