@@ -70,6 +70,67 @@ from this release on. On a container that predates that image, the hotpatch scri
 `.audit/cameras-pi-hotpatch.ps1` installs it into the running container's writable layer
 (survives stop/start, not a recreate). The Cameras card says when it is missing.
 
+## Framing — mirror, flip, rotate, digital zoom
+
+Every camera has a **Framing** block in its drawer: **Mirror** (left–right, for a webcam
+whose driver hands out the video-call mirror), **Flip vertical** (a camera hanging upside
+down off a tent bar), **Rotate** by a quarter turn, and a **Digital zoom** of 1–8× with the
+crop window placed by two centre sliders.
+
+The transform is **baked into the stored frame**, not applied in the browser. The frame on
+disk is the record — the timelapse, journal attachments and (next pass) plant regions all
+read it — so a view-only flip would leave every one of those disagreeing with the card.
+
+Two consequences worth knowing before you touch it:
+
+* **Changing the framing re-frames the record from that moment on.** Frames already taken
+  keep the old geometry, and a timelapse spanning the change will jump. There is no version
+  of this that could rewrite frames already captured.
+* **Digital zoom is a crop.** 4× on a 1080p camera stores 480×270 and nothing brings the
+  rest back. On a USB webcam pick the largest **Resolution** first so the crop has pixels to
+  spend. The drawer shows the resulting size next to the slider.
+
+For **USB** and **RTSP** the filters ride along inside the capture ffmpeg already runs, so
+they are free. A **snapshot**, **MJPEG** or **motionEye** source hands the brain a finished
+JPEG, so a transform costs one decode/encode — and **needs ffmpeg**. Without it those
+captures *fail* rather than storing untransformed frames: a run where half the frames are
+mirrored cannot be told apart afterwards, and a gap is the recoverable failure.
+
+**Test source** applies the same framing, so the preview is what Save would store.
+
+## Camera controls (USB webcams)
+
+A USB webcam's own knobs are read from the node with v4l2 ioctls — the same door
+`VIDIOC_QUERYCAP` discovery uses, so no `v4l-utils` in the image — and written back **before
+every capture**. Once at save time is not enough: a replug resets a UVC device to its
+defaults and the container can be recreated under a camera that never moved.
+
+Ranges, steps, defaults and menu labels all come from the camera. Anything it does not
+implement is simply absent; a cheap webcam reports three of these and a Brio reports all.
+
+| Group | Controls | Why it matters here |
+|---|---|---|
+| **Exposure** | anti-flicker (power line frequency), exposure mode (auto/manual), exposure time, gain | Auto exposure re-meters every capture and a month of frames pulses. Manual is what a timelapse wants. Anti-flicker set to the mains frequency stops the LED driver banding a fast exposure. |
+| **Focus** | auto focus, focus position | Continuous AF hunts on a canopy moving under a fan. Focus once with it on, then switch it off to lock the lens where it landed. |
+| **Colour** | auto white balance, white balance temperature | Auto WB drifts as the canopy fills the frame, so leaf colour in the record tracks the algorithm rather than the plant. |
+| **Image** | brightness, contrast, saturation, sharpness, backlight compensation | A webcam ships neutral; a grow tent is not neutral. |
+| **Camera pan · tilt · zoom** | the camera's own PTZ, where it has one | Applied before the frame reaches the brain, unlike the digital zoom above. |
+
+Only the controls you touch are written; the rest are left wherever the camera has them —
+which is a different thing from putting the defaults back. **Stop managing these** clears
+the set without moving the camera.
+
+An auto switch is always written before the manual value it gates, because a UVC driver
+refuses `exposure_time_absolute` while auto exposure still owns the sensor and
+`focus_absolute` while continuous AF owns the lens. A manual control whose gate is on is
+shown disabled with the reason, rather than failing at the ioctl.
+
+**Warm-up frames** (USB and RTSP, in *Capture*) reads and throws away N frames before the
+one it keeps. Auto exposure and auto focus do not converge on frame 1: this rig opens the
+camera cold once an interval and keeps exactly one frame, so with no warm-up that frame is
+the hunting one. Three to five costs a second of wall clock. It is 0 by default, so nothing
+changes for a camera that was already working.
+
 ## Cadence, gating, retention
 
 * **Interval** 1–60 min. The brain's poller ticks every 15 s and captures when the interval
@@ -99,6 +160,7 @@ count and a link.
 | `GET /cameras` | cameras with status + storage, source kinds, ffmpeg present, USB devices |
 | `PUT /cameras/{id}` · `DELETE /cameras/{id}?delete_media=` | create/update · remove |
 | `POST /cameras/test` | one frame from an unsaved spec, returned as a data URL |
+| `GET /cameras/controls?device=` | one USB node's v4l2 controls, live values and all, straight off the device |
 | `POST /cameras/{id}/capture` | capture now |
 | `GET /cameras/{id}/latest.jpg` | latest frame (`Cache-Control: no-store`) |
 | `GET /cameras/{id}/days` · `/frames?day=` · `/frames/{day}/{name}` | the record |

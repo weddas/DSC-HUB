@@ -5886,9 +5886,21 @@ button.dsc-metric:focus-visible { outline: 2px solid var(--dsc-teal); outline-of
 .dsc-cam-form > label input, .dsc-cam-form > label select { width: 100%; box-sizing: border-box; }
 .dsc-cam-form > label input[type="number"] { width: 96px; font-family: var(--dsc-mono); }
 .dsc-cam-form-inline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* A slider and its readout share one row: the generic `label input { width: 100% }` above
+   would otherwise push the number onto a line of its own, where it reads as a stray value. */
+.dsc-cam-form-inline input[type="range"] { flex: 1 1 160px; width: auto; min-width: 120px; }
+.dsc-cam-form-inline > em { flex: 0 0 auto; }
 .dsc-cam-form-toggle { grid-template-columns: 130px auto minmax(0, 1fr) !important; }
 .dsc-cam-form-toggle em { font-style: normal; font-size: var(--dsc-fs-sm); }
 .dsc-cam-form-help { margin: -4px 0 0; font-size: var(--dsc-fs-sm); }
+/* One group of the webcam's own v4l2 controls (exposure, focus, colour, image). Indented
+   so a long list of sliders still reads as belonging to its heading. */
+.dsc-cam-ctrl-group { display: flex; flex-direction: column; gap: 10px; padding-left: 10px; border-left: 1px solid color-mix(in srgb, var(--dsc-gray-3) 70%, transparent); }
+.dsc-cam-ctrl-group > label { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 8px; align-items: center; font-size: var(--dsc-fs-sm); }
+.dsc-cam-ctrl-group > label > span:first-child { color: var(--dsc-gray-5); font-family: var(--dsc-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+.dsc-cam-ctrl-group > label input, .dsc-cam-ctrl-group > label select { width: 100%; box-sizing: border-box; }
+.dsc-cam-ctrl-group .dsc-cam-form-inline em { font-family: var(--dsc-mono); font-size: 11px; white-space: nowrap; }
+.dsc-cam-ctrl-group .dsc-cam-subfield:first-child { margin-top: 0; }
 /* A second labelled control inside one <label> (Device + Resolution share a row group). */
 .dsc-cam-subfield { display: block; margin: 10px 0 4px; font-size: var(--dsc-fs-sm); opacity: 0.75; }
 

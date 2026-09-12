@@ -62,6 +62,9 @@ DEFAULT_CAP_GB = 2.0
 MAX_FRAME_BYTES = 12 * 1024 * 1024
 CAPTURE_TIMEOUT_S = 20.0
 MOTIONEYE_BASE_STREAM_PORT = 8080  # camera N streams on 8080 + N
+ROTATE_CHOICES: tuple[int, ...] = (0, 90, 180, 270)
+MAX_ZOOM = 8.0
+MAX_WARMUP_FRAMES = 30
 PASSWORD_KEY_PREFIX = "camera_password:"
 CAMERA_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,39}$")
 DAY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")  # still the API's day format
@@ -427,6 +430,8 @@ def upsert_camera(
         extra["fps"] = _norm_int(extra.get("fps"), 12, 1, 60, "fps")
     if extra.get("auth") not in (None, "", "basic", "digest"):
         raise ValueError("auth must be basic or digest")
+    normalise_framing(extra)
+    normalise_controls(extra)
 
     if merged["space_id"] not in _valid_space_ids(db_path):
         raise ValueError(f"unknown zone {merged['space_id'] or '(none)'}")
@@ -656,6 +661,150 @@ def _http_fetch_frame(url: str, auth: Any, timeout: float) -> bytes:
         raise CaptureError(f"HTTP error: {exc}") from exc
 
 
+# ---------------------------------------------------------------------------------------
+# framing — mirror, flip, rotate, digital zoom
+# ---------------------------------------------------------------------------------------
+
+# A fixed-mount camera is rarely mounted the way the operator wants to look at it: it hangs
+# off a tent bar upside down, or it is a webcam whose driver mirrors the frame because it
+# was built for video calls, or it sees the whole tent when what matters is one plant.
+#
+# The transform is baked into the stored frame rather than applied in the browser, because
+# the frame on disk IS the record - the timelapse, the journal attachment and (next pass)
+# the plant regions all read it. A view-only flip would leave every one of those disagreeing
+# with what the operator sees on the card.
+#
+# The cost of that choice: changing the framing re-frames the record from that moment on.
+# Yesterday's frames keep the old geometry, so a timelapse spanning the change jumps. The
+# drawer says so; re-framing a camera is the operator's call and there is no version of this
+# that could rewrite frames already taken.
+
+
+def normalise_framing(extra: dict[str, Any]) -> dict[str, Any]:
+    """Validate the framing keys in ``extra``, in place. Raises ValueError, operator-readable.
+
+    Each key is dropped rather than stored at its no-op value, so ``extra`` stays a record of
+    what the operator actually changed and :func:`has_transform` is a truthiness test rather
+    than a comparison against defaults.
+    """
+    for key in ("flip_h", "flip_v"):
+        if extra.get(key) in (None, "", False, 0):
+            extra.pop(key, None)
+        else:
+            extra[key] = True
+    if extra.get("rotate") in (None, "", 0):
+        extra.pop("rotate", None)
+    else:
+        rot = _norm_int(extra.get("rotate"), 0, 0, 360, "rotate")
+        if rot not in ROTATE_CHOICES:
+            raise ValueError("rotate must be 0, 90, 180 or 270")
+        extra["rotate"] = rot
+    if extra.get("zoom") in (None, ""):
+        extra.pop("zoom", None)
+    else:
+        zoom = _norm_float(extra.get("zoom"), 1.0, 1.0, MAX_ZOOM, "zoom")
+        if zoom <= 1.0:
+            extra.pop("zoom", None)
+        else:
+            extra["zoom"] = round(zoom, 2)
+    if "zoom" in extra:
+        # Where the crop window sits, as a percentage of the travel it has. 50/50 is the
+        # middle; a tent camera framing one plant is usually nowhere near the middle.
+        extra["zoom_x"] = round(_norm_float(extra.get("zoom_x"), 50.0, 0.0, 100.0, "zoom_x"), 1)
+        extra["zoom_y"] = round(_norm_float(extra.get("zoom_y"), 50.0, 0.0, 100.0, "zoom_y"), 1)
+    else:
+        extra.pop("zoom_x", None)
+        extra.pop("zoom_y", None)
+    if extra.get("warmup_frames") in (None, "", 0):
+        extra.pop("warmup_frames", None)
+    else:
+        extra["warmup_frames"] = _norm_int(
+            extra.get("warmup_frames"), 0, 1, MAX_WARMUP_FRAMES, "warmup_frames"
+        )
+    return extra
+
+
+def has_transform(extra: dict[str, Any] | None) -> bool:
+    e = extra or {}
+    return bool(e.get("flip_h") or e.get("flip_v") or e.get("rotate") or float(e.get("zoom") or 1.0) > 1.0)
+
+
+def build_video_filters(extra: dict[str, Any] | None) -> list[str]:
+    """The ``-vf`` chain for a camera's framing, in the order that keeps it cheap and sane.
+
+    Crop first: everything after it then works on fewer pixels, and the crop window is the
+    one thing the operator picked in terms of the *sensor's* frame, so it has to be applied
+    before anything moves the pixels around. Rotate next, mirror last - the mirror is what
+    the operator is looking at in the preview, so it reads as the outermost operation.
+
+    The crop is written as ffmpeg expressions rather than pixel numbers because the input
+    size is not known here: a USB camera resolves its mode at capture time, and an IP camera
+    can change resolution without telling anybody.
+    """
+    e = extra or {}
+    filters: list[str] = []
+    zoom = float(e.get("zoom") or 1.0)
+    if zoom > 1.0:
+        fx = max(0.0, min(1.0, float(e.get("zoom_x", 50.0) or 0.0) / 100.0))
+        fy = max(0.0, min(1.0, float(e.get("zoom_y", 50.0) or 0.0) / 100.0))
+        # trunc(.../2)*2 keeps the crop even on both axes. An odd width or height is refused
+        # by the yuv420p encoder the timelapse uses, and discovering that a month later when
+        # the first assembly runs is exactly the delayed failure worth two expressions here.
+        filters.append(
+            f"crop=trunc(iw/{zoom:g}/2)*2:trunc(ih/{zoom:g}/2)*2:"
+            f"trunc((iw-iw/{zoom:g})*{fx:g}/2)*2:trunc((ih-ih/{zoom:g})*{fy:g}/2)*2"
+        )
+    rot = int(e.get("rotate") or 0)
+    if rot == 90:
+        filters.append("transpose=1")  # clockwise
+    elif rot == 270:
+        filters.append("transpose=2")  # counter-clockwise
+    elif rot == 180:
+        filters.append("transpose=1,transpose=1")
+    if e.get("flip_h"):
+        filters.append("hflip")
+    if e.get("flip_v"):
+        filters.append("vflip")
+    return filters
+
+
+def warmup_filters(extra: dict[str, Any] | None) -> list[str]:
+    """Throw away the first N frames of a live capture before keeping one.
+
+    Auto exposure and auto focus do not converge on frame 1. A UVC camera opened cold hands
+    out a dark, hunting frame and settles a few frames later - invisible on a video call, but
+    this rig opens the camera once every ten minutes and keeps exactly one frame, so the
+    hunting frame IS the record. Discarding a handful costs a second of wall clock and is the
+    difference between a usable auto mode and a timelapse that flickers.
+    """
+    n = int((extra or {}).get("warmup_frames") or 0)
+    return [f"select=gte(n\\,{n})"] if n > 0 else []
+
+
+def _transform_jpeg(data: bytes, extra: dict[str, Any], timeout: float, db_path: Path | None) -> bytes:
+    """Apply the framing to a frame that arrived over HTTP as a finished JPEG.
+
+    USB and RTSP get the filters for free inside the capture, because ffmpeg is already
+    decoding there. A snapshot, MJPEG or motionEye source hands us a JPEG, so one decode and
+    re-encode of a single still is the price of a mirror or a crop - and only when a
+    transform is actually configured, which is why the untouched path stays byte-exact.
+
+    With no ffmpeg the capture FAILS rather than storing the frame untransformed. A gap in the
+    record is recoverable; a run where half the frames are mirrored and half are not cannot be
+    told apart afterwards, and it breaks both the timelapse and the pixel regions that read it.
+    """
+    filters = build_video_filters(extra)
+    if not filters:
+        return data
+    if not ffmpeg_bin(db_path):
+        raise CaptureError(
+            "this camera has a mirror, rotation or zoom set, and an HTTP source needs ffmpeg on "
+            "the brain to apply it (apt install ffmpeg). Clear the framing to capture untouched "
+            "frames instead."
+        )
+    return _ffmpeg_frame(["-f", "image2pipe", "-i", "pipe:0"], timeout, db_path, vf=filters, stdin=data)
+
+
 def _explain_capture_failure(line: str, input_args: list[str]) -> str:
     """Turn ffmpeg's bare errno text into something the operator can act on.
 
@@ -690,7 +839,16 @@ def _explain_capture_failure(line: str, input_args: list[str]) -> str:
     return line
 
 
-def _ffmpeg_frame(input_args: list[str], timeout: float, db_path: Path | None = None) -> bytes:
+def _ffmpeg_frame(
+    input_args: list[str],
+    timeout: float,
+    db_path: Path | None = None,
+    *,
+    vf: list[str] | None = None,
+    stdin: bytes | None = None,
+) -> bytes:
+    """One JPEG out of ffmpeg. ``vf`` is the filter chain (framing, warm-up discard); ``stdin``
+    feeds it a frame we already hold, which is how an HTTP source gets mirrored."""
     binary = ffmpeg_bin(db_path)
     if not binary:
         raise CaptureError("ffmpeg is not installed on the brain host (apt install ffmpeg)")
@@ -699,8 +857,10 @@ def _ffmpeg_frame(input_args: list[str], timeout: float, db_path: Path | None = 
         "-hide_banner",
         "-loglevel",
         "error",
-        "-nostdin",
+        # -nostdin stops ffmpeg eating the parent's stdin; it has to go when stdin IS the frame.
+        *([] if stdin is not None else ["-nostdin"]),
         *input_args,
+        *(["-vf", ",".join(vf)] if vf else []),
         "-frames:v",
         "1",
         "-f",
@@ -712,7 +872,7 @@ def _ffmpeg_frame(input_args: list[str], timeout: float, db_path: Path | None = 
         "pipe:1",
     ]
     try:
-        proc = subprocess.run(cmd, capture_output=True, timeout=timeout, check=False)
+        proc = subprocess.run(cmd, input=stdin, capture_output=True, timeout=timeout, check=False)
     except subprocess.TimeoutExpired as exc:
         raise CaptureError(f"ffmpeg gave no frame within {timeout:g} s") from exc
     except OSError as exc:
@@ -766,6 +926,16 @@ def _usb_frame(src: str, extra: dict[str, Any], timeout: float, db_path: Path | 
     worth far more than no camera at all, and the alternative is a grow log that silently
     stops recording because a mode was refused.
     """
+    # Controls are re-applied before every capture rather than once at save. ffmpeg opens
+    # the device fresh each time, the container can be recreated under a camera that stayed
+    # plugged in, and a replug resets a UVC device to its defaults - so "set it once" quietly
+    # decays into a camera that is no longer on the settings the operator chose. A dozen
+    # ioctls cost under a millisecond and make the configured state true every time.
+    controls = extra.get("controls")
+    if isinstance(controls, dict) and controls:
+        apply_v4l2_controls(src, controls)
+
+    vf = warmup_filters(extra) + build_video_filters(extra)
     want: tuple[int, int] | None = None
     pinned = extra.get("width"), extra.get("height")
     if all(v not in (None, "") for v in pinned):
@@ -783,25 +953,28 @@ def _usb_frame(src: str, extra: dict[str, Any], timeout: float, db_path: Path | 
             "-i", src,
         ]
         try:
-            return _ffmpeg_frame(sized, timeout, db_path)
+            return _ffmpeg_frame(sized, timeout, db_path, vf=vf)
         except CaptureError:
             pass
-    return _ffmpeg_frame(["-f", "v4l2", "-i", src], timeout, db_path)
+    return _ffmpeg_frame(["-f", "v4l2", "-i", src], timeout, db_path, vf=vf)
 
 
 def capture_frame(cam: dict[str, Any], password: str, *, timeout: float = CAPTURE_TIMEOUT_S, db_path: Path | None = None) -> bytes:
     """One JPEG from the camera's source. Raises CaptureError with the reason."""
     kind = cam.get("source_kind")
     src = str(cam.get("source") or "")
+    extra = dict(cam.get("extra") or {})
     if kind == "usb":
-        return _usb_frame(src, dict(cam.get("extra") or {}), timeout, db_path)
+        return _usb_frame(src, extra, timeout, db_path)
     if kind == "rtsp":
         url = _url_with_credentials(src, str(cam.get("username") or ""), password)
-        return _ffmpeg_frame(["-rtsp_transport", "tcp", "-i", url], timeout, db_path)
+        vf = warmup_filters(extra) + build_video_filters(extra)
+        return _ffmpeg_frame(["-rtsp_transport", "tcp", "-i", url], timeout, db_path, vf=vf)
     if kind in ("snapshot", "mjpeg"):
-        return _http_fetch_frame(src, _http_auth(cam, password), timeout)
+        return _transform_jpeg(_http_fetch_frame(src, _http_auth(cam, password), timeout), extra, timeout, db_path)
     if kind == "motioneye":
-        return _http_fetch_frame(motioneye_stream_url(cam), _http_auth(cam, password), timeout)
+        data = _http_fetch_frame(motioneye_stream_url(cam), _http_auth(cam, password), timeout)
+        return _transform_jpeg(data, extra, timeout, db_path)
     raise CaptureError(f"unknown source kind {kind!r}")
 
 
@@ -1103,6 +1276,10 @@ def test_source(spec: dict[str, Any], password: str, *, db_path: Path | None = N
         "extra": extra,
     }
     cam["source"] = validate_source(cam["source_kind"], str(spec.get("source") or ""), extra)
+    # Test has to go through the same normalisation as Save, or the preview is of a framing
+    # the saved camera will not have.
+    normalise_framing(extra)
+    normalise_controls(extra)
     t0 = time.monotonic()
     data = capture_frame(cam, password, db_path=db_path)
     if not is_jpeg(data):
@@ -1228,6 +1405,382 @@ def best_usb_frame_size(device: str) -> tuple[int, int] | None:
     """
     sizes = usb_frame_sizes(device)
     return sizes[0] if sizes else None
+
+
+# ---------------------------------------------------------------------------------------
+# v4l2 controls — auto focus, auto exposure, and the manual settings underneath them
+# ---------------------------------------------------------------------------------------
+
+# The camera's own knobs, read and written through the same ioctl door as QUERYCAP above
+# rather than by shelling out to v4l2-ctl: v4l-utils is not in either brain image, and the
+# whole point of the container mapping is that the node we probe is the node ffmpeg opens.
+#
+# Why an operator wants these on a grow camera, in order of how much they matter:
+#
+# * Auto exposure hunting is what makes a timelapse strobe. A tent goes from 900 umol to
+#   black in one second at lights-off, and a camera left on auto re-meters every capture, so
+#   a month of frames pulses. Manual exposure + manual white balance is the difference
+#   between a timelapse and a stroboscope.
+# * Auto focus hunts on leaves - a moving canopy under a fan is exactly the subject
+#   continuous AF is worst at. Focus once, lock it, and every frame lands the same.
+# * Anti-flicker (power line frequency) against LED drivers: wrong setting, rolling bands.
+# * The rest - brightness, contrast, saturation, sharpness, gain, backlight compensation -
+#   are the manual settings a webcam ships neutral and a grow tent is not neutral for.
+#
+# Every value here is the camera's, not ours: ranges, steps and defaults come from
+# QUERYCTRL on the node itself, and anything a camera does not implement simply does not
+# appear. A $15 webcam reports three of these; a Brio reports all of them.
+
+_VIDIOC_QUERYCTRL = 0xC0445624  # _IOWR('V', 36, struct v4l2_queryctrl), 68 bytes
+_VIDIOC_QUERYMENU = 0xC02C5625  # _IOWR('V', 37, struct v4l2_querymenu), 44 bytes, packed
+_VIDIOC_G_CTRL = 0xC008561B  # _IOWR('V', 27, struct v4l2_control), 8 bytes
+_VIDIOC_S_CTRL = 0xC008561C  # _IOWR('V', 28, struct v4l2_control), 8 bytes
+
+_V4L2_CTRL_TYPE_INTEGER = 1
+_V4L2_CTRL_TYPE_BOOLEAN = 2
+_V4L2_CTRL_TYPE_MENU = 3
+_V4L2_CTRL_FLAG_DISABLED = 0x0001
+_V4L2_CTRL_FLAG_READ_ONLY = 0x0004
+_V4L2_CTRL_FLAG_INACTIVE = 0x0010
+
+_CTRL_TYPE_NAMES = {
+    _V4L2_CTRL_TYPE_INTEGER: "int",
+    _V4L2_CTRL_TYPE_BOOLEAN: "bool",
+    _V4L2_CTRL_TYPE_MENU: "menu",
+}
+
+# The controls worth an operator's time, in the order they must be WRITTEN.
+#
+# That order is not cosmetic. A UVC driver refuses `exposure_time_absolute` while
+# `auto_exposure` is still in aperture-priority, and refuses `focus_absolute` while
+# continuous AF owns the lens - so each auto switch is written before the manual value it
+# gates, and `gated_by` says which state the gate has to be in for the manual value to take.
+V4L2_CONTROLS: tuple[dict[str, Any], ...] = (
+    {
+        "key": "power_line_frequency",
+        "id": 0x00980918,
+        "label": "Anti-flicker",
+        "group": "exposure",
+        "help": "Match the mains frequency the grow light runs on (50 Hz here) or a fast exposure picks up rolling bands from the LED driver.",
+    },
+    {
+        "key": "auto_exposure",
+        "id": 0x009A0901,
+        "label": "Exposure mode",
+        "group": "exposure",
+        "help": "Manual holds every frame at the same brightness, which is what a timelapse needs; auto re-meters each capture and makes the run pulse.",
+    },
+    {
+        "key": "exposure_time_absolute",
+        "id": 0x009A0902,
+        "label": "Exposure time",
+        "group": "exposure",
+        "gated_by": ("auto_exposure", 1),  # 1 = V4L2_EXPOSURE_MANUAL
+        "help": "In 100 us units. Only settable with the exposure mode on manual.",
+    },
+    {
+        "key": "gain",
+        "id": 0x00980913,
+        "label": "Gain",
+        "group": "exposure",
+        "help": "Sensor gain. Raising it brightens a dark frame and adds noise with it.",
+    },
+    {
+        "key": "focus_automatic_continuous",
+        "id": 0x009A090C,
+        "label": "Auto focus",
+        "group": "focus",
+        "help": "Continuous AF hunts on a canopy moving under a fan. Focus once with it on, then turn it off to lock the lens where it landed.",
+    },
+    {
+        "key": "focus_absolute",
+        "id": 0x009A090A,
+        "label": "Focus",
+        "group": "focus",
+        "gated_by": ("focus_automatic_continuous", 0),
+        "help": "Manual focus position. Only settable with auto focus off.",
+    },
+    {
+        "key": "white_balance_automatic",
+        "id": 0x0098090C,
+        "label": "Auto white balance",
+        "group": "colour",
+        "help": "Auto white balance drifts as the canopy fills the frame, so leaf colour in the record tracks the algorithm instead of the plant.",
+    },
+    {
+        "key": "white_balance_temperature",
+        "id": 0x0098091A,
+        "label": "White balance",
+        "group": "colour",
+        "gated_by": ("white_balance_automatic", 0),
+        "help": "Kelvin. Only settable with auto white balance off.",
+    },
+    {
+        "key": "brightness",
+        "id": 0x00980900,
+        "label": "Brightness",
+        "group": "image",
+    },
+    {
+        "key": "contrast",
+        "id": 0x00980901,
+        "label": "Contrast",
+        "group": "image",
+    },
+    {
+        "key": "saturation",
+        "id": 0x00980902,
+        "label": "Saturation",
+        "group": "image",
+    },
+    {
+        "key": "sharpness",
+        "id": 0x0098091B,
+        "label": "Sharpness",
+        "group": "image",
+    },
+    {
+        "key": "backlight_compensation",
+        "id": 0x0098091C,
+        "label": "Backlight compensation",
+        "group": "image",
+        "help": "Lifts a subject shot against a bright background - a plant under a lamp pointed at the lens.",
+    },
+    {
+        "key": "zoom_absolute",
+        "id": 0x009A090D,
+        "label": "Camera zoom",
+        "group": "framing",
+        "help": "The camera's own zoom, where it has one. Unlike the digital zoom above, it is applied before the frame reaches the brain, so what it costs in pixels is the camera's business.",
+    },
+    {
+        "key": "pan_absolute",
+        "id": 0x009A0908,
+        "label": "Pan",
+        "group": "framing",
+        "help": "Where the camera's zoom window sits. Most webcams only move this while zoomed in.",
+    },
+    {
+        "key": "tilt_absolute",
+        "id": 0x009A0909,
+        "label": "Tilt",
+        "group": "framing",
+    },
+)
+
+CONTROLS_BY_KEY: dict[str, dict[str, Any]] = {c["key"]: c for c in V4L2_CONTROLS}
+
+
+def _open_video_node(device: str, *, write: bool) -> int | None:
+    flags = (os.O_RDWR if write else os.O_RDONLY) | getattr(os, "O_NONBLOCK", 0)
+    try:
+        return os.open(device, flags)
+    except OSError:
+        return None
+
+
+def _query_ctrl(fd: int, ctrl_id: int) -> dict[str, Any] | None:
+    """QUERYCTRL for one control, or None when this camera does not implement it."""
+    try:
+        import fcntl
+    except ImportError:
+        return None
+    import struct
+
+    payload = struct.pack("<II32siiiiIII", ctrl_id, 0, b"", 0, 0, 0, 0, 0, 0, 0)
+    try:
+        raw = fcntl.ioctl(fd, _VIDIOC_QUERYCTRL, payload)
+    except OSError:
+        return None  # EINVAL: the control does not exist on this device
+    _id, ctype, name, lo, hi, step, default, flags, _r0, _r1 = struct.unpack("<II32siiiiIII", raw)
+    if flags & _V4L2_CTRL_FLAG_DISABLED:
+        return None
+    return {
+        "name": name.split(b"\0")[0].decode("utf-8", "replace").strip(),
+        "type": _CTRL_TYPE_NAMES.get(ctype, "int"),
+        "min": lo,
+        "max": hi,
+        "step": step or 1,
+        "default": default,
+        "read_only": bool(flags & _V4L2_CTRL_FLAG_READ_ONLY),
+        "inactive": bool(flags & _V4L2_CTRL_FLAG_INACTIVE),
+    }
+
+
+def _query_menu(fd: int, ctrl_id: int, lo: int, hi: int) -> list[dict[str, Any]]:
+    """The menu entries a control offers, by their driver names.
+
+    Asking rather than hardcoding: "1 = Manual Mode, 3 = Aperture Priority Mode" is UVC's
+    numbering for auto_exposure and reads like nonsense in a dropdown until the driver's own
+    label is next to it.
+    """
+    try:
+        import fcntl
+    except ImportError:
+        return []
+    import struct
+
+    out: list[dict[str, Any]] = []
+    for index in range(max(0, lo), min(hi, lo + 32) + 1):
+        payload = struct.pack("<II32sI", ctrl_id, index, b"", 0)
+        try:
+            raw = fcntl.ioctl(fd, _VIDIOC_QUERYMENU, payload)
+        except OSError:
+            continue  # EINVAL: this slot of the range is not a valid choice
+        _id, idx, name, _res = struct.unpack("<II32sI", raw)
+        label = name.split(b"\0")[0].decode("utf-8", "replace").strip()
+        out.append({"value": int(idx), "label": label or str(idx)})
+    return out
+
+
+def _get_ctrl(fd: int, ctrl_id: int) -> int | None:
+    try:
+        import fcntl
+    except ImportError:
+        return None
+    import struct
+
+    try:
+        raw = fcntl.ioctl(fd, _VIDIOC_G_CTRL, struct.pack("<Ii", ctrl_id, 0))
+    except OSError:
+        return None
+    return int(struct.unpack("<Ii", raw)[1])
+
+
+def _set_ctrl(fd: int, ctrl_id: int, value: int) -> str:
+    """Write one control. Returns "" on success, else the errno text, operator-readable."""
+    try:
+        import fcntl
+    except ImportError:
+        return "v4l2 controls need a Linux brain"
+    import struct
+
+    try:
+        fcntl.ioctl(fd, _VIDIOC_S_CTRL, struct.pack("<Ii", ctrl_id, int(value)))
+    except OSError as exc:
+        return f"{exc.strerror or exc} (errno {exc.errno})"
+    return ""
+
+
+def list_v4l2_controls(device: str) -> list[dict[str, Any]]:
+    """Every control from :data:`V4L2_CONTROLS` this node actually implements, with its own
+    range and its current live value.
+
+    Live value rather than what we stored: the camera is the source of truth for its own
+    state, and the two can differ - a replug resets a UVC device to defaults, and nothing
+    stops a second tool on the Pi from moving them.
+    """
+    fd = _open_video_node(device, write=False)
+    if fd is None:
+        return []
+    out: list[dict[str, Any]] = []
+    try:
+        for spec in V4L2_CONTROLS:
+            info = _query_ctrl(fd, int(spec["id"]))
+            if info is None:
+                continue
+            entry: dict[str, Any] = {
+                "key": spec["key"],
+                "label": spec["label"],
+                "group": spec["group"],
+                "help": spec.get("help", ""),
+                "driver_name": info["name"],
+                "type": info["type"],
+                "min": info["min"],
+                "max": info["max"],
+                "step": info["step"],
+                "default": info["default"],
+                "value": _get_ctrl(fd, int(spec["id"])),
+                "read_only": info["read_only"],
+                "inactive": info["inactive"],
+                "options": _query_menu(fd, int(spec["id"]), info["min"], info["max"])
+                if info["type"] == "menu"
+                else [],
+            }
+            gate = spec.get("gated_by")
+            if gate:
+                entry["gated_by"] = {"key": gate[0], "value": gate[1]}
+            out.append(entry)
+    finally:
+        os.close(fd)
+    return out
+
+
+def normalise_controls(extra: dict[str, Any]) -> dict[str, Any]:
+    """Keep ``extra['controls']`` to known keys with integer values, in place.
+
+    Ranges are deliberately NOT checked here: the camera owns them, they differ per model,
+    and the brain has to be able to save a camera's settings while the device is unplugged or
+    while the SPA is talking to a dev brain with no camera at all. A value the driver refuses
+    comes back as a per-control error from :func:`apply_v4l2_controls`, which is where the
+    device is actually present to have an opinion.
+    """
+    raw = extra.get("controls")
+    if raw in (None, "", {}):
+        extra.pop("controls", None)
+        return extra
+    if not isinstance(raw, dict):
+        raise ValueError("controls must be an object of control name to value")
+    clean: dict[str, int] = {}
+    for key, value in raw.items():
+        if key not in CONTROLS_BY_KEY:
+            continue  # a control we do not expose, or a typo: dropped rather than stored
+        if value in (None, ""):
+            continue
+        try:
+            clean[key] = int(float(value))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"{key} must be a whole number") from exc
+    if clean:
+        extra["controls"] = clean
+    else:
+        extra.pop("controls", None)
+    return extra
+
+
+def apply_v4l2_controls(device: str, controls: dict[str, Any]) -> list[dict[str, Any]]:
+    """Write the operator's controls onto the camera. Never raises - returns what happened.
+
+    A control that will not take is not worth losing a frame over: the capture is the point,
+    and the drawer shows the live values afterwards so a refusal is visible rather than
+    silent. Written in :data:`V4L2_CONTROLS` order so each auto switch lands before the
+    manual value it gates.
+    """
+    results: list[dict[str, Any]] = []
+    fd = _open_video_node(device, write=True)
+    if fd is None:
+        return [{"key": k, "value": v, "error": f"cannot open {device} for writing"} for k, v in controls.items()]
+    try:
+        for spec in V4L2_CONTROLS:
+            key = spec["key"]
+            if key not in controls:
+                continue
+            try:
+                value = int(float(controls[key]))
+            except (TypeError, ValueError):
+                results.append({"key": key, "value": controls[key], "error": "not a number"})
+                continue
+            gate = spec.get("gated_by")
+            if gate:
+                gate_key, gate_want = gate
+                gate_spec = CONTROLS_BY_KEY[gate_key]
+                # What the gate will BE after this pass: the requested value if the operator
+                # set one (it was written above, in table order), otherwise whatever the
+                # camera currently holds.
+                gate_now = controls.get(gate_key)
+                if gate_now is None:
+                    gate_now = _get_ctrl(fd, int(gate_spec["id"]))
+                if gate_now is not None and int(gate_now) != int(gate_want):
+                    results.append(
+                        {"key": key, "value": value, "error": f"skipped while {gate_spec['label'].lower()} is on"}
+                    )
+                    continue
+            results.append({"key": key, "value": value, "error": _set_ctrl(fd, int(spec["id"]), value)})
+    except OSError as exc:  # a device yanked mid-apply; the capture still gets its try
+        results.append({"key": "", "value": None, "error": str(exc)})
+    finally:
+        os.close(fd)
+    return results
 
 
 def _by_id_index() -> dict[str, str]:

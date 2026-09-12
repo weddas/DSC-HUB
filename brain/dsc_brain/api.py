@@ -2996,6 +2996,23 @@ def cameras_storage() -> dict[str, Any]:
     return {"cameras": rows, "total_bytes": sum(r["bytes"] for r in rows), "media_root": str(media_root())}
 
 
+@app.get("/cameras/controls")
+def cameras_controls(device: str = Query(...)) -> dict[str, Any]:
+    """What one USB webcam's own knobs are, right now, straight off the node.
+
+    Read live rather than echoed back from the camera row: the camera owns its state, a
+    replug resets a UVC device to its defaults, and the drawer showing a value the lens is
+    not actually on would be worse than showing nothing. Empty `controls` means the node is
+    not there or implements none of them - which is the honest answer for an IP camera, a
+    container with no device mapped, and a brain that is not Linux.
+    """
+    from .cameras import list_v4l2_controls
+
+    if not (device.startswith("/dev/video") or device.startswith("/dev/v4l/by-id/")):
+        raise HTTPException(400, "device must be a /dev/videoN node or its /dev/v4l/by-id/... path")
+    return {"device": device, "controls": list_v4l2_controls(device)}
+
+
 @app.post("/cameras/test")
 def cameras_test(body: CameraTestBody) -> dict[str, Any]:
     """Grab one frame from an unsaved spec — nothing stored, preview returned inline."""
