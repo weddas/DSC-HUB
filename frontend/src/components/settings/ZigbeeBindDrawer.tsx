@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Button, StatusChip } from "../ui";
 import { isZigbeeSafetyLeakRole, zigbeeBannerTemplate, zigbeeFloodBannerTemplate, type ZigbeeRecipe, type ZigbeeRole } from "../../lib/fleetApi";
 import { FLOOD_TASK_ID, TANK_TASK_ID, TASK_PARAM_IDS } from "./settingsConstants";
-import { taskParamDefaults } from "./settingsHelpers";
+import TaskParamFields from "./TaskParamFields";
+import { taskHasParams, taskParamDefaults } from "./settingsHelpers";
 import { DrawerField, SettingsDrawer } from "./SettingsDrawer";
 import { nextTaskParams, zigbeeOptionLists } from "./zigbeeBindLogic";
 
@@ -64,7 +65,10 @@ export function ZigbeeBindDrawer({
     allRoles,
     allRecipes,
   });
-  const showTaskParams = draft.role !== "unbound" && TASK_PARAM_IDS.has(draft.recipe_id);
+  const activeRecipe = allRecipes.find((r) => r.id === draft.recipe_id);
+  const genericParams = !TASK_PARAM_IDS.has(draft.recipe_id) && taskHasParams(activeRecipe);
+  const showTaskParams =
+    draft.role !== "unbound" && (TASK_PARAM_IDS.has(draft.recipe_id) || genericParams);
   const isFlood = draft.recipe_id === FLOOD_TASK_ID;
   const seatId = String(draft.params.seat_id ?? "dehumidifier");
   const problemWhen = String(draft.params.problem_when ?? "active");
@@ -140,9 +144,11 @@ export function ZigbeeBindDrawer({
           disabled={draft.role === "unbound"}
           onChange={(e) => {
             const nextRecipe = e.target.value;
-            const params = TASK_PARAM_IDS.has(nextRecipe)
-              ? taskParamDefaults(nextRecipe, allRecipes.find((r) => r.id === nextRecipe))
-              : {};
+            const picked = allRecipes.find((r) => r.id === nextRecipe);
+            const params =
+              TASK_PARAM_IDS.has(nextRecipe) || taskHasParams(picked)
+                ? taskParamDefaults(nextRecipe, picked)
+                : {};
             setDraft({ ...draft, recipe_id: nextRecipe, params: nextRecipe === "none" ? {} : params });
           }}
         >
@@ -153,7 +159,16 @@ export function ZigbeeBindDrawer({
           ))}
         </select>
       </DrawerField>
-      {showTaskParams ? (
+      {showTaskParams && genericParams ? (
+        <TaskParamFields
+          schema={activeRecipe?.param_schema ?? {}}
+          params={draft.params}
+          onChange={(patch) =>
+            setDraft({ ...draft, params: nextTaskParams(draft.recipe_id, draft.params, patch) })
+          }
+        />
+      ) : null}
+      {showTaskParams && !genericParams ? (
         <>
           {draft.recipe_id === TANK_TASK_ID ? (
             <DrawerField label="Appliance">

@@ -672,6 +672,36 @@ class TuyaLane:
             self.ingest(device_id, resp["dps"])
         return {"ok": True, "device_id": device_id, "state": "ON" if on else "OFF", "queued": False}
 
+    def set_raw_dp(self, device_id: str, index: int, value: Any) -> dict[str, Any]:
+        """Write one datapoint by index, without touching the switch's commanded/write state.
+
+        For datapoints that are not the relay — today only the plug's own countdown timer,
+        which `light_plug` refreshes as a dead-man's switch. Deliberately does NOT set
+        ``_commanded`` / ``_write_state``: those describe whether the device agrees with the
+        state we asked it to hold, and a countdown refresh is not a state command. Folding it
+        in would make a healthy device read as PENDING forever.
+        """
+        devices = load_tuya_devices()
+        row = devices.get(str(device_id))
+        if row is None:
+            return {"ok": False, "error": "unknown device", "device_id": device_id}
+        with self._lock:
+            worker = self._workers.get(device_id)
+        if worker is not None and worker.is_alive():
+            worker.commands.put((int(index), value))
+            return {"ok": True, "device_id": device_id, "dp": int(index), "queued": True}
+        try:
+            dev = _device_for(row)
+            resp = dev.set_value(int(index), value)
+            close = getattr(dev, "close", None)
+            if callable(close):
+                close()
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "error": str(exc), "device_id": device_id}
+        if isinstance(resp, dict) and "Err" in resp:
+            return {"ok": False, "error": str(resp.get("Error") or resp.get("Err")), "device_id": device_id}
+        return {"ok": True, "device_id": device_id, "dp": int(index), "queued": False}
+
     # -- views -------------------------------------------------------------
 
     def _link_for(self, device_id: str, now: float) -> str:
@@ -848,6 +878,14 @@ def set_tuya_state(device_id: str, on: bool) -> dict[str, Any]:
     """ON/OFF write to a Tuya switch/plug. Best-effort — returns a status dict, never raises."""
     try:
         return _lane.set_state(str(device_id), bool(on))
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc), "device_id": device_id}
+
+
+def set_tuya_dp(device_id: str, index: int, value: Any) -> dict[str, Any]:
+    """Write one non-relay datapoint by index. Best-effort — returns a status dict, never raises."""
+    try:
+        return _lane.set_raw_dp(str(device_id), int(index), value)
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": str(exc), "device_id": device_id}
 

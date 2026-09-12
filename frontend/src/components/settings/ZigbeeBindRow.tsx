@@ -9,7 +9,9 @@ import {
   type ZigbeeRole,
 } from "../../lib/fleetApi";
 import { FLOOD_TASK_ID, TANK_TASK_ID, TASK_PARAM_IDS } from "./settingsConstants";
-import { effectiveZigbeeClass, taskParamDefaults } from "./settingsHelpers";
+import TaskParamFields from "./TaskParamFields";
+import { nextTaskParams } from "./zigbeeBindLogic";
+import { effectiveZigbeeClass, taskHasParams, taskParamDefaults } from "./settingsHelpers";
 import {
   ActionsCell,
   HealthCell,
@@ -89,7 +91,9 @@ export function ZigbeeBindRow({
     const current = allRecipes.find((r) => r.id === recipeId);
     if (current) recipeOptions = [...recipeOptions, current];
   }
-  const showTaskParams = role !== "unbound" && TASK_PARAM_IDS.has(recipeId);
+  const activeRecipe = allRecipes.find((r) => r.id === recipeId);
+  const genericParams = !TASK_PARAM_IDS.has(recipeId) && taskHasParams(activeRecipe);
+  const showTaskParams = role !== "unbound" && (TASK_PARAM_IDS.has(recipeId) || genericParams);
   const isFlood = recipeId === FLOOD_TASK_ID;
   const seatId = String(policyParams.seat_id ?? "dehumidifier");
   const problemWhen = String(policyParams.problem_when ?? "active");
@@ -103,46 +107,13 @@ export function ZigbeeBindRow({
       : "";
   const secondary = [ieee || "—", classNote].filter(Boolean).join(" · ");
 
-  const updateTaskParam = (patch: Partial<{ seat_id: string; problem_when: string; banner: string }>) => {
-    const nextPolarity = patch.problem_when ?? problemWhen;
-    let nextBanner = patch.banner ?? banner;
-    if (isFlood) {
-      const prevTemplate = zigbeeFloodBannerTemplate(problemWhen);
-      if (patch.problem_when != null) {
-        const nextTemplate = zigbeeFloodBannerTemplate(nextPolarity);
-        if (banner === prevTemplate || !banner.trim()) {
-          nextBanner = nextTemplate;
-        }
-      }
-      onPolicyChange(ieee, {
-        recipe_id: recipeId,
-        params: {
-          ...policyParams,
-          problem_when: nextPolarity,
-          banner: nextBanner,
-          banner_tone: policyParams.banner_tone ?? "critical",
-        },
-      });
-      return;
-    }
-    const nextSeat = patch.seat_id ?? seatId;
-    const prevTemplate = zigbeeBannerTemplate(seatId, problemWhen);
-    if (patch.seat_id != null || patch.problem_when != null) {
-      const nextTemplate = zigbeeBannerTemplate(nextSeat, nextPolarity);
-      if (banner === prevTemplate || !banner.trim()) {
-        nextBanner = nextTemplate;
-      }
-    }
+  // Delegates to nextTaskParams so the banner templating lives in exactly one place, and so
+  // a generic task's own params (window_mode, countdown_backup, …) survive the merge — this
+  // used to inline the tank branch and silently drop any field it did not name.
+  const updateTaskParam = (patch: Record<string, unknown>) => {
     onPolicyChange(ieee, {
       recipe_id: recipeId,
-      params: {
-        ...policyParams,
-        seat_id: nextSeat,
-        problem_when: nextPolarity,
-        banner: nextBanner,
-        force_relay: policyParams.force_relay ?? "off",
-        banner_tone: policyParams.banner_tone ?? "critical",
-      },
+      params: nextTaskParams(recipeId, policyParams, patch),
     });
   };
 
@@ -212,13 +183,11 @@ export function ZigbeeBindRow({
           title={role === "unbound" ? "Bind a Role first" : "Task / recipe when sensor is active"}
           onChange={(nextRecipe) => {
             onBindingChange(ieee, { role, zone, recipe_id: nextRecipe, capability_override: capabilityOverride });
-            if (TASK_PARAM_IDS.has(nextRecipe)) {
+            const picked = allRecipes.find((r) => r.id === nextRecipe);
+            if (TASK_PARAM_IDS.has(nextRecipe) || taskHasParams(picked)) {
               onPolicyChange(ieee, {
                 recipe_id: nextRecipe,
-                params: taskParamDefaults(
-                  nextRecipe,
-                  allRecipes.find((r) => r.id === nextRecipe),
-                ),
+                params: taskParamDefaults(nextRecipe, picked),
               });
             } else if (nextRecipe === "none") {
               onPolicyChange(ieee, { recipe_id: "none", params: {} });
@@ -247,7 +216,14 @@ export function ZigbeeBindRow({
       {showTaskParams ? (
         <SettingsSubRow colSpan={ZIGBEE_BIND_COLS}>
           <div className="dsc-row-actions" style={{ flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
-            {recipeId === TANK_TASK_ID ? (
+            {genericParams ? (
+              <TaskParamFields
+                schema={activeRecipe?.param_schema ?? {}}
+                params={policyParams}
+                onChange={updateTaskParam}
+              />
+            ) : null}
+            {genericParams ? null : recipeId === TANK_TASK_ID ? (
               <label>
                 Appliance
                 <select value={seatId} onChange={(e) => updateTaskParam({ seat_id: e.target.value })}>
@@ -256,6 +232,7 @@ export function ZigbeeBindRow({
                 </select>
               </label>
             ) : null}
+            {genericParams ? null : (
             <label>
               Problem when
               <select value={problemWhen} onChange={(e) => updateTaskParam({ problem_when: e.target.value })}>
@@ -263,6 +240,8 @@ export function ZigbeeBindRow({
                 <option value="inactive">Dry / inactive = problem</option>
               </select>
             </label>
+            )}
+            {genericParams ? null : (
             <label style={{ flex: "1 1 240px" }}>
               Banner text
               <input
@@ -276,6 +255,7 @@ export function ZigbeeBindRow({
                 }
               />
             </label>
+            )}
           </div>
         </SettingsSubRow>
       ) : null}
